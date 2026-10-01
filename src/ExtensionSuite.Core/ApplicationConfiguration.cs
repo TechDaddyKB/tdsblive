@@ -47,10 +47,25 @@ public sealed record ServerConfiguration
 
 public sealed record IntegrationConfiguration(string Host, int Port)
 {
+    public bool Enabled { get; init; }
+    public string Endpoint { get; init; } = "/";
+    public int RequestTimeoutSeconds { get; init; } = 10;
+    public int ReconnectDelaySeconds { get; init; } = 2;
+    public int MaximumReconnectDelaySeconds { get; init; } = 30;
+    public Guid[] AllowedActionIds { get; init; } = [];
+    public bool ForwardLiveEvents { get; init; }
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Host) || Uri.CheckHostName(Host) == UriHostNameType.Unknown || Port is < 1 or > 65535)
             throw new ArgumentException("Integration requires a valid host and port.");
+        if (string.IsNullOrWhiteSpace(Endpoint) || !Endpoint.StartsWith('/') || Endpoint.StartsWith("//", StringComparison.Ordinal) ||
+            Endpoint.Length > 256 || Endpoint.IndexOfAny(['?', '#', '\\']) >= 0 || Endpoint.Any(char.IsControl))
+            throw new ArgumentException("Integration endpoint requires a bounded absolute path without credentials or query parameters.");
+        if (RequestTimeoutSeconds is < 1 or > 60 || ReconnectDelaySeconds is < 1 or > 60 ||
+            MaximumReconnectDelaySeconds < ReconnectDelaySeconds || MaximumReconnectDelaySeconds > 300)
+            throw new ArgumentException("Integration timeouts and reconnect bounds are invalid.");
+        if (AllowedActionIds is null || AllowedActionIds.Length > 128 || AllowedActionIds.Any(id => id == Guid.Empty))
+            throw new ArgumentException("Selected action identifiers require a bounded list of non-empty GUIDs.");
     }
 }
 

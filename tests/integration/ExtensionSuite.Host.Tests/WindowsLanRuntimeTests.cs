@@ -70,7 +70,19 @@ public sealed class WindowsLanRuntimeTests
             await process.WaitForExitAsync();
             await Task.WhenAll(output, errors); // Drain privately; never expose credential-bearing child output.
             Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-            Directory.Delete(directory, recursive: true);
+            await DeleteRuntimeDirectoryAsync(directory);
+        }
+    }
+
+    private static async Task DeleteRuntimeDirectoryAsync(string directory)
+    {
+        // Windows can briefly retain a killed child's SQLite sidecar while releasing handles/scanning files.
+        // Retry only cleanup, after process exit; assertions and persistent cleanup failures still fail the test.
+        for (var attempt = 0; ; attempt++)
+        {
+            try { Directory.Delete(directory, recursive: true); return; }
+            catch (Exception error) when (attempt < 20 && (error is IOException or UnauthorizedAccessException))
+            { await Task.Delay(100); }
         }
     }
 

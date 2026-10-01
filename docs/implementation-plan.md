@@ -78,7 +78,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
 | [G01](#g01) | Create repository and quality infrastructure | G00 | Complete |
 | [G02](#g02) | Build application foundation | G01 | Complete |
-| [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
+| [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Complete |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Not started |
@@ -210,7 +210,7 @@ None for G02 acceptance. Live platform adapters, OBS behavior, visual editing, f
 
 ## G03 — Integrate Streamer.bot and Speaker.bot
 
-Status: **Not started**
+Status: **Complete**
 Prerequisites: G02
 
 ### Deliverables
@@ -228,11 +228,20 @@ Prerequisites: G02
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+- G02 prerequisite verified on protected main `da53c87`: Windows run 36849059398 and Sonar passed.
+- Implemented correlated bounded protocol sessions, Streamer.bot authentication/discovery/allowlisted dispatch, independent reconnect, Speaker.bot queue requests, conservative normalization, bridge prevention, bounded inspector, isolated replay, C# bootstrap/forwarding templates, deterministic import generator and editor controls. Public schemas and generated frontend types updated; no migration needed. Contracts and limitations are maintained in [G03 integrations](g03-integrations.md).
+- Local backend tests pass: 103 tests, two Windows-only skips. Frontend tests pass (20 tests, 99.0% lines) with inspector/copy/replay and forged identifier rejection coverage. Import transport tests verify deterministic content and artifact-directory confinement.
+- [Windows run 36855820795](https://github.com/camarokris/tdsblive/actions/runs/36855820795), revision `43b5037`, passes Windows tests, OpenCover/LCOV import, replay qualification, crash/restart/HTTP contracts, isolated browser rendering and generated type checks. [SonarQube PR analysis](https://sonarcloud.io/dashboard?id=camarokris_tdsblive&pullRequest=4) passes with **85.9% new-code coverage**, 0% duplication, A reliability/security/maintainability, and all hotspots reviewed. CodeQL passes. The first failing gate led to input confinement and reliability refactoring; two specific search-query/port-as-content findings were reviewed as false positives with recorded data-flow rationale, without rule exclusions.
+- Live GE-Proton qualification on 2026-10-01 confirmed Streamer.bot **1.0.7**, Speaker.bot **0.1.7** (local port **7580**), all 13 custom-trigger registrations, actual dedicated test-trigger execution and matching synthetic event in the host inspector, safe sample/replay behavior, and Speaker.bot Pause/Resume acknowledgements. Repeat command: `python tools/qualify_bots.py --execute-local-test-trigger-and-queue --speaker-port 7580`. Uses temporary host data and dedicated synthetic actions; no chat/OBS/financial effects. Product default ports are unchanged.
+
+- Final implementation revision `19c01f7` passes [Windows run 36861946605](https://github.com/camarokris/tdsblive/actions/runs/36861946605), including the SonarQube quality gate and OpenCover/LCOV analysis. Local verification passes 107 backend tests (two Windows-only skips), 20 frontend tests, five import tests, type checks, lint and deterministic secrets scanning.
+- Operator confirmed the regenerated bundle imports successfully through Streamer.bot's graphical Import dialog on 2026-10-01. The initial matching-version rejection was corrected by removing the optional author gate and retaining the established import-format floor; runtime qualification remains limited to 1.0.7. After restoring the deliberately separate test binding, real trigger execution, inspector reception, isolated replay and Speaker.bot Pause/Resume passed again.
+- Automated review fixes contain per-event consumer/ingestion failures without exposing exception details, reject blank forwarded routing, and require an explicit clean native-store scanner verdict before reading. Regression tests verify session survival and refusal to read after ambiguous scan results.
+- Delivery: [PR #4](https://github.com/camarokris/tdsblive/pull/4); protected integration and the final evidence revision are traceable through the PR.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+None. Compatibility beyond native Streamer.bot 1.0.7 remains unverified and documented; Rumble ingestion and real audio/OBS qualification belong to later goals.
 
 <a id="g04"></a>
 
