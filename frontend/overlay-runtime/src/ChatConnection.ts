@@ -52,7 +52,8 @@ export class ChatConnection {
   }
   private schedule(): void {
     if (this.abort.signal.aborted || this.retry !== undefined) return;
-    this.retry = setTimeout(() => { this.retry = undefined; void this.start(); }, Math.min(30_000, 1000 * 2 ** Math.min(this.failures++, 5)) * (1 + Math.random() * .1));
+    const jitter = crypto.getRandomValues(new Uint32Array(1))[0] / 0x1_0000_0000;
+    this.retry = setTimeout(() => { this.retry = undefined; void this.start(); }, Math.min(30_000, 1000 * 2 ** Math.min(this.failures++, 5)) * (1 + jitter * .1));
   }
   stop(): void {
     this.abort.abort(); clearTimeout(this.retry); clearInterval(this.heartbeat);

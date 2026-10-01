@@ -14,7 +14,7 @@ public class CPHInline
             !CPH.TryGetArg<string>("tdsbliveForwardedType", out type)) return false;
         var payload = new JObject();
         // Explicitly selected fields prevent forwarding arbitrary action arguments/credentials.
-        foreach (var field in new[] { "messageId", "eventId", "userId", "user", "userLogin", "userName", "avatarUrl", "badges", "isBot", "from", "message", "text", "amount", "currency", "createdAt", "publishedAt", "timestamp", "isTest" })
+        foreach (var field in new[] { "messageId", "eventId", "userId", "user", "userLogin", "userName", "avatarUrl", "badges", "isBot", "from", "message", "text", "parts", "emotes", "amount", "currency", "createdAt", "publishedAt", "timestamp", "isTest" })
         {
             object value;
             if (CPH.TryGetArg<object>(field, out value) && value != null) payload[field] = JToken.FromObject(value);

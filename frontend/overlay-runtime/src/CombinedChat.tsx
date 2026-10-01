@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChatBuffer, defaultSettings, safeAvatar, type ChatEvent, type ChatSettings, type OverlayDefinition } from './chat';
 import { ChatConnection } from './ChatConnection';
 import './chat.css';
+import { ChatMessage } from './ChatMessage';
 
 function initialTheme(): string {
   try { return localStorage.getItem('tdsblive.chat.theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
@@ -37,10 +38,10 @@ export function CombinedChat({ id, streamer = false, preview = false, token = ''
   }, [messages]);
   useEffect(() => {
     const fontId = definition?.chat.fontAssetId;
-    if (!fontId) return;
+    if (!fontId || fontId.length !== 64 || !/^[0-9a-f]{64}$/.test(fontId)) return;
     const controller = new AbortController(); let face: FontFace | undefined;
-    void fetch(`/assets/${fontId}`, { headers: token ? { Authorization: `Bearer ${token}`, 'X-TDSBLive-Overlay': id } : {}, signal: controller.signal })
-      .then(async response => { if (!response.ok) throw new Error(); face = new FontFace('TDSBLiveCustom', await response.arrayBuffer()); await face.load(); if (!controller.signal.aborted) document.fonts.add(face); })
+    void fetch(`/assets/${encodeURIComponent(fontId)}`, { headers: token ? { Authorization: `Bearer ${token}`, 'X-TDSBLive-Overlay': id } : {}, signal: controller.signal })
+      .then(async response => { if (!response.ok) { throw new Error('Font unavailable.'); } face = new FontFace('TDSBLiveCustom', await response.arrayBuffer()); await face.load(); if (!controller.signal.aborted) document.fonts.add(face); })
       .catch(() => { /* Use the configured system font if the asset cannot load. */ });
     return () => { controller.abort(); if (face) document.fonts.delete(face); };
   }, [definition?.chat.fontAssetId, id, token]);
@@ -65,7 +66,7 @@ export function CombinedChat({ id, streamer = false, preview = false, token = ''
             {s.showTimestamp && <time dateTime={event.occurredAt}>{new Date(event.occurredAt).toLocaleTimeString()}</time>}
             {s.showBadges && (event.user?.badgeDetails ?? (event.user?.badges ?? []).map(name => ({ name }))).slice(0, 20).map((badge, index) => <ChatBadge key={`${badge.name}-${index}`} {...badge} />)}
             {s.showUsername && <strong className="username" style={{ color: s.platformColors[event.platform] }}>{event.user?.displayName ?? event.user?.login ?? 'Viewer'}: </strong>}
-            {s.showMessage && <span className="message-text">{event.message?.text}</span>}
+            {s.showMessage && <span className="message-text"><ChatMessage message={event.message} /></span>}
           </div>
         </article>;
       })}

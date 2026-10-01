@@ -24,7 +24,7 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory, S
         var sanitized = item with
         {
             Raw = retainRaw ? CredentialRedactor.Json(item.Raw, sensitive?.Snapshot()) as System.Text.Json.Nodes.JsonObject : null,
-            Message = item.Message is null ? null : new EventMessage(CredentialRedactor.Text(item.Message.Text ?? "", sensitive?.Snapshot())),
+            Message = item.Message is null ? null : item.Message with { Text = CredentialRedactor.Text(item.Message.Text ?? "", sensitive?.Snapshot()) },
             User = item.User is null ? null : item.User with { AvatarUrl = item.User.AvatarUrl is null ? null : CredentialRedactor.Text(item.User.AvatarUrl, sensitive?.Snapshot()) }
         };
         var provenance = item.Provenance.ToString();

@@ -294,6 +294,7 @@ Prerequisites: G03, G04
 - Normalize Twitch/YouTube/Kick/Rumble chat with platform/user/message/raw metadata. Provide configurable icons/avatar/badges/name/timestamp/colors/fonts/duration/max messages/animations/ignore users/prefixes/bots, scrolling and persistent modes.
 - Validate/deduplicate assets by SHA-256; serve IDs rather than filesystem paths. Sanitize SVG and validate MIME/size.
 - Provide a responsive streamer chat page usable in an OBS custom browser dock or ordinary browser, with a persistent light/dark toggle and the same normalized feed.
+- Preserve and render Streamer.bot supplied Twitch, 7TV, BetterTTV and FrankerFaceZ emote artwork and explicit Twitch GIF parts, with safe URLs, bounded rendering and text fallbacks. Record unavailable live GIF evidence explicitly.
 
 ### Acceptance criteria
 
@@ -305,13 +306,13 @@ Prerequisites: G03, G04
 
 Implemented runtime, settings panel, assets, migration, scoped read-only tokens and streamer chat; owning contract and operating instructions: [G05 overlays and chat](g05-overlays-chat.md). G03/G04 completion and successful main Windows CI run 36878683352 establish prerequisites.
 
-2026-10-01: 193 backend tests passed locally; two Windows-only tests remain for Windows CI. All 43 frontend tests, type checking, lint, lightweight runtime build, fresh isolated browser qualification and foundation process qualification passed. Runtime JavaScript is approximately 71.6 KiB gzipped, with editor dependency exclusion enforced by the build. Existing 785-poll Rumble replay tests pass.
+2026-10-01: 206 backend tests passed locally; two Windows-only tests remain for Windows CI. All 48 frontend tests, type checking, lint, lightweight runtime build, fresh isolated browser qualification and foundation process qualification passed. Runtime JavaScript is approximately 71.6 KiB gzipped, with editor dependency exclusion enforced by the build. Existing 785-poll Rumble replay tests pass.
 
-Real installed Streamer.bot → Twitch → isolated host → streamer browser chat verified by the user's test message and confirmation that it appears once and Light/Dark works. Backend history independently contains exactly one matching message. YouTube/Kick are documented-payload/synthetic qualification only. The user also confirmed actual OBS transparent source and dock/theme behavior, then reported label-only badges. Badge artwork preservation/rendering is corrected and tested; final live badge confirmation and latest Windows/Sonar evidence remain outstanding.
+Real installed Streamer.bot → Twitch → isolated host → streamer browser chat verified by the user's test message and confirmation that it appears once and Light/Dark works. Backend history independently contains exactly one matching message. YouTube/Kick are documented-payload/synthetic qualification only. The user also confirmed actual OBS transparent source and dock/theme behavior, then reported label-only badges. Badge artwork preservation/rendering is corrected, tested and confirmed by a fresh user Twitch message. Added Twitch/7TV/BetterTTV/FrankerFaceZ emote and GIF rendering is tested but live media confirmation and corrected Windows/Sonar evidence remain outstanding.
 
 ### Blockers
 
-Final live badge-image confirmation is pending after the user verified OBS source/dock rendering and identified label-only badge rendering. Latest Windows CI and SonarQube analysis/coverage import remain outstanding. Do not mark complete from Chromium or mocked tests alone.
+Live emote/GIF confirmation is pending for the added media scope. Initial Windows CI run 36889440276 passed build/tests/browser qualification but failed SonarQube security conditions; new-code coverage was 92.1%. Reported path construction, reconnect randomness and regex findings have code fixes and regression tests; corrected Windows/Sonar analysis remains outstanding. Do not mark complete from Chromium or mocked tests alone.
 
 <a id="g06"></a>
 

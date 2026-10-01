@@ -40,3 +40,8 @@ Streamer.bot badge artwork is preserved without requiring raw retention; built-i
 chat displays credential-free HTTP(S) images and falls back to labels for missing,
 unsafe or failed images. Old persisted messages are not retroactively enriched.
 Built-in overlay history/socket delivery excludes raw and monetary metadata.
+
+Optional `message.parts` preserves structured text/emote/GIF rendering metadata
+(`kind`, `text`, `imageUrl`, `source`, `zeroWidth`) without requiring raw payload
+access. Plain-text records deserialize with parts absent. The owning G05 document
+describes normalized positions, URL validation, limits and fallback behavior.

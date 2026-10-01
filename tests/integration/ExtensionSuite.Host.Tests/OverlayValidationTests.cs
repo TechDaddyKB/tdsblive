@@ -10,6 +10,14 @@ namespace ExtensionSuite.Host.Tests;
 
 public sealed class OverlayValidationTests
 {
+    [Fact]
+    public void IdentifiersFontsAndColorsRejectTrailingNewlines()
+    {
+        Assert.False(OverlayDefinition.ValidId("combined-chat\n")); Assert.False(AssetIdentity.IsValid(new string('a', 64) + "\n"));
+        Assert.Throws<ArgumentException>(() => new ChatSettings { Font = "Arial\n" }.Validate());
+        Assert.Throws<ArgumentException>(() => new ChatSettings { PlatformColors = new() { ["twitch"] = "#abcdef\n", ["youtube"] = "#abcdef", ["kick"] = "#abcdef", ["rumble"] = "#abcdef" } }.Validate());
+    }
+
     public static TheoryData<string, byte[]> Signatures
     {
         get

@@ -1601,6 +1601,47 @@
               "null",
               "string"
             ]
+          },
+          "parts": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/EventMessagePart"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "EventMessagePart": {
+        "required": [
+          "kind",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "zeroWidth": {
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false

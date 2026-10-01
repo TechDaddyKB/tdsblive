@@ -8,6 +8,9 @@ html, body, #root { width: 100%; height: 100%; margin: 0; background: transparen
 .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .badge { font-size: .6em; padding: 2px 4px; margin-right: 4px; border: 1px solid currentColor; border-radius: 4px; }
 .badge-image { width: 1em; height: 1em; object-fit: contain; vertical-align: middle; margin-right: 4px; }
+.chat-emote { height: 1.4em; max-width: 4em; object-fit: contain; vertical-align: middle; }
+.chat-gif { display: inline-block; width: auto; max-width: min(240px, 100%); max-height: 160px; vertical-align: middle; object-fit: contain; }
+.chat-emote.zero-width { margin-left: -1.4em; }
 time { font-size: .65em; opacity: .8; margin-right: 8px; }
 .streamer-chat { background: #111820; color: #eef2f6; }
 .streamer-chat header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #536070; font: 14px Arial, sans-serif; }

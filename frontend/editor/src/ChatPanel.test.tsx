@@ -5,6 +5,17 @@ import { defaultSettings, type OverlayDefinition } from '../../overlay-runtime/s
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const definition: OverlayDefinition = { id: 'combined-chat', name: 'Chat', width: 1920, height: 1080, background: 'transparent', version: 1, chat: defaultSettings };
+it('encodes server-supplied token identifiers without allowing API traversal', async () => {
+  const id = '../../rumble/disconnect?x=1';
+  const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
+    if (url === '/api/auth/csrf') return Response.json({ requestToken: 'synthetic-csrf' });
+    if (url.endsWith('/tokens')) return Response.json([{ id, revoked: false, expiresAt: '2026-11-01T00:00:00Z' }]);
+    if (init?.method === 'DELETE') return new Response(null, { status: 404 });
+    return Response.json(definition);
+  }); vi.stubGlobal('fetch', fetcher); render(<ChatPanel />); await screen.findByLabelText('OBS overlay URL');
+  fireEvent.click(screen.getByText('Manage viewing links')); fireEvent.click(await screen.findByText('Revoke viewing link')); await screen.findByText('Unable to revoke link.');
+  expect(fetcher.mock.calls.find(call => call[1]?.method === 'DELETE')![0]).toBe(`/api/overlays/combined-chat/tokens/${encodeURIComponent(id)}`);
+});
 function mockHost() {
   const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
     if (url === '/api/auth/csrf') return Response.json({ requestToken: 'synthetic-csrf' });

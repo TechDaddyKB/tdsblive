@@ -1638,6 +1638,15 @@ export interface components {
         };
         EventMessage: {
             text: null | string;
+            parts?: null | components["schemas"]["EventMessagePart"][];
+        };
+        EventMessagePart: {
+            kind: string;
+            text: string;
+            imageUrl?: null | string;
+            source?: null | string;
+            /** @default false */
+            zeroWidth: boolean;
         };
         EventMetrics: {
             /** Format: int64 */

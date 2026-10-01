@@ -9,7 +9,12 @@ vi.mock('./ChatConnection', () => ({ ChatConnection: class {
   start() { callbacks.settings({ id: 'combined-chat', name: 'Streamer Chat', chat: defaultSettings }); callbacks.status('Connected'); }
   stop() {}
 } }));
-afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); });
+afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); vi.unstubAllGlobals(); });
+it('rejects a font asset path that could target a different API route', () => {
+  const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher); render(<CombinedChat id="combined-chat" />);
+  act(() => callbacks.settings({ chat: { ...defaultSettings, fontAssetId: '../api/rumble/disconnect' } }));
+  expect(fetcher).not.toHaveBeenCalled();
+});
 it('renders badge artwork and falls back safely when missing, unsafe or unavailable', () => {
   render(<CombinedChat id="combined-chat" />);
   act(() => callbacks.events([{ ...message, user: { badgeDetails: [

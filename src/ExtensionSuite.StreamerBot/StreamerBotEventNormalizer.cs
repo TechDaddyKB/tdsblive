@@ -64,7 +64,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         {
             OccurredAt = occurredAt, ReceivedAt = receivedAt.ToUniversalTime(), Source = "streamerbot", Platform = platform,
             Type = type, NativeType = category + "." + nativeType, NativeId = nativeId, DedupeKey = dedupe,
-            User = eventUser, Message = text is null ? null : new(text), Monetary = money, Raw = raw, Provenance = provenance,
+            User = eventUser, Message = ChatMediaNormalizer.Normalize(text, data, platform), Monetary = money, Raw = raw, Provenance = provenance,
             CorrelationId = Guid.TryParse(String(bridgeData["tdsbliveCorrelationId"]), out var correlation) ? correlation : null,
             BridgePath = [.. path, "tdsblive"]
         };

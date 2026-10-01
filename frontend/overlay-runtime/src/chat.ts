@@ -10,7 +10,7 @@ export interface OverlayDefinition extends WireOverlayDefinition { id: string; n
 export interface ChatEvent {
   id: string; type: string; platform: Platform; occurredAt: string; receivedAt: string; provenance: 'live' | 'simulation' | 'replay';
   user?: { platformUserId?: string | null; login?: string | null; displayName?: string | null; avatarUrl?: string | null; badges?: string[] | null; isBot?: boolean; badgeDetails?: { name: string; imageUrl?: string | null; version?: string | null }[] | null } | null;
-  message?: { text?: string | null } | null;
+  message?: { text?: string | null; parts?: { kind: string; text: string; imageUrl?: string | null; source?: string | null; zeroWidth?: boolean }[] | null } | null;
 }
 export const defaultSettings: ChatSettings = {
   platforms: [...platforms], showPlatformIcon: true, showAvatar: true, showBadges: true, showUsername: true, showMessage: true, showTimestamp: false,

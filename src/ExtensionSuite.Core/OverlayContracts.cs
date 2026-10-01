@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace ExtensionSuite.Core;
 
-public sealed record ChatSettings
+public sealed partial record ChatSettings
 {
     public static readonly string[] SupportedPlatforms = ["twitch", "youtube", "kick", "rumble"];
     public string[] Platforms { get; init; } = [.. SupportedPlatforms];
@@ -33,14 +33,18 @@ public sealed record ChatSettings
     {
         if (Platforms is null || Platforms.Length > 4 || Platforms.Distinct().Count() != Platforms.Length || Platforms.Any(p => !SupportedPlatforms.Contains(p)) ||
             MessageDurationSeconds is < 1 or > 86400 || MaximumMessages is < 1 or > 500 || FontSize is < 8 or > 120 ||
-            !double.IsFinite(BackgroundOpacity) || BackgroundOpacity is < 0 or > 1 || Font is null || !Regex.IsMatch(Font, @"^[\w -]{1,64}$") ||
+            !double.IsFinite(BackgroundOpacity) || BackgroundOpacity is < 0 or > 1 || Font is null || !FontPattern().IsMatch(Font) ||
             AnimationIn is not ("none" or "fade" or "slide") || AnimationOut is not ("none" or "fade" or "slide") ||
             FontAssetId is not null && !AssetIdentity.IsValid(FontAssetId)) throw new ArgumentException("Invalid chat settings.");
-        if (PlatformColors is null || PlatformColors.Count != 4 || SupportedPlatforms.Any(p => !PlatformColors.TryGetValue(p, out var c) || c is null || !Regex.IsMatch(c, "^#[0-9a-fA-F]{6}$")))
+        if (PlatformColors is null || PlatformColors.Count != 4 || SupportedPlatforms.Any(p => !PlatformColors.TryGetValue(p, out var c) || c is null || !ColorPattern().IsMatch(c)))
             throw new ArgumentException("Invalid platform colors.");
         foreach (var values in new[] { IgnoredUsers, IgnoredPrefixes, BotUsers })
             if (values is null || values.Length > 128 || values.Any(v => string.IsNullOrWhiteSpace(v) || v.Length > 128)) throw new ArgumentException("Invalid chat filters.");
     }
+    [GeneratedRegex(@"^[\w -]{1,64}\z", RegexOptions.NonBacktracking, 100)]
+    private static partial Regex FontPattern();
+    [GeneratedRegex(@"^#[0-9a-fA-F]{6}\z", RegexOptions.NonBacktracking, 100)]
+    private static partial Regex ColorPattern();
 
     public bool Accepts(CanonicalEvent item)
     {
@@ -52,7 +56,7 @@ public sealed record ChatSettings
     }
 }
 
-public sealed record OverlayDefinition
+public sealed partial record OverlayDefinition
 {
     public string Id { get; init; } = "combined-chat";
     public string Name { get; init; } = "Combined Chat";
@@ -61,7 +65,9 @@ public sealed record OverlayDefinition
     public string Background { get; init; } = "transparent";
     public int Version { get; init; } = 1;
     public ChatSettings Chat { get; init; } = new();
-    public static bool ValidId(string id) => Regex.IsMatch(id, "^[a-z0-9][a-z0-9-]{0,63}$");
+    public static bool ValidId(string id) => IdPattern().IsMatch(id);
+    [GeneratedRegex(@"^[a-z0-9][a-z0-9-]{0,63}\z", RegexOptions.NonBacktracking, 100)]
+    private static partial Regex IdPattern();
     public void Validate()
     {
         if (Id is null || !ValidId(Id) || string.IsNullOrWhiteSpace(Name) || Name.Length > 128 || Width is < 1 or > 7680 || Height is < 1 or > 7680 ||
@@ -70,9 +76,11 @@ public sealed record OverlayDefinition
     }
 }
 
-public static class AssetIdentity
+public static partial class AssetIdentity
 {
-    public static bool IsValid(string id) => Regex.IsMatch(id, "^[0-9a-f]{64}$");
+    public static bool IsValid(string id) => HashPattern().IsMatch(id);
+    [GeneratedRegex(@"^[0-9a-f]{64}\z", RegexOptions.NonBacktracking, 100)]
+    private static partial Regex HashPattern();
 }
 
 public sealed record AssetInfo(string Id, string Filename, string Mime, long Size, string Hash, DateTimeOffset UploadedAt, bool Sanitized, string? License);
