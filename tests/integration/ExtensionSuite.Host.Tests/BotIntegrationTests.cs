@@ -66,7 +66,7 @@ public sealed class BotIntegrationTests
         using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         var run = adapter.RunAsync((_, _) => Task.CompletedTask, lifetime.Token);
         await Until(() => adapter.State.FailureKind == failure);
-        Assert.Equal("authenticationFailed", adapter.State.State); Assert.Empty(adapter.Discovery.Actions);
+        Assert.Equal("authenticationFailed", adapter.State.State); Assert.True(adapter.State.AuthenticationRequired); Assert.Empty(adapter.Discovery.Actions);
         await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
     }
 
@@ -302,6 +302,8 @@ public sealed class BotIntegrationTests
         Assert.Equal("tester", result.Event.User!.DisplayName);
         Assert.DoesNotContain("synthetic-private-value", result.Event.Raw!.ToJsonString());
         inner["tdsbliveOrigin"] = "tdsblive"; envelope["data"] = inner;
+        Assert.Equal("bridgeLoop", normalizer.Normalize(envelope, DateTimeOffset.UtcNow).Classification);
+        inner["tdsbliveOrigin"] = "TDSBLIVE";
         Assert.Equal("bridgeLoop", normalizer.Normalize(envelope, DateTimeOffset.UtcNow).Classification);
         Assert.Null(normalizer.Normalize(new JsonObject { ["event"] = "invalid" }, DateTimeOffset.UtcNow).Event);
     }

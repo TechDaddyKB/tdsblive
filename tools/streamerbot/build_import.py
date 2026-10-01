@@ -27,9 +27,12 @@ def actions():
 def build():
     return {'meta': {'name': 'TDSBLive G03 integrations', 'author': 'camarokris', 'version': '0.3.0',
         'description': 'Explicit bootstrap, isolated qualification probe, and forwarding template. No platform automation is bound by default.',
-        'autoRunAction': None, 'minimumVersion': '1.0.7'}, 'data': {'actions': actions(),
+        'autoRunAction': None, 'minimumVersion': None}, 'data': {'actions': actions(),
         'queues': [{'id': identifier('queue'), 'name': 'TDSBLive', 'blocking': False}], 'commands': [], 'websocketServers': [], 'websocketClients': [], 'timers': []},
-        'version': 10, 'exportedFrom': '1.0.7', 'minimumVersion': '1.0.7'}
+        # This is the import-format floor, not a claim of qualified runtime support.
+        # Runtime qualification remains Streamer.bot 1.0.7. An author version gate
+        # rejects the installed 1.0.7 build despite displaying the same version.
+        'version': 10, 'exportedFrom': '1.0.7', 'minimumVersion': '0.2.4-beta.6'}
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(); parser.add_argument('output', type=Path); args = parser.parse_args()

@@ -65,6 +65,9 @@ public sealed class BotEndpointTests
         Assert.Equal(1234, arguments["amountMinorUnits"]!.GetValue<long>());
         Assert.Equal("tdsblive.rumble.rant", TriggerArgumentMapper.EventNames[item.Type]);
         Assert.DoesNotContain("not forwarded", arguments.ToJsonString());
+        var hops = Enumerable.Range(0, 15).Select(index => "hop" + index).Append("TDSBLIVE").ToArray();
+        Assert.Equal(16, JsonNode.Parse(TriggerArgumentMapper.Map(item with { BridgePath = hops })["tdsbliveBridgePath"]!.GetValue<string>())!.AsArray().Count);
+        Assert.Throws<ArgumentException>(() => TriggerArgumentMapper.Map(item with { BridgePath = Enumerable.Repeat("unrelated", 16).ToArray() }));
     }
 
     private static async Task Protect(HttpClient client)

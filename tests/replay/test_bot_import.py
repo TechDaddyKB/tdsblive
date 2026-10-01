@@ -71,7 +71,9 @@ class BotImportTests(unittest.TestCase):
             self.assertTrue(all(not action['triggers'] for action in actions))
             self.assertFalse(document['data']['commands'])
             self.assertFalse(document['data']['websocketServers'])
-            self.assertEqual(document['meta']['minimumVersion'], '1.0.7')
+            self.assertIsNone(document['meta']['minimumVersion'])
+            self.assertEqual(document['minimumVersion'], '0.2.4-beta.6')
+            self.assertEqual(document['exportedFrom'], '1.0.7')
 
 
 if __name__ == '__main__':

@@ -236,7 +236,7 @@ Prerequisites: G02
 
 ### Blockers
 
-- Bootstrap import acceptance is verified through the repeatable `install_native.py` operator CLI importing the generated `.sb` into the stopped native 1.0.7 action store, followed by registration, trigger/action execution and inspector qualification. Graphical dialog behavior and future native schema versions remain explicitly unverified compatibility limitations; this does not claim graphical importer evidence.
+- Native CLI import, registration and trigger execution passed. The graphical importer rejected the initial bundle minimum-version gate despite displaying matching 1.0.7 versions. The regenerated bundle removes the optional author gate and uses the established import-format floor; successful graphical import is awaiting operator verification. Runtime qualification remains 1.0.7 only.
 - Final importer/Windows cleanup revision and protected-main merge remain pending. [PR #4](https://github.com/camarokris/tdsblive/pull/4) contains the implementation; G03 remains In progress until those checks pass.
 
 <a id="g04"></a>

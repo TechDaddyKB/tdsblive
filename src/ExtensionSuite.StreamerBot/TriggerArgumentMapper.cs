@@ -24,7 +24,7 @@ public static class TriggerArgumentMapper
         return new JsonObject
         {
             ["tdsbliveEventId"] = item.Id.ToString(), ["tdsbliveCorrelationId"] = (item.CorrelationId ?? item.Id).ToString(),
-            ["tdsbliveOrigin"] = "tdsblive", ["tdsbliveBridgePath"] = JsonSerializer.Serialize(item.BridgePath.Append("tdsblive").Distinct().ToArray()),
+            ["tdsbliveOrigin"] = "tdsblive", ["tdsbliveBridgePath"] = JsonSerializer.Serialize(item.BridgePath.Append("tdsblive").Distinct(StringComparer.OrdinalIgnoreCase).ToArray()),
             ["tdsbliveProvenance"] = item.Provenance.ToString().ToLowerInvariant(), ["tdsblivePlatform"] = item.Platform,
             ["tdsbliveType"] = item.Type, ["tdsbliveNativeType"] = item.NativeType,
             ["tdsbliveOccurredAt"] = item.OccurredAt.ToString("O"), ["tdsbliveNativeId"] = item.NativeId,

@@ -43,6 +43,7 @@ function inspectorId(id: string): string {
 export const bots = {
   overview: () => request<BotOverview>('/api/integrations'),
   discovery: () => request<Discovery>('/api/integrations/streamerbot/discovery'),
+  refreshDiscovery: () => write<Discovery>('/api/integrations/streamerbot/discovery/refresh', 'POST'),
   inspector: (filter: string) => request<InspectorItem[]>(`/api/inspector?filter=${encodeURIComponent(filter)}`),
   fixture: (id: string) => request<unknown>(`/api/inspector/${inspectorId(id)}/fixture`),
   replay: (id: string) => write<{ liveActionsAllowed: boolean }>(`/api/inspector/${inspectorId(id)}/replay`, 'POST', { persist: false }),

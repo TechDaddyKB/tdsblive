@@ -61,7 +61,9 @@ public sealed class StreamerBotConnection(IntegrationConfiguration configuration
             catch (Exception error) when (error is BotRequestException or WebSocketException or JsonException or InvalidOperationException or OperationCanceledException)
             {
                 var kind = error is BotRequestException requestError ? requestError.Kind : "connectionFailure";
-                Volatile.Write(ref state, new(kind == "authenticationFailed" || kind == "missingCredential" ? "authenticationFailed" : "reconnecting", FailureKind: kind));
+                var observed = State;
+                Volatile.Write(ref state, new(kind == "authenticationFailed" || kind == "missingCredential" ? "authenticationFailed" : "reconnecting",
+                    observed.Version, observed.AuthenticationRequired, kind));
             }
             finally { Volatile.Write(ref session, null); await current.DisposeAsync(); }
             var seconds = Math.Min(configuration.MaximumReconnectDelaySeconds, configuration.ReconnectDelaySeconds * Math.Pow(2, Math.Min(attempt++, 8)));

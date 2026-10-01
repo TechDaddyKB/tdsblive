@@ -2,13 +2,14 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { BotPanel } from './BotPanel';
 import { api, bots } from './api';
-vi.mock('./api', () => ({ api: { configuration: vi.fn(), saveConfiguration: vi.fn() }, bots: { overview: vi.fn(), discovery: vi.fn(), inspector: vi.fn(), fixture: vi.fn(), replay: vi.fn() } }));
+vi.mock('./api', () => ({ api: { configuration: vi.fn(), saveConfiguration: vi.fn() }, bots: { overview: vi.fn(), discovery: vi.fn(), refreshDiscovery: vi.fn(), inspector: vi.fn(), fixture: vi.fn(), replay: vi.fn() } }));
 beforeEach(() => {
   vi.mocked(bots.overview).mockResolvedValue({ streamerBot: { state: 'connected', version: 'test' }, speakerBot: { state: 'disabled' } });
   vi.mocked(bots.discovery).mockResolvedValue({ actions: [{ id: 'action-id', name: 'test action', enabled: false }], codeTriggers: [{ name: 'Probe', eventName: 'tdsblive.test' }], events: {} });
   vi.mocked(bots.inspector).mockResolvedValue([{ id: 'test-id', classification: 'normalized', event: { nativeType: 'Twitch.ChatMessage', provenance: 'simulation' } }]);
   vi.mocked(bots.fixture).mockResolvedValue({ synthetic: true });
   vi.mocked(bots.replay).mockResolvedValue({ liveActionsAllowed: false });
+  vi.mocked(bots.refreshDiscovery).mockResolvedValue({ actions: [], codeTriggers: [{ name: 'New trigger', eventName: 'tdsblive.new' }], events: {} });
   vi.mocked(api.configuration).mockResolvedValue({ streamerBot: { host: '127.0.0.1', port: 8080, enabled: false } });
   vi.mocked(api.saveConfiguration).mockResolvedValue({ restartRequired: true });
 });
@@ -25,6 +26,8 @@ it('shows live state, discovers actions, searches, pauses and resumes', async ()
   fireEvent.click(screen.getByText('Toggle Streamer.bot connection'));
   expect(await screen.findByText(/Restart TDSBLive/)).toBeVisible();
   expect(api.saveConfiguration).toHaveBeenCalledWith(expect.objectContaining({ streamerBot: expect.objectContaining({ enabled: true }) }));
+  fireEvent.click(screen.getByText('Refresh discovery'));
+  expect(await screen.findByText(/tdsblive.new/)).toBeInTheDocument();
 });
 it('inspects samples and replays without live automation', async () => {
   render(<BotPanel />); fireEvent.click(await screen.findByText('Inspect sample'));
@@ -51,6 +54,9 @@ it('reports errors without exposing remote response bodies', async () => {
   fireEvent.click(screen.getByText('Toggle Speaker.bot connection'));
   expect(await screen.findByText('Unable to save connection settings.')).toBeVisible();
   expect(screen.queryByText('private body')).not.toBeInTheDocument();
+  vi.mocked(bots.refreshDiscovery).mockRejectedValue(new Error('private body'));
+  fireEvent.click(screen.getByText('Refresh discovery'));
+  expect(await screen.findByText('Unable to refresh discovery.')).toBeVisible();
 });
 it('handles sample, replay and clipboard failures', async () => {
   vi.mocked(bots.fixture).mockRejectedValueOnce(new Error());

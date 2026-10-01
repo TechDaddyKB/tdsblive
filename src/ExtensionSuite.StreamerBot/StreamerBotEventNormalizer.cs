@@ -26,7 +26,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         }
         var bridgeData = data;
         var path = Strings(data["tdsbliveBridgePath"]);
-        if (path.Contains("tdsblive", StringComparer.OrdinalIgnoreCase) || String(data["tdsbliveOrigin"]) == "tdsblive")
+        if (path.Contains("tdsblive", StringComparer.OrdinalIgnoreCase) || string.Equals(String(data["tdsbliveOrigin"]), "tdsblive", StringComparison.OrdinalIgnoreCase))
             return new(null, "bridgeLoop", "returnedToOrigin");
         if (path.Length >= 16) return new(null, "bridgeLoop", "bridgePathLimit");
         if (category.Equals("General", StringComparison.OrdinalIgnoreCase) && nativeType == "Custom" && String(data["tdsbliveForwardedSource"]) is { } forwarded)

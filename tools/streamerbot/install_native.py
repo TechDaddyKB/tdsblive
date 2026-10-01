@@ -15,11 +15,13 @@ from pathlib import Path
 import socket
 import subprocess
 import sys
+import tempfile
 from uuid import UUID, uuid5
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools'))
 from rumble_evidence import safe_read, scan_bytes
+from build_import import build
 
 NAMESPACE = UUID('90f0339e-036b-446b-a6fa-07abc3c783d8')
 OWN_ACTIONS = {str(uuid5(NAMESPACE, name)) for name in ['TDSBLive bootstrap', 'TDSBLive qualification probe', 'TDSBLive explicit forwarder']}
@@ -47,6 +49,7 @@ def load_bundle(path):
             raise ValueError('Bundle source does not match the checked-out TDSBLive templates')
     queue = document.get('data', {}).get('queues', [])
     if queue != [{'id': str(uuid5(NAMESPACE, 'queue')), 'name': 'TDSBLive', 'blocking': False}]: raise ValueError('Unexpected bundle queue')
+    if document != build(): raise ValueError('Bundle definitions do not match the reviewed generated import')
     return document
 
 
@@ -82,14 +85,16 @@ def install(bundle, data_directory, port, bind_probe):
     native['queues'].extend(q for q in imported['data']['queues'] if q['id'] not in queue_ids)
     backup = directory / ('actions.tdsblive-backup-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ') + '.json')
     with os.fdopen(os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as stream: stream.write(original)
-    temporary = directory / 'actions.tdsblive-import.tmp'
+    temporary = None
     try:
-        with temporary.open('x', encoding='utf-8-sig') as stream:
+        with tempfile.NamedTemporaryFile(mode='w', dir=directory, prefix='actions.tdsblive-', suffix='.tmp',
+                                         encoding='utf-8-sig', delete=False) as stream:
+            temporary = Path(stream.name)
             json.dump(native, stream, ensure_ascii=False, indent=2)
             stream.flush(); os.fsync(stream.fileno())
         os.replace(temporary, target)
     finally:
-        temporary.unlink(missing_ok=True)
+        if temporary is not None: temporary.unlink(missing_ok=True)
     print('Imported three TDSBLive actions; preserved unrelated actions and created a private backup.')
 
 

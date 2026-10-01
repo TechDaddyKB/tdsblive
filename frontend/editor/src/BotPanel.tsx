@@ -45,13 +45,18 @@ export function BotPanel() {
     try { await bots.replay(id); setNotice('Replay published locally without persistence or live automation.'); }
     catch { setNotice('Unable to replay this event.'); }
   }
+  async function refreshDiscovery() {
+    try { setDiscovery(await bots.refreshDiscovery()); setNotice('Discovery refreshed.'); }
+    catch { setNotice('Unable to refresh discovery.'); }
+  }
   async function copy() {
     const text = JSON.stringify(selected, null, 2);
     try {
       if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
       else {
         const area = document.createElement('textarea'); area.value = text; document.body.append(area); area.select();
-        const copied = document.execCommand('copy'); area.remove(); if (!copied) throw new Error('Copy unavailable');
+        try { if (!document.execCommand('copy')) throw new Error('Copy unavailable'); }
+        finally { area.remove(); }
       }
       setNotice('Sample copied. Review before sharing.');
     } catch { setNotice('Copy unavailable. Select the displayed sample or save a fixture.'); }
@@ -65,6 +70,7 @@ export function BotPanel() {
     </div>)}
     <p>Host, port, endpoint, reconnect bounds, and selected action GUIDs are configured through the configuration API. Live execution is opt-in.</p>
     <details><summary>Discovered actions and triggers</summary>
+      <button onClick={() => { void refreshDiscovery(); }}>Refresh discovery</button>
       <ul>{discovery?.actions.map(action => <li key={action.id}>{action.name} — {action.id} {action.enabled ? '' : '(disabled)'}</li>)}</ul>
       <ul>{discovery?.codeTriggers.map(trigger => <li key={trigger.eventName}>{trigger.name} — {trigger.eventName}</li>)}</ul>
     </details>
