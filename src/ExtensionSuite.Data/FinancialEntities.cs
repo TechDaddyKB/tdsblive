@@ -8,6 +8,17 @@ public sealed class FinancialProjectionReceipt
     public long ProcessedAtTicks { get; set; }
 }
 
+public sealed class GiftAccountingClaim
+{
+    public required string Platform { get; set; }
+    public required string KeyHash { get; set; }
+    public Guid OwnerContributionId { get; set; }
+    public required string Role { get; set; }
+    public required string Tier { get; set; }
+    public string? SenderKey { get; set; }
+    public long Quantity { get; set; }
+}
+
 public sealed class Supporter
 {
     public Guid Id { get; set; }
@@ -50,6 +61,10 @@ public sealed class FinancialContribution
     public string? PendingReason { get; set; }
     public string? StreamId { get; set; }
     public string? GiftCorrelationKey { get; set; }
+    public string? GiftScopeKey { get; set; }
+    public string? GiftSenderKey { get; set; }
+    public string GiftRole { get; set; } = "none";
+    public string GiftTier { get; set; } = "";
     public required string AccountingState { get; set; }
     public required string MetadataJson { get; set; }
     public int Version { get; set; }

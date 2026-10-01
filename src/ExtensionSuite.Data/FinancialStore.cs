@@ -47,18 +47,16 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
         if (item.Provenance != EventProvenance.Live || item.Support is not { } support) return false;
         support.Validate();
         ValidateRateDate(rate, item.OccurredAt);
-        // Gift accounting is gated until the correlation strategy establishes purchase evidence.
-        var gated = support.GatedReason ?? (support.Kind == "gift" ?
-            item.Platform == "rumble" ? "rumble_gift_unverified" : "gift_correlation_pending" : null);
-        var recipient = support.GiftRole == "recipient";
-        var valuation = gated is not null || recipient
-            ? new SupportValuation(null, ValuationMethods.Unknown, false, PendingReason: gated ?? "gift_recipient_notification")
-            : SupportValuator.Value(support.NativeMoney, support.Quantity, nominalUsdMinorPerUnit, rate);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         if (await db.FinancialEvents.AnyAsync(row => row.EventId == item.Id || (row.Platform == item.Platform &&
             (row.DedupeKey == item.DedupeKey || (item.NativeId != null && row.NativeEventId == item.NativeId))), cancellationToken))
             return false;
+        var contributionId = Guid.CreateVersion7();
+        var accounting = await GiftAccounting.DecideAsync(db, item, contributionId, cancellationToken);
+        var valuation = accounting.State != "counted"
+            ? new SupportValuation(null, ValuationMethods.Unknown, false, PendingReason: accounting.Reason)
+            : SupportValuator.Value(support.NativeMoney, support.Quantity, nominalUsdMinorPerUnit, rate);
         // Display names are labels, never identity keys. Unknown givers stay event-scoped.
         var key = item.User?.PlatformUserId is { Length: > 0 } id ? "id:" + id :
             item.User?.Login is { Length: > 0 } login ? "login:" + login.ToLowerInvariant() : "event:" + item.DedupeKey;
@@ -73,7 +71,7 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
         }
         db.FinancialEvents.Add(new FinancialContribution
         {
-            Id = Guid.CreateVersion7(), EventId = item.Id, SupporterId = identity.SupporterId, IdentityId = identity.Id,
+            Id = contributionId, EventId = item.Id, SupporterId = identity.SupporterId, IdentityId = identity.Id,
             Source = item.Source, Platform = item.Platform, Type = support.Kind, NativeEventId = item.NativeId,
             DedupeKey = item.DedupeKey, OccurredAtTicks = item.OccurredAt.UtcTicks, Quantity = support.Quantity,
             NativeAmountMinor = support.NativeMoney?.AmountMinor, NativeCurrency = support.NativeMoney?.Currency,
@@ -81,9 +79,11 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
             ValuationMethod = valuation.Method, Estimated = valuation.Estimated,
             FxRate = valuation.FxRate?.ToString(CultureInfo.InvariantCulture), FxRateDay = valuation.FxRateDate?.DayNumber,
             FxProvider = valuation.FxProvider, PendingReason = valuation.PendingReason, StreamId = item.Stream?.Id,
-            GiftCorrelationKey = support.GiftCorrelationKey, AccountingState = gated is not null ? "gated" : recipient ? "excluded" : "counted",
+            GiftCorrelationKey = support.GiftCorrelationKey, AccountingState = accounting.State,
+            GiftRole = support.GiftRole, GiftTier = support.Tier, GiftScopeKey = support.GiftScopeKey, GiftSenderKey = GiftAccounting.SenderKey(item),
             MetadataJson = JsonSerializer.Serialize(new { support.Tier, support.GiftRole, support.ReportedAmountMajor, support.ReportedCurrency,
-                support.GiftRecipientKeys, userPlatformId = item.User?.PlatformUserId, userDisplayName = item.User?.DisplayName,
+                support.GiftRecipientKeys, support.GiftScopeKey, support.GiftPeriodStart, support.GiftPeriodEnd,
+                userPlatformId = item.User?.PlatformUserId, userDisplayName = item.User?.DisplayName,
                 userLogin = item.User?.Login, message = item.Message?.Text }), Version = 1
         });
         await db.SaveChangesAsync(cancellationToken);

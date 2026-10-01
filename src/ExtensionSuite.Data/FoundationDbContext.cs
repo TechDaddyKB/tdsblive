@@ -22,6 +22,7 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
     public DbSet<StoredValuationRule> ValuationRules => Set<StoredValuationRule>();
     public DbSet<FinancialAudit> FinancialAudits => Set<FinancialAudit>();
     public DbSet<FinancialProjectionReceipt> FinancialProjectionReceipts => Set<FinancialProjectionReceipt>();
+    public DbSet<GiftAccountingClaim> GiftAccountingClaims => Set<GiftAccountingClaim>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +31,12 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
             entity.HasKey(item => item.EventId);
             entity.HasIndex(item => item.State);
             entity.HasOne<StoredEvent>().WithMany().HasForeignKey(item => item.EventId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<GiftAccountingClaim>(entity =>
+        {
+            entity.HasKey(item => new { item.Platform, item.KeyHash });
+            entity.HasIndex(item => item.OwnerContributionId);
+            entity.HasOne<FinancialContribution>().WithMany().HasForeignKey(item => item.OwnerContributionId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<Supporter>().HasKey(item => item.Id);
         modelBuilder.Entity<SupporterIdentity>(entity =>
@@ -49,6 +56,8 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
             entity.HasIndex(item => item.SupporterId);
             entity.HasIndex(item => item.Platform);
             entity.HasIndex(item => new { item.StreamId, item.OccurredAtTicks });
+            entity.Property(item => item.GiftRole).HasDefaultValue("none");
+            entity.HasIndex(item => new { item.Platform, item.GiftScopeKey, item.GiftCorrelationKey, item.GiftRole });
             entity.HasOne<Supporter>().WithMany().HasForeignKey(item => item.SupporterId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<SupporterIdentity>().WithMany().HasForeignKey(item => item.IdentityId).OnDelete(DeleteBehavior.Restrict);
         });

@@ -61,6 +61,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
             else dedupe = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(new
             {
                 platform, nativeType, occurredAt, support.Quantity, support.NativeMoney, support.Tier, support.GiftRole, support.GiftCorrelationKey, support.GiftRecipientKeys,
+                support.GiftScopeKey, support.GiftPeriodStart, support.GiftPeriodEnd,
                 userId = String(user?["id"]), userLogin = String(user?["login"]), recipient = String((data["recipient"] as JsonObject)?["id"]),
                 broadcaster = String((data["broadcaster"] as JsonObject)?["id"]), broadcast = String((data["broadcast"] as JsonObject)?["id"]),
                 expiresAt = String(data["expiresAt"])

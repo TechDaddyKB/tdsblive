@@ -53,6 +53,8 @@ public sealed class SupportPayloadTests
         Assert.Equal(new[] { "id:recipient-1" }, gift.GiftRecipientKeys);
         data.Remove("fromCommunitySubGift");
         Assert.Equal("gift_origin_unavailable", SupportPayloadNormalizer.Normalize("twitch", "GiftSub", data, false)!.GatedReason);
+        data["fromCommunitySubGift"] = false;
+        Assert.Equal("gift_origin_conflict", SupportPayloadNormalizer.Normalize("twitch", "GiftSub", data, false)!.GatedReason);
     }
 
     [Fact]
@@ -63,5 +65,20 @@ public sealed class SupportPayloadTests
         Assert.Equal("quantity_unavailable", missing.GatedReason);
         var actual = SupportPayloadNormalizer.Normalize("twitch", "Cheer", new JsonObject { ["bits"] = 25 }, false)!;
         Assert.Equal(25, actual.Quantity);
+    }
+
+    [Fact]
+    public void GiftPeriodsRequireExplicitTimezoneAndPrimeRulesRemainDistinct()
+    {
+        var data = JsonNode.Parse("{\"subscribedAt\":\"2026-01-05T12:00:00\",\"expiresAt\":\"2026-02-05T12:00:00Z\",\"recipient\":{\"id\":\"one\"}}")!.AsObject();
+        var unknown = SupportPayloadNormalizer.Normalize("kick", "GiftSubscription", data, false)!;
+        Assert.Null(unknown.GiftPeriodStart);
+        data["subscribedAt"] = "2026-01-05T14:00:00+02:00";
+        var dated = SupportPayloadNormalizer.Normalize("kick", "GiftSubscription", data, false)!;
+        Assert.Equal(new DateTimeOffset(2026, 1, 5, 12, 0, 0, TimeSpan.Zero), dated.GiftPeriodStart);
+        var prime = SupportPayloadNormalizer.Normalize("twitch", "Sub", new JsonObject { ["isPrime"] = true, ["subTier"] = "1000" }, false)!;
+        Assert.Equal("prime", prime.Tier);
+        var gifted = SupportPayloadNormalizer.Normalize("twitch", "ReSub", new JsonObject { ["isGift"] = true }, false)!;
+        Assert.Equal("recipient", gifted.GiftRole);
     }
 }
