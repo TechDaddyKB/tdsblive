@@ -9,6 +9,7 @@ public sealed record EventUser(string? PlatformUserId = null, string? Login = nu
 public sealed record EventMessage(string? Text);
 public sealed record EventMoney(long? MinorUnits, string? Currency, string ValuationKind);
 public sealed record EventStream(string? Id, string? Title);
+public sealed record EventMetrics(long? Value = null, string? Health = null);
 
 public sealed record CanonicalEvent
 {
@@ -24,6 +25,7 @@ public sealed record CanonicalEvent
     public EventMessage? Message { get; init; }
     public EventMoney? Monetary { get; init; }
     public EventStream? Stream { get; init; }
+    public EventMetrics? Metrics { get; init; }
     public required string DedupeKey { get; init; }
     public JsonObject? Raw { get; init; }
     public EventProvenance Provenance { get; init; }

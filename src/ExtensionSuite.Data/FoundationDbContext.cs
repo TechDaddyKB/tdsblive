@@ -9,9 +9,18 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
     public DbSet<OutboxEntry> Outbox => Set<OutboxEntry>();
     public DbSet<StoredConfiguration> Configurations => Set<StoredConfiguration>();
     public DbSet<StoredLog> Logs => Set<StoredLog>();
+    public DbSet<RumbleSnapshotState> RumbleStates => Set<RumbleSnapshotState>();
+    public DbSet<RumbleTriggerDelivery> RumbleDeliveries => Set<RumbleTriggerDelivery>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<RumbleSnapshotState>().HasKey(item => new { item.Context, item.Provenance });
+        modelBuilder.Entity<RumbleTriggerDelivery>(entity =>
+        {
+            entity.HasKey(item => item.EventId);
+            entity.HasOne<StoredEvent>().WithOne().HasForeignKey<RumbleTriggerDelivery>(item => item.EventId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(item => new { item.State, item.CreatedAtTicks });
+        });
         modelBuilder.Entity<StoredEvent>(entity =>
         {
             entity.HasKey(item => item.Id);
@@ -33,6 +42,19 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
             entity.HasIndex(item => new { item.DeliveredAtTicks, item.CreatedAtTicks });
         });
     }
+}
+
+public sealed class RumbleSnapshotState
+{
+    public required string Context { get; set; }
+    public required string Provenance { get; set; }
+    public required string Json { get; set; }
+}
+public sealed class RumbleTriggerDelivery
+{
+    public Guid EventId { get; set; }
+    public long CreatedAtTicks { get; set; }
+    public required string State { get; set; }
 }
 
 public sealed class StoredConfiguration

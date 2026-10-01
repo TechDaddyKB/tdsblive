@@ -6,7 +6,8 @@ public class CPHInline
     {
         string value;
         Guid testId;
-        if (!CPH.TryGetArg<string>("tdsbliveTestId", out value) || !Guid.TryParse(value, out testId)) return false;
+        if (!CPH.TryGetArg<string>("tdsbliveTestId", out value) && !CPH.TryGetArg<string>("tdsbliveEventId", out value)) return false;
+        if (!Guid.TryParse(value, out testId)) return false;
         // This action only changes a namespaced test marker and emits a synthetic event.
         // It never sends chat, controls OBS, speaks, or contributes to financial totals.
         CPH.SetGlobalVar("tdsbliveG03LastTestId", testId.ToString(), true);

@@ -511,6 +511,7 @@
         "type": "Project",
         "dependencies": {
           "ExtensionSuite.Core": "[0.1.0, )",
+          "ExtensionSuite.Rumble": "[0.1.0, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )",
           "System.Security.Cryptography.ProtectedData": "[10.0.12, )"
         }

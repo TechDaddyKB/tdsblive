@@ -31,7 +31,9 @@ public static class TriggerArgumentMapper
             ["userId"] = item.User?.PlatformUserId, ["user"] = item.User?.Login, ["userName"] = item.User?.DisplayName,
             ["message"] = item.Message?.Text, ["amountMinorUnits"] = item.Monetary?.MinorUnits,
             ["currency"] = item.Monetary?.Currency, ["valuationKind"] = item.Monetary?.ValuationKind,
-            ["streamId"] = item.Stream?.Id
+            ["streamId"] = item.Stream?.Id, ["streamTitle"] = item.Stream?.Title,
+            ["badges"] = JsonSerializer.Serialize(item.User?.Badges ?? []), ["avatarUrl"] = item.User?.AvatarUrl,
+            ["health"] = item.Metrics?.Health, ["value"] = item.Metrics?.Value
         };
     }
 }

@@ -50,6 +50,12 @@ class BotImportTests(unittest.TestCase):
             subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
             repeated = json.loads(safe_read(native))
             self.assertEqual(result, repeated)
+            subprocess.run(command + ['--bind-rumble-qualification'], check=True, stdout=subprocess.DEVNULL)
+            qualified = json.loads(safe_read(native))
+            bindings = next(a for a in qualified['actions'] if a['name'] == 'TDSBLive qualification probe')['triggers']
+            self.assertIn('tdsblive.rumble.health', [t['eventName'] for t in bindings])
+            self.assertNotIn('tdsblive.rumble.gift', [t['eventName'] for t in bindings])
+            self.assertNotIn('tdsblive.rumble.subscription', [t['eventName'] for t in bindings])
 
     def test_native_import_refuses_a_listening_bot(self):
         with socket.socket() as listener:

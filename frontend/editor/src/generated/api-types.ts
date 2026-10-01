@@ -4,6 +4,165 @@
  */
 
 export interface paths {
+    "/api/rumble/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RumbleStatus"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rumble/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: number | string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rumble/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RumbleCredentialRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rumble/reset-baseline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/integrations": {
         parameters: {
             query?: never;
@@ -1046,6 +1205,7 @@ export interface components {
             message?: null | components["schemas"]["EventMessage"];
             monetary?: null | components["schemas"]["EventMoney"];
             stream?: null | components["schemas"]["EventStream"];
+            metrics?: null | components["schemas"]["EventMetrics"];
             dedupeKey: string;
             raw?: null | components["schemas"]["JsonObject"];
             provenance?: components["schemas"]["EventProvenance"];
@@ -1064,6 +1224,11 @@ export interface components {
         };
         EventMessage: {
             text: null | string;
+        };
+        EventMetrics: {
+            /** Format: int64 */
+            value?: null | number | string;
+            health?: null | string;
         };
         EventMoney: {
             /** Format: int64 */
@@ -1128,6 +1293,36 @@ export interface components {
             /** Format: int32 */
             pollIntervalSeconds?: number | string;
             advancedSlowerPolling?: boolean;
+            forwardTriggers?: boolean;
+            /** Format: int32 */
+            requestTimeoutSeconds?: number | string;
+            /** Format: int32 */
+            offlineConfirmationPolls?: number | string;
+        };
+        RumbleCredentialRequest: {
+            value: string;
+            /** @default true */
+            sessionOnly: boolean;
+        };
+        RumbleStatus: {
+            state: string;
+            enabled: boolean;
+            credentialPresent: boolean;
+            /** Format: date-time */
+            lastPollAt: null | string;
+            /** Format: date-time */
+            nextPollAt: null | string;
+            /** Format: int32 */
+            consecutiveFailures: number | string;
+            baselineEstablished: boolean;
+            /** Format: int64 */
+            pollSequence: number | string;
+            forwardTriggers: boolean;
+            liveStreams: string[];
+            /** @default false */
+            subscriptionsLiveVerified: boolean;
+            /** @default false */
+            giftsAuthoritative: boolean;
         };
         SecretUpdate: {
             value: string;
