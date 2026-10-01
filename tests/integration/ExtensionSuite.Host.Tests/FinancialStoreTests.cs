@@ -55,6 +55,7 @@ public sealed class FinancialStoreTests
         using var app = new FoundationHostFactory(); using var client = app.CreateClient();
         var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>(); var store = new FinancialStore(factory);
         await store.AcceptAsync(Paid()); await store.AcceptAsync(Paid("youtube"));
+        Assert.Equal(2, (await store.TotalsAsync(new(null, null))).Length);
         await using var db = await factory.CreateDbContextAsync();
         var identities = await db.SupporterIdentities.AsNoTracking().OrderBy(row => row.Platform).ToArrayAsync();
         Assert.Equal(2, identities.Select(row => row.SupporterId).Distinct().Count());
@@ -63,6 +64,8 @@ public sealed class FinancialStoreTests
         var rows = await db.FinancialEvents.AsNoTracking().ToArrayAsync();
         Assert.All(rows, row => Assert.Equal(identities[0].SupporterId, row.SupporterId));
         Assert.Equal(1000, rows.Sum(row => row.UsdAmountMinor));
+        var total = Assert.Single(await store.TotalsAsync(new(null, null)));
+        Assert.Equal("1000", total.UsdAmountMinor); Assert.Equal("1000", total.ExactAmountMinor);
         Assert.Equal(1, await db.FinancialAudits.CountAsync());
         Assert.Equal(2, rows.Select(row => row.Platform).Distinct().Count());
         Assert.All(rows, row => Assert.Equal(1, row.Quantity));
@@ -83,6 +86,28 @@ public sealed class FinancialStoreTests
         Assert.Equal(1250, row.UsdAmountMinor); Assert.Equal(1000, row.NativeAmountMinor);
         Assert.Equal("1.25", row.FxRate); Assert.Equal("manual", row.FxProvider); Assert.False(row.Estimated);
         Assert.Equal(1, row.Version);
+    }
+
+    [Fact]
+    public async Task PeriodTotalsAreHalfOpenAndCannotLosePrecisionOrIncludePendingGiftValues()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>(); var store = new FinancialStore(factory);
+        var start = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero); var end = start.AddDays(1);
+        await store.AcceptAsync(Paid(nativeId: "before") with { OccurredAt = start.AddTicks(-1) });
+        await store.AcceptAsync(Paid(nativeId: "start") with { Support = new("donation", 1, new(long.MaxValue, "USD", 2)) });
+        await store.AcceptAsync(Paid(nativeId: "second") with { Support = new("donation", 1, new(1, "USD", 2)) });
+        await store.AcceptAsync(Paid(nativeId: "end") with { OccurredAt = end });
+        await store.AcceptAsync(Paid(nativeId: "unknown") with { Support = new("subscription", 1) });
+        await store.AcceptAsync(Paid(nativeId: "nominal") with { Support = new("bits", 10) }, nominalUsdMinorPerUnit: .5m);
+        await store.AcceptAsync(Paid(nativeId: "gated") with { Support = new("gift", 100) }, nominalUsdMinorPerUnit: 500m);
+        var total = Assert.Single(await store.TotalsAsync(new(start, end)));
+        Assert.Equal("9223372036854775813", total.UsdAmountMinor);
+        Assert.Equal("9223372036854775808", total.ExactAmountMinor);
+        Assert.Equal("5", total.NominalAmountMinor); Assert.Equal("0", total.FxAmountMinor);
+        Assert.Equal(5, total.ContributionCount); Assert.Equal(1, total.UnknownCount);
+        Assert.Equal(1, total.EstimatedCount); Assert.Equal(1, total.GatedCount);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => store.TotalsAsync(new(null, null), 0));
     }
 
     [Fact]

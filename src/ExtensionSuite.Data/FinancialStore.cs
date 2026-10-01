@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using System.Text.Json;
 using ExtensionSuite.Core;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,38 @@ namespace ExtensionSuite.Data;
 
 public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factory)
 {
+    public async Task<FinancialTotals[]> TotalsAsync(LedgerPeriodRange period, int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        period.Validate();
+        if (limit is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var events = db.FinancialEvents.AsNoTracking().Where(row => row.AccountingState != "excluded");
+        if (period.StartInclusive is { } start) events = events.Where(row => row.OccurredAtTicks >= start.UtcTicks);
+        if (period.EndExclusive is { } end) events = events.Where(row => row.OccurredAtTicks < end.UtcTicks);
+        var query = from row in events join supporter in db.Supporters.AsNoTracking() on row.SupporterId equals supporter.Id
+                    select new { row.SupporterId, supporter.Name, row.UsdAmountMinor, row.ValuationMethod, row.Estimated, row.AccountingState };
+        var totals = new Dictionary<Guid, TotalAccumulator>();
+        // SQLite SUM can overflow or fall back to floating point. Stream integer rows and sum exactly.
+        await foreach (var row in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
+        {
+            if (!totals.TryGetValue(row.SupporterId, out var total))
+                totals.Add(row.SupporterId, total = new(row.SupporterId, row.Name));
+            total.Count++;
+            if (row.AccountingState != "counted") { total.Gated++; continue; }
+            if (row.UsdAmountMinor is not { } amount) { total.Unknown++; continue; }
+            total.Amount += amount;
+            if (row.Estimated) total.Estimated++;
+            switch (row.ValuationMethod)
+            {
+                case ValuationMethods.Exact: total.Exact += amount; break;
+                case ValuationMethods.Fx: total.Fx += amount; break;
+                case ValuationMethods.ConfiguredNominal: total.Nominal += amount; break;
+            }
+        }
+        return totals.Values.OrderByDescending(row => row.Amount).ThenBy(row => row.Id).Take(limit).Select(row => row.Result()).ToArray();
+    }
+
     public async Task<bool> AcceptAsync(CanonicalEvent item, CurrencyRate? rate = null,
         decimal? nominalUsdMinorPerUnit = null, CancellationToken cancellationToken = default)
     {
@@ -76,4 +109,13 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
     }
 
     private static string BoundedName(string? name) => string.IsNullOrWhiteSpace(name) ? "Unknown supporter" : name[..Math.Min(name.Length, 128)];
+
+    private sealed class TotalAccumulator(Guid id, string name)
+    {
+        public Guid Id { get; } = id;
+        public BigInteger Amount, Exact, Fx, Nominal;
+        public long Count, Unknown, Estimated, Gated;
+        public FinancialTotals Result() => new(Id, name, Text(Amount), Text(Exact), Text(Fx), Text(Nominal), Count, Unknown, Estimated, Gated);
+        private static string Text(BigInteger value) => value.ToString(CultureInfo.InvariantCulture);
+    }
 }
