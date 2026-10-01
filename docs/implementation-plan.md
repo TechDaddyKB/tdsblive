@@ -230,13 +230,14 @@ Prerequisites: G02
 
 - G02 prerequisite verified on protected main `da53c87`: Windows run 36849059398 and Sonar passed.
 - Implemented correlated bounded protocol sessions, Streamer.bot authentication/discovery/allowlisted dispatch, independent reconnect, Speaker.bot queue requests, conservative normalization, bridge prevention, bounded inspector, isolated replay, C# bootstrap/forwarding templates, deterministic import generator and editor controls. Public schemas and generated frontend types updated; no migration needed. Contracts and limitations are maintained in [G03 integrations](g03-integrations.md).
-- Local Release tests pass: 58 backend tests, two Windows-only skips. Frontend tests pass with meaningful inspector/copy/replay coverage; Windows CI and Sonar evidence remain pending.
+- Local backend tests pass: 103 tests, two Windows-only skips. Frontend tests pass (20 tests, 99.0% lines) with inspector/copy/replay and forged identifier rejection coverage. Import transport tests verify deterministic content and artifact-directory confinement.
+- [Windows run 36855820795](https://github.com/camarokris/tdsblive/actions/runs/36855820795), revision `43b5037`, passes Windows tests, OpenCover/LCOV import, replay qualification, crash/restart/HTTP contracts, isolated browser rendering and generated type checks. [SonarQube PR analysis](https://sonarcloud.io/dashboard?id=camarokris_tdsblive&pullRequest=4) passes with **85.9% new-code coverage**, 0% duplication, A reliability/security/maintainability, and all hotspots reviewed. CodeQL passes. The first failing gate led to input confinement and reliability refactoring; two specific search-query/port-as-content findings were reviewed as false positives with recorded data-flow rationale, without rule exclusions.
 - Live GE-Proton qualification on 2026-10-01 confirmed Streamer.bot **1.0.7**, Speaker.bot **0.1.7** (local port **7580**), all 13 custom-trigger registrations, actual dedicated test-trigger execution and matching synthetic event in the host inspector, safe sample/replay behavior, and Speaker.bot Pause/Resume acknowledgements. Repeat command: `python tools/qualify_bots.py --execute-local-test-trigger-and-queue --speaker-port 7580`. Uses temporary host data and dedicated synthetic actions; no chat/OBS/financial effects. Product default ports are unchanged.
 
 ### Blockers
 
 - Graphical Import dialog acceptance of the generated `.sb` remains unverified. The same C# definitions were installed through the stopped native action store, compiled and executed successfully; this is not presented as graphical importer evidence. A concrete artifact and manual-check request have been provided.
-- Windows CI, SonarQube quality gate/coverage import, and protected-main merge remain pending.
+- Final evidence/test-record revision and protected-main merge remain pending. [PR #4](https://github.com/camarokris/tdsblive/pull/4) contains the implementation; G03 remains In progress until every acceptance criterion is met.
 
 <a id="g04"></a>
 
