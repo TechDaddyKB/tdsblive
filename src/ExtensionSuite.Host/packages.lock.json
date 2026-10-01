@@ -87,7 +87,8 @@
         "type": "Project",
         "dependencies": {
           "ExtensionSuite.Core": "[0.1.0, )",
-          "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )"
+          "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )",
+          "System.Security.Cryptography.ProtectedData": "[10.0.12, )"
         }
       },
       "extensionsuite.finance": {
@@ -132,6 +133,12 @@
           "SQLitePCLRaw.bundle_e_sqlite3": "2.1.12",
           "SQLitePCLRaw.core": "2.1.12"
         }
+      },
+      "System.Security.Cryptography.ProtectedData": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.12, )",
+        "resolved": "10.0.12",
+        "contentHash": "wO0W8VDMeRJZakRySOmemAnrBZMwEFRlbfBtATxUiLf2I3IhSRnCp1Vt157NWptdE4IJ7eftd5n8q9LtaKHFTQ=="
       }
     }
   }

@@ -76,8 +76,8 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | ID | Goal | Prerequisites | Status |
 |---|---|---|---|
 | [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
-| [G01](#g01) | Create repository and quality infrastructure | G00 | In progress |
-| [G02](#g02) | Build application foundation | G01 | Not started |
+| [G01](#g01) | Create repository and quality infrastructure | G00 | Complete |
+| [G02](#g02) | Build application foundation | G01 | In progress |
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
@@ -164,7 +164,7 @@ None for G01. Application features and live integrations remain owned by G02–G
 
 ## G02 — Build application foundation
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G01
 
 ### Deliverables
@@ -181,7 +181,10 @@ Prerequisites: G01
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+- G01 prerequisite revalidated: protected main and successful Windows run 36838097322 on commit 3a16834.
+- Foundation branch adds validated typed configuration, UUIDv7/UTC canonical contracts, recursive credential redaction, EF SQLite schema/migration, indexed provenance-scoped dedupe, transactional checkpoint/event/outbox acceptance, and explicit test persistence isolation.
+- Local .NET tests pass: 20 core tests and SQLite persistence tests, including reopen/dedupe, raw redaction, transaction rollback and test namespaces. Real Windows DPAPI vault test is intentionally skipped on Linux; Windows CI evidence remains required.
+- Implementation and acceptance work remain: host composition, configuration persistence, secure LAN/host/origin/CSRF boundaries, redacted retained logging, isolated hosted services, bounded durable delivery, diagnostics, editor serving, REST/WebSocket/OpenAPI/types, shutdown/port-conflict/runtime checks and trusted CI/Sonar qualification.
 
 ### Blockers
 
