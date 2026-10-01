@@ -1,6 +1,6 @@
 # G02 foundation qualification
 
-Status: In progress. Final revision Windows checks and protected merge are pending.
+Status: Complete. Foundation acceptance is verified by the Windows run below.
 G01 prerequisite is complete; G03–G13 remain separate goals.
 
 ## Acceptance traceability
@@ -23,6 +23,18 @@ G01 prerequisite is complete; G03–G13 remain separate goals.
 
 ## Recorded evidence
 
+- Final qualification: [Windows run 36847673559](https://github.com/camarokris/tdsblive/actions/runs/36847673559)
+  on `0da0b34` passed all 44 backend tests (zero skips), 14 frontend tests, replay
+  checks, real crash/restart/OpenAPI validation, Windows DPAPI/non-loopback HTTP,
+  rendered browser shells, generated type drift checks and report import.
+- Backend production coverage is 91.2%; frontend line coverage is 97.6%; Sonar
+  new-code coverage is 87.0%, duplication 0%, and reliability/security/maintainability
+  ratings A. The Sonar gate, CodeQL and Gitar checks passed. OpenCover/TRX and LCOV
+  are imported, not inferred from compilation or test counts.
+- Twenty-six remaining Sonar findings are code smells and non-blocking under the
+  configured gate, including complexity findings. No open vulnerability finding
+  remains. Specific HTTP acceptances and CodeQL false-positive reviews are recorded
+  in docs/security.md and the external findings; security rules remain enabled.
 - Public draft PR: https://github.com/camarokris/tdsblive/pull/3.
 - Windows run 36845468111 passed runtime/browser/contract/report checks but failed
   Sonar due to PATH-based executable lookup. The qualifier now uses the absolute
@@ -69,8 +81,8 @@ capabilities retain their own acceptance and live-evidence gates. User Chrome
 blocked localhost with ERR_BLOCKED_BY_CLIENT; its protections were untouched.
 Rendered-shell evidence comes from a separate fresh Windows CI browser.
 
-## Remaining completion work
+## Remaining blockers
 
-- Pass final Windows CI and Sonar for the configuration/log persistence revision.
-- Record final coverage/import evidence and any remaining non-blocking findings.
-- Complete the protected PR merge and revalidate main; update G02 status/evidence.
+None for G02 acceptance. Protected PR #3 contains the implementation and evidence;
+main requires app-bound Windows and Sonar checks. G03–G13 remain Not started and
+retain their own capability and live-evidence requirements.

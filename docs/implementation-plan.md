@@ -77,7 +77,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 |---|---|---|---|
 | [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
 | [G01](#g01) | Create repository and quality infrastructure | G00 | Complete |
-| [G02](#g02) | Build application foundation | G01 | In progress |
+| [G02](#g02) | Build application foundation | G01 | Complete |
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
@@ -164,7 +164,7 @@ None for G01. Application features and live integrations remain owned by G02–G
 
 ## G02 — Build application foundation
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G01
 
 ### Deliverables
@@ -199,10 +199,12 @@ Prerequisites: G01
 - Windows run [36846286222](https://github.com/camarokris/tdsblive/actions/runs/36846286222) on `65d944c` passed runtime/test qualification but failed Sonar on the intentional HTTP listener and non-Secure cookie. These two findings were explicitly accepted with documented rationale on 2026-10-01 because HTTP, including optional authenticated LAN, is an approved requirement. The PATH-based executable finding was fixed. Credential rotation/login session limits are atomic; log I/O failures are isolated. The initially recorded run 36846290263 was Advanced Security rather than Windows CI and does not prove the Windows quality gate.
 - Final persistence audit adds the `FoundationState` migration, authoritative non-secret SQLite configuration with atomic bootstrap fallback, and redacted SQLite logs behind an independent bounded queue. Local tests cover migration from the initial schema without event loss, fallback failure rollback, restart, redaction and retention; local crash/contract qualification also passes. Final Windows requalification and completion audit remain pending.
 - Final review adds safe cancellation of disconnected WebSocket subscribers, concurrent disconnect/publish/shutdown qualification, daily log-file pruning and 64-row SQLite log transactions. Local backend suite passes 42 tests with two Windows-only skips. Requirement traceability is maintained in [G02 validation](g02-validation.md). Windows run 36846983150 passed runtime qualification but was superseded/cancelled when the next revision was pushed; it is not recorded as a completed Windows gate.
+- Final qualification: [Windows run 36847673559](https://github.com/camarokris/tdsblive/actions/runs/36847673559), commit `0da0b34`, passed all 44 backend tests (including actual Windows DPAPI and non-loopback HTTP), frontend tests, replay checks, crash/restart/OpenAPI qualification, fresh-browser editor/login rendering, generated type checks and the SonarQube quality gate. Imported backend coverage is 91.2%, frontend lines 97.6%, and Sonar new-code coverage 87.0%, with 0% duplication and ratings A. CodeQL and Gitar checks passed. The requirement-by-requirement audit is in [G02 validation](g02-validation.md).
+- Two HTTP-specific Sonar findings and two HTTP-cookie CodeQL findings were accepted under the explicit HTTP requirement. Two CodeQL negative-rejection guard findings were reviewed as false positives: early returns deny the entire request, while continuing requests still require authentication/CSRF. No broad security exclusion was added. Twenty-six remaining Sonar code-smell findings are non-blocking under the configured gate; no open vulnerability finding remains. See [security review](security.md).
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+None for G02 acceptance. Live platform adapters, OBS behavior, visual editing, financial ingestion and installation retain their owning G03–G13 evidence gates.
 
 <a id="g03"></a>
 
