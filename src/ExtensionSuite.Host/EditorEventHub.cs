@@ -23,15 +23,29 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         var payload = CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = item }, EventStore.JsonOptions), sensitive.Snapshot())!
             .ToJsonString(EventStore.JsonOptions);
         foreach (var subscriber in subscribers.Values)
-            if (subscriber.Accepts(item.Type) && !subscriber.Queue.Writer.TryWrite(payload)) subscriber.TryStop();
+            if (subscriber.Accepts(item) && !subscriber.Queue.Writer.TryWrite(subscriber.Overlay is null ? payload :
+                CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = OverlayEndpoints.PublicChat(item) }, EventStore.JsonOptions), sensitive.Snapshot())!.ToJsonString(EventStore.JsonOptions))) subscriber.TryStop();
     }
 
-    public async Task ConnectAsync(HttpContext context)
+    public void UpdateOverlay(OverlayDefinition definition)
+    {
+        foreach (var subscriber in subscribers.Values.Where(s => s.Overlay?.Id == definition.Id))
+        {
+            subscriber.Overlay = definition;
+            if (!subscriber.Queue.Writer.TryWrite(JsonSerializer.Serialize(new { op = "settings", settings = definition }, EventStore.JsonOptions))) subscriber.TryStop();
+        }
+    }
+    public void CloseLimitedOverlay(string id)
+    {
+        foreach (var subscriber in subscribers.Values.Where(s => s.Overlay?.Id == id && s.Limited)) subscriber.TryStop();
+    }
+
+    public async Task ConnectAsync(HttpContext context, OverlayDefinition? overlay = null)
     {
         if (!context.WebSockets.IsWebSocketRequest) { context.Response.StatusCode = 400; return; }
-        using var socket = await context.WebSockets.AcceptWebSocketAsync();
+        using var socket = await context.WebSockets.AcceptWebSocketAsync(context.WebSockets.WebSocketRequestedProtocols.Contains("tdsblive.overlay.v1") ? "tdsblive.overlay.v1" : null);
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
-        var subscriber = new Subscriber(stop);
+        var subscriber = new Subscriber(stop) { Overlay = overlay, Preview = context.Request.Query["preview"] == "1", Limited = context.Items.ContainsKey("OverlayToken") };
         var id = Guid.CreateVersion7();
         if (!await connectionSlots.WaitAsync(0, context.RequestAborted))
         {
@@ -40,6 +54,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         }
         subscribers[id] = subscriber;
         var sending = SendAsync(socket, subscriber);
+        var authorization = CheckAuthorizationAsync(context, subscriber);
         try { await ReceiveAsync(socket, subscriber); }
         catch (Exception error) when (error is OperationCanceledException or WebSocketException or JsonException) { }
         finally
@@ -50,6 +65,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             subscriber.Queue.Writer.TryComplete();
             try { await sending; }
             catch (Exception error) when (error is OperationCanceledException or WebSocketException) { }
+            try { await authorization; } catch (OperationCanceledException) { }
             if (socket.State is WebSocketState.Open or WebSocketState.CloseReceived)
             {
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
@@ -57,6 +73,22 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
                 catch (Exception error) when (error is OperationCanceledException or WebSocketException) { }
             }
         }
+    }
+
+    private static async Task CheckAuthorizationAsync(HttpContext context, Subscriber subscriber)
+    {
+        if (!subscriber.Limited || subscriber.Overlay is null) return;
+        var store = context.RequestServices.GetRequiredService<OverlayStore>();
+        try
+        {
+            while (!subscriber.Stop.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), subscriber.Stop.Token);
+                if (!await store.AuthorizeAsync((string)context.Items["OverlayToken"]!, subscriber.Overlay.Id, subscriber.Stop.Token)) { subscriber.TryStop(); return; }
+            }
+        }
+        catch (OperationCanceledException) when (subscriber.Stop.IsCancellationRequested) { /* Normal close. */ }
+        catch (Exception) { subscriber.TryStop(); } // Authorization-store failure closes the session rather than failing open.
     }
 
     private static async Task SendAsync(WebSocket socket, Subscriber subscriber)
@@ -86,6 +118,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             } while (!frame.EndOfMessage);
             using var document = JsonDocument.Parse(buffer.AsMemory(0, length));
             var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) throw new JsonException();
             if (!root.TryGetProperty("op", out var op) || op.ValueKind != JsonValueKind.String) throw new JsonException();
             string response;
             switch (op.GetString())
@@ -96,6 +129,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
                         throw new JsonException();
                     var types = selected.EnumerateArray().Select(value => value.ValueKind == JsonValueKind.String ? value.GetString()! : "").ToArray();
                     if (types.Any(type => string.IsNullOrWhiteSpace(type) || type.Length > 128)) throw new JsonException();
+                    if (subscriber.Overlay is not null && types.Any(type => type != "chat.message")) throw new JsonException();
                     subscriber.Subscribe(types);
                     response = "{\"op\":\"subscribed\"}";
                     break;
@@ -108,10 +142,14 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
     private sealed class Subscriber(CancellationTokenSource stop)
     {
         private volatile string[] types = [];
+        public volatile OverlayDefinition? Overlay;
+        public bool Preview { get; init; }
+        public bool Limited { get; init; }
         public CancellationTokenSource Stop { get; } = stop;
         public Channel<string> Queue { get; } = Channel.CreateBounded<string>(new BoundedChannelOptions(256)
             { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
-        public bool Accepts(string type) => types.Contains(type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal);
+        public bool Accepts(CanonicalEvent item) => (types.Contains(item.Type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal)) &&
+            (Overlay is null || Overlay.Chat.Accepts(item) && (item.Provenance == EventProvenance.Live || Preview));
         public void Subscribe(string[] selected) => types = selected;
         public void TryStop()
         {

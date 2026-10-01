@@ -24,7 +24,7 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory, S
         var sanitized = item with
         {
             Raw = retainRaw ? CredentialRedactor.Json(item.Raw, sensitive?.Snapshot()) as System.Text.Json.Nodes.JsonObject : null,
-            Message = item.Message is null ? null : new EventMessage(CredentialRedactor.Text(item.Message.Text ?? "", sensitive?.Snapshot())),
+            Message = item.Message is null ? null : item.Message with { Text = CredentialRedactor.Text(item.Message.Text ?? "", sensitive?.Snapshot()) },
             User = item.User is null ? null : item.User with { AvatarUrl = item.User.AvatarUrl is null ? null : CredentialRedactor.Text(item.User.AvatarUrl, sensitive?.Snapshot()) }
         };
         var provenance = item.Provenance.ToString();
@@ -66,6 +66,15 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory, S
                           where delivery.DeliveredAtTicks == null
                           orderby delivery.CreatedAtTicks
                           select item.Json).Take(64).ToArrayAsync(cancellationToken);
+        return rows.Select(json => JsonSerializer.Deserialize<CanonicalEvent>(json, JsonOptions)!).ToArray();
+    }
+
+    public async Task<CanonicalEvent[]> ChatAsync(int limit, CancellationToken cancellationToken = default)
+    {
+        if (limit is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var rows = await db.Events.AsNoTracking().Where(item => item.Type == "chat.message" && item.Provenance == nameof(EventProvenance.Live))
+            .OrderByDescending(item => item.OccurredAtTicks).ThenByDescending(item => item.Id).Take(limit).Select(item => item.Json).ToArrayAsync(cancellationToken);
         return rows.Select(json => JsonSerializer.Deserialize<CanonicalEvent>(json, JsonOptions)!).ToArray();
     }
 

@@ -41,10 +41,10 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         var type = Classify(platform, nativeType);
         var known = type != "integration.unknown";
         var legacyMessage = data["message"] as JsonObject;
-        var nativeId = String(data["messageId"]) ?? String(data["id"]) ?? String(legacyMessage?["msgId"]);
+        var nativeId = String(data["messageId"]) ?? String(data["eventId"]) ?? String(data["id"]) ?? String(legacyMessage?["msgId"]);
         var user = data["user"] as JsonObject;
         var text = String(data["text"]) ?? String(data["message"]) ?? String(legacyMessage?["message"]);
-        var timestamp = String(data["createdAt"]) ?? String(raw["timeStamp"]);
+        var timestamp = String(data["createdAt"]) ?? String(data["publishedAt"]) ?? String(data["timestamp"]) ?? String(raw["timeStamp"]);
         var occurredAt = DateTimeOffset.TryParse(timestamp, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var date)
             ? date.ToUniversalTime() : receivedAt.ToUniversalTime();
         var dedupe = nativeId is not null ? $"{platform}:{nativeType}:{nativeId}" : timestamp is not null
@@ -52,8 +52,9 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         var provenance = EventProvenance.Live;
         if (Enum.TryParse<EventProvenance>(String(bridgeData["tdsbliveProvenance"]), true, out var declared) && Enum.IsDefined(declared)) provenance = declared;
         if (Boolean(data["isTest"]) || Boolean(bridgeData["tdsbliveTest"]) || Boolean((data["meta"] as JsonObject)?["isTest"])) provenance = EventProvenance.Simulation;
-        var eventUser = user is null && platform != "kofi" && String(data["userId"]) is null && String(data["userName"]) is null ? null : new EventUser(String(user?["id"]) ?? String(data["userId"]), String(user?["login"]),
-            String(user?["name"]) ?? String(user?["displayName"]) ?? String(data["userName"]) ?? String(data["from"]), String(user?["avatarUrl"]), BadgeNames(user?["badges"]));
+        var eventUser = user is null && platform != "kofi" && String(data["userId"]) is null && String(data["userName"]) is null ? null : new EventUser(String(user?["id"]) ?? String(data["userId"]), String(user?["login"]) ?? String(data["userLogin"]) ?? String(data["user"]),
+            String(user?["name"]) ?? String(user?["displayName"]) ?? String(data["userName"]) ?? String(data["from"]),
+            String(user?["avatarUrl"]) ?? String(user?["profileImageUrl"]) ?? String(user?["profilePicture"]) ?? String(data["avatarUrl"]), BadgeDetails(user?["badges"] ?? data["badges"]).Select(b => b.Name).ToArray(), Boolean(user?["isBot"]) || Boolean(data["isBot"]), BadgeDetails(user?["badges"] ?? data["badges"]));
         var currency = String(data["currency"]);
         EventMoney? money = null;
         if (nativeType is "Cheer" && Integer(data["bits"]) is { } bits)
@@ -63,7 +64,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         {
             OccurredAt = occurredAt, ReceivedAt = receivedAt.ToUniversalTime(), Source = "streamerbot", Platform = platform,
             Type = type, NativeType = category + "." + nativeType, NativeId = nativeId, DedupeKey = dedupe,
-            User = eventUser, Message = text is null ? null : new(text), Monetary = money, Raw = raw, Provenance = provenance,
+            User = eventUser, Message = ChatMediaNormalizer.Normalize(text, data, platform), Monetary = money, Raw = raw, Provenance = provenance,
             CorrelationId = Guid.TryParse(String(bridgeData["tdsbliveCorrelationId"]), out var correlation) ? correlation : null,
             BridgePath = [.. path, "tdsblive"]
         };
@@ -95,5 +96,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         return value.TryGetValue<int>(out var integer) && integer >= 0 ? integer : null;
     }
     private static string[] Strings(JsonNode? node) => node is JsonArray array ? array.Select(String).Where(value => value is not null).Cast<string>().ToArray() : [];
-    private static string[] BadgeNames(JsonNode? node) => node is JsonArray array ? array.OfType<JsonObject>().Select(item => String(item["name"])).Where(value => value is not null).Cast<string>().ToArray() : [];
+    private static EventBadge[] BadgeDetails(JsonNode? node) => node is JsonArray array ? array.Take(128)
+        .Select(item => item is JsonObject badge ? new EventBadge(String(badge["name"]) ?? "Badge", String(badge["imageUrl"]), String(badge["version"]))
+            : String(item) is { } name ? new EventBadge(name) : null).OfType<EventBadge>().ToArray() : [];
 }

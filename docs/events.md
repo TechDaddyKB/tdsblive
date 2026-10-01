@@ -33,3 +33,15 @@ records running/degraded/stopped state, and retries failure after five seconds.
 No live integration is registered by G02. Outbox failure leaves durable rows
 pending and retries independently. Shutdown cancels socket sessions/workers before
 the final WAL checkpoint; checkpointing is idempotent under overlapping stop calls.
+
+G05 adds optional `user.isBot` (defaults false) and `user.badgeDetails`, an array of
+`{ name, imageUrl?, version? }`. Existing `user.badges` string labels remain compatible.
+Streamer.bot badge artwork is preserved without requiring raw retention; built-in
+chat displays credential-free HTTP(S) images and falls back to labels for missing,
+unsafe or failed images. Old persisted messages are not retroactively enriched.
+Built-in overlay history/socket delivery excludes raw and monetary metadata.
+
+Optional `message.parts` preserves structured text/emote/GIF rendering metadata
+(`kind`, `text`, `imageUrl`, `source`, `zeroWidth`) without requiring raw payload
+access. Plain-text records deserialize with parts absent. The owning G05 document
+describes normalized positions, URL validation, limits and fallback behavior.

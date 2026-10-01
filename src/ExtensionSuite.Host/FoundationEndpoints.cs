@@ -21,6 +21,7 @@ public static class FoundationEndpoints
     public static void MapFoundationEndpoints(this WebApplication app)
     {
         app.MapRumbleEndpoints();
+        app.MapOverlayEndpoints();
         app.Map("/ws/editor", (HttpContext context, EditorEventHub hub) => hub.ConnectAsync(context));
         app.MapBotEndpoints();
         app.MapOpenApi("/api/openapi/{documentName}.json");
