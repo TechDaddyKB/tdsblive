@@ -4,12 +4,40 @@ using ExtensionSuite.StreamerBot;
 using ExtensionSuite.Data;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http.Json;
+using System.Net.WebSockets;
+using System.Text;
 using Xunit;
 
 namespace ExtensionSuite.Host.Tests;
 
 public sealed class ChatMediaTests
 {
+    [Fact]
+    public async Task LiveObservedGifShapePreservesRequiredPublicQueryThroughHistory()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var ws = app.Server.CreateWebSocketClient(); ws.ConfigureRequest = request => request.Headers.Origin = "http://localhost";
+        using var socket = await ws.ConnectAsync(new Uri("ws://localhost/ws/overlay/combined-chat"), default);
+        await socket.SendAsync(Encoding.UTF8.GetBytes("""{"op":"subscribe","types":["chat.message"]}"""), WebSocketMessageType.Text, true, default);
+        await Read(socket);
+        const string url = "https://media4.giphy.com/media/synthetic/giphy.gif?cid=synthetic&ep=v1_gifs_trending&rid=giphy.gif&ct=g";
+        var envelope = new JsonObject { ["event"] = new JsonObject { ["source"] = "Twitch", ["type"] = "ChatMessage" }, ["data"] = new JsonObject {
+            ["messageId"] = "synthetic-live-gif-shape", ["text"] = "[Synthetic GIF]", ["parts"] = new JsonArray(new JsonObject { ["type"] = "gif", ["url"] = url }) } };
+        var item = new StreamerBotEventNormalizer(new()).Normalize(envelope, DateTimeOffset.UtcNow).Event!;
+        Assert.Equal(url, Assert.Single(item.Message!.Parts!, p => p.Kind == "gif").ImageUrl);
+        await app.Services.GetRequiredService<EventStore>().AcceptAsync(item, "gif-contract", retainRaw: false);
+        var history = (await client.GetFromJsonAsync<CanonicalEvent[]>("/api/overlays/combined-chat/chat", EventStore.JsonOptions))!;
+        var stored = Assert.Single(history); Assert.Null(stored.Raw); Assert.Equal(url, Assert.Single(stored.Message!.Parts!, p => p.Kind == "gif").ImageUrl);
+        var delivered = await Read(socket); Assert.Equal(url, delivered["event"]!["message"]!["parts"]![1]!["imageUrl"]!.GetValue<string>());
+    }
+
+    private static async Task<JsonObject> Read(WebSocket socket)
+    {
+        var bytes = new byte[32768]; using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var frame = await socket.ReceiveAsync(new ArraySegment<byte>(bytes), timeout.Token); Assert.True(frame.EndOfMessage);
+        return JsonNode.Parse(Encoding.UTF8.GetString(bytes, 0, frame.Count))!.AsObject();
+    }
+
     [Fact]
     public async Task MediaSurvivesNormalizationPersistenceAndPublicHistoryWithoutRawPayload()
     {

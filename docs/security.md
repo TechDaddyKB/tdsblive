@@ -57,3 +57,12 @@ enabled where available. Dependency/action updates remain reviewed and locked.
 
 Security reports must omit credential values and private capture content. Rotate
 an exposed credential at its provider rather than relying on Git history cleanup.
+
+
+G05 preserves complete public GIF URLs only inside explicitly typed GIF metadata.
+The exception permits recognized Giphy media hosts, `/media/` GIF paths and the
+public `cid`, `ep`, `rid`, `ct` query keys. It rejects known vault values, credential
+assignments, userinfo, fragments, other hosts/endpoints and unknown query keys.
+Unstructured/query URLs still receive the existing redaction. This is required
+for Twitch's supplied GIF URLs; it does not allow credentials or establish support
+for an unobserved CDN format. Regression tests cover persistence and socket delivery.
