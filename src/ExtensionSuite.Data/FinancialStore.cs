@@ -82,7 +82,9 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
             FxRate = valuation.FxRate?.ToString(CultureInfo.InvariantCulture), FxRateDay = valuation.FxRateDate?.DayNumber,
             FxProvider = valuation.FxProvider, PendingReason = valuation.PendingReason, StreamId = item.Stream?.Id,
             GiftCorrelationKey = support.GiftCorrelationKey, AccountingState = gated is not null ? "gated" : recipient ? "excluded" : "counted",
-            MetadataJson = JsonSerializer.Serialize(new { support.Tier, support.GiftRole }), Version = 1
+            MetadataJson = JsonSerializer.Serialize(new { support.Tier, support.GiftRole, support.ReportedAmountMajor, support.ReportedCurrency,
+                support.GiftRecipientKeys, userPlatformId = item.User?.PlatformUserId, userDisplayName = item.User?.DisplayName,
+                userLogin = item.User?.Login, message = item.Message?.Text }), Version = 1
         });
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);

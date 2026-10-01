@@ -10,15 +10,19 @@ public static class ValuationMethods
 
 /// <summary>Verified financial facts carried independently of optional raw capture.</summary>
 public sealed record SupportDetails(string Kind, long Quantity, NativeMoney? NativeMoney = null,
-    string Tier = "", string? GiftCorrelationKey = null, string GiftRole = "none", string? GatedReason = null)
+    string Tier = "", string? GiftCorrelationKey = null, string GiftRole = "none", string? GatedReason = null,
+    string? ReportedAmountMajor = null, string? ReportedCurrency = null, string[]? GiftRecipientKeys = null)
 {
     public void Validate()
     {
         if (!new[] { "bits", "donation", "subscription", "membership", "gift", "rant" }.Contains(Kind) ||
-            Quantity <= 0 || Tier is null || Tier.Length > 64 ||
+            Quantity < 0 || (Quantity == 0 && GatedReason is null) || Tier is null || Tier.Length > 64 ||
             GiftCorrelationKey?.Length > 256 || GatedReason?.Length > 128 ||
-            !new[] { "none", "batch", "individual", "recipient" }.Contains(GiftRole))
+            ReportedAmountMajor?.Length > 128 || ReportedCurrency?.Length > 128 ||
+            !new[] { "none", "batch", "individual", "standalone", "recipient" }.Contains(GiftRole))
             throw new ArgumentException("Invalid financial support facts.");
+        if (GiftRecipientKeys is { } keys && (keys.Length > 1000 || keys.Any(key => string.IsNullOrWhiteSpace(key) || key.Length > 512)))
+            throw new ArgumentException("Invalid gift recipient evidence.");
         NativeMoney?.Validate();
     }
 }

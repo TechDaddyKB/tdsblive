@@ -344,7 +344,7 @@ The operator confirmed on 2026-10-01: “OBS Playback of alert video and audio w
 
 ### Blockers
 
-None for G06 functionality. Protected merge still requires passing Windows/SonarQube checks on the final documentation commit; the active goal remains open until delivery is merged.
+None. The operator's successful OBS video/audio confirmation is recorded above. G06 was delivered through protected [PR #7](https://github.com/camarokris/tdsblive/pull/7), merged on 2026-10-01 at 20:13:38 UTC as `232c59e23e28a63e8d1f349f16c5114bacbd28e8`. No further OBS confirmation is pending for G06.
 
 <a id="g07"></a>
 

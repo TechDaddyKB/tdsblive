@@ -25,6 +25,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
             catch (System.Text.Json.JsonException) { return new(null, "invalid", "invalidCustomBroadcast"); }
         }
         var bridgeData = data;
+        var wasForwarded = false;
         var path = Strings(data["tdsbliveBridgePath"]);
         if (path.Contains("tdsblive", StringComparer.OrdinalIgnoreCase) || string.Equals(String(data["tdsbliveOrigin"]), "tdsblive", StringComparison.OrdinalIgnoreCase))
             return new(null, "bridgeLoop", "returnedToOrigin");
@@ -34,6 +35,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
             if (string.IsNullOrWhiteSpace(forwarded) || string.IsNullOrWhiteSpace(String(data["tdsbliveForwardedType"])))
                 return new(null, "invalid", "missingForwardedRouting");
             category = forwarded;
+            wasForwarded = true;
             nativeType = String(data["tdsbliveForwardedType"]) ?? "Unknown";
             data = data["payload"] as JsonObject ?? new JsonObject();
         }
@@ -42,19 +44,34 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         var known = type != "integration.unknown";
         var legacyMessage = data["message"] as JsonObject;
         var nativeId = String(data["messageId"]) ?? String(data["eventId"]) ?? String(data["id"]) ?? String(legacyMessage?["msgId"]);
-        var user = data["user"] as JsonObject;
+        var user = (platform == "youtube" && nativeType == "GiftMembershipReceived" ? data["gifter"] : data["user"]) as JsonObject;
         var text = String(data["text"]) ?? String(data["message"]) ?? String(legacyMessage?["message"]);
-        var timestamp = String(data["createdAt"]) ?? String(data["publishedAt"]) ?? String(data["timestamp"]) ?? String(raw["timeStamp"]);
+        var sourceTimestamp = String(data["createdAt"]) ?? String(data["publishedAt"]) ?? String(data["timestamp"]) ?? String(data["subscribedAt"]);
+        var timestamp = sourceTimestamp ?? String(raw["timeStamp"]);
         var occurredAt = DateTimeOffset.TryParse(timestamp, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var date)
             ? date.ToUniversalTime() : receivedAt.ToUniversalTime();
         var dedupe = nativeId is not null ? $"{platform}:{nativeType}:{nativeId}" : timestamp is not null
             ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw.ToJsonString()))) : Guid.CreateVersion7().ToString();
         var provenance = EventProvenance.Live;
+        var support = SupportPayloadNormalizer.Normalize(platform, nativeType, data, wasForwarded);
+        if (support is not null && nativeId is null)
+        {
+            if (sourceTimestamp is null || !DateTimeOffset.TryParse(sourceTimestamp, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out _))
+                support = support with { GatedReason = support.GatedReason ?? "event_identity_unverified" };
+            else dedupe = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                platform, nativeType, occurredAt, support.Quantity, support.NativeMoney, support.Tier, support.GiftRole, support.GiftCorrelationKey, support.GiftRecipientKeys,
+                userId = String(user?["id"]), userLogin = String(user?["login"]), recipient = String((data["recipient"] as JsonObject)?["id"]),
+                broadcaster = String((data["broadcaster"] as JsonObject)?["id"]), broadcast = String((data["broadcast"] as JsonObject)?["id"]),
+                expiresAt = String(data["expiresAt"])
+            }))));
+        }
         if (Enum.TryParse<EventProvenance>(String(bridgeData["tdsbliveProvenance"]), true, out var declared) && Enum.IsDefined(declared)) provenance = declared;
         if (Boolean(data["isTest"]) || Boolean(bridgeData["tdsbliveTest"]) || Boolean((data["meta"] as JsonObject)?["isTest"])) provenance = EventProvenance.Simulation;
         var eventUser = user is null && platform != "kofi" && String(data["userId"]) is null && String(data["userName"]) is null ? null : new EventUser(String(user?["id"]) ?? String(data["userId"]), String(user?["login"]) ?? String(data["userLogin"]) ?? String(data["user"]),
             String(user?["name"]) ?? String(user?["displayName"]) ?? String(data["userName"]) ?? String(data["from"]),
             String(user?["avatarUrl"]) ?? String(user?["profileImageUrl"]) ?? String(user?["profilePicture"]) ?? String(data["avatarUrl"]), BadgeDetails(user?["badges"] ?? data["badges"]).Select(b => b.Name).ToArray(), Boolean(user?["isBot"]) || Boolean(data["isBot"]), BadgeDetails(user?["badges"] ?? data["badges"]));
+        if (support is not null && (Boolean(data["anonymous"]) || Boolean(data["isAnonymous"]))) eventUser = null;
         var currency = String(data["currency"]);
         EventMoney? money = null;
         if (nativeType is "Cheer" && Integer(data["bits"]) is { } bits)
@@ -64,7 +81,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         {
             OccurredAt = occurredAt, ReceivedAt = receivedAt.ToUniversalTime(), Source = "streamerbot", Platform = platform,
             Type = type, NativeType = category + "." + nativeType, NativeId = nativeId, DedupeKey = dedupe,
-            User = eventUser, Message = ChatMediaNormalizer.Normalize(text, data, platform), Monetary = money, Raw = raw, Provenance = provenance,
+            User = eventUser, Message = ChatMediaNormalizer.Normalize(text, data, platform), Monetary = money, Support = support, Raw = raw, Provenance = provenance,
             CorrelationId = Guid.TryParse(String(bridgeData["tdsbliveCorrelationId"]), out var correlation) ? correlation : null,
             BridgePath = [.. path, "tdsblive"]
         };
