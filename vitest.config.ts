@@ -6,12 +6,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['frontend/test-setup.ts'],
-    include: ['frontend/**/*.test.tsx'],
+    include: ['frontend/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['frontend/**/src/**/*.{ts,tsx}'],
-      exclude: ['**/*.test.tsx'],
+      exclude: ['**/*.test.{ts,tsx}', '**/generated/**'],
     },
   },
 });

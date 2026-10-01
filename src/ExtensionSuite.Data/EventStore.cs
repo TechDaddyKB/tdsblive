@@ -57,4 +57,22 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory, S
             .OrderByDescending(item => item.OccurredAtTicks).Take(limit).Select(item => item.Json).ToArrayAsync(cancellationToken);
         return rows.Select(json => JsonSerializer.Deserialize<CanonicalEvent>(json, JsonOptions)!).ToArray();
     }
+
+    public async Task<CanonicalEvent[]> PendingAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var rows = await (from delivery in db.Outbox.AsNoTracking()
+                          join item in db.Events.AsNoTracking() on delivery.EventId equals item.Id
+                          where delivery.DeliveredAtTicks == null
+                          orderby delivery.CreatedAtTicks
+                          select item.Json).Take(64).ToArrayAsync(cancellationToken);
+        return rows.Select(json => JsonSerializer.Deserialize<CanonicalEvent>(json, JsonOptions)!).ToArray();
+    }
+
+    public async Task MarkDeliveredAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        await db.Outbox.Where(item => item.EventId == id && item.DeliveredAtTicks == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(item => item.DeliveredAtTicks, DateTimeOffset.UtcNow.UtcTicks), cancellationToken);
+    }
 }

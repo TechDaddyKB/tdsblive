@@ -11,18 +11,23 @@ namespace ExtensionSuite.Host;
 public sealed record AdminLogin(string Credential);
 public sealed record SecretUpdate(string Value);
 public sealed record TestEventRequest(CanonicalEvent Event, bool Persist = false);
+public sealed record IntegrationStates(string StreamerBot, string SpeakerBot, string Rumble);
+public sealed record StatusResponse(string Name, bool HttpSupported, bool LanEnabled, IntegrationStates Integrations);
+public sealed record CsrfResponse(string? RequestToken);
 
 public static class FoundationEndpoints
 {
     public static void MapFoundationEndpoints(this WebApplication app)
     {
-        app.MapGet("/api/status", (ApplicationConfiguration configuration) => Results.Ok(new
-        {
-            name = configuration.DisplayName, httpSupported = true, lanEnabled = configuration.Server.EnableLan,
-            integrations = new { streamerBot = "notConnected", speakerBot = "notConnected", rumble = "notStarted" }
-        }));
+        app.Map("/ws/editor", (HttpContext context, EditorEventHub hub) => hub.ConnectAsync(context));
+        app.MapOpenApi("/api/openapi/{documentName}.json");
+        app.MapGet("/", () => Results.Redirect("/editor"));
+        app.MapGet("/editor", () => EditorShell(app));
+        app.MapGet("/login", () => EditorShell(app));
+        app.MapGet("/api/status", (ApplicationConfiguration configuration) => TypedResults.Ok(new StatusResponse(
+            configuration.DisplayName, true, configuration.Server.EnableLan, new IntegrationStates("notConnected", "notConnected", "notStarted"))));
         app.MapGet("/api/auth/csrf", (HttpContext context, IAntiforgery antiforgery) =>
-            Results.Ok(new { requestToken = antiforgery.GetAndStoreTokens(context).RequestToken }));
+            TypedResults.Ok(new CsrfResponse(antiforgery.GetAndStoreTokens(context).RequestToken)));
         app.MapPost("/api/auth/login", (AdminLogin login, HttpContext context, AccessControl access) =>
         {
             if (!access.ValidateCredential(login.Credential)) return Results.Unauthorized();
@@ -45,7 +50,7 @@ public static class FoundationEndpoints
             sensitive.Set("admin-token", credential);
             return Results.Ok(new { credential });
         });
-        app.MapGet("/api/configuration", (ConfigurationStore store) => Results.Ok(store.Load()));
+        app.MapGet("/api/configuration", (ConfigurationStore store) => TypedResults.Ok(store.Load()));
         app.MapPut("/api/configuration", async ([FromBody] ApplicationConfiguration configuration, ConfigurationStore store, HttpContext context) =>
         {
             try { await store.SaveAsync(configuration, context.RequestAborted); }
@@ -74,13 +79,14 @@ public static class FoundationEndpoints
         {
             if (limit is < 1 or > 500) return Results.BadRequest();
             return Results.Ok(await store.ReadAsync(limit ?? 100, cancellationToken: cancellationToken));
-        });
-        app.MapPost("/api/test-event", async (TestEventRequest request, EventStore store, ApplicationConfiguration configuration, CancellationToken cancellationToken) =>
+        }).Produces<CanonicalEvent[]>();
+        app.MapPost("/api/test-event", async (TestEventRequest request, EventStore store, ApplicationConfiguration configuration, EditorEventHub hub, CancellationToken cancellationToken) =>
         {
             var item = request.Event with { Id = Guid.CreateVersion7(), Provenance = EventProvenance.Simulation, ReceivedAt = DateTimeOffset.UtcNow };
             try { item.Validate(); }
             catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid canonical event." }); }
             var persisted = await store.AcceptAsync(item, "simulation", request.Persist, configuration.RetainRawEvents, cancellationToken);
+            if (!request.Persist) hub.Publish(item with { Raw = configuration.RetainRawEvents ? item.Raw : null });
             return Results.Ok(new { eventId = item.Id, persisted, provenance = "simulation", liveActionsAllowed = false });
         });
         app.MapGet("/api/diagnostics", async (IDbContextFactory<FoundationDbContext> factory, CancellationToken cancellationToken) =>
@@ -98,5 +104,11 @@ public static class FoundationEndpoints
             var current = Path.Combine(paths.Logs, DateTime.UtcNow.ToString("yyyy-MM-dd") + ".jsonl");
             return File.Exists(current) ? Results.File(current, "application/x-ndjson", "tdsblive-log.jsonl") : Results.NotFound();
         });
+    }
+
+    private static IResult EditorShell(WebApplication app)
+    {
+        var path = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "editor", "index.html");
+        return File.Exists(path) ? Results.File(path, "text/html") : Results.Problem("Editor assets are missing. Run npm run build before starting the host.", statusCode: 503);
     }
 }

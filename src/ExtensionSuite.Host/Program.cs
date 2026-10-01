@@ -2,11 +2,12 @@ using ExtensionSuite.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddFoundation();
-await using var app = builder.Build();
+var app = builder.Build();
 await app.InitializeFoundationAsync();
 app.UseWebSockets();
 app.UseMiddleware<RequestSecurity>();
 app.UseRateLimiter();
+app.UseStaticFiles();
 app.MapFoundationEndpoints();
 try { await app.RunAsync(); }
 catch (IOException)

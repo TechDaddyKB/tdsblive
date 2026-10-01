@@ -39,6 +39,7 @@ appsettings.*.Local.json
 /artifacts/
 /release/
 /installer-output/
+/src/ExtensionSuite.Host/wwwroot/editor/
 *.trx
 *.pyc
 __pycache__/

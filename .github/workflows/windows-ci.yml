@@ -87,14 +87,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           if (-not $env:SONAR_TOKEN) { throw 'SONAR_TOKEN must be configured for trusted analysis' }
-          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"0.1.0" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
+          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"0.1.0" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**,**/wwwroot/editor/**,frontend/**/generated/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,frontend/**/*.test.ts,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build .NET solution
         run: dotnet build TDSBLive.slnx --configuration Release --no-restore --no-incremental
-
-      - name: Test .NET with OpenCover and TRX
-        run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 
       - name: Lint and type-check frontend
         shell: pwsh
@@ -106,6 +103,9 @@ jobs:
 
       - name: Build editor and lightweight runtime
         run: npm run build
+
+      - name: Test .NET with OpenCover and TRX
+        run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 
       - name: Test frontend with LCOV
         run: npm run test:coverage

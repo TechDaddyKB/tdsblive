@@ -82,9 +82,10 @@ public sealed class RequestSecurity(RequestDelegate next)
         var localPeer = context.Connection.RemoteIpAddress is { } peer && IPAddress.IsLoopback(peer);
         // TestServer has no network peer; it must still use a loopback Host.
         var local = localPeer || context.Connection.RemoteIpAddress is null && loopbackHost;
-        var login = request.Path == "/api/auth/login" || request.Path == "/api/auth/csrf" || request.Path == "/login";
+        var login = request.Path == "/api/auth/login" || request.Path == "/api/auth/csrf" || request.Path == "/login" || request.Path.StartsWithSegments("/editor/assets");
         if (!local && (!configuration.Server.EnableLan || !access.IsAuthenticated(context)) && !login)
         {
+            if (request.Path == "/editor") { context.Response.Redirect("/login"); return; }
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }

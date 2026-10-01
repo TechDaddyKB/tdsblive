@@ -26,6 +26,9 @@ public static class FoundationServices
                 { DataSource = path, ForeignKeys = true }.ToString());
         });
         builder.Services.AddSingleton<EventStore>();
+        builder.Services.AddOpenApi();
+        builder.Services.AddSingleton<EditorEventHub>();
+        builder.Services.AddSingleton<IntegrationHealthRegistry>();
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
@@ -47,6 +50,8 @@ public static class FoundationServices
             options.Cookie.SecurePolicy = CookieSecurePolicy.None;
         });
         builder.Services.AddHostedService<DatabaseShutdown>();
+        builder.Services.AddHostedService<IsolatedIntegrations>();
+        builder.Services.AddHostedService<DurableOutboxWorker>();
     }
 
     public static async Task InitializeFoundationAsync(this WebApplication app)
@@ -78,9 +83,11 @@ public static class FoundationServices
 
 public sealed class DatabaseShutdown(IDbContextFactory<FoundationDbContext> factory) : IHostedService
 {
+    private int stopped;
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     public async Task StopAsync(CancellationToken cancellationToken)
     {
+        if (Interlocked.Exchange(ref stopped, 1) != 0) return;
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         await DatabaseLifecycle.CheckpointAsync(db, cancellationToken);
     }
