@@ -81,7 +81,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Complete |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Complete |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Complete |
-| [G06](#g06) | Build basic visual editor and alerts | G05 | In progress |
+| [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Not started |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Not started |
@@ -318,7 +318,7 @@ None for G05 acceptance. Live YouTube/Kick accounts were unavailable; their docu
 
 ## G06 — Build basic visual editor and alerts
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G05
 
 ### Deliverables
@@ -336,13 +336,15 @@ Prerequisites: G05
 
 ### Validation evidence
 
-G05 prerequisite verified against merged commit `8053c99eb12edfbca4628c7f82201c82324a9e9e` and successful main Windows CI run 36900637540. Implementation is underway on `g06-visual-editor-alerts`; owning contracts, queue semantics, HTTP/security boundaries and scope are recorded in [G06 editor and alerts](g06-editor-alerts.md). Local checks pass: 227 backend tests (two Windows-only skips), 88 frontend tests, type checking/lint, build (runtime 74.3 kB gzipped), and foundation process/contract qualification. Frontend line coverage is 96.27%. Fresh isolated Playwright verifies create/add/drag/resize/nudge, repeated duplicate/delete/undo/redo, 750ms save/reload/restore, served GIF, actual VP9 decoding and muted PCM audio playback, embedded chat, synthetic/native alert previews, inherited group settings, single socket, and no durable injection history. Backend tests cover transaction rollback, concurrent stale-version rejection, 50-revision retention, validation, scoped LAN media and rejection of test events by normal/wrong-overlay viewers; scheduler tests cover groups/priority/FIFO/concurrency/cooldown/overflow/interrupt behavior. Windows CI run 36908584159 passed build/tests/replay but exposed a Playwright restore timing assumption; qualification now waits for the real restore receipt. Automated review also found group-setting inheritance and historical-chat alert replay issues; both are corrected with tests. Windows CI run 36910749328 passed build/tests/replay/browser and imported 83.3% new-code coverage with A security; Sonar flagged three reliability findings (promise handling, reduce initialization and CSS font fallback). They are fixed and locally requalified; a passing final analysis remains required. No G06 completion claim is made yet.
+G05 prerequisite verified against merged commit `8053c99eb12edfbca4628c7f82201c82324a9e9e` and successful main Windows CI run 36900637540. Implementation is delivered on `g06-visual-editor-alerts`; owning contracts, queue semantics, HTTP/security boundaries and scope are recorded in [G06 editor and alerts](g06-editor-alerts.md). Local checks pass: 227 backend tests (two Windows-only skips), 88 frontend tests, type checking/lint, build (runtime 74.3 kB gzipped), and foundation process/contract qualification. Frontend line coverage is 96.27%. Fresh isolated Playwright verifies create/add/drag/resize/nudge, repeated duplicate/delete/undo/redo, 750ms save/reload/restore, served GIF, actual VP9 decoding and muted PCM audio playback, embedded chat, synthetic/native alert previews, inherited group settings, single socket, and no durable injection history. Backend tests cover transaction rollback, concurrent stale-version rejection, 50-revision retention, validation, scoped LAN media and rejection of test events by normal/wrong-overlay viewers; scheduler tests cover groups/priority/FIFO/concurrency/cooldown/overflow/interrupt behavior. Windows CI run 36908584159 passed build/tests/replay but exposed a Playwright restore timing assumption; qualification now waits for the real restore receipt. Automated review also found group-setting inheritance and historical-chat alert replay issues; both are corrected with tests. Windows CI run 36910749328 passed build/tests/replay/browser and imported 83.3% new-code coverage with A security; Sonar flagged three reliability findings (promise handling, reduce initialization and CSS font fallback). They are fixed; the subsequent Windows/SonarQube run below passed.
 
 The final local canvas audit passed at commit `c6478b5135b5ff7f2e87ee12df54a7ef5c71135d`: reconnect retains one open socket and does not replay completed alerts; the clipboard contains the actual OBS URL; a separately connected source updates after revision restore and removes obsolete media/chat widgets. Windows CI run [36915186896](https://github.com/camarokris/tdsblive/actions/runs/36915186896) passed build, backend/frontend tests, replay, recovery, browser qualification and SonarQube quality gate for that commit. Logs confirm OpenCover and LCOV import; production coverage is 95.5% backend and 96.3% frontend. SonarQube reports 87.8% new-code coverage, A reliability/security/maintainability, zero new duplication, and all security hotspots reviewed.
 
+The operator confirmed on 2026-10-01: “OBS Playback of alert video and audio was successful,” after the isolated 1280×720 Browser Source test at `/overlay/g06-qualification?preview=1&audio=1`. This supplies real OBS media/audio evidence alongside the browser-tested bounded duration and cleanup. All G06 acceptance criteria are verified; G11/G12/G09 scope boundaries remain unchanged.
+
 ### Blockers
 
-Real OBS sound/video confirmation remains required: the isolated qualification source must show moving video and alert text, play the tone, and dismiss the alert after five seconds. Automated muted playback cannot prove audible OBS output. No completion claim is made while this operator check is pending. Any subsequent commit must retain passing required Windows/SonarQube checks before merge.
+None for G06 functionality. Protected merge still requires passing Windows/SonarQube checks on the final documentation commit; the active goal remains open until delivery is merged.
 
 <a id="g07"></a>
 
