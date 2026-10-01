@@ -1,6 +1,6 @@
 using ExtensionSuite.Host;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = AppContext.BaseDirectory });
 builder.AddFoundation();
 var app = builder.Build();
 await app.InitializeFoundationAsync();

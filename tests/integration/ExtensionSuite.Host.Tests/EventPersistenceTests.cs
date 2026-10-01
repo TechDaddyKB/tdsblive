@@ -3,6 +3,7 @@ using ExtensionSuite.Core;
 using ExtensionSuite.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Xunit;
 
 namespace ExtensionSuite.Host.Tests;
@@ -60,6 +61,49 @@ public sealed class EventPersistenceTests : IAsyncLifetime
         Assert.Single(await store.ReadAsync());
         Assert.Null((await store.ReadAsync(provenance: EventProvenance.Replay))[0].Raw);
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => store.ReadAsync(501));
+    }
+
+    [Fact]
+    public async Task ConcurrentAcceptancesCreateOneEventOutboxAndCheckpoint()
+    {
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tasks = Enumerable.Range(0, 8).Select(index => Task.Run(async () =>
+        {
+            await start.Task;
+            return await new EventStore(factory).AcceptAsync(Event(), $"poll-{index}");
+        })).ToArray();
+        start.SetResult();
+        var accepted = await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(20));
+        Assert.Single(accepted, value => value);
+        await using var db = factory.CreateDbContext();
+        Assert.Single(await db.Events.ToArrayAsync());
+        Assert.Single(await db.Outbox.ToArrayAsync());
+        Assert.Single(await db.Checkpoints.ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task PendingOutboxSurvivesReopenAndAcknowledgmentIsIdempotent()
+    {
+        var item = Event();
+        Assert.True(await new EventStore(factory).AcceptAsync(item, "accepted"));
+        var reopened = new EventStore(NewFactory());
+        Assert.Equal(item.Id, Assert.Single(await reopened.PendingAsync(CancellationToken.None)).Id);
+        await reopened.MarkDeliveredAsync(item.Id, CancellationToken.None);
+        await reopened.MarkDeliveredAsync(item.Id, CancellationToken.None);
+        Assert.Empty(await new EventStore(NewFactory()).PendingAsync(CancellationToken.None));
+        Assert.Single(await reopened.ReadAsync());
+    }
+
+    [Fact]
+    public async Task InitialMigrationCanBeRolledBackAndReapplied()
+    {
+        await using var db = factory.CreateDbContext();
+        var migrator = db.GetService<IMigrator>();
+        await migrator.MigrateAsync("0");
+        Assert.Empty(await db.Database.GetAppliedMigrationsAsync());
+        await DatabaseLifecycle.InitializeAsync(db);
+        Assert.Single(await db.Database.GetAppliedMigrationsAsync());
+        Assert.Empty(await db.Events.ToArrayAsync());
     }
 
     [Fact]
