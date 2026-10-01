@@ -73,6 +73,20 @@ public sealed class RumbleStore(IDbContextFactory<FoundationDbContext> factory, 
         await db.RumbleDeliveries.Where(item => item.EventId == eventId && item.State == "dispatching")
             .ExecuteUpdateAsync(setters => setters.SetProperty(item => item.State, outcome), cancellationToken);
     }
+    public async Task ParkPendingAsync(Guid eventId, string outcome, CancellationToken cancellationToken)
+    {
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        await db.RumbleDeliveries.Where(item => item.EventId == eventId && item.State == "pending")
+            .ExecuteUpdateAsync(setters => setters.SetProperty(item => item.State, outcome), cancellationToken);
+    }
+    public async Task ResumeRegisteredAsync(string[] eventTypes, CancellationToken cancellationToken)
+    {
+        if (eventTypes.Length == 0) return;
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        await db.RumbleDeliveries.Where(delivery => delivery.State == "waitingForTrigger" &&
+            db.Events.Any(item => item.Id == delivery.EventId && eventTypes.Contains(item.Type)))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(item => item.State, "pending"), cancellationToken);
+    }
     public async Task<Dictionary<string, int>> DeliveryStatusAsync(CancellationToken cancellationToken)
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);

@@ -26,7 +26,8 @@ public sealed class RumbleHttpTransport(HttpClient client, TimeProvider clock, i
         deadline.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, credential);
+            var upstream = new UriBuilder("https", "rumble.com") { Path = "/-livestream-api/get-data", Query = new Uri(credential).Query };
+            using var request = new HttpRequestMessage(HttpMethod.Get, upstream.Uri);
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, deadline.Token);
             var now = clock.GetUtcNow();
             var retry = response.Headers.RetryAfter;
@@ -61,4 +62,19 @@ public sealed class RumbleHttpTransport(HttpClient client, TimeProvider clock, i
         var seconds = backoff * (1 + jitter * .1);
         return TimeSpan.FromSeconds(Math.Max(seconds, Math.Max(0, retryAfter?.TotalSeconds ?? 0)));
     }
+
+    public static async Task WaitDelayAsync(TimeSpan delay, TimeProvider clock, CancellationToken cancellationToken)
+    {
+        // Task.Delay timers have a finite duration range. Preserve long Retry-After
+        // values rather than failing and accidentally retrying the request early.
+        while (delay > TimeSpan.Zero)
+        {
+            var slice = delay > TimeSpan.FromDays(1) ? TimeSpan.FromDays(1) : delay;
+            await Task.Delay(slice, clock, cancellationToken);
+            delay -= slice;
+        }
+    }
+
+    public static DateTimeOffset ScheduledAt(DateTimeOffset now, TimeSpan delay) =>
+        delay >= DateTimeOffset.MaxValue - now ? DateTimeOffset.MaxValue : now + delay;
 }

@@ -92,7 +92,7 @@ public sealed class RumbleIntegration(IRumbleStore store, RumbleHttpTransport tr
             if (batch.RawSnapshot is not null) inspector.Add(new(null, "rumble.snapshot", "unknownFieldsRetained"), batch.RawSnapshot);
             var delay = RumbleHttpTransport.NextDelay(configuration.Rumble.PollIntervalSeconds, batch.State.ConsecutiveFailures, poll.RetryAfter, Random.Shared.NextDouble());
             var scope = batch.State.ActiveScope is { } key ? batch.State.Scopes[key] : null;
-            Volatile.Write(ref status, new(batch.State.Health, true, true, poll.ObservedAt, clock.GetUtcNow() + delay,
+            Volatile.Write(ref status, new(batch.State.Health, true, true, poll.ObservedAt, RumbleHttpTransport.ScheduledAt(clock.GetUtcNow(), delay),
                 batch.State.ConsecutiveFailures, !baseline, batch.State.PollSequence, configuration.Rumble.ForwardTriggers && configuration.StreamerBot.ForwardLiveEvents,
                 scope?.Streams.Where(item => item.Value.Live).Select(item => item.Key).ToArray() ?? []));
             return delay;
@@ -113,7 +113,7 @@ public sealed class RumbleIntegration(IRumbleStore store, RumbleHttpTransport tr
                 Volatile.Write(ref status, Status with { State = "processingFailure", NextPollAt = clock.GetUtcNow() + delay });
                 inspector.Add(new(null, "rumble.processingFailure"), new() { ["errorType"] = error.GetType().Name });
             }
-            await Task.Delay(delay, clock, cancellationToken);
+            await RumbleHttpTransport.WaitDelayAsync(delay, clock, cancellationToken);
         }
     }
 }
@@ -129,16 +129,23 @@ public sealed class RumbleTriggerDispatcher(RumbleStore store, StreamerBotConnec
         while (!cancellationToken.IsCancellationRequested)
         {
             if (configuration.Rumble.ForwardTriggers && configuration.StreamerBot.ForwardLiveEvents && streamer.State.State == "connected")
+            {
+                if (clock.GetUtcNow() - lastDiscoveryRefresh >= TimeSpan.FromSeconds(30))
+                {
+                    lastDiscoveryRefresh = clock.GetUtcNow(); await streamer.RefreshDiscoveryAsync(cancellationToken);
+                    var registered = TriggerArgumentMapper.EventNames.Where(pair => streamer.Discovery.CodeTriggers.Any(trigger => trigger.EventName == pair.Value))
+                        .Select(pair => pair.Key).ToArray();
+                    await store.ResumeRegisteredAsync(registered, cancellationToken);
+                }
                 foreach (var item in await store.PendingTriggersAsync(cancellationToken))
                 {
-                    if (!TriggerArgumentMapper.EventNames.TryGetValue(item.Type, out var name)) continue;
+                    if (!TriggerArgumentMapper.EventNames.TryGetValue(item.Type, out var name))
+                    {
+                        await store.ParkPendingAsync(item.Id, "unmapped", cancellationToken); continue;
+                    }
                     if (!streamer.Discovery.CodeTriggers.Any(trigger => trigger.EventName == name))
                     {
-                        if (clock.GetUtcNow() - lastDiscoveryRefresh >= TimeSpan.FromSeconds(30))
-                        {
-                            lastDiscoveryRefresh = clock.GetUtcNow(); await streamer.RefreshDiscoveryAsync(cancellationToken);
-                        }
-                        if (!streamer.Discovery.CodeTriggers.Any(trigger => trigger.EventName == name)) continue;
+                        await store.ParkPendingAsync(item.Id, "waitingForTrigger", cancellationToken); continue;
                     }
                     if (!await store.ClaimAsync(item.Id, cancellationToken)) continue;
                     var result = await streamer.ExecuteCodeTriggerAsync(name, TriggerArgumentMapper.Map(item), true, cancellationToken);
@@ -146,6 +153,7 @@ public sealed class RumbleTriggerDispatcher(RumbleStore store, StreamerBotConnec
                     inspector.Add(new(null, "rumble.triggerDelivery", result.State), new() { ["eventId"] = item.Id.ToString(), ["triggerName"] = name,
                         ["outcome"] = result.State, ["mayHaveExecuted"] = result.MayHaveExecuted });
                 }
+            }
             await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
         }
     }

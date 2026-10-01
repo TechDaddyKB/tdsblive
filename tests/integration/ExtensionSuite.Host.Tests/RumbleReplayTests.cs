@@ -143,6 +143,11 @@ public sealed class RumbleReplayTests : IAsyncLifetime
     {
         var triggerDiscovery = 0; var executions = 0;
         var batch = engine.Reconcile(new(), new(DateTimeOffset.UtcNow, "timeout"), "late-bootstrap", false);
+        var waiting = Enumerable.Range(0, 64).Select(index => new CanonicalEvent {
+            Source = "rumble", Platform = "rumble", Type = "stream.viewers", NativeType = "viewers",
+            OccurredAt = DateTimeOffset.UtcNow, ReceivedAt = DateTimeOffset.UtcNow.AddMinutes(-1),
+            DedupeKey = $"waiting-viewer-{index}", Metrics = new(index), Stream = new("synthetic-stream", "Test") }).ToArray();
+        await store.CommitAsync("waiting", EventProvenance.Live, new(new(), waiting, [], false, null), true, true, default);
         var item = Assert.Single(await store.CommitAsync("late-bootstrap", EventProvenance.Live, batch, true, true, default));
         await using var server = await FakeBot.Start(async socket =>
         {
@@ -174,8 +179,16 @@ public sealed class RumbleReplayTests : IAsyncLifetime
         var dispatch = new RumbleTriggerDispatcher(store, adapter, config, new EventInspectorStore(config), TimeProvider.System).RunAsync(lifetime.Token);
         while (!(await store.DeliveryStatusAsync(lifetime.Token)).ContainsKey("acknowledged")) await Task.Delay(20, lifetime.Token);
         Assert.Equal(1, executions); Assert.True(triggerDiscovery >= 2); Assert.Empty(await store.PendingTriggersAsync(default));
+        Assert.Equal(64, (await store.DeliveryStatusAsync(default))["waitingForTrigger"]);
         await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => dispatch.WaitAsync(TimeSpan.FromSeconds(3)));
+        // A later registration resumes only its parked rows, including after reopening SQLite.
+        var reopened = new RumbleStore(NewFactory(), new());
+        await reopened.ResumeRegisteredAsync(["integration.health"], default);
+        Assert.Empty(await reopened.PendingTriggersAsync(default));
+        await reopened.ResumeRegisteredAsync(["stream.viewers"], default);
+        Assert.Equal(64, (await reopened.PendingTriggersAsync(default)).Length);
+        Assert.Equal(1, (await reopened.DeliveryStatusAsync(default))["acknowledged"]);
     }
 
     [Fact]

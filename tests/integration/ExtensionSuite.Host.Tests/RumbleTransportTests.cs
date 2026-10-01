@@ -98,6 +98,35 @@ public sealed class RumbleTransportTests
     }
 
     [Fact]
+    public async Task LongRetryAfterUsesBoundedTimerSlicesAndSupportsShutdown()
+    {
+        var clock = new InstantTimerClock();
+        await RumbleHttpTransport.WaitDelayAsync(TimeSpan.FromDays(60) + TimeSpan.FromSeconds(7), clock, default);
+        Assert.Equal(61, clock.Delays.Count); Assert.Equal(TimeSpan.FromDays(60) + TimeSpan.FromSeconds(7), TimeSpan.FromTicks(clock.Delays.Sum(item => item.Ticks)));
+        Assert.All(clock.Delays, item => Assert.True(item <= TimeSpan.FromDays(1)));
+        using var stop = new CancellationTokenSource(); await stop.CancelAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => RumbleHttpTransport.WaitDelayAsync(TimeSpan.FromDays(60), TimeProvider.System, stop.Token));
+        Assert.Equal(DateTimeOffset.MaxValue, RumbleHttpTransport.ScheduledAt(DateTimeOffset.MaxValue.AddSeconds(-1), TimeSpan.FromSeconds(2)));
+    }
+
+    private sealed class InstantTimerClock : TimeProvider
+    {
+        public List<TimeSpan> Delays { get; } = [];
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            Delays.Add(dueTime);
+            ThreadPool.QueueUserWorkItem(_ => callback(state));
+            return new NoopTimer();
+        }
+        private sealed class NoopTimer : ITimer
+        {
+            public bool Change(TimeSpan dueTime, TimeSpan period) => true;
+            public void Dispose() { }
+            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        }
+    }
+
+    [Fact]
     public void ParserPreservesRedactedUnknownShapesAndRejectsAmbiguousStreamContainers()
     {
         var sensitive = new ExtensionSuite.Core.SensitiveValues(); sensitive.Set("test", "synthetic-sensitive-value");
