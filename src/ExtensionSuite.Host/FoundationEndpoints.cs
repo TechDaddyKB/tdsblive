@@ -30,8 +30,9 @@ public static class FoundationEndpoints
             TypedResults.Ok(new CsrfResponse(antiforgery.GetAndStoreTokens(context).RequestToken)));
         app.MapPost("/api/auth/login", (AdminLogin login, HttpContext context, AccessControl access) =>
         {
-            if (!access.ValidateCredential(login.Credential)) return Results.Unauthorized();
-            context.Response.Cookies.Append("tdsblive-session", access.CreateSession(), new CookieOptions
+            var session = access.TryCreateSession(login.Credential);
+            if (session is null) return Results.Unauthorized();
+            context.Response.Cookies.Append("tdsblive-session", session, new CookieOptions
                 { HttpOnly = true, SameSite = SameSiteMode.Strict, Secure = false, MaxAge = TimeSpan.FromHours(8), Path = "/" });
             return Results.NoContent();
         }).RequireRateLimiting("admin-login");

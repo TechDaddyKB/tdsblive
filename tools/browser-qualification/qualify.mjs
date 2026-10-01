@@ -10,6 +10,9 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const dotnetRoot = process.env.DOTNET_ROOT;
+assert.ok(dotnetRoot && path.isAbsolute(dotnetRoot), 'CI must supply an absolute setup-dotnet installation directory');
+const dotnetExecutable = path.join(dotnetRoot, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
 const directory = await mkdtemp(path.join(tmpdir(), 'tdsblive-browser-test-'));
 const port = await new Promise((resolve, reject) => {
   const server = createServer();
@@ -21,7 +24,7 @@ const port = await new Promise((resolve, reject) => {
 });
 await writeFile(path.join(directory, 'configuration.json'), JSON.stringify({ server: { host: '127.0.0.1', port } }));
 const origin = `http://127.0.0.1:${port}`;
-const host = spawn('dotnet', [path.join(root, 'src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'),
+const host = spawn(dotnetExecutable, [path.join(root, 'src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'),
   '--TDSBLive:DataDirectory', directory], { stdio: 'ignore' });
 let spawnFailed = false;
 host.on('error', () => { spawnFailed = true; });

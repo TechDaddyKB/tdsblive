@@ -10,39 +10,53 @@ namespace ExtensionSuite.Host;
 public sealed class AccessControl
 {
     private readonly ConcurrentDictionary<string, DateTimeOffset> sessions = new();
+    private readonly object sessionSync = new();
     private byte[]? adminHash;
-    public bool HasAdminCredential => adminHash is not null;
+    public bool HasAdminCredential { get { lock (sessionSync) return adminHash is not null; } }
 
     public void SetAdminCredential(string credential)
     {
         if (credential.Length < 32) throw new ArgumentException("Admin credentials require at least 32 characters.");
-        adminHash = SHA256.HashData(Encoding.UTF8.GetBytes(credential));
-        sessions.Clear();
+        lock (sessionSync)
+        {
+            adminHash = SHA256.HashData(Encoding.UTF8.GetBytes(credential));
+            sessions.Clear();
+        }
     }
 
-    public bool ValidateCredential(string candidate) => adminHash is not null && candidate.Length <= 1024 &&
+    public bool ValidateCredential(string candidate)
+    {
+        lock (sessionSync) return ValidateCredentialLocked(candidate);
+    }
+
+    private bool ValidateCredentialLocked(string candidate) => adminHash is not null && candidate.Length <= 1024 &&
         CryptographicOperations.FixedTimeEquals(adminHash, SHA256.HashData(Encoding.UTF8.GetBytes(candidate)));
 
-    public string CreateSession()
+    public string? TryCreateSession(string credential)
     {
-        foreach (var expired in sessions.Where(item => item.Value <= DateTimeOffset.UtcNow)) sessions.TryRemove(expired.Key, out _);
-        if (sessions.Count >= 32) throw new InvalidOperationException("Maximum concurrent admin sessions reached.");
-        var session = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        sessions[session] = DateTimeOffset.UtcNow.AddHours(8);
-        return session;
+        lock (sessionSync)
+        {
+            if (!ValidateCredentialLocked(credential)) return null;
+            foreach (var expired in sessions.Where(item => item.Value <= DateTimeOffset.UtcNow)) sessions.TryRemove(expired.Key, out _);
+            if (sessions.Count >= 32) return null;
+            var session = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+            sessions[session] = DateTimeOffset.UtcNow.AddHours(8);
+            return session;
+        }
     }
 
     public bool IsAuthenticated(HttpContext context)
     {
         var authorization = context.Request.Headers.Authorization.ToString();
         if (authorization.StartsWith("Bearer ", StringComparison.Ordinal)) return ValidateCredential(authorization[7..]);
-        return context.Request.Cookies.TryGetValue("tdsblive-session", out var session) &&
+        lock (sessionSync) return context.Request.Cookies.TryGetValue("tdsblive-session", out var session) &&
             sessions.TryGetValue(session, out var expires) && expires > DateTimeOffset.UtcNow;
     }
 
     public void RevokeSession(HttpContext context)
     {
-        if (context.Request.Cookies.TryGetValue("tdsblive-session", out var session)) sessions.TryRemove(session, out _);
+        lock (sessionSync)
+            if (context.Request.Cookies.TryGetValue("tdsblive-session", out var session)) sessions.TryRemove(session, out _);
         context.Response.Cookies.Delete("tdsblive-session");
     }
 }

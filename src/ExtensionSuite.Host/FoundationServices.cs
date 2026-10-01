@@ -12,6 +12,8 @@ public static class FoundationServices
     public static void AddFoundation(this WebApplicationBuilder builder)
     {
         builder.Logging.ClearProviders();
+        // The provider applies the validated application level, including Trace.
+        builder.Logging.SetMinimumLevel(LogLevel.Trace);
         builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 65536);
         builder.Services.AddSingleton<ApplicationPaths>();
         builder.Services.AddSingleton<ConfigurationStore>();

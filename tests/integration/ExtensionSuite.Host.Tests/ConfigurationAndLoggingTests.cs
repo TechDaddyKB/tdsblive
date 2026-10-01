@@ -10,6 +10,25 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class ConfigurationAndLoggingTests
 {
     [Fact]
+    public void LogIoFailureDoesNotInterruptApplicationExecution()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "tdsblive-log-tests", Guid.NewGuid().ToString());
+        var paths = new ApplicationPaths(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            { ["TDSBLive:DataDirectory"] = root }).Build());
+        try
+        {
+            Directory.CreateDirectory(root);
+            File.WriteAllText(paths.Logs, "blocked-directory");
+            using var provider = new RedactedFileLoggerProvider(paths, new ApplicationConfiguration { MinimumLogLevel = "Trace" }, new SensitiveValues());
+            var logger = provider.CreateLogger("tests");
+            Assert.True(logger.IsEnabled(LogLevel.Trace));
+            logger.LogTrace("Synthetic diagnostic");
+            Assert.Equal(1, provider.WriteFailures);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
     public async Task ConfigurationRejectsUnknownSecretFieldsAndLeavesPreviousFileOnValidationFailure()
     {
         var root = Path.Combine(Path.GetTempPath(), "tdsblive-config-tests", Guid.NewGuid().ToString());
