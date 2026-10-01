@@ -64,15 +64,29 @@ public sealed class VisualEditorTests
         using var app = new FoundationHostFactory(); using var http = app.CreateClient(); await Csrf(http);
         var definition = new OverlayDefinition { Id = "alerts", CanvasEnabled = true, Widgets = [new() { Kind = "alert" }] };
         (await http.PostAsJsonAsync("/api/overlays", definition)).EnsureSuccessStatusCode();
+        (await http.PostAsJsonAsync("/api/overlays", definition with { Id = "other-alerts" })).EnsureSuccessStatusCode();
         var ws = app.Server.CreateWebSocketClient(); ws.ConfigureRequest = r => r.Headers["Origin"] = "http://localhost";
+        using var live = await ws.ConnectAsync(new("ws://localhost/ws/overlay/alerts"), default);
+        using var other = await ws.ConnectAsync(new("ws://localhost/ws/overlay/other-alerts?preview=1"), default);
         using var preview = await ws.ConnectAsync(new("ws://localhost/ws/overlay/alerts?preview=1"), default);
         await preview.SendAsync(Encoding.UTF8.GetBytes("{\"op\":\"subscribe\",\"types\":[\"community.follow\"]}"), WebSocketMessageType.Text, true, default);
         var bytes = new byte[16384]; using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         await preview.ReceiveAsync(bytes, timeout.Token);
+        foreach (var socket in new[] { live, other })
+        {
+            await socket.SendAsync(Encoding.UTF8.GetBytes("{\"op\":\"subscribe\",\"types\":[\"*\"]}"), WebSocketMessageType.Text, true, timeout.Token);
+            await socket.ReceiveAsync(bytes, timeout.Token);
+        }
         (await http.PostAsJsonAsync("/api/overlays/alerts/preview-events", new PreviewEventRequest("community.follow"))).EnsureSuccessStatusCode();
         var frame = await preview.ReceiveAsync(bytes, timeout.Token);
         using var payload = JsonDocument.Parse(bytes.AsMemory(0, frame.Count));
         Assert.Equal("simulation", payload.RootElement.GetProperty("event").GetProperty("provenance").GetString());
+        foreach (var socket in new[] { live, other })
+        {
+            await socket.SendAsync(Encoding.UTF8.GetBytes("{\"op\":\"ping\"}"), WebSocketMessageType.Text, true, timeout.Token);
+            var received = await socket.ReceiveAsync(bytes, timeout.Token); using var response = JsonDocument.Parse(bytes.AsMemory(0, received.Count));
+            Assert.Equal("pong", response.RootElement.GetProperty("op").GetString());
+        }
         await using var db = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>().CreateDbContext();
         Assert.Empty(await db.Events.ToArrayAsync()); Assert.Empty(await db.Outbox.ToArrayAsync()); Assert.Empty(await db.RumbleDeliveries.ToArrayAsync());
     }

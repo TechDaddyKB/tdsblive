@@ -32,6 +32,11 @@ describe('bounded alert scheduling', () => {
     const c = widget(); c.alert.priority = 20; c.alert.interruptPolicy = 'higher-priority';
     q.tick(5000); q.enqueue(c, event('higher'), 5001); expect(q.tick(5001)[0].event.id).toBe('higher'); expect(q.interrupted).toBe(1);
   });
+  it('completes expired jobs before admitting a new interrupting job', () => {
+    const q = new AlertQueue(); const a = widget(); q.enqueue(a, event('expired'), 0);
+    q.enqueue({ ...a, id: 'high', alert: { ...a.alert, priority: 50, interruptPolicy: 'higher-priority' } }, event('new'), 5000);
+    expect(q.tick(5000)[0].event.id).toBe('new'); expect(q.completed).toBe(1); expect(q.interrupted).toBe(0);
+  });
   it('does not interrupt an active job when overflow rejects the incoming higher-priority job', () => {
     const q = new AlertQueue(); const a = widget(); a.alert.maximumQueueLength = 1; a.alert.overflowPolicy = 'drop-newest';
     q.enqueue(a, event('active'), 0); q.enqueue(a, event('waiting'), 0);

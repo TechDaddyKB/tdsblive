@@ -14,6 +14,7 @@ export class AlertQueue {
     const key = `${widget.id}:${event.id}`;
     if (this.seen.has(key)) return;
     this.seen.add(key); if (this.seen.size > 10000) this.seen.delete(this.seen.values().next().value!);
+    this.tick(now);
     if (now < (this.cooldown.get(widget.id) ?? -Infinity)) { this.dropped++; return; }
     const job = { key, widget, event, enqueued: this.sequence++ };
     const queued = this.pending.filter(j => j.widget.alert.group === a.group);
