@@ -42,6 +42,9 @@ jobs:
           $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Append
 
       - name: Scan tracked files before reading source
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
         run: |
           $trackedFiles = @(git ls-files)
@@ -108,6 +111,9 @@ jobs:
         run: npm run test:coverage
 
       - name: Qualify sanitized capture and synthetic fixtures
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
         run: |
           python tools/rumble_evidence.py verify
@@ -116,6 +122,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify coverage reports contain production code
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
         run: python tools/verify_coverage.py
 
       - name: End analysis and require SonarQube quality gate
