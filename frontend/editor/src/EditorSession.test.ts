@@ -17,7 +17,7 @@ describe('editor autosave and local history', () => {
     let complete: ((scene: Scene) => void) | undefined;
     const save = vi.fn((s: Scene) => new Promise<Scene>(resolve => { complete = resolve; expect(s.version).toBe(save.mock.calls.length); }));
     const session = new EditorSession(scene(), save); session.edit({ ...session.snapshot.document, name: 'One' });
-    const flushing = session.flush(); session.edit({ ...session.snapshot.document, name: 'Two' }); complete!({ ...scene(), name: 'One', version: 2 });
+    const flushing = session.flush(); await vi.waitFor(() => expect(complete).toBeDefined()); session.edit({ ...session.snapshot.document, name: 'Two' }); complete!({ ...scene(), name: 'One', version: 2 });
     await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(2)); complete!({ ...scene(), name: 'Two', version: 3 }); expect(await flushing).toBe(true);
     expect(session.snapshot.document.name).toBe('Two'); expect(session.snapshot.document.version).toBe(3); session.dispose();
   });
@@ -39,4 +39,10 @@ describe('editor autosave and local history', () => {
     expect(await session.flush()).toBe(true); session.edit({ ...session.snapshot.document, name: 'Unsent' }); session.dispose(); await vi.advanceTimersByTimeAsync(1000);
     expect(save).toHaveBeenCalledTimes(2);
   });
+});
+
+it('reports synchronous persistence errors and allows a later explicit retry', async () => {
+  const save = vi.fn().mockImplementationOnce(() => { throw new Error('Synchronous failure'); }).mockImplementation(async (s: Scene) => ({ ...s, version: s.version + 1 }));
+  const session = new EditorSession(scene(), save); session.edit({ ...session.snapshot.document, name: 'Local' }); expect(await session.flush()).toBe(false);
+  expect(session.snapshot.status).toBe('error'); expect(session.snapshot.document.name).toBe('Local'); expect(await session.flush()).toBe(true); session.dispose();
 });

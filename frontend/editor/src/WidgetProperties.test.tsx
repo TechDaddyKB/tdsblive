@@ -13,7 +13,7 @@ it('edits text, bounded geometry, rotation, appearance and lock/hide without acc
   for (const [label, n] of [['X', '-20'], ['Y', '40'], ['Width', '500'], ['Height', '300'], ['Rotation', '45'], ['Font size', '48']]) change(label, n);
   fireEvent.click(screen.getByLabelText('Locked')); fireEvent.click(screen.getByLabelText('Hidden'));
   expect(value()).toMatchObject({ name: 'Title', text: '<script>escaped</script>', color: '#123456', x: -20, y: 40, width: 500, height: 300, rotation: 45, fontSize: 48, locked: true, hidden: true });
-  change('Width', '0'); change('X', '9000'); change('Height', ''); expect(value().width).toBe(500); expect(value().x).toBe(-20); expect(value().height).toBe(300);
+  change('Width', '0'); change('X', '9000'); change('Height', ''); change('Font size', '48.5'); expect(value().fontSize).toBe(48); expect(value().width).toBe(500); expect(value().x).toBe(-20); expect(value().height).toBe(300);
 });
 it.each(['image', 'video', 'audio'] as const)('offers only compatible %s assets and playback controls', kind => {
   render(<Harness kind={kind} />); const id = assets.find(a => a.mime.startsWith(`${kind}/`))!.id; change('Media asset', id); expect(value().assetId).toBe(id);
@@ -22,7 +22,7 @@ it.each(['image', 'video', 'audio'] as const)('offers only compatible %s assets 
 });
 it('edits chat selection and persistence without mutating unrelated chat defaults', () => {
   render(<Harness kind="chat" />); const select = screen.getByLabelText('Chat platforms') as HTMLSelectElement; for (const option of select.options) option.selected = option.value === 'rumble'; fireEvent.change(select);
-  change('Chat font size', '36'); fireEvent.click(screen.getByLabelText('Persistent chat')); expect(value().chat).toMatchObject({ platforms: ['rumble'], fontSize: 36, persistent: true, maximumMessages: 100 });
+  change('Chat font size', '36'); fireEvent.click(screen.getByLabelText('Persistent chat')); expect(value().chat).toMatchObject({ platforms: ['rumble'], fontSize: 36, persistent: true, maximumMessages: 100 }); change('Chat font size', '36.5'); expect(value().chat.fontSize).toBe(36);
 });
 it('configures alert presets, templates, media and complete bounded queue policies', () => {
   render(<Harness kind="alert" />); change('Alert preset', '3'); expect(value().alert).toMatchObject({ eventTypes: ['support.bits'], platforms: ['twitch'] });
@@ -32,4 +32,8 @@ it('configures alert presets, templates, media and complete bounded queue polici
   fireEvent.click(screen.getByLabelText('Interruptible')); change('Interrupt policy', 'higher-priority'); change('Overflow policy', 'drop-newest'); change('Animation', 'slide');
   expect(value().alert).toMatchObject({ eventTypes: ['support.bits', 'support.gift'], platforms: ['twitch', 'kick'], template: '{user}: {message}', group: 'sounds', priority: 10, durationMs: 1000, cooldownMs: 2000, concurrency: 2, maximumQueueLength: 3, interruptible: false, interruptPolicy: 'higher-priority', overflowPolicy: 'drop-newest', animation: 'slide', mediaAssetId: assets[0].id, soundAssetId: assets[2].id });
   change('Concurrency', '9'); change('Priority', '-101'); expect(value().alert.concurrency).toBe(2); expect(value().alert.priority).toBe(10);
+});
+
+it('accepts both native and forwarded custom Streamer.bot trigger routes', () => {
+  render(<Harness kind="alert" />); change('Alert preset', '13'); expect(value().alert).toMatchObject({ eventTypes: ['integration.custom'], platforms: ['general', 'custom'] });
 });

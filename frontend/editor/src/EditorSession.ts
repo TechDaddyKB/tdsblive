@@ -42,9 +42,7 @@ export class EditorSession {
       return Promise.resolve();
     }
     const sent = structuredClone(this.state.document); this.update(this.state.document, 'saving');
-    let writing: Promise<Scene>;
-    try { writing = this.persist(sent); } catch (error) { writing = Promise.reject(error); }
-    this.work = writing.then(saved => {
+    this.work = Promise.resolve().then(() => this.persist(sent)).then(saved => {
       if (this.disposed) return;
       this.baseline = fingerprint(saved);
       const document = { ...this.state.document, version: saved.version };

@@ -23,7 +23,7 @@ export class AlertQueue {
     if (queued.length >= a.maximumQueueLength) {
       this.dropped++;
       if (a.overflowPolicy === 'drop-newest') return;
-      const oldest = queued.reduce((l, r) => l.enqueued < r.enqueued ? l : r);
+      const oldest = queued.reduce((l, r) => l.enqueued < r.enqueued ? l : r, queued[0]);
       this.pending = this.pending.filter(j => j !== oldest);
     }
     const active = this.running.filter(j => j.widget.alert.group === a.group);

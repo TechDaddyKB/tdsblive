@@ -5,4 +5,4 @@
 .active-alert { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .active-alert img, .active-alert video { max-height: 75%; }
 .active-alert p { margin: .3em 0; }
-.canvas-preview-label { position: absolute; z-index: 1000; top: 0; left: 0; background: #223; color: white; font: 14px Arial; padding: .3em; }
+.canvas-preview-label { position: absolute; z-index: 1000; top: 0; left: 0; background: #223; color: white; font: 14px Arial, sans-serif; padding: .3em; }
