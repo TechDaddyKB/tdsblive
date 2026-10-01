@@ -46,6 +46,7 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
         item.Validate();
         if (item.Provenance != EventProvenance.Live || item.Support is not { } support) return false;
         support.Validate();
+        ValidateRateDate(rate, item.OccurredAt);
         // Gift accounting is gated until the correlation strategy establishes purchase evidence.
         var gated = support.GatedReason ?? (support.Kind == "gift" ?
             item.Platform == "rumble" ? "rumble_gift_unverified" : "gift_correlation_pending" : null);
@@ -106,6 +107,47 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
             AfterJson = JsonSerializer.Serialize(new { identityId, supporterId }) });
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<bool> ReconcileAsync(Guid id, int expectedVersion, CurrencyRate? rate = null,
+        decimal? nominalUsdMinorPerUnit = null, CancellationToken cancellationToken = default)
+    {
+        if (expectedVersion < 1) throw new ArgumentOutOfRangeException(nameof(expectedVersion));
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var row = await db.FinancialEvents.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, cancellationToken)
+            ?? throw new KeyNotFoundException("Financial contribution not found.");
+        if (row.Version != expectedVersion) return false;
+        if (row.AccountingState != "counted") throw new InvalidOperationException("Gated or excluded purchases cannot be revalued before purchase evidence is established.");
+        ValidateRateDate(rate, new DateTimeOffset(row.OccurredAtTicks, TimeSpan.Zero));
+        var native = row.NativeAmountMinor is { } amount && row.NativeCurrency is { } currency && row.NativeMinorUnitDigits is { } digits
+            ? new NativeMoney(amount, currency, digits) : null;
+        var value = SupportValuator.Value(native, row.Quantity, nominalUsdMinorPerUnit, rate);
+        // A failed lookup must not erase a previously accepted valuation.
+        if (value.UsdAmountMinor is null && row.UsdAmountMinor is not null) return true;
+        var old = new SupportValuation(row.UsdAmountMinor, row.ValuationMethod, row.Estimated,
+            row.FxRate is null ? null : decimal.Parse(row.FxRate, CultureInfo.InvariantCulture),
+            row.FxRateDay is { } day ? DateOnly.FromDayNumber(day) : null, row.FxProvider, row.PendingReason);
+        if (old == value) return true;
+        var rateText = value.FxRate?.ToString(CultureInfo.InvariantCulture);
+        var rateDay = value.FxRateDate?.DayNumber;
+        var changed = await db.FinancialEvents.Where(item => item.Id == id && item.Version == expectedVersion)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(item => item.UsdAmountMinor, value.UsdAmountMinor)
+                .SetProperty(item => item.ValuationMethod, value.Method).SetProperty(item => item.Estimated, value.Estimated)
+                .SetProperty(item => item.FxRate, rateText).SetProperty(item => item.FxRateDay, rateDay)
+                .SetProperty(item => item.FxProvider, value.FxProvider).SetProperty(item => item.PendingReason, value.PendingReason)
+                .SetProperty(item => item.Version, expectedVersion + 1), cancellationToken);
+        if (changed != 1) return false;
+        db.FinancialAudits.Add(new FinancialAudit { Id = Guid.CreateVersion7(), ContributionId = id,
+            CreatedAtTicks = DateTimeOffset.UtcNow.UtcTicks, Operation = "reconcile",
+            BeforeJson = JsonSerializer.Serialize(old), AfterJson = JsonSerializer.Serialize(value) });
+        await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); return true;
+    }
+
+    private static void ValidateRateDate(CurrencyRate? rate, DateTimeOffset occurredAt)
+    {
+        if (rate is not null && rate.RequestedDate != DateOnly.FromDateTime(occurredAt.UtcDateTime))
+            throw new ArgumentException("Rate request date must match the contribution's UTC occurrence date.");
     }
 
     private static string BoundedName(string? name) => string.IsNullOrWhiteSpace(name) ? "Unknown supporter" : name[..Math.Min(name.Length, 128)];
