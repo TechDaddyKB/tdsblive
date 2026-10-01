@@ -3,8 +3,12 @@
 Default origin: `http://127.0.0.1:17474`. HTTPS is not required. The configuration
 file resides under `%LOCALAPPDATA%/TDSBLive`, separate from binaries and DPAPI
 credentials. `TDSBLive__DataDirectory` overrides the data directory for isolated
-tests. Configuration changes require restart; writes validate and replace the
-file atomically. Unknown configuration fields, including credential fields, fail.
+tests. Configuration changes require restart. On first startup, `configuration.json`
+provides the bootstrap settings; after migrations, SQLite holds the authoritative
+non-secret configuration. Use PUT `/api/configuration` for subsequent changes.
+Writes validate, update SQLite transactionally and replace the fallback file
+atomically before committing. A crash before commit leaves the previous SQLite
+configuration authoritative. Unknown fields, including credential fields, fail.
 
 The host validates explicit hosts and same-origin requests. Writes require an
 antiforgery cookie and `X-TDSBLive-CSRF` header obtained from `/api/auth/csrf`.
@@ -44,7 +48,16 @@ into `frontend/editor/src/generated/api-types.ts` using the separately locked
 from the application's TypeScript 6 toolchain. Restore with `npm ci --prefix
 tools/api-type-generator`, then `npm run generate --prefix tools/api-type-generator`
 after refreshing the snapshot from the running host. Contract drift verification
-is part of remaining G02 qualification.
+is checked by Windows CI against a real temporary-data host.
+
+Structured redacted logs are retained for 14 days by default in SQLite and dated
+JSONL files. Pre-migration startup diagnostics use the file sink. A failed file or
+SQLite log write increments a diagnostic failure counter and does not terminate
+the application. SQLite log writes use an independent 1,024-row bounded queue,
+so EF transaction logging cannot block its own database transaction. A full queue
+or database failure leaves the file sink as fallback; shutdown drains the queue
+before the final database checkpoint. Diagnostics expose file/SQLite write failure
+counts and isolated integration health. Log messages omit credential values and exception messages.
 
 ## WebSocket operations
 

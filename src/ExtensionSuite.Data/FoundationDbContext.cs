@@ -7,6 +7,8 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
     public DbSet<StoredEvent> Events => Set<StoredEvent>();
     public DbSet<SourceCheckpoint> Checkpoints => Set<SourceCheckpoint>();
     public DbSet<OutboxEntry> Outbox => Set<OutboxEntry>();
+    public DbSet<StoredConfiguration> Configurations => Set<StoredConfiguration>();
+    public DbSet<StoredLog> Logs => Set<StoredLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,6 +20,12 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
             entity.HasIndex(item => item.Type);
         });
         modelBuilder.Entity<SourceCheckpoint>().HasKey(item => new { item.Source, item.Provenance });
+        modelBuilder.Entity<StoredConfiguration>().HasKey(item => item.Name);
+        modelBuilder.Entity<StoredLog>(entity =>
+        {
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.TimestampTicks);
+        });
         modelBuilder.Entity<OutboxEntry>(entity =>
         {
             entity.HasKey(item => item.EventId);
@@ -25,6 +33,19 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
             entity.HasIndex(item => new { item.DeliveredAtTicks, item.CreatedAtTicks });
         });
     }
+}
+
+public sealed class StoredConfiguration
+{
+    public required string Name { get; set; }
+    public required string Json { get; set; }
+}
+
+public sealed class StoredLog
+{
+    public long Id { get; set; }
+    public long TimestampTicks { get; set; }
+    public required string Json { get; set; }
 }
 
 public sealed class StoredEvent

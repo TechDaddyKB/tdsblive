@@ -1,14 +1,15 @@
 # Security and local HTTP
 
 **HTTPS is not required.** Default host access is loopback HTTP on port 17474.
-The scaffold exposes only product/status metadata. It has no credential setup,
-ledger or asset upload routes yet. G02 adds privileged endpoint protection;
-optional LAN operation must be explicit, authenticated and origin/CSRF protected.
+The foundation exposes editor, configuration, diagnostics and credential setup
+routes with host/origin validation and CSRF protection. Optional LAN operation is
+explicit and requires a Windows DPAPI admin credential before startup.
 HTTP on LAN does not encrypt traffic; optional HTTPS may be used without becoming
 a core requirement. Never expose a privileged editor through an unauthenticated
 LAN binding.
 
-Store integration credentials with DPAPI on Windows. Redact Rumble URLs/query
+Admin login has a bounded session count and rate limit; rotation invalidates
+sessions atomically. Store integration credentials with DPAPI on Windows. Redact Rumble URLs/query
 credentials, stream keys, integration passwords and tokens before persistence,
 display or diagnostics. Widgets never receive credentials. Sandbox custom widgets
 and mediate permissions in G12. Validate files/package traversal and size limits.

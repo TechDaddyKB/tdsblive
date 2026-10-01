@@ -3,6 +3,21 @@ using ExtensionSuite.Data;
 
 namespace ExtensionSuite.Host;
 
+public sealed class FoundationLogWriter(FoundationStateStore state) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        try { await state.RunLogsAsync(stoppingToken); }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { /* Expected shutdown. */ }
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await base.StopAsync(cancellationToken);
+        state.FlushLogs(cancellationToken);
+    }
+}
+
 public sealed record IntegrationHealth(string State, string? ErrorType = null);
 public sealed class IntegrationHealthRegistry
 {

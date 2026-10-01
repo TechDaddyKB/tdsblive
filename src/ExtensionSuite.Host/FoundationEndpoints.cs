@@ -90,14 +90,17 @@ public static class FoundationEndpoints
             if (!request.Persist) hub.Publish(item with { Raw = configuration.RetainRawEvents ? item.Raw : null });
             return Results.Ok(new { eventId = item.Id, persisted, provenance = "simulation", liveActionsAllowed = false });
         });
-        app.MapGet("/api/diagnostics", async (IDbContextFactory<FoundationDbContext> factory, CancellationToken cancellationToken) =>
+        app.MapGet("/api/diagnostics", async (IDbContextFactory<FoundationDbContext> factory, FoundationStateStore state,
+            IntegrationHealthRegistry health, IEnumerable<ILoggerProvider> providers, CancellationToken cancellationToken) =>
         {
             await using var db = await factory.CreateDbContextAsync(cancellationToken);
             return Results.Ok(new
             {
                 database = "ready", migrations = await db.Database.GetAppliedMigrationsAsync(cancellationToken),
                 eventCount = await db.Events.CountAsync(cancellationToken), pendingDeliveries = await db.Outbox.CountAsync(row => row.DeliveredAtTicks == null, cancellationToken),
-                secretStorage = OperatingSystem.IsWindows() ? "windowsDpapi" : "unavailable", liveIntegrations = "ownedByG03AndG04"
+                secretStorage = OperatingSystem.IsWindows() ? "windowsDpapi" : "unavailable", liveIntegrations = "ownedByG03AndG04",
+                integrationHealth = health.Snapshot(), sqliteLogFailures = state.LogPersistenceFailures,
+                fileLogFailures = providers.OfType<RedactedFileLoggerProvider>().Sum(provider => provider.WriteFailures)
             });
         });
         app.MapGet("/api/diagnostics/logs", (ApplicationPaths paths) =>

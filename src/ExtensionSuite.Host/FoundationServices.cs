@@ -16,6 +16,7 @@ public static class FoundationServices
         builder.Logging.SetMinimumLevel(LogLevel.Trace);
         builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 65536);
         builder.Services.AddSingleton<ApplicationPaths>();
+        builder.Services.AddSingleton(services => new FoundationStateStore(services.GetRequiredService<ApplicationPaths>().Database));
         builder.Services.AddSingleton<ConfigurationStore>();
         builder.Services.AddSingleton(services => services.GetRequiredService<ConfigurationStore>().Load());
         builder.Services.AddSingleton<ILoggerProvider, RedactedFileLoggerProvider>();
@@ -58,6 +59,7 @@ public static class FoundationServices
             options.Cookie.SecurePolicy = CookieSecurePolicy.None;
         });
         builder.Services.AddHostedService<DatabaseShutdown>();
+        builder.Services.AddHostedService<FoundationLogWriter>();
         builder.Services.AddHostedService<IsolatedIntegrations>();
         builder.Services.AddHostedService<DurableOutboxWorker>();
     }
@@ -69,6 +71,7 @@ public static class FoundationServices
         var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
         await using var db = await factory.CreateDbContextAsync();
         await DatabaseLifecycle.InitializeAsync(db);
+        app.Services.GetRequiredService<ConfigurationStore>().InitializePersistence(configuration);
         if (OperatingSystem.IsWindows())
         {
             var vault = app.Services.GetRequiredService<WindowsSecretVault>();

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ExtensionSuite.Core;
+using ExtensionSuite.Data;
 
 namespace ExtensionSuite.Host;
 
@@ -20,7 +21,7 @@ public sealed class ApplicationPaths
     }
 }
 
-public sealed class ConfigurationStore(ApplicationPaths paths)
+public sealed class ConfigurationStore(ApplicationPaths paths, FoundationStateStore? state = null)
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
@@ -30,10 +31,11 @@ public sealed class ConfigurationStore(ApplicationPaths paths)
 
     public ApplicationConfiguration Load()
     {
-        if (!File.Exists(paths.Configuration)) return new ApplicationConfiguration();
+        var persisted = state?.ReadConfiguration();
+        if (persisted is null && !File.Exists(paths.Configuration)) return new ApplicationConfiguration();
         try
         {
-            var config = JsonSerializer.Deserialize<ApplicationConfiguration>(File.ReadAllText(paths.Configuration), Options)
+            var config = JsonSerializer.Deserialize<ApplicationConfiguration>(persisted ?? File.ReadAllText(paths.Configuration), Options)
                 ?? throw new JsonException();
             config.Validate();
             return config;
@@ -44,6 +46,8 @@ public sealed class ConfigurationStore(ApplicationPaths paths)
         }
     }
 
+    public void InitializePersistence(ApplicationConfiguration configuration) => state?.Initialize(JsonSerializer.Serialize(configuration, Options));
+
     public async Task SaveAsync(ApplicationConfiguration configuration, CancellationToken cancellationToken)
     {
         configuration.Validate();
@@ -52,7 +56,9 @@ public sealed class ConfigurationStore(ApplicationPaths paths)
         {
             var pending = paths.Configuration + ".pending";
             await File.WriteAllTextAsync(pending, JsonSerializer.Serialize(configuration, Options), cancellationToken);
-            File.Move(pending, paths.Configuration, overwrite: true);
+            void SaveFallback() => File.Move(pending, paths.Configuration, overwrite: true);
+            if (state is null) SaveFallback();
+            else state.SaveConfiguration(JsonSerializer.Serialize(configuration, Options), SaveFallback);
         }
         finally { gate.Release(); }
     }

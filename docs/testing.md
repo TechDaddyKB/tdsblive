@@ -31,14 +31,21 @@ disabled. Test sources, fixtures, generated/dependency/build output and developm
 tooling/configuration are not production coverage targets. Handwritten runtime
 entrypoints and domain/UI code remain included.
 
-Actions upload only TRX, coverage XML and LCOV artifacts, retained for 14 days.
+Actions upload TRX, coverage XML, LCOV and the isolated G02 editor screenshot,
+retained for 14 days. The screenshot contains only generated non-production state.
 They never upload scanner state or original references. The deterministic secrets
 scanner requires a Sonar user token even for local scanning. Fork/Dependabot runs
 receive no token and fail closed before reading source; they require maintainer
 review and promotion to a trusted branch for tests and analysis. Protected merges
 require the actual SonarQube check from that reviewed trusted branch.
 
-The current test corpus does not validate real Rumble purchases, production
-dedupe, Streamer.bot actions, editor interaction, OBS audio, LAN authentication,
+G02 tests qualify canonical-event persistence/dedupe, migration rollback, outbox
+recovery, isolated simulation, HTTP security, WebSockets, configuration and redacted
+logs. Windows-only tests use actual DPAPI and authenticated non-loopback HTTP.
+Separate CI child-process and fresh-browser qualifiers verify crash/restart,
+OpenAPI drift and rendered editor/login shells without user or production data.
+
+The current test corpus does not validate real Rumble purchases, platform
+dedupe, Streamer.bot actions, visual-editor interaction, OBS audio,
 financial precision or installer behavior. Their owning goals add those tests and
 record physical/live validation. Keep any unavailable evidence visibly blocked.
