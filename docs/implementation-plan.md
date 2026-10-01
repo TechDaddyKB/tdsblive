@@ -78,7 +78,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
 | [G01](#g01) | Create repository and quality infrastructure | G00 | Complete |
 | [G02](#g02) | Build application foundation | G01 | Complete |
-| [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | In progress |
+| [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Complete |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Not started |
@@ -210,7 +210,7 @@ None for G02 acceptance. Live platform adapters, OBS behavior, visual editing, f
 
 ## G03 — Integrate Streamer.bot and Speaker.bot
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G02
 
 ### Deliverables
@@ -234,10 +234,13 @@ Prerequisites: G02
 - [Windows run 36855820795](https://github.com/camarokris/tdsblive/actions/runs/36855820795), revision `43b5037`, passes Windows tests, OpenCover/LCOV import, replay qualification, crash/restart/HTTP contracts, isolated browser rendering and generated type checks. [SonarQube PR analysis](https://sonarcloud.io/dashboard?id=camarokris_tdsblive&pullRequest=4) passes with **85.9% new-code coverage**, 0% duplication, A reliability/security/maintainability, and all hotspots reviewed. CodeQL passes. The first failing gate led to input confinement and reliability refactoring; two specific search-query/port-as-content findings were reviewed as false positives with recorded data-flow rationale, without rule exclusions.
 - Live GE-Proton qualification on 2026-10-01 confirmed Streamer.bot **1.0.7**, Speaker.bot **0.1.7** (local port **7580**), all 13 custom-trigger registrations, actual dedicated test-trigger execution and matching synthetic event in the host inspector, safe sample/replay behavior, and Speaker.bot Pause/Resume acknowledgements. Repeat command: `python tools/qualify_bots.py --execute-local-test-trigger-and-queue --speaker-port 7580`. Uses temporary host data and dedicated synthetic actions; no chat/OBS/financial effects. Product default ports are unchanged.
 
+- Final implementation revision `19c01f7` passes [Windows run 36861946605](https://github.com/camarokris/tdsblive/actions/runs/36861946605), including the SonarQube quality gate and OpenCover/LCOV analysis. Local verification passes 103 backend tests (two Windows-only skips), 20 frontend tests, four import tests, type checks, lint and deterministic secrets scanning.
+- Operator confirmed the regenerated bundle imports successfully through Streamer.bot's graphical Import dialog on 2026-10-01. The initial matching-version rejection was corrected by removing the optional author gate and retaining the established import-format floor; runtime qualification remains limited to 1.0.7. After restoring the deliberately separate test binding, real trigger execution, inspector reception, isolated replay and Speaker.bot Pause/Resume passed again.
+- Delivery: [PR #4](https://github.com/camarokris/tdsblive/pull/4); protected integration and the final evidence revision are traceable through the PR.
+
 ### Blockers
 
-- Native CLI import, registration and trigger execution passed. The graphical importer rejected the initial bundle minimum-version gate despite displaying matching 1.0.7 versions. The regenerated bundle removes the optional author gate and uses the established import-format floor; successful graphical import is awaiting operator verification. Runtime qualification remains 1.0.7 only.
-- Final importer/Windows cleanup revision and protected-main merge remain pending. [PR #4](https://github.com/camarokris/tdsblive/pull/4) contains the implementation; G03 remains In progress until those checks pass.
+None. Compatibility beyond native Streamer.bot 1.0.7 remains unverified and documented; Rumble ingestion and real audio/OBS qualification belong to later goals.
 
 <a id="g04"></a>
 
