@@ -6,7 +6,7 @@ export interface ChatSettings extends WireChatSettings {
   backgroundOpacity: number; font: string; fontAssetId: string | null; fontSize: number; platformColors: Record<Platform, string>;
   ignoredUsers: string[]; ignoredPrefixes: string[]; hideBotMessages: boolean; botUsers: string[];
 }
-export interface OverlayDefinition extends WireOverlayDefinition { id: string; name: string; width: number; height: number; background: string; version: number; chat: ChatSettings }
+export interface OverlayDefinition extends WireOverlayDefinition { id: string; name: string; width: number; height: number; background: string; version: number; chat: ChatSettings; canvasEnabled?: boolean }
 export interface ChatEvent {
   id: string; type: string; platform: Platform; occurredAt: string; receivedAt: string; provenance: 'live' | 'simulation' | 'replay';
   user?: { platformUserId?: string | null; login?: string | null; displayName?: string | null; avatarUrl?: string | null; badges?: string[] | null; isBot?: boolean; badgeDetails?: { name: string; imageUrl?: string | null; version?: string | null }[] | null } | null;

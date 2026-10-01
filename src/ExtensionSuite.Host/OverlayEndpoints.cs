@@ -1,6 +1,8 @@
 using ExtensionSuite.Core;
 using ExtensionSuite.Data;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using ExtensionSuite.StreamerBot;
 
 namespace ExtensionSuite.Host;
 
@@ -8,6 +10,48 @@ public static class OverlayEndpoints
 {
     public static void MapOverlayEndpoints(this WebApplication app)
     {
+        app.MapGet("/api/overlays", async (OverlayStore store, CancellationToken ct) => TypedResults.Ok(await store.ListAsync(ct)));
+        app.MapPost("/api/overlays", async (OverlayDefinition value, OverlayStore store, AssetStore assets, CancellationToken ct) =>
+        {
+            try { value.Validate(); } catch (ArgumentException) { return Results.BadRequest(); }
+            if (!await ValidAssetsAsync(value, assets, ct)) return Results.BadRequest();
+            return await store.CreateAsync(value, ct) ? Results.Created($"/api/overlays/{value.Id}", value) : Results.Conflict();
+        }).Produces<OverlayDefinition>(201);
+        app.MapGet("/api/overlays/{id}/revisions", async (string id, OverlayStore store, CancellationToken ct) =>
+            await store.GetAsync(id, ct) is null ? Results.NotFound() : Results.Ok(await store.RevisionsAsync(id, ct))).Produces<OverlayRevision[]>();
+        app.MapPost("/api/overlays/{id}/revisions/{version:int}/restore", async (string id, int version, RestoreOverlayRevision request,
+            OverlayStore store, AssetStore assets, EditorEventHub hub, CancellationToken ct) =>
+        {
+            var saved = await store.RevisionAsync(id, version, ct);
+            if (saved is null) return Results.NotFound();
+            var restored = saved with { Version = request.ExpectedVersion };
+            try { restored.Validate(); } catch (ArgumentException) { return Results.BadRequest(); }
+            if (!await ValidAssetsAsync(restored, assets, ct)) return Results.BadRequest();
+            if (!await store.SaveAsync(restored, ct)) return Results.Conflict();
+            var updated = (await store.GetAsync(id, ct))!; hub.UpdateOverlay(updated); return Results.Ok(updated);
+        }).Produces<OverlayDefinition>();
+        app.MapPost("/api/overlays/{id}/preview-events", async (string id, PreviewEventRequest request, OverlayStore store,
+            EditorEventHub hub, SensitiveValues sensitive, StreamerBotEventNormalizer normalizer, TimeProvider clock, CancellationToken ct) =>
+        {
+            if (await store.GetAsync(id, ct) is null) return Results.NotFound();
+            if (string.IsNullOrWhiteSpace(request.Type) || request.Type.Length > 128 || string.IsNullOrWhiteSpace(request.Platform) ||
+                request.Platform.Length > 64 || request.User.Length > 128 || request.Message.Length > 4096) return Results.BadRequest();
+            var now = clock.GetUtcNow();
+            var item = new CanonicalEvent { Source = "overlay-preview", Platform = request.Platform, Type = request.Type,
+                NativeType = "SyntheticPreview", OccurredAt = now, ReceivedAt = now, Provenance = EventProvenance.Simulation,
+                DedupeKey = Guid.CreateVersion7().ToString(), User = new(DisplayName: request.User), Message = new(request.Message), Raw = request.Raw };
+            if (request.Mode == "native")
+            {
+                if (request.Raw is null || normalizer.Normalize(request.Raw, now).Event is not { } normalized) return Results.BadRequest();
+                item = normalized with { Id = Guid.CreateVersion7(), Source = "overlay-preview", OccurredAt = now, ReceivedAt = now,
+                    Provenance = EventProvenance.Simulation, DedupeKey = Guid.CreateVersion7().ToString(), BridgePath = [] };
+            }
+            else if (request.Mode != "synthetic") return Results.BadRequest();
+            var clean = CredentialRedactor.Json(System.Text.Json.JsonSerializer.SerializeToNode(item, EventStore.JsonOptions), sensitive.Snapshot());
+            item = clean!.Deserialize<CanonicalEvent>(EventStore.JsonOptions)!;
+            hub.PublishPreview(id, item);
+            return Results.Ok(new { id = item.Id, provenance = "simulation", persisted = false, liveActionsAllowed = false });
+        });
         app.MapGet("/overlay/{id}", async (string id, OverlayStore store, CancellationToken ct) =>
             await store.GetAsync(id, ct) is null ? Results.NotFound() : Shell(app));
         app.MapGet("/chat/{id}", async (string id, OverlayStore store, CancellationToken ct) =>
@@ -18,7 +62,7 @@ public static class OverlayEndpoints
         {
             if (value.Id != id) return Results.BadRequest();
             try { value.Validate(); } catch (ArgumentException) { return Results.BadRequest(); }
-            if (value.Chat.FontAssetId is { } font && (await assets.GetAsync(font, ct))?.Mime.StartsWith("font/", StringComparison.Ordinal) != true) return Results.BadRequest();
+            if (!await ValidAssetsAsync(value, assets, ct)) return Results.BadRequest();
             if (!await store.SaveAsync(value, ct)) return Results.Conflict();
             var updated = (await store.GetAsync(id, ct))!; hub.UpdateOverlay(updated);
             return Results.Ok(updated);
@@ -28,7 +72,8 @@ public static class OverlayEndpoints
             var overlay = await overlays.GetAsync(id, ct);
             if (overlay is null) return Results.NotFound();
             var history = await events.ChatAsync(500, ct);
-            return Results.Ok(history.Where(overlay.Chat.Accepts).Take(overlay.Chat.MaximumMessages).Select(PublicChat).ToArray());
+            return Results.Ok(history.Where(item => overlay.CanvasEnabled ? overlay.Widgets.Any(w => !w.Hidden && w.Kind == "chat" && w.Chat.Accepts(item)) : overlay.Chat.Accepts(item))
+                .Take(overlay.CanvasEnabled ? 500 : overlay.Chat.MaximumMessages).Select(PublicChat).ToArray());
         }).Produces<CanonicalEvent[]>();
         app.Map("/ws/overlay/{id}", async (string id, OverlayStore overlays, EditorEventHub hub, HttpContext context) =>
         {
@@ -58,13 +103,34 @@ public static class OverlayEndpoints
             }
             catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid asset MIME, size, filename, SVG or font license declaration." }); }
         }).Produces<AssetInfo>();
-        app.MapGet("/assets/{id}", async (string id, AssetStore store, HttpContext context) =>
+        app.MapMethods("/assets/{id}", ["GET", "HEAD"], async (string id, AssetStore store, HttpContext context) =>
         {
             var info = await store.GetAsync(id, context.RequestAborted);
             if (info is null || !File.Exists(store.PathFor(id))) return Results.NotFound();
             context.Response.Headers.ContentSecurityPolicy = "default-src 'none'; sandbox";
             return Results.File(store.PathFor(id), info.Mime, enableRangeProcessing: true);
         });
+    }
+    private static async Task<bool> ValidAssetsAsync(OverlayDefinition overlay, AssetStore assets, CancellationToken ct)
+    {
+        var fonts = new[] { overlay.Chat.FontAssetId }.Concat(overlay.Widgets.Select(w => w.Chat.FontAssetId)).Where(id => id is not null);
+        foreach (var id in fonts) if ((await assets.GetAsync(id!, ct))?.Mime.StartsWith("font/", StringComparison.Ordinal) != true) return false;
+        foreach (var widget in overlay.Widgets)
+        {
+            if (widget.AssetId is { } id)
+            {
+                var mime = (await assets.GetAsync(id, ct))?.Mime;
+                var family = widget.Kind switch { "image" => "image/", "video" => "video/", "audio" => "audio/", _ => "invalid/" };
+                if (mime?.StartsWith(family, StringComparison.Ordinal) != true) return false;
+            }
+            if (widget.Alert.MediaAssetId is { } media)
+            {
+                var mime = (await assets.GetAsync(media, ct))?.Mime;
+                if (mime?.StartsWith("image/", StringComparison.Ordinal) != true && mime?.StartsWith("video/", StringComparison.Ordinal) != true) return false;
+            }
+            if (widget.Alert.SoundAssetId is { } sound && (await assets.GetAsync(sound, ct))?.Mime.StartsWith("audio/", StringComparison.Ordinal) != true) return false;
+        }
+        return true;
     }
     public static CanonicalEvent PublicChat(CanonicalEvent item) => item with { Raw = null, Monetary = null };
     private static IResult Shell(WebApplication app)
@@ -73,3 +139,5 @@ public static class OverlayEndpoints
         return File.Exists(file) ? Results.File(file, "text/html") : Results.Problem("Build the overlay runtime before starting the host.", statusCode: 503);
     }
 }
+
+public sealed record PreviewEventRequest(string Type, string Platform = "twitch", string User = "Test viewer", string Message = "Test message", System.Text.Json.Nodes.JsonObject? Raw = null, string Mode = "synthetic");

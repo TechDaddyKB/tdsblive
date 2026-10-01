@@ -163,6 +163,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/overlays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayDefinition"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["OverlayDefinition"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayDefinition"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayRevision"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}/revisions/{version}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    version: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RestoreOverlayRevision"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayDefinition"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}/preview-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreviewEventRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/overlay/{id}": {
         parameters: {
             query?: never;
@@ -515,7 +691,26 @@ export interface paths {
         post?: never;
         delete?: never;
         options?: never;
-        head?: never;
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         patch?: never;
         trace?: never;
     };
@@ -1496,6 +1691,28 @@ export interface components {
         AdminLogin: {
             credential: string;
         };
+        AlertSettings: {
+            eventTypes?: string[];
+            platforms?: string[];
+            template?: string;
+            group?: string;
+            /** Format: int32 */
+            priority?: number | string;
+            /** Format: int32 */
+            durationMs?: number | string;
+            /** Format: int32 */
+            cooldownMs?: number | string;
+            /** Format: int32 */
+            concurrency?: number | string;
+            /** Format: int32 */
+            maximumQueueLength?: number | string;
+            interruptible?: boolean;
+            interruptPolicy?: string;
+            overflowPolicy?: string;
+            animation?: string;
+            mediaAssetId?: null | string;
+            soundAssetId?: null | string;
+        };
         ApplicationConfiguration: {
             server?: components["schemas"]["ServerConfiguration"];
             streamerBot?: components["schemas"]["IntegrationConfiguration"];
@@ -1725,6 +1942,17 @@ export interface components {
             /** Format: int32 */
             version?: number | string;
             chat?: components["schemas"]["ChatSettings"];
+            canvasEnabled?: boolean;
+            /** Format: int32 */
+            revisionLimit?: number | string;
+            widgets?: components["schemas"]["OverlayWidget"][];
+        };
+        OverlayRevision: {
+            /** Format: int32 */
+            version: number | string;
+            /** Format: date-time */
+            savedAt: string;
+            name: string;
         };
         OverlayTokenInfo: {
             /** Format: uuid */
@@ -1733,6 +1961,50 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
             revoked: boolean;
+        };
+        OverlayWidget: {
+            id?: string;
+            name?: string;
+            kind?: string;
+            /** Format: double */
+            x?: number | string;
+            /** Format: double */
+            y?: number | string;
+            /** Format: double */
+            width?: number | string;
+            /** Format: double */
+            height?: number | string;
+            /** Format: double */
+            rotation?: number | string;
+            locked?: boolean;
+            hidden?: boolean;
+            text?: string;
+            color?: string;
+            /** Format: int32 */
+            fontSize?: number | string;
+            assetId?: null | string;
+            /** Format: double */
+            volume?: number | string;
+            loop?: boolean;
+            muted?: boolean;
+            chat?: components["schemas"]["ChatSettings"];
+            alert?: components["schemas"]["AlertSettings"];
+        };
+        PreviewEventRequest: {
+            type: string;
+            /** @default twitch */
+            platform: string;
+            /** @default Test viewer */
+            user: string;
+            /** @default Test message */
+            message: string;
+            raw?: null | components["schemas"]["JsonObject"];
+            /** @default synthetic */
+            mode: string;
+        };
+        RestoreOverlayRevision: {
+            /** Format: int32 */
+            expectedVersion: number | string;
         };
         RumbleConfiguration: {
             enabled?: boolean;

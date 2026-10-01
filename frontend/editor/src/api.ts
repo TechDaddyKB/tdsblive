@@ -7,14 +7,14 @@ export class ApiError extends Error {
   constructor(public readonly status: number) { super(`Request failed (${status})`); }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(path, { credentials: 'same-origin', ...init });
   if (!response.ok) throw new ApiError(response.status);
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 
-async function write<T>(path: string, method: string, body?: unknown): Promise<T> {
+export async function write<T>(path: string, method: string, body?: unknown): Promise<T> {
   const csrf = await request<components['schemas']['CsrfResponse']>('/api/auth/csrf');
   if (!csrf.requestToken) throw new Error('Unable to initialize request protection');
   return request<T>(path, {

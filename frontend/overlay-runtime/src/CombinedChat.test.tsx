@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { CombinedChat } from './CombinedChat';
 import { defaultSettings, type ChatEvent, type OverlayDefinition } from './chat';
@@ -47,4 +47,17 @@ it('expires overlay messages, labels test preview and exposes a sign-in recovery
   await act(async () => vi.advanceTimersByTimeAsync(1000)); expect(document.querySelector('.exit-slide')).not.toBeNull();
   await act(async () => vi.advanceTimersByTimeAsync(500)); expect(screen.queryByText(message.message!.text!)).toBeNull();
   expect(screen.getByText('Test preview · includes simulation/replay')).toBeVisible(); act(() => callbacks.status('Sign in or use an overlay token')); expect(screen.getByRole('link', { name: 'Sign in to this host' })).toHaveAttribute('href', '/login');
+});
+
+it('keeps embedded chat fonts independent and cleans up their loaded font faces', async () => {
+  const families: string[] = []; const add = vi.fn(), remove = vi.fn();
+  Object.defineProperty(document, 'fonts', { configurable: true, value: { add, delete: remove } });
+  vi.stubGlobal('FontFace', class { constructor(family: string) { families.push(family); } async load() { return this; } });
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(new Uint8Array([1, 2, 3]))));
+  const make = (fontAssetId: string) => ({ definition: { id: 'canvas', name: 'Chat', width: 1920, height: 1080, background: 'transparent', version: 1,
+    chat: { ...defaultSettings, fontAssetId } }, events: [message] });
+  const view = render(<><CombinedChat id="canvas" feed={make('a'.repeat(64))} /><CombinedChat id="canvas" feed={make('b'.repeat(64))} /></>);
+  await waitFor(() => expect(add).toHaveBeenCalledTimes(2)); expect(new Set(families).size).toBe(2);
+  const nodes = document.querySelectorAll<HTMLElement>('.combined-chat'); expect(nodes[0].style.fontFamily).not.toBe(nodes[1].style.fontFamily);
+  view.unmount(); expect(remove).toHaveBeenCalledTimes(2); Reflect.deleteProperty(document, 'fonts');
 });

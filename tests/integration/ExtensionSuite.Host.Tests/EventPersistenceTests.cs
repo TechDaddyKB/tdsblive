@@ -102,7 +102,7 @@ public sealed class EventPersistenceTests : IAsyncLifetime
         await migrator.MigrateAsync("0");
         Assert.Empty(await db.Database.GetAppliedMigrationsAsync());
         await DatabaseLifecycle.InitializeAsync(db);
-        Assert.Equal(4, (await db.Database.GetAppliedMigrationsAsync()).Count());
+        Assert.Equal(db.Database.GetMigrations(), await db.Database.GetAppliedMigrationsAsync());
         Assert.Empty(await db.Events.ToArrayAsync());
     }
 

@@ -1,0 +1,8 @@
+.canvas-runtime { position: relative; overflow: hidden; background: transparent; }
+.runtime-widget { position: absolute; overflow: hidden; }
+.runtime-widget img, .runtime-widget video { width: 100%; height: 100%; object-fit: contain; }
+.widget-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.active-alert { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.active-alert img, .active-alert video { max-height: 75%; }
+.active-alert p { margin: .3em 0; }
+.canvas-preview-label { position: absolute; z-index: 1000; top: 0; left: 0; background: #223; color: white; font: 14px Arial, sans-serif; padding: .3em; }
