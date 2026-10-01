@@ -1,0 +1,87 @@
+{
+  "captureDatabaseSchema": [
+    "CREATE TABLE payloads (\n            hash TEXT PRIMARY KEY, body BLOB NOT NULL, raw_bytes INTEGER NOT NULL)",
+    "CREATE TABLE polls (\n            id INTEGER PRIMARY KEY, observed_at TEXT NOT NULL,\n            http_status INTEGER, elapsed_ms INTEGER NOT NULL,\n            outcome TEXT NOT NULL, payload_hash TEXT REFERENCES payloads(hash))",
+    "CREATE TABLE state (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+  ],
+  "compressedPayloadBytes": 3154134,
+  "distinctStoredPayloads": 785,
+  "existingExportPolls": 1,
+  "fieldPaths": 88,
+  "formatVersion": 1,
+  "generator": {
+    "gzipLevel": 9,
+    "gzipMtime": 0,
+    "python": "3.14.7",
+    "zlib": "1.3.2"
+  },
+  "metrics": {
+    "allEqualTimestampWindows": 0,
+    "ascendingTimestampWindows": 0,
+    "chatArrayObservations": 33207,
+    "consecutiveFullWindowZeroOverlap": 0,
+    "descendingTimestampWindows": 751,
+    "distinctChatBaseFingerprints": 111,
+    "distinctFollowerBaseFingerprints": 53,
+    "distinctRantBaseFingerprints": 1,
+    "distinctStreams": 1,
+    "duplicateBaseOccurrencesWithinSnapshots": 0,
+    "firstPoll": "2026-09-22T18:03:58.763+00:00",
+    "followerArrayObservations": 38465,
+    "fullChatWindows": 506,
+    "lastPoll": "2026-09-30T01:29:07.926+00:00",
+    "maxChatWindow": 50,
+    "outcomes": {
+      "ok": 785
+    },
+    "pollIntervalSeconds": {
+      "max": 623070.371,
+      "median": 10.784,
+      "min": 10.222
+    },
+    "polls": 785,
+    "pollsWithLivestream": 751,
+    "pollsWithoutLivestream": 34,
+    "rantArrayObservations": 751,
+    "streamStateChanges": [
+      {
+        "liveFlags": [
+          true
+        ],
+        "sourcePollId": 2,
+        "streamPresent": true
+      },
+      {
+        "liveFlags": [],
+        "sourcePollId": 753,
+        "streamPresent": false
+      }
+    ]
+  },
+  "provenance": "captured-sanitized",
+  "replayGzipSha256": "dd4dce23d0de93ecc11a6422ad0bf21faa40cf7ba87d61a6c1c0c5a748d80aec",
+  "replaySha256": "f2cc5b1f478b2122e7415785691bae3f5de3eb553e8b1d4c5175fa7943dee32c",
+  "sanitization": {
+    "aliases": "sequential first occurrence in sorted object traversal; category-specific",
+    "mappingExported": false,
+    "privateStrings": "user/account/channel/stream IDs, text, titles, categories, badges and URLs replaced",
+    "retained": "timestamps, numbers, booleans, nulls, arrays/order, public type/visibility enum values",
+    "version": 1,
+    "warning": "Preserved dates/amounts/counters are correlation metadata; not complete anonymization."
+  },
+  "selectedArchiveMembers": [
+    "README.md",
+    "recorder.py",
+    "test_recorder.py",
+    "make_launchd.py",
+    ".gitignore",
+    "data/local.rumble-schema-recorder.plist",
+    "data/reports/report.md",
+    "data/reports/fields.json",
+    "data/reports/schema.json",
+    "data/recorder.lock",
+    "data/capture.sqlite3",
+    "data/captures.jsonl.gz"
+  ],
+  "sourceArchiveSha256": "d50aa54765b144e8ca6b0a96888d4374514f01f2aa6b5affa287e161a2a03b11"
+}

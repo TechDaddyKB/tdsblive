@@ -1,0 +1,722 @@
+[
+  {
+    "observations": 785,
+    "parent_object_observations": null,
+    "path": "$",
+    "types": {
+      "object": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"channel_id\"]",
+    "types": {
+      "null": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"channel_name\"]",
+    "types": {
+      "null": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"]",
+    "types": {
+      "object": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"][\"latest_follower\"]",
+    "types": {
+      "object": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"][\"latest_follower\"][\"followed_on\"]",
+    "types": {
+      "string": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"][\"latest_follower\"][\"profile_pic_url\"]",
+    "types": {
+      "string": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"][\"latest_follower\"][\"username\"]",
+    "types": {
+      "string": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"][\"num_followers\"]",
+    "types": {
+      "integer": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"][\"num_followers_total\"]",
+    "types": {
+      "integer": 785
+    }
+  },
+  {
+    "empty_arrays": 0,
+    "max_length": 49,
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"followers\"][\"recent_followers\"]",
+    "types": {
+      "array": 785
+    }
+  },
+  {
+    "observations": 38465,
+    "parent_object_observations": null,
+    "path": "$[\"followers\"][\"recent_followers\"][]",
+    "types": {
+      "object": 38465
+    }
+  },
+  {
+    "observations": 38465,
+    "parent_object_observations": 38465,
+    "path": "$[\"followers\"][\"recent_followers\"][][\"followed_on\"]",
+    "types": {
+      "string": 38465
+    }
+  },
+  {
+    "observations": 38465,
+    "parent_object_observations": 38465,
+    "path": "$[\"followers\"][\"recent_followers\"][][\"profile_pic_url\"]",
+    "types": {
+      "string": 38465
+    }
+  },
+  {
+    "observations": 38465,
+    "parent_object_observations": 38465,
+    "path": "$[\"followers\"][\"recent_followers\"][][\"username\"]",
+    "types": {
+      "string": 38465
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"gifted_subs\"]",
+    "types": {
+      "object": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"gifted_subs\"][\"latest_gifted_sub\"]",
+    "types": {
+      "null": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"gifted_subs\"][\"num_gifted_subs\"]",
+    "types": {
+      "integer": 785
+    }
+  },
+  {
+    "empty_arrays": 785,
+    "max_length": 0,
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"gifted_subs\"][\"recent_gifted_subs\"]",
+    "types": {
+      "array": 785
+    }
+  },
+  {
+    "observations": 0,
+    "parent_object_observations": null,
+    "path": "$[\"gifted_subs\"][\"recent_gifted_subs\"][]",
+    "types": {}
+  },
+  {
+    "empty_arrays": 34,
+    "max_length": 1,
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"livestreams\"]",
+    "types": {
+      "array": 785
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": null,
+    "path": "$[\"livestreams\"][]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"categories\"]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"categories\"][\"primary\"]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"categories\"][\"primary\"][\"slug\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"categories\"][\"primary\"][\"title\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"categories\"][\"secondary\"]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"categories\"][\"secondary\"][\"slug\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"categories\"][\"secondary\"][\"title\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_message\"]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "empty_arrays": 153,
+    "max_length": 1,
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_message\"][\"badges\"]",
+    "types": {
+      "array": 751
+    }
+  },
+  {
+    "observations": 598,
+    "parent_object_observations": null,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_message\"][\"badges\"][]",
+    "types": {
+      "string": 598
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_message\"][\"created_on\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_message\"][\"profile_pic_url\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_message\"][\"text\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_message\"][\"username\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"amount_cents\"]",
+    "types": {
+      "integer": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"amount_dollars\"]",
+    "types": {
+      "integer": 751
+    }
+  },
+  {
+    "empty_arrays": 0,
+    "max_length": 1,
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"badges\"]",
+    "types": {
+      "array": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": null,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"badges\"][]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"created_on\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"expires_on\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"profile_pic_url\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"text\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"latest_rant\"][\"username\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "empty_arrays": 0,
+    "max_length": 50,
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"]",
+    "types": {
+      "array": 751
+    }
+  },
+  {
+    "observations": 33207,
+    "parent_object_observations": null,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"][]",
+    "types": {
+      "object": 33207
+    }
+  },
+  {
+    "empty_arrays": 7800,
+    "max_length": 2,
+    "observations": 33207,
+    "parent_object_observations": 33207,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"][][\"badges\"]",
+    "types": {
+      "array": 33207
+    }
+  },
+  {
+    "observations": 25613,
+    "parent_object_observations": null,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"][][\"badges\"][]",
+    "types": {
+      "string": 25613
+    }
+  },
+  {
+    "observations": 33207,
+    "parent_object_observations": 33207,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"][][\"created_on\"]",
+    "types": {
+      "string": 33207
+    }
+  },
+  {
+    "observations": 33207,
+    "parent_object_observations": 33207,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"][][\"profile_pic_url\"]",
+    "types": {
+      "string": 33207
+    }
+  },
+  {
+    "observations": 33207,
+    "parent_object_observations": 33207,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"][][\"text\"]",
+    "types": {
+      "string": 33207
+    }
+  },
+  {
+    "observations": 33207,
+    "parent_object_observations": 33207,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_messages\"][][\"username\"]",
+    "types": {
+      "string": 33207
+    }
+  },
+  {
+    "empty_arrays": 0,
+    "max_length": 1,
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"]",
+    "types": {
+      "array": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": null,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][]",
+    "types": {
+      "object": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"amount_cents\"]",
+    "types": {
+      "integer": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"amount_dollars\"]",
+    "types": {
+      "integer": 751
+    }
+  },
+  {
+    "empty_arrays": 0,
+    "max_length": 1,
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"badges\"]",
+    "types": {
+      "array": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": null,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"badges\"][]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"created_on\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"expires_on\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"profile_pic_url\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"text\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"chat\"][\"recent_rants\"][][\"username\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"created_on\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"dislikes\"]",
+    "types": {
+      "integer": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"id\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"is_live\"]",
+    "types": {
+      "boolean": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"likes\"]",
+    "types": {
+      "integer": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"scheduled_on\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"server_url\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"stream_key\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"title\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"visibility\"]",
+    "types": {
+      "string": 751
+    }
+  },
+  {
+    "observations": 751,
+    "parent_object_observations": 751,
+    "path": "$[\"livestreams\"][][\"watching_now\"]",
+    "types": {
+      "integer": 751
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"max_num_results\"]",
+    "types": {
+      "integer": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"now\"]",
+    "types": {
+      "integer": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"since\"]",
+    "types": {
+      "null": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"subscribers\"]",
+    "types": {
+      "object": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"subscribers\"][\"latest_subscriber\"]",
+    "types": {
+      "null": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"subscribers\"][\"num_subscribers\"]",
+    "types": {
+      "integer": 785
+    }
+  },
+  {
+    "empty_arrays": 785,
+    "max_length": 0,
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"subscribers\"][\"recent_subscribers\"]",
+    "types": {
+      "array": 785
+    }
+  },
+  {
+    "observations": 0,
+    "parent_object_observations": null,
+    "path": "$[\"subscribers\"][\"recent_subscribers\"][]",
+    "types": {}
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"type\"]",
+    "types": {
+      "string": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"user_id\"]",
+    "types": {
+      "string": 785
+    }
+  },
+  {
+    "observations": 785,
+    "parent_object_observations": 785,
+    "path": "$[\"username\"]",
+    "types": {
+      "string": 785
+    }
+  }
+]

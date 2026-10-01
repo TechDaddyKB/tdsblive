@@ -1,0 +1,56 @@
+# Private reference material and credentials
+/references/
+.secrets/
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+appsettings.Local.json
+appsettings.*.Local.json
+
+# Runtime data, captures, backups and diagnostics (curated fixtures stay tracked)
+/data/
+/captures/
+/backups/
+/diagnostics/
+/logs/
+/user-assets/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.log
+
+# Build, dependency and verification output
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/coverage/
+**/TestResults/
+**/test-results/
+**/playwright-report/
+/.sonarqube/
+/.scannerwork/
+/artifacts/
+/release/
+/installer-output/
+*.trx
+*.pyc
+__pycache__/
+.venv/
+.cache/
+
+# Editor/OS and scratch files
+.vs/
+.idea/
+*.user
+*.suo
+.DS_Store
+__MACOSX/
+*.tmp
+*~

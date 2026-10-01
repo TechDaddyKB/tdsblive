@@ -1,0 +1,33 @@
+{
+  "cases": [
+    "baseline-repetition",
+    "duplicate-occurrence-increase",
+    "indistinguishable-window-replacement",
+    "same-text-different-users",
+    "same-text-new-time",
+    "array-reordering",
+    "full-window-rotation",
+    "full-window-zero-overlap",
+    "empty-chat-window",
+    "errors-and-offline-debounce",
+    "retry-after-date",
+    "online-offline-recovery",
+    "explicit-not-live",
+    "application-restart",
+    "credential-change",
+    "dedupe-reset",
+    "stream-id-change",
+    "rant-repeat-expiry",
+    "rant-cents-authority",
+    "new-follow",
+    "subscriber-official-example",
+    "gift-mutation-unverified",
+    "unknown-null-type-drift",
+    "malformed-payload-recovery",
+    "stats-and-count-only-follow",
+    "badge-mutation-ambiguity"
+  ],
+  "formatVersion": 1,
+  "provenance": "synthetic",
+  "warning": "Inputs and proposed expectations only. G04 must execute these against the real adapter."
+}

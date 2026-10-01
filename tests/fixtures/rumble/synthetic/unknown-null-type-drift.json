@@ -1,0 +1,144 @@
+{
+  "description": "Future shapes must be retained diagnostically without killing the poller.",
+  "expectationScope": "G04 acceptance oracle; not a live-capture or current-adapter verification",
+  "expected": {
+    "offline": 0,
+    "preserveUnknown": true
+  },
+  "formatVersion": 1,
+  "id": "unknown-null-type-drift",
+  "provenance": "synthetic",
+  "schemaOrigin": "hypothetical-schema-change",
+  "steps": [
+    {
+      "http_status": 200,
+      "kind": "poll",
+      "observed_at": "2026-01-01T00:16:40Z",
+      "outcome": "ok",
+      "payload": {
+        "channel_id": null,
+        "channel_name": null,
+        "followers": {
+          "latest_follower": null,
+          "num_followers": 0,
+          "num_followers_total": 0,
+          "recent_followers": []
+        },
+        "gifted_subs": {
+          "latest_gifted_sub": null,
+          "num_gifted_subs": 0,
+          "recent_gifted_subs": []
+        },
+        "livestreams": [
+          {
+            "categories": {
+              "primary": {
+                "slug": "gaming",
+                "title": "Gaming"
+              }
+            },
+            "chat": {
+              "latest_message": null,
+              "latest_rant": null,
+              "recent_messages": [],
+              "recent_rants": []
+            },
+            "created_on": "2026-01-01T00:00:00Z",
+            "dislikes": 0,
+            "id": "synthetic-stream-a",
+            "is_live": true,
+            "likes": 1,
+            "scheduled_on": "2026-01-01T00:00:00Z",
+            "server_url": "https://example.invalid/ingest",
+            "stream_key": "[REDACTED]",
+            "title": "Synthetic stream",
+            "visibility": "public",
+            "watching_now": 10
+          }
+        ],
+        "max_num_results": 50,
+        "now": 1767225600,
+        "since": null,
+        "subscribers": {
+          "latest_subscriber": null,
+          "num_subscribers": 0,
+          "recent_subscribers": []
+        },
+        "type": "user",
+        "user_id": "synthetic-account-a",
+        "username": "synthetic-channel-owner"
+      },
+      "sequence": 1
+    },
+    {
+      "http_status": 200,
+      "kind": "poll",
+      "observed_at": "2026-01-01T00:16:47Z",
+      "outcome": "ok",
+      "payload": {
+        "channel_id": "synthetic-channel-b",
+        "channel_name": null,
+        "followers": {
+          "latest_follower": null,
+          "num_followers": 0,
+          "num_followers_total": 0,
+          "recent_followers": []
+        },
+        "future_data": {
+          "nested": [
+            null,
+            {
+              "synthetic": true
+            }
+          ]
+        },
+        "gifted_subs": {
+          "latest_gifted_sub": null,
+          "num_gifted_subs": 0,
+          "recent_gifted_subs": []
+        },
+        "livestreams": [
+          {
+            "categories": {
+              "primary": {
+                "slug": "gaming",
+                "title": "Gaming"
+              }
+            },
+            "chat": {
+              "latest_message": null,
+              "latest_rant": null,
+              "recent_messages": [],
+              "recent_rants": []
+            },
+            "created_on": "2026-01-01T00:00:00Z",
+            "dislikes": 0,
+            "id": "synthetic-stream-a",
+            "is_live": true,
+            "likes": 1,
+            "scheduled_on": "2026-01-01T00:00:00Z",
+            "server_url": "https://example.invalid/ingest",
+            "stream_key": "[REDACTED]",
+            "title": "Synthetic stream",
+            "visibility": "public",
+            "watching_now": 10
+          }
+        ],
+        "max_num_results": 50,
+        "now": 1767225600,
+        "since": 1,
+        "subscribers": {
+          "latest_subscriber": {
+            "future_field": "synthetic-value"
+          },
+          "num_subscribers": 0,
+          "recent_subscribers": []
+        },
+        "type": "user",
+        "user_id": "synthetic-account-a",
+        "username": "synthetic-channel-owner"
+      },
+      "sequence": 2
+    }
+  ]
+}

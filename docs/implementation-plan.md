@@ -1,0 +1,505 @@
+# TDSBLive Implementation Plan
+
+## Goal execution contract
+
+This document is the self-contained implementation authority for TDSBLive. Goal IDs are stable: preserve them when revising requirements. The source requirements are `references/tdsblive_spec.md`; that local reference is not intended for public publication. This document records the approved implementation decisions so execution does not depend on chat history.
+
+Invoke a goal with:
+
+> Complete goal G02 from docs/implementation-plan.md, including any incomplete prerequisites.
+
+For every goal, Codex must:
+
+1. Scan workspace files with `sonar analyze secrets <path>` before reading them. If secrets are reported, do not read the file or continue the original task; explain the exposure risk and require credential rotation/removal.
+2. Read the requested goal and referenced requirements; check prerequisites against repository, CI, and external-system evidence.
+3. Complete missing prerequisites before dependent work. Do not expand into subsequent goals unless needed to satisfy the requested goal.
+4. Implement deliverables, run the acceptance checks, and update status, validation evidence, and blockers here.
+5. Never mark a goal complete merely because code compiles or mocked tests pass. Record missing real-world evidence explicitly.
+
+Statuses: **Not started**, **In progress**, **Blocked**, **Complete**. A partially implemented goal with a missing acceptance gate remains In progress or Blocked. Record commit IDs, commands/results, CI links, integration versions, and dates as evidence without credentials or private data. These document statuses are separate from Codex goal-mode runtime status.
+
+MVP completion requires G00–G10. Repository-wide completion requires G00–G13. Creating this document alone does not complete a goal.
+
+## Locked architecture and defaults
+
+| Item | Decision |
+|---|---|
+| Repository | Public `camarokris/tdsblive`, fresh history, default branch `main` |
+| License | MIT |
+| Branding | TDSBLive; configurable display branding |
+| Backend | .NET 10 LTS, ASP.NET Core/Kestrel, EF Core SQLite, System.Text.Json, structured logging |
+| Frontend | React, TypeScript, Vite, Zustand, React Moveable, Monaco |
+| Distribution | Self-contained Windows x64 portable ZIP and Inno Setup installer |
+| Host | `http://127.0.0.1:17474`, configurable port; clear conflict error |
+| Streamer.bot | Configurable `ws://127.0.0.1:8080/` with authentication and reconnect |
+| Speaker.bot | Configurable host/port, default 127.0.0.1:7680 |
+| Application data | `%LOCALAPPDATA%\TDSBLive`, separate from installed binaries |
+| SonarQube | SonarQube Cloud organization `camarokris`, project key `camarokris_tdsblive` |
+| Currency conversion | Replaceable Frankfurter provider, cached historical rates, dated manual overrides |
+| Time periods | OS timezone confirmed at setup; Monday-start weeks; UTC event storage |
+| Rumble polling | 7 seconds, positive jitter up to 10%; normal UI 5–10 seconds, advanced slower only |
+| Editor history | 750 ms autosave debounce, 50 revisions by default |
+
+Streamer.bot remains the authority for existing platform integration and action execution. TDSBLive provides missing services: Rumble polling, normalization, persistence, aggregation, overlays, visual editing, supporter accounting, replay, and rules. Use isolated hosted services and adapters/strategies; an integration failure must not stop the host or other integrations. Design backend boundaries for future Linux hosting without claiming Linux release qualification.
+
+**HTTP is supported and HTTPS is not required**, including optional authenticated LAN operation. Do not enable HTTPS redirects or require secure-context-only browser features for core workflows. Default binding is loopback; LAN binding is explicit opt-in with authentication. Document that LAN HTTP does not encrypt traffic. Optional HTTPS may be supported without becoming a release gate.
+
+## Cross-goal contracts
+
+### Events, persistence, APIs, and delivery
+
+Use the canonical event envelope: UUIDv7 `id`; UTC `occurredAt`/`receivedAt`; `source`, `platform`, `type`, `nativeType`, optional `nativeId`; user login/display name/platform ID/avatar/badges; message text; optional monetary and stream data; `dedupeKey`; credential-redacted `raw`. Add live/simulation/replay provenance and correlation metadata to prevent bridge loops. Retain unknown source fields after credential redaction unless raw retention is disabled for privacy.
+
+SQLite uses WAL, foreign keys, migrations, indexed aggregations, and transactional event/dedupe/checkpoint acceptance. Persist events/dedupe, polling/stream state, chat, supporters/identities, financial entries, FX/valuation rules, overlays/revisions/widgets/settings/state, assets, automation/execution records, configuration and logs. Use a durable outbox for downstream delivery. Financial ingestion is idempotent. External actions do not guarantee exactly-once execution: record uncertain outcomes and do not blindly retry ambiguous execution.
+
+Serve `/editor`, `/overlay/{overlayId}`, `/assets/{assetId}`, `/api/...`, `/ws/editor`, and `/ws/overlay/{overlayId}`. REST covers status/integrations, events/chat, overlays/widgets, supporters/leaderboards/valuations, assets, rules, test events, backup/restore and import/export. Document with OpenAPI and generate frontend types. WebSocket operation envelopes include subscribe/event/ping and state updates, bounded delivery, reconnection/resubscription, and overlay-specific filtering. Raw payload access requires explicit widget permission.
+
+Simulation/replay defaults to isolation: no live Streamer.bot actions, TTS, VTube Studio changes, or production ledger writes. Explicitly persisted test contributions are marked and excluded from ordinary totals by default.
+
+### Security, repository hygiene, and quality
+
+Use Windows DPAPI for stored integration credentials. Never send credentials or stream keys to widgets or ordinary logs. Redact before persistence/display/export; scanner success alone is not proof that credential-bearing data is publishable. Keep privileged endpoints same-origin, validate hosts and WebSocket origins, protect against CSRF, and never use wildcard privileged CORS. LAN access requires generated admin authentication and separate revocable, limited overlay tokens.
+
+Ignore `references/` entirely, original archives, `.secrets/`, environment files, private certificates, local configuration overrides, capture/runtime databases and sidecars, logs, backups, diagnostic exports, user assets, build/cache output, dependencies, coverage/results, Playwright output, installer/release output, IDE state, Python caches and OS metadata. Deliberately track sample config, lockfiles, source assets and sanitized fixtures. Review staged files and verify ignore behavior before public push. Never import embedded recorder Git history.
+
+Use Windows GitHub Actions for Windows build/test/package work. Backend tests generate OpenCover and TRX; frontend tests generate LCOV. SonarQube imports these reports rather than executing tests. Use trusted CI analysis, disable automatic analysis, keep SONAR_TOKEN in Actions secrets, and never execute fork code using pull_request_target. Fork PRs run tests without secrets. Require trusted build/tests and Sonar quality gate; at least 80% new-code coverage, reviewed security hotspots, and no new blocking quality/security issues. Exclude generated/dependency/build/fixture/test code from production coverage without hiding handwritten logic.
+
+### Scope and evidence limitations
+
+First release is the integrated MVP, followed by full-spec milestones. Exclude initial cloud hosting, SaaS accounts, marketplace, mobile editor, Rumble chat sending, remote OBS control/synchronization, and full StreamElements compatibility. Use original UX/assets and licensed dependencies.
+
+Capture evidence inspected during planning: 785 successful polls, 751 with a livestream, observed recent chat maximum 50, 111 distinct base chat fingerprints, one distinct base Rant fingerprint, and no subscriber/gift examples. These are observations, not a delivery guarantee. Missing live evidence is a capability blocker, never proof of unsupported or supported behavior.
+
+## Goal index
+
+
+| ID | Goal | Prerequisites | Status |
+|---|---|---|---|
+| [G00](#g00) | Analyze and sanitize Rumble evidence | None | In progress |
+| [G01](#g01) | Create repository and quality infrastructure | G00 | Not started |
+| [G02](#g02) | Build application foundation | G01 | Not started |
+| [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
+| [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
+| [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
+| [G06](#g06) | Build basic visual editor and alerts | G05 | Not started |
+| [G07](#g07) | Build financial ledger and supporter identities | G04 | Not started |
+| [G08](#g08) | Build donor widgets | G05, G07 | Not started |
+| [G09](#g09) | Build automation rules | G03, G06, G07 | Not started |
+| [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
+| [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
+| [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
+| [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
+
+<a id="g00"></a>
+
+## G00 — Analyze and sanitize Rumble evidence
+
+Status: **In progress**
+Prerequisites: None
+
+### Deliverables
+
+- Inspect scanner-approved recorder source, README, tests, schema/fields/report and capture database schema. Never expose `.secrets/rumble-url`, embedded Git history, original capture messages or credentials.
+- Document every observed field, type, null-only/unobserved structure, candidate event, dedupe limitation and replay design in `docs/rumble-analysis.md` before production Rumble code.
+- Derive chronological sanitized fixtures from all 785 SQLite polls; do not assume the existing JSONL contains the full dataset. Consistently replace identities/messages while preserving equality, multiplicity, timestamps, ordering, stream transitions and monetary structure.
+- Add synthetic fixtures for new Rants, duplicate occurrences, rotation/reordering, full/no-overlap windows, errors, restart, subscriptions and gifts; label synthetic versus captured provenance.
+
+### Acceptance criteria
+
+- All 785 polls represented in replay with ordering/provenance checks; observed counts reconcile with the report.
+- Scanner and explicit publication review find no credentials/private capture content in public artifacts.
+- Unknown subscription/gift identity and capture coverage limits are documented; Rumble analysis is committed before production adapter implementation.
+
+### Validation evidence
+
+- 2026-10-01: source/report/database inspection and 88-path inventory documented in `docs/rumble-analysis.md`.
+- `python tools/rumble_evidence.py verify --archive references/rumbleLiveAPIScraper.zip`: 785 polls, 88 field paths, full source comparison and private replacement audit passed.
+- `python -m unittest discover -s tests/replay -v`: 20 tests passed, including the original recorder's 10 tests executed inside the source qualification test.
+- 26 synthetic scenarios generated and structurally qualified; these are future G04 acceptance inputs, not production adapter results.
+- Completion still awaits public-checkout qualification, staged publication review and the required local analysis commit.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g01"></a>
+
+## G01 — Create repository and quality infrastructure
+
+Status: **Not started**
+Prerequisites: G00
+
+### Deliverables
+
+- Create public camarokris/tdsblive with fresh main history and MIT license. Publish reviewed SPEC.md, this plan, README/contributing instructions, architecture/security/testing docs and safe gitignore.
+- Create backend modules, separate editor/runtime workspaces, streamerbot bootstrap/import/examples, widget packages and unit/integration/replay/fixture test areas. Pin SDK, npm/.NET dependencies, tool versions and Actions revisions.
+- Set up windows-2022 CI and meaningful initial tests. Register GitHub-bound SonarQube Cloud project camarokris_tdsblive; configure CI scanner begin/build/test/end, OpenCover/TRX/LCOV paths and SONAR_TOKEN without exposing it.
+- Enable dependency updates and available secret protection; protect main with trusted test/build/quality checks.
+
+### Acceptance criteria
+
+- Public repository, license, default branch and safe staged content verified; representative ignore tests pass.
+- Initial Windows CI and Sonar analysis succeed, with actual backend/frontend coverage imported.
+- Fork-safe workflow behavior and quality-gate requirements verified; no original ZIP, embedded history, private capture or credentials published.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g02"></a>
+
+## G02 — Build application foundation
+
+Status: **Not started**
+Prerequisites: G01
+
+### Deliverables
+
+- Implement typed configuration and secret storage, SQLite migrations/indexes, structured redacted logging (14-day default retention), isolated hosted services, startup/shutdown sequencing and diagnostics.
+- Implement canonical events, transactional dedupe/checkpoint acceptance, durable outbox and isolated test/replay paths.
+- Serve editor shell and documented REST/WebSocket contracts at port 17474; generate frontend API types. Implement loopback default and authenticated optional LAN foundation.
+
+### Acceptance criteria
+
+- Host and editor load over HTTP without certificates; port conflicts are actionable.
+- Fresh/migrated databases, rollback/crash/restart, graceful shutdown and idempotent acceptance tests pass.
+- Integration failure isolation, credential redaction, origin/host/CSRF checks, and LAN authentication tests pass.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g03"></a>
+
+## G03 — Integrate Streamer.bot and Speaker.bot
+
+Status: **Not started**
+Prerequisites: G02
+
+### Deliverables
+
+- Implement correlated WebSocket requests, authentication, configurable reconnect and connection health. Discover GetEvents/GetActions/GetCodeTriggers; invoke ExecuteCodeTrigger and selected action GUIDs.
+- Provide importable C# Init bootstrap using CPH.RegisterCustomTrigger for Rumble chat/Rant/follow/sub/gift/online/offline/viewer/likes/health and finance/overlay categories. Include argument mapping and explicit forwarding examples for triggers not broadcast over WebSocket.
+- Normalize Twitch/YouTube/Kick/Ko-fi events conservatively; retain sanitized unknown diagnostics. Build searchable event inspector with pause/filter/copy/replay/save-fixture and sample payload inspection.
+- Implement Speaker.bot documented WebSocket queue protocol; use Streamer.bot actions for VTube Studio. Prevent bridge loops and expose missing actions/uncertain execution.
+
+### Acceptance criteria
+
+- Mocked protocol tests cover auth, discovery, timeout, reconnect, unsupported capability and missing actions.
+- Real Streamer.bot bootstrap import/registration and custom-trigger action execution verified with versions recorded.
+- Speaker.bot connection/request behavior and forwarding limitations documented; inspector receives real events.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g04"></a>
+
+## G04 — Implement reliable Rumble ingestion
+
+Status: **Not started**
+Prerequisites: G00, G02, G03
+
+### Deliverables
+
+- Implement tolerant parser with redacted unknown-field preservation; poll 7 seconds with positive jitter, minimum 5 seconds, Retry-After and capped exponential error backoff.
+- First successful configuration/restart/credential-change/reset poll baselines historical arrays without alerts; current live status is separate. Scope state to account/channel/stream.
+- Use complete recent arrays, canonical SHA-256 fingerprints and occurrence reconciliation against preceding windows. Preserve exact text, normalize timestamps/badges; retain message IDs until both older than 24 hours and outside latest 10000. Keep financial dedupe independent.
+- Deduplicate Rants using stream/created/user/cents/text/expiry; use amount_cents USD. Follows use context/user/followed timestamp, not counter changes. Track stats and health changes.
+- Offline requires two consecutive successful offline observations per stream; failures do not advance debounce. Full-window zero overlap emits possible_gap diagnostics, never invented messages.
+- Implement documented subscription fixtures with unverified-live labeling. Preserve gift shapes; do not treat remaining_gifts mutations as purchases. Disable authoritative gift automation/financial ingestion pending qualifying identity evidence.
+
+### Acceptance criteria
+
+- Full capture replay and synthetic error/rotation/multiplicity/restart fixtures pass without duplicate emissions or baseline alerts.
+- Timeout/429/500/malformed JSON cause health changes without false offline; successful recovery resumes polling.
+- Real Rumble-to-Streamer.bot trigger execution verified; missing live subscription/gift validation remains explicitly gated.
+- Ambiguous identical records and snapshot loss limits documented without claiming complete delivery.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g05"></a>
+
+## G05 — Build overlay runtime and combined chat
+
+Status: **Not started**
+Prerequisites: G03, G04
+
+### Deliverables
+
+- Implement separate lightweight transparent OBS runtime, local assets, one shared WebSocket per overlay, bounded delivery/DOM, filtered subscriptions and reconnect.
+- Normalize Twitch/YouTube/Kick/Rumble chat with platform/user/message/raw metadata. Provide configurable icons/avatar/badges/name/timestamp/colors/fonts/duration/max messages/animations/ignore users/prefixes/bots, scrolling and persistent modes.
+- Validate/deduplicate assets by SHA-256; serve IDs rather than filesystem paths. Sanitize SVG and validate MIME/size.
+
+### Acceptance criteria
+
+- OBS displays transparent combined chat, with repeated Rumble snapshots rendered once.
+- Supported platform flows, reconnect and filtering verified; editor libraries absent from runtime bundle.
+- Upload/traversal/SVG and bounded-chat tests pass; actual OBS rendering verified.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g06"></a>
+
+## G06 — Build basic visual editor and alerts
+
+Status: **Not started**
+Prerequisites: G05
+
+### Deliverables
+
+- Provide canvas presets including vertical/custom, layers, drag/resize/properties, basic snapping, keyboard controls and undo/redo.
+- Implement 750ms autosave, conflict detection, 50 revision default, restore, preview and copy OBS URL.
+- Deliver Text/Image/media, Combined Chat and AlertBox presets with templates, sound/video/animation; bounded queues with priority/duration/cooldown/group/concurrency/interrupt policy.
+- Expose synthetic test event controls and developer raw injection with isolation defaults.
+
+### Acceptance criteria
+
+- Playwright verifies create/add/drag/resize/save/reload/restore/preview and repeated interactions.
+- Alert queue concurrency/cooldown/overflow and OBS sound/media behavior verified.
+- Test events never invoke production financial or external automation by default.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g07"></a>
+
+## G07 — Build financial ledger and supporter identities
+
+Status: **Not started**
+Prerequisites: G04
+
+### Deliverables
+
+- Ingest Bits, donations, Super Chats/Stickers where exposed, subscriptions/gifts/memberships, Kick support, Ko-fi and Rumble Rants using adapter strategies and durable uniqueness.
+- Correlate gift batches/individual notifications to avoid double-counting; do not infer unsupported monetary values.
+- Use integer minor amounts and decimal rates; retain native currency/rate/date/provider and exact/fx/configured_nominal/unknown methods. Setup leaves Bits/sub nominal rules unconfigured until chosen.
+- Use historical Frankfurter rates, cache/manual dated overrides, visibly estimated latest-rate fallback, pending unavailable conversion and explicit reconciliation; freeze accepted historical values.
+- Provide manual cross-platform identity linking and indexed current-stream/today/week/month/year/all-time/custom aggregation with configured timezone.
+
+### Acceptance criteria
+
+- Precision/rounding, missing FX, freeze/reconcile, nominal/unknown labels, reconnect/replay dedupe and gift correlation tested.
+- Manual identity linking changes totals without name-based automatic merging.
+- DST, Monday-week and custom/current-stream boundary tests pass; unverified gift accounting remains gated.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g08"></a>
+
+## G08 — Build donor widgets
+
+Status: **Not started**
+Prerequisites: G05, G07
+
+### Deliverables
+
+- Implement Donor Crown, ranked leaderboard (1–25), latest supporter and current-stream leader.
+- Provide period/platform/event/minimum filters, name/avatar/badge/amount/crown visibility, templates/fonts/colors/assets and animated leader transitions.
+- Push aggregate changes after financial/identity/valuation updates without browser refresh.
+
+### Acceptance criteria
+
+- Live rankings/crown update correctly for new entries, links and explicit reconciliation.
+- Empty/pending/unknown/estimated data is represented honestly; filters and period changes tested.
+- Actual OBS donor-widget rendering verified.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g09"></a>
+
+## G09 — Build automation rules
+
+Status: **Not started**
+Prerequisites: G03, G06, G07
+
+### Deliverables
+
+- Implement event filters and exact/minimum/range/multiple conditions, multiple actions, cooldowns, queues and execution tracking.
+- Implement Ko-fi TTS templates with minimum amount, voice, max length, URL/punctuation/repetition/bad-word controls and moderation options.
+- Play sound assets in OBS with volume/queue/interrupt/cooldown/random variants/ducking metadata.
+- Execute selected Streamer.bot VTS actions; support timed reversion via toggle or enable/disable actions and Extend/Restart/Ignore/Queue policies.
+- Keep financial ingestion independent of alert/rule configuration; expose ambiguous external outcomes without blind retry.
+
+### Acceptance criteria
+
+- Rule boundaries, queues, timer stacking/restart, failures and isolated simulation tested.
+- Real Ko-fi-path Speaker.bot speech, OBS sound capture and Streamer.bot-to-VTS behavior verified.
+- Missing actions/voices, moderation and uncertain execution remain visible.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g10"></a>
+
+## G10 — Deliver and validate the MVP
+
+Status: **Not started**
+Prerequisites: G01–G09
+
+### Deliverables
+
+- Build self-contained Windows x64 ZIP and Inno Setup installer in Actions; attach checksums after release validation.
+- Implement first-run connection/bootstrap/Rumble/Speaker/timezone/valuation/overlay wizard and optional login startup; ordinary runtime unelevated.
+- Provide SQLite-safe backup/validated restore with safety backup and paused consumers, secret-free config export/import, installation/recovery docs.
+- Validate integrated MVP, authenticated LAN HTTP, rendering/audio, restart and the specified performance workload on a documented Windows streaming PC.
+
+### Acceptance criteria
+
+- All G00–G09 acceptance gates satisfied; Windows CI and Sonar quality gate pass.
+- Installer/portable build verified on Windows; setup requires no normal-user command line or certificates.
+- Real end-to-end Rumble trigger/chat/Rant ledger/crown and Ko-fi/Bits automation flows work together.
+- Measure idle <1% CPU, ordinary-chat <3% average CPU and backend <300MB against documented hardware/workload; record deviations honestly.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g11"></a>
+
+## G11 — Complete advanced editor and built-in widgets
+
+Status: **Not started**
+Prerequisites: G10
+
+### Deliverables
+
+- Add rotation, multi-select, grouping/ungrouping, copy/paste/duplicate, lock/hide, alignment/distribution, z-order, grid/snap, zoom/pan and keyboard nudging.
+- Complete Event List, Goal/Progress bars and remaining specified media/supporter widgets.
+- Complete typed settings fields: text/textarea/number/slider/check/dropdown/multiselect/color/font/assets/duration/event/action/user/platform/button/hidden/group.
+
+### Acceptance criteria
+
+- Browser tests exercise repeated advanced interactions, undo/redo and save/reload with groups/transforms.
+- Every specified built-in widget/settings capability has requirement evidence.
+- OBS runtime remains lightweight and existing MVP workflows pass regression checks.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g12"></a>
+
+## G12 — Deliver custom-widget platform and portability
+
+Status: **Not started**
+Prerequisites: G11
+
+### Deliverables
+
+- Implement Monaco HTML/CSS/JS/settings editor, versioned package manifests and schema-driven settings/subscriptions.
+- Run custom code in allow-scripts iframes without same-origin/top-navigation privileges; default external networking disabled with explicit domain permissions.
+- Expose mediated SBX lifecycle/event/session/config/store API, validate messages against specific frames/capabilities, isolate widget storage and grant raw/financial/chat/audio permissions explicitly.
+- Export/import .sbxoverlay and .sbxwidget ZIP containers with manifest/assets and no secrets/absolute paths; enforce size/decompression/traversal limits.
+
+### Acceptance criteria
+
+- Custom widget binds arbitrary available events and stores state across restart; permissions enforced.
+- Sandbox escape, parent access, network, token disclosure and message spoofing tests pass.
+- Portable packages round-trip; malicious traversal/oversized packages rejected.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+<a id="g13"></a>
+
+## G13 — Complete compatibility and full-spec qualification
+
+Status: **Not started**
+Prerequisites: G12
+
+### Deliverables
+
+- Implement limited local StreamElements shim: onWidgetLoad/onEventReceived/onSessionUpdate, fieldData/listener/event and safe store/queue/status equivalents. Unsupported calls give descriptive warnings.
+- Deliver migration/replay/sample generation/backup/log sanitization/diagnostic export utilities and unknown-shape inspector with sanitized fixture export.
+- Complete architecture/events/rumble/overlay/widget/database/security/testing/user documentation and requirement matrix for every numbered source-spec section.
+- Qualify performance and compatibility; classify each requirement verified, deferred by explicit scope or blocked by evidence.
+
+### Acceptance criteria
+
+- Compatibility fixtures and unsupported-call behavior tested; no full-SE compatibility claim.
+- Diagnostics/utilities protect credentials and private data; performance evidence recorded.
+- All G00–G12 complete, every original requirement traced, and no hidden unfinished acceptance gate remains.
+
+### Validation evidence
+
+None recorded. Planning inspection is not implementation acceptance.
+
+### Blockers
+
+None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+
+## Official reference documentation
+
+- [Streamer.bot API](https://docs.streamer.bot/api)
+- [Streamer.bot WebSocket requests](https://docs.streamer.bot/api/websocket/requests)
+- [Streamer.bot examples](https://docs.streamer.bot/examples)
+- [Streamer.bot client](https://github.com/streamerbot/client)
+- [Speaker.bot WebSocket API](https://speaker.bot/api/websocket)
+- [StreamElements overlays](https://docs.streamelements.com/overlays)
+- [Rumble Live Stream API](https://rumble.support/en/help/how-to-use-rumble-s-live-stream-api)
+- [.NET support policy](https://dotnet.microsoft.com/en-us/platform/support/policy)
+- [SonarQube .NET coverage](https://docs.sonarsource.com/sonarqube-cloud/analyzing-source-code/test-coverage/dotnet-test-coverage)
+- [SonarQube JS/TS coverage](https://docs.sonarsource.com/sonarqube-cloud/analyzing-source-code/test-coverage/javascript-typescript-test-coverage)
+- [Frankfurter](https://frankfurter.dev/)
+
+Recheck version-sensitive protocols and dependencies during their owning goal. Observed capture shapes take priority over guessed Rumble structures; official examples supplement unobserved cases without replacing evidence.

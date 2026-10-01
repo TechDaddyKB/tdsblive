@@ -1,0 +1,783 @@
+{
+  "$comment": "Inferred from successful captures, not an official or exhaustive contract. Credential values are redacted. No fields are asserted required; null-only types and unobserved array items remain uncertain.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "channel_id": {
+      "type": "null",
+      "x-observations": 785,
+      "x-type-counts": {
+        "null": 785
+      }
+    },
+    "channel_name": {
+      "type": "null",
+      "x-observations": 785,
+      "x-type-counts": {
+        "null": 785
+      }
+    },
+    "followers": {
+      "additionalProperties": true,
+      "properties": {
+        "latest_follower": {
+          "additionalProperties": true,
+          "properties": {
+            "followed_on": {
+              "type": "string",
+              "x-observations": 785,
+              "x-type-counts": {
+                "string": 785
+              }
+            },
+            "profile_pic_url": {
+              "type": "string",
+              "x-observations": 785,
+              "x-type-counts": {
+                "string": 785
+              }
+            },
+            "username": {
+              "type": "string",
+              "x-observations": 785,
+              "x-type-counts": {
+                "string": 785
+              }
+            }
+          },
+          "type": "object",
+          "x-always-present-in-observed-objects": [
+            "followed_on",
+            "profile_pic_url",
+            "username"
+          ],
+          "x-observations": 785,
+          "x-type-counts": {
+            "object": 785
+          }
+        },
+        "num_followers": {
+          "type": "integer",
+          "x-observations": 785,
+          "x-type-counts": {
+            "integer": 785
+          }
+        },
+        "num_followers_total": {
+          "type": "integer",
+          "x-observations": 785,
+          "x-type-counts": {
+            "integer": 785
+          }
+        },
+        "recent_followers": {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "followed_on": {
+                "type": "string",
+                "x-observations": 38465,
+                "x-type-counts": {
+                  "string": 38465
+                }
+              },
+              "profile_pic_url": {
+                "type": "string",
+                "x-observations": 38465,
+                "x-type-counts": {
+                  "string": 38465
+                }
+              },
+              "username": {
+                "type": "string",
+                "x-observations": 38465,
+                "x-type-counts": {
+                  "string": 38465
+                }
+              }
+            },
+            "type": "object",
+            "x-always-present-in-observed-objects": [
+              "followed_on",
+              "profile_pic_url",
+              "username"
+            ],
+            "x-observations": 38465,
+            "x-type-counts": {
+              "object": 38465
+            }
+          },
+          "type": "array",
+          "x-empty-array-observations": 0,
+          "x-max-observed-length": 49,
+          "x-observations": 785,
+          "x-type-counts": {
+            "array": 785
+          }
+        }
+      },
+      "type": "object",
+      "x-always-present-in-observed-objects": [
+        "latest_follower",
+        "num_followers",
+        "num_followers_total",
+        "recent_followers"
+      ],
+      "x-observations": 785,
+      "x-type-counts": {
+        "object": 785
+      }
+    },
+    "gifted_subs": {
+      "additionalProperties": true,
+      "properties": {
+        "latest_gifted_sub": {
+          "type": "null",
+          "x-observations": 785,
+          "x-type-counts": {
+            "null": 785
+          }
+        },
+        "num_gifted_subs": {
+          "type": "integer",
+          "x-observations": 785,
+          "x-type-counts": {
+            "integer": 785
+          }
+        },
+        "recent_gifted_subs": {
+          "items": {
+            "$comment": "No items observed; item type is unknown."
+          },
+          "type": "array",
+          "x-empty-array-observations": 785,
+          "x-max-observed-length": 0,
+          "x-observations": 785,
+          "x-type-counts": {
+            "array": 785
+          }
+        }
+      },
+      "type": "object",
+      "x-always-present-in-observed-objects": [
+        "latest_gifted_sub",
+        "num_gifted_subs",
+        "recent_gifted_subs"
+      ],
+      "x-observations": 785,
+      "x-type-counts": {
+        "object": 785
+      }
+    },
+    "livestreams": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "categories": {
+            "additionalProperties": true,
+            "properties": {
+              "primary": {
+                "additionalProperties": true,
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "title": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  }
+                },
+                "type": "object",
+                "x-always-present-in-observed-objects": [
+                  "slug",
+                  "title"
+                ],
+                "x-observations": 751,
+                "x-type-counts": {
+                  "object": 751
+                }
+              },
+              "secondary": {
+                "additionalProperties": true,
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "title": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  }
+                },
+                "type": "object",
+                "x-always-present-in-observed-objects": [
+                  "slug",
+                  "title"
+                ],
+                "x-observations": 751,
+                "x-type-counts": {
+                  "object": 751
+                }
+              }
+            },
+            "type": "object",
+            "x-always-present-in-observed-objects": [
+              "primary",
+              "secondary"
+            ],
+            "x-observations": 751,
+            "x-type-counts": {
+              "object": 751
+            }
+          },
+          "chat": {
+            "additionalProperties": true,
+            "properties": {
+              "latest_message": {
+                "additionalProperties": true,
+                "properties": {
+                  "badges": {
+                    "items": {
+                      "type": "string",
+                      "x-observations": 598,
+                      "x-type-counts": {
+                        "string": 598
+                      }
+                    },
+                    "type": "array",
+                    "x-empty-array-observations": 153,
+                    "x-max-observed-length": 1,
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "array": 751
+                    }
+                  },
+                  "created_on": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "profile_pic_url": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "text": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "username": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  }
+                },
+                "type": "object",
+                "x-always-present-in-observed-objects": [
+                  "badges",
+                  "created_on",
+                  "profile_pic_url",
+                  "text",
+                  "username"
+                ],
+                "x-observations": 751,
+                "x-type-counts": {
+                  "object": 751
+                }
+              },
+              "latest_rant": {
+                "additionalProperties": true,
+                "properties": {
+                  "amount_cents": {
+                    "type": "integer",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "integer": 751
+                    }
+                  },
+                  "amount_dollars": {
+                    "type": "integer",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "integer": 751
+                    }
+                  },
+                  "badges": {
+                    "items": {
+                      "type": "string",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "string": 751
+                      }
+                    },
+                    "type": "array",
+                    "x-empty-array-observations": 0,
+                    "x-max-observed-length": 1,
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "array": 751
+                    }
+                  },
+                  "created_on": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "expires_on": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "profile_pic_url": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "text": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  },
+                  "username": {
+                    "type": "string",
+                    "x-observations": 751,
+                    "x-type-counts": {
+                      "string": 751
+                    }
+                  }
+                },
+                "type": "object",
+                "x-always-present-in-observed-objects": [
+                  "amount_cents",
+                  "amount_dollars",
+                  "badges",
+                  "created_on",
+                  "expires_on",
+                  "profile_pic_url",
+                  "text",
+                  "username"
+                ],
+                "x-observations": 751,
+                "x-type-counts": {
+                  "object": 751
+                }
+              },
+              "recent_messages": {
+                "items": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "badges": {
+                      "items": {
+                        "type": "string",
+                        "x-observations": 25613,
+                        "x-type-counts": {
+                          "string": 25613
+                        }
+                      },
+                      "type": "array",
+                      "x-empty-array-observations": 7800,
+                      "x-max-observed-length": 2,
+                      "x-observations": 33207,
+                      "x-type-counts": {
+                        "array": 33207
+                      }
+                    },
+                    "created_on": {
+                      "type": "string",
+                      "x-observations": 33207,
+                      "x-type-counts": {
+                        "string": 33207
+                      }
+                    },
+                    "profile_pic_url": {
+                      "type": "string",
+                      "x-observations": 33207,
+                      "x-type-counts": {
+                        "string": 33207
+                      }
+                    },
+                    "text": {
+                      "type": "string",
+                      "x-observations": 33207,
+                      "x-type-counts": {
+                        "string": 33207
+                      }
+                    },
+                    "username": {
+                      "type": "string",
+                      "x-observations": 33207,
+                      "x-type-counts": {
+                        "string": 33207
+                      }
+                    }
+                  },
+                  "type": "object",
+                  "x-always-present-in-observed-objects": [
+                    "badges",
+                    "created_on",
+                    "profile_pic_url",
+                    "text",
+                    "username"
+                  ],
+                  "x-observations": 33207,
+                  "x-type-counts": {
+                    "object": 33207
+                  }
+                },
+                "type": "array",
+                "x-empty-array-observations": 0,
+                "x-max-observed-length": 50,
+                "x-observations": 751,
+                "x-type-counts": {
+                  "array": 751
+                }
+              },
+              "recent_rants": {
+                "items": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "amount_cents": {
+                      "type": "integer",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "integer": 751
+                      }
+                    },
+                    "amount_dollars": {
+                      "type": "integer",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "integer": 751
+                      }
+                    },
+                    "badges": {
+                      "items": {
+                        "type": "string",
+                        "x-observations": 751,
+                        "x-type-counts": {
+                          "string": 751
+                        }
+                      },
+                      "type": "array",
+                      "x-empty-array-observations": 0,
+                      "x-max-observed-length": 1,
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "array": 751
+                      }
+                    },
+                    "created_on": {
+                      "type": "string",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "string": 751
+                      }
+                    },
+                    "expires_on": {
+                      "type": "string",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "string": 751
+                      }
+                    },
+                    "profile_pic_url": {
+                      "type": "string",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "string": 751
+                      }
+                    },
+                    "text": {
+                      "type": "string",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "string": 751
+                      }
+                    },
+                    "username": {
+                      "type": "string",
+                      "x-observations": 751,
+                      "x-type-counts": {
+                        "string": 751
+                      }
+                    }
+                  },
+                  "type": "object",
+                  "x-always-present-in-observed-objects": [
+                    "amount_cents",
+                    "amount_dollars",
+                    "badges",
+                    "created_on",
+                    "expires_on",
+                    "profile_pic_url",
+                    "text",
+                    "username"
+                  ],
+                  "x-observations": 751,
+                  "x-type-counts": {
+                    "object": 751
+                  }
+                },
+                "type": "array",
+                "x-empty-array-observations": 0,
+                "x-max-observed-length": 1,
+                "x-observations": 751,
+                "x-type-counts": {
+                  "array": 751
+                }
+              }
+            },
+            "type": "object",
+            "x-always-present-in-observed-objects": [
+              "latest_message",
+              "latest_rant",
+              "recent_messages",
+              "recent_rants"
+            ],
+            "x-observations": 751,
+            "x-type-counts": {
+              "object": 751
+            }
+          },
+          "created_on": {
+            "type": "string",
+            "x-observations": 751,
+            "x-type-counts": {
+              "string": 751
+            }
+          },
+          "dislikes": {
+            "type": "integer",
+            "x-observations": 751,
+            "x-type-counts": {
+              "integer": 751
+            }
+          },
+          "id": {
+            "type": "string",
+            "x-observations": 751,
+            "x-type-counts": {
+              "string": 751
+            }
+          },
+          "is_live": {
+            "type": "boolean",
+            "x-observations": 751,
+            "x-type-counts": {
+              "boolean": 751
+            }
+          },
+          "likes": {
+            "type": "integer",
+            "x-observations": 751,
+            "x-type-counts": {
+              "integer": 751
+            }
+          },
+          "scheduled_on": {
+            "type": "string",
+            "x-observations": 751,
+            "x-type-counts": {
+              "string": 751
+            }
+          },
+          "server_url": {
+            "type": "string",
+            "x-observations": 751,
+            "x-type-counts": {
+              "string": 751
+            }
+          },
+          "stream_key": {
+            "type": "string",
+            "x-observations": 751,
+            "x-type-counts": {
+              "string": 751
+            }
+          },
+          "title": {
+            "type": "string",
+            "x-observations": 751,
+            "x-type-counts": {
+              "string": 751
+            }
+          },
+          "visibility": {
+            "type": "string",
+            "x-observations": 751,
+            "x-type-counts": {
+              "string": 751
+            }
+          },
+          "watching_now": {
+            "type": "integer",
+            "x-observations": 751,
+            "x-type-counts": {
+              "integer": 751
+            }
+          }
+        },
+        "type": "object",
+        "x-always-present-in-observed-objects": [
+          "categories",
+          "chat",
+          "created_on",
+          "dislikes",
+          "id",
+          "is_live",
+          "likes",
+          "scheduled_on",
+          "server_url",
+          "stream_key",
+          "title",
+          "visibility",
+          "watching_now"
+        ],
+        "x-observations": 751,
+        "x-type-counts": {
+          "object": 751
+        }
+      },
+      "type": "array",
+      "x-empty-array-observations": 34,
+      "x-max-observed-length": 1,
+      "x-observations": 785,
+      "x-type-counts": {
+        "array": 785
+      }
+    },
+    "max_num_results": {
+      "type": "integer",
+      "x-observations": 785,
+      "x-type-counts": {
+        "integer": 785
+      }
+    },
+    "now": {
+      "type": "integer",
+      "x-observations": 785,
+      "x-type-counts": {
+        "integer": 785
+      }
+    },
+    "since": {
+      "type": "null",
+      "x-observations": 785,
+      "x-type-counts": {
+        "null": 785
+      }
+    },
+    "subscribers": {
+      "additionalProperties": true,
+      "properties": {
+        "latest_subscriber": {
+          "type": "null",
+          "x-observations": 785,
+          "x-type-counts": {
+            "null": 785
+          }
+        },
+        "num_subscribers": {
+          "type": "integer",
+          "x-observations": 785,
+          "x-type-counts": {
+            "integer": 785
+          }
+        },
+        "recent_subscribers": {
+          "items": {
+            "$comment": "No items observed; item type is unknown."
+          },
+          "type": "array",
+          "x-empty-array-observations": 785,
+          "x-max-observed-length": 0,
+          "x-observations": 785,
+          "x-type-counts": {
+            "array": 785
+          }
+        }
+      },
+      "type": "object",
+      "x-always-present-in-observed-objects": [
+        "latest_subscriber",
+        "num_subscribers",
+        "recent_subscribers"
+      ],
+      "x-observations": 785,
+      "x-type-counts": {
+        "object": 785
+      }
+    },
+    "type": {
+      "type": "string",
+      "x-observations": 785,
+      "x-type-counts": {
+        "string": 785
+      }
+    },
+    "user_id": {
+      "type": "string",
+      "x-observations": 785,
+      "x-type-counts": {
+        "string": 785
+      }
+    },
+    "username": {
+      "type": "string",
+      "x-observations": 785,
+      "x-type-counts": {
+        "string": 785
+      }
+    }
+  },
+  "title": "Observed Rumble livestream API response",
+  "type": "object",
+  "x-always-present-in-observed-objects": [
+    "channel_id",
+    "channel_name",
+    "followers",
+    "gifted_subs",
+    "livestreams",
+    "max_num_results",
+    "now",
+    "since",
+    "subscribers",
+    "type",
+    "user_id",
+    "username"
+  ],
+  "x-observations": 785,
+  "x-type-counts": {
+    "object": 785
+  }
+}
