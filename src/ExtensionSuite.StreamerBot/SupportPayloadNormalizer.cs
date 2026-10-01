@@ -39,7 +39,9 @@ public static class SupportPayloadNormalizer
         if (result?.Kind == "gift")
         {
             var broadcaster = (data["broadcaster"] as JsonObject)?["id"] ?? (data["broadcast"] as JsonObject)?["id"];
-            result = result with { GiftScopeKey = Text(broadcaster) is { } id ? "channel:" + id : "streamerbot:connected-channel" };
+            var scope = Identifier(broadcaster);
+            result = result with { GiftScopeKey = scope is not null ? "channel:" + scope : null,
+                GatedReason = result.GatedReason ?? (scope is null ? "gift_channel_unavailable" : null) };
             if (platform == "kick") result = result with { GiftPeriodStart = Date(data["subscribedAt"]), GiftPeriodEnd = Date(data["expiresAt"]) };
         }
         result?.Validate(); return result;
@@ -97,6 +99,7 @@ public static class SupportPayloadNormalizer
     }
     private static string? Text(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out var text) &&
         !string.IsNullOrWhiteSpace(text) && text.Length <= 128 && !text.Any(char.IsControl) ? text : null;
+    public static string? Identifier(JsonNode? node) => Text(node) ?? (Integer(node) is > 0 and var number ? number.ToString(CultureInfo.InvariantCulture) : null);
     private static bool? Boolean(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : null;
     private static DateTimeOffset? Date(JsonNode? node)
     {

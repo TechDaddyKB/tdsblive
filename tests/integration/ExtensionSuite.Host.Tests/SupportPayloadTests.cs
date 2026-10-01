@@ -6,6 +6,22 @@ namespace ExtensionSuite.Host.Tests;
 
 public sealed class SupportPayloadTests
 {
+    [Fact]
+    public void GiftChannelRequiresExplicitIdentityAndConnectedDiscovery()
+    {
+        var payload = new JsonObject { ["total"] = 2, ["id"] = "batch" };
+        var unknown = SupportPayloadNormalizer.Normalize("twitch", "GiftBomb", payload, false)!;
+        Assert.Null(unknown.GiftScopeKey);
+        Assert.Equal("gift_channel_unavailable", unknown.GatedReason);
+        var discovery = JsonNode.Parse("{\"connected\":[\"twitch\",\"kick\"],\"platforms\":{\"twitch\":{\"broadcastUserId\":123},\"kick\":{\"broadcasterUserId\":\"456\"},\"youtube\":{\"broadcastUserId\":\"old\"}}}")!.AsObject();
+        Assert.Equal("123", StreamerBotConnection.BroadcasterIdentifier(discovery, "twitch"));
+        Assert.Equal("456", StreamerBotConnection.BroadcasterIdentifier(discovery, "kick"));
+        Assert.Null(StreamerBotConnection.BroadcasterIdentifier(discovery, "youtube"));
+        payload["broadcaster"] = new JsonObject { ["id"] = 123 };
+        var known = SupportPayloadNormalizer.Normalize("twitch", "GiftBomb", payload, false)!;
+        Assert.Equal("channel:123", known.GiftScopeKey);
+        Assert.Null(known.GatedReason);
+    }
     [Theory]
     [InlineData("USD", 1250000, 125, 2)]
     [InlineData("JPY", 125000000, 125, 0)]

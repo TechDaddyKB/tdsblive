@@ -36,6 +36,9 @@ public sealed class GiftIngestionTests
              "subscribedAt":"2026-01-05T12:00:00Z","expiresAt":"2026-02-05T12:00:00Z","isAnonymous":false,"isTest":false}}
             """)!.AsObject();
         var events = app.Services.GetRequiredService<EventStore>();
+        // The connection attaches a verified GetBroadcaster identity before normalization.
+        foreach (var envelope in new[] { individualEnvelope, batchEnvelope })
+            envelope["data"]!["broadcaster"] = new JsonObject { ["id"] = "owned-channel" };
         var projection = new FinancialProjection(contexts, new(contexts), new NoRates(), rules);
         var first = normalizer.Normalize(individualFirst ? individualEnvelope : batchEnvelope, DateTimeOffset.UtcNow).Event!;
         var second = normalizer.Normalize(individualFirst ? batchEnvelope : individualEnvelope, DateTimeOffset.UtcNow).Event!;

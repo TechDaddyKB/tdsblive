@@ -9,6 +9,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { qualifyVisualEditor } from './visual-editor.mjs';
+import { qualifyFinancial } from './financial.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
@@ -124,6 +125,7 @@ try {
   await page.waitForFunction(() => document.querySelector('.badge-image')?.naturalWidth > 0);
   await page.screenshot({ path: path.join(root, 'artifacts/g05-streamer-chat.png') });
   await qualifyVisualEditor(page, origin, writeHeaders, root);
+  await qualifyFinancial(page, origin);
   assert.equal(pageErrors, 0, 'Rendered pages raised JavaScript errors');
   console.log('G02/G05/G06 fresh-browser qualification passed: HTTP editor/login, transparent escaped four-platform chat, bounded DOM, one socket, reconnect, saved settings and persistent light/dark streamer view');
 } finally {

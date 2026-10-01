@@ -379,7 +379,7 @@ Admin financial APIs, versioned UTC current-stream/timezone settings, exact-stri
 
 ### Blockers
 
-None preventing implementation. Editor ledger/identity/settings controls are implemented with local typecheck, lint, production build and seven targeted UI/precision tests passing. Browser acceptance, source-channel context/forwarding qualification, Windows CI, SonarQube and final delivery/review remain unfinished. Backend APIs, settings, maintenance, selected reconciliation and real process restart/FX checks are implemented and verified locally. Unverified Rumble gift accounting remains gated. No live paid event verification is claimed.
+None preventing implementation. Editor ledger/identity/settings controls are implemented with local typecheck, lint, production build and seven targeted UI/precision tests passing. Isolated browser settings/rules/manual-FX precision, reload and custom-period checks now pass; populated ledger/reconciliation and identity-link browser flows remain unfinished. Source-channel lookup uses verified connected broadcaster IDs and passed a read-only installed Streamer.bot schema probe; concrete Ko-fi forwarding, Windows CI, SonarQube and final delivery/review remain unfinished. Backend APIs, settings, maintenance, selected reconciliation and real process restart/FX checks are implemented and verified locally. Unverified Rumble gift accounting remains gated. No live paid event verification is claimed.
 
 <a id="g08"></a>
 
