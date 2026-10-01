@@ -127,6 +127,16 @@ jobs:
           SONARQUBE_CLI_ORG: camarokris
         run: python tools/qualify_foundation.py
 
+      - name: Qualify rendered editor in an isolated CI browser
+        shell: pwsh
+        run: |
+          npm ci --prefix tools/browser-qualification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run install-browser --prefix tools/browser-qualification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run qualify --prefix tools/browser-qualification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify generated frontend API types
         shell: pwsh
         run: |
@@ -163,4 +173,5 @@ jobs:
             TestResults/**/coverage.opencover.xml
             TestResults/**/coverage.cobertura.xml
             coverage/lcov.info
+            artifacts/g02-editor.png
           if-no-files-found: warn

@@ -9,6 +9,11 @@
 *.p12
 appsettings.Local.json
 appsettings.*.Local.json
+configuration.json
+*.dpapi
+*.pending
+**/credentials/
+**/logs/
 
 # Runtime data, captures, backups and diagnostics (curated fixtures stay tracked)
 /data/

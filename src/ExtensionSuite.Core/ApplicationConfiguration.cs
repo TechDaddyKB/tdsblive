@@ -15,11 +15,13 @@ public sealed record ApplicationConfiguration
 
     public void Validate()
     {
+        if (Server is null || StreamerBot is null || SpeakerBot is null || Rumble is null)
+            throw new ArgumentException("Configuration sections cannot be null.");
         Server.Validate();
         StreamerBot.Validate();
         SpeakerBot.Validate();
         _ = new RumblePollInterval(Rumble.PollIntervalSeconds, Rumble.AdvancedSlowerPolling);
-        if (LogRetentionDays is < 1 or > 365 || string.IsNullOrWhiteSpace(DisplayName))
+        if (LogRetentionDays is < 1 or > 365 || string.IsNullOrWhiteSpace(DisplayName) || DisplayName.Length > 128)
             throw new ArgumentException("Invalid retention or display name.");
         if (!new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical", "None" }.Contains(MinimumLogLevel))
             throw new ArgumentException("Invalid minimum log level.");
@@ -38,7 +40,7 @@ public sealed record ServerConfiguration
             throw new ArgumentException("Server requires a numeric IP address and valid port.");
         if (!IPAddress.IsLoopback(address) && !EnableLan)
             throw new ArgumentException("Non-loopback binding requires explicit LAN opt-in.");
-        if (AllowedHosts.Any(host => Uri.CheckHostName(host) == UriHostNameType.Unknown || host == "*"))
+        if (AllowedHosts is null || AllowedHosts.Any(host => Uri.CheckHostName(host) == UriHostNameType.Unknown || host == "*"))
             throw new ArgumentException("Allowed hosts must be explicit hostnames or IP addresses.");
     }
 }

@@ -5,6 +5,7 @@ No production data or live integration calls. Child processes use temporary data
 Only metadata is printed. Credentials/nonces never enter output or artifacts.
 """
 import argparse
+from contextlib import closing
 from datetime import datetime, timezone
 import http.cookiejar
 import json
@@ -76,7 +77,7 @@ def qualify():
             assert result['persisted'] and not result['liveActionsAllowed']
             process.kill()  # Intentional crash of this isolated child only.
             process.wait(timeout=10)
-            with sqlite3.connect(root / 'tdsblive.db') as database:
+            with closing(sqlite3.connect(root / 'tdsblive.db')) as database:
                 assert database.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
                 assert database.execute('SELECT COUNT(*) FROM Events').fetchone()[0] == 1
                 stored = database.execute('SELECT Json FROM Events').fetchone()[0]

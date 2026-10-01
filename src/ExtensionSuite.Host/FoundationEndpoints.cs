@@ -45,7 +45,7 @@ public static class FoundationEndpoints
             if (context.Connection.RemoteIpAddress is not { } peer || !IPAddress.IsLoopback(peer)) return Results.StatusCode(403);
             if (!OperatingSystem.IsWindows()) return Results.Problem("Credential provisioning requires Windows DPAPI.", statusCode: 501);
             var credential = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-            await new WindowsSecretVault(paths.Secrets).SetAsync("admin-token", credential, context.RequestAborted);
+            await context.RequestServices.GetRequiredService<WindowsSecretVault>().SetAsync("admin-token", credential, context.RequestAborted);
             access.SetAdminCredential(credential);
             sensitive.Set("admin-token", credential);
             return Results.Ok(new { credential });
@@ -61,7 +61,7 @@ public static class FoundationEndpoints
         {
             if (!OperatingSystem.IsWindows()) return Results.Problem("Credential storage requires Windows DPAPI.", statusCode: 501);
             if (name == "admin-token") return Results.BadRequest(new { error = "Use the local admin provisioning endpoint." });
-            try { await new WindowsSecretVault(paths.Secrets).SetAsync(name, update.Value, context.RequestAborted); }
+            try { await context.RequestServices.GetRequiredService<WindowsSecretVault>().SetAsync(name, update.Value, context.RequestAborted); }
             catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid secret name." }); }
             sensitive.Set(name, update.Value);
             return Results.NoContent();
@@ -70,7 +70,7 @@ public static class FoundationEndpoints
         {
             if (!OperatingSystem.IsWindows()) return Results.Problem("Credential storage requires Windows DPAPI.", statusCode: 501);
             if (name == "admin-token") return Results.BadRequest(new { error = "Rotate admin credentials through local provisioning." });
-            try { await new WindowsSecretVault(paths.Secrets).DeleteAsync(name, context.RequestAborted); }
+            try { await context.RequestServices.GetRequiredService<WindowsSecretVault>().DeleteAsync(name, context.RequestAborted); }
             catch (ArgumentException) { return Results.BadRequest(new { error = "Invalid secret name." }); }
             sensitive.Remove(name);
             return Results.NoContent();

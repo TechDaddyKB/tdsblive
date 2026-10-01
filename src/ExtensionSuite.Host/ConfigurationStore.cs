@@ -25,7 +25,7 @@ public sealed class ConfigurationStore(ApplicationPaths paths)
     private readonly SemaphoreSlim gate = new(1, 1);
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
-        WriteIndented = true, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow
+        WriteIndented = true, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow, RespectNullableAnnotations = true
     };
 
     public ApplicationConfiguration Load()

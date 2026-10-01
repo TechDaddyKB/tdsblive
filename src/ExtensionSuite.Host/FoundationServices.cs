@@ -19,6 +19,11 @@ public static class FoundationServices
         builder.Services.AddSingleton<ILoggerProvider, RedactedFileLoggerProvider>();
         builder.Services.AddSingleton<AccessControl>();
         builder.Services.AddSingleton<SensitiveValues>();
+        if (OperatingSystem.IsWindows()) builder.Services.AddSingleton(services =>
+        {
+            if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+            return new WindowsSecretVault(services.GetRequiredService<ApplicationPaths>().Secrets);
+        });
         builder.Services.AddDbContextFactory<FoundationDbContext>((services, options) =>
         {
             var path = services.GetRequiredService<ApplicationPaths>().Database;
@@ -32,6 +37,7 @@ public static class FoundationServices
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+            options.SerializerOptions.RespectNullableAnnotations = true;
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter<EventProvenance>(JsonNamingPolicy.CamelCase));
         });
         builder.Services.AddRateLimiter(options =>
@@ -63,7 +69,7 @@ public static class FoundationServices
         await DatabaseLifecycle.InitializeAsync(db);
         if (OperatingSystem.IsWindows())
         {
-            var vault = new WindowsSecretVault(app.Services.GetRequiredService<ApplicationPaths>().Secrets);
+            var vault = app.Services.GetRequiredService<WindowsSecretVault>();
             var sensitive = app.Services.GetRequiredService<SensitiveValues>();
             foreach (var name in vault.Names())
             {
@@ -81,14 +87,20 @@ public static class FoundationServices
     }
 }
 
-public sealed class DatabaseShutdown(IDbContextFactory<FoundationDbContext> factory) : IHostedService
+public sealed class DatabaseShutdown(ApplicationPaths paths) : IHostedService
 {
     private int stopped;
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         if (Interlocked.Exchange(ref stopped, 1) != 0) return;
-        await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        await DatabaseLifecycle.CheckpointAsync(db, cancellationToken);
+        // The final checkpoint must not resolve EF logging services from a provider
+        // that a concurrent host-disposal path may already have disposed.
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+            { DataSource = paths.Database, ForeignKeys = true }.ToString());
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }
