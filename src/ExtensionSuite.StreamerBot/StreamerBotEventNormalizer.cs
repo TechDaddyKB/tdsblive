@@ -31,6 +31,8 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         if (path.Length >= 16) return new(null, "bridgeLoop", "bridgePathLimit");
         if (category.Equals("General", StringComparison.OrdinalIgnoreCase) && nativeType == "Custom" && String(data["tdsbliveForwardedSource"]) is { } forwarded)
         {
+            if (string.IsNullOrWhiteSpace(forwarded) || string.IsNullOrWhiteSpace(String(data["tdsbliveForwardedType"])))
+                return new(null, "invalid", "missingForwardedRouting");
             category = forwarded;
             nativeType = String(data["tdsbliveForwardedType"]) ?? "Unknown";
             data = data["payload"] as JsonObject ?? new JsonObject();

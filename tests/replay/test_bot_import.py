@@ -8,13 +8,27 @@ import socket
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools'))
 from rumble_evidence import safe_read, scan_bytes
+sys.path.insert(0, str(ROOT / 'tools/streamerbot'))
+import install_native
 
 
 class BotImportTests(unittest.TestCase):
+    def test_native_scan_requires_explicit_clean_verdict_before_read(self):
+        with tempfile.TemporaryDirectory() as directory:
+            data = Path(directory); (data / 'actions.json').write_text('{}')
+            with socket.socket() as listener:
+                listener.bind(('127.0.0.1', 0)); port = listener.getsockname()[1]
+            for verdict in (b'', b'Secret detected'):
+                with patch.object(install_native.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, verdict)), patch.object(Path, 'read_bytes') as read:
+                    with self.assertRaisesRegex(RuntimeError, 'no content was read'):
+                        install_native.install(data / 'unused.sb', data, port, False)
+                    read.assert_not_called()
+
     def test_native_import_preserves_unrelated_actions_bindings_and_private_backup(self):
         artifacts = ROOT / 'artifacts'; artifacts.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=artifacts) as directory:

@@ -73,7 +73,7 @@ public sealed class StreamerBotConnection(IntegrationConfiguration configuration
         Volatile.Write(ref state, new("disconnected"));
     }
 
-    private static async Task RunConnectedAsync(BotProtocolSession current, Func<JsonObject, CancellationToken, Task> onEvent,
+    private async Task RunConnectedAsync(BotProtocolSession current, Func<JsonObject, CancellationToken, Task> onEvent,
         CancellationTokenSource connectionLifetime)
     {
         var consuming = ConsumeAsync(current, onEvent, connectionLifetime.Token);
@@ -142,9 +142,13 @@ public sealed class StreamerBotConnection(IntegrationConfiguration configuration
         if (selected.Count > 0) await current.RequestAsync("Subscribe", new JsonObject { ["events"] = selected }, Timeout, cancellationToken);
     }
 
-    private static async Task ConsumeAsync(BotProtocolSession current, Func<JsonObject, CancellationToken, Task> onEvent, CancellationToken cancellationToken)
+    private async Task ConsumeAsync(BotProtocolSession current, Func<JsonObject, CancellationToken, Task> onEvent, CancellationToken cancellationToken)
     {
-        await foreach (var item in current.Events.ReadAllAsync(cancellationToken)) await onEvent(item, cancellationToken);
+        await foreach (var item in current.Events.ReadAllAsync(cancellationToken))
+        {
+            try { await onEvent(item, cancellationToken); }
+            catch (Exception error) when (error is not OperationCanceledException) { Record("event", "processingFailed", false); }
+        }
     }
 
     public async Task<BotExecution> ExecuteActionAsync(Guid actionId, JsonObject arguments, bool executeLive, CancellationToken cancellationToken)

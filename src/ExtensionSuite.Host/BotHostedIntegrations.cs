@@ -13,6 +13,15 @@ public sealed class StreamerBotHostedIntegration(StreamerBotConnection connectio
     public Task RunAsync(CancellationToken cancellationToken) => connection.RunAsync(ReceiveAsync, cancellationToken);
     private async Task ReceiveAsync(JsonObject payload, CancellationToken cancellationToken)
     {
+        try { await ProcessAsync(payload, cancellationToken); }
+        catch (Exception error) when (error is not OperationCanceledException)
+        {
+            // Do not expose database exception messages or raw peer values.
+            inspector.Add(new(null, "processingFailed", "eventProcessingFailure"), new JsonObject());
+        }
+    }
+    private async Task ProcessAsync(JsonObject payload, CancellationToken cancellationToken)
+    {
         var result = normalizer.Normalize(payload, DateTimeOffset.UtcNow);
         inspector.Add(result, CredentialRedactor.Json(payload, sensitive.Snapshot()) as JsonObject ?? new JsonObject());
         if (result.Event is not { } item) return;

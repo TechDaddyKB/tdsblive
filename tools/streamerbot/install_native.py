@@ -61,8 +61,9 @@ def install(bundle, data_directory, port, bind_probe):
     directory = data_directory.resolve(strict=True)
     target = directory / 'actions.json'
     if target.is_symlink() or not target.is_file(): raise ValueError('An existing regular data/actions.json is required')
-    scanned = subprocess.run(['sonar', 'analyze', 'secrets', str(target)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
-    if scanned.returncode != 0: raise RuntimeError('STOP: native action store failed deterministic secrets scanning; no content was read')
+    scanned = subprocess.run(['sonar', 'analyze', 'secrets', '--', str(target)], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False)
+    if scanned.returncode != 0 or b'No secrets found' not in scanned.stdout:
+        raise RuntimeError('STOP: native action store failed deterministic secrets scanning; no content was read')
     original = target.read_bytes()
     native = json.loads(original)
     if not isinstance(native.get('actions'), list) or not isinstance(native.get('queues'), list): raise ValueError('Unsupported native action-store schema')

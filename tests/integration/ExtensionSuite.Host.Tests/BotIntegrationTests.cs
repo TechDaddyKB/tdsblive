@@ -17,6 +17,45 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class BotIntegrationTests
 {
     [Fact]
+    public async Task FailedEventConsumerKeepsSessionAndConsumesNextEvent()
+    {
+        var connections = 0; var received = 0;
+        await using var server = await FakeBot.Start(async socket =>
+        {
+            Interlocked.Increment(ref connections);
+            await FakeBot.Send(socket, new() { ["request"] = "Hello" });
+            while (socket.State == WebSocketState.Open)
+            {
+                var request = await FakeBot.Read(socket);
+                var operation = request["request"]!.GetValue<string>();
+                var response = operation == "GetEvents" ? new JsonObject { ["events"] = new JsonObject { ["Twitch"] = new JsonArray("ChatMessage") } } : new JsonObject();
+                await FakeBot.Reply(socket, request, response);
+                if (operation == "Subscribe")
+                    for (var index = 0; index < 2; index++)
+                        await FakeBot.Send(socket, new() { ["event"] = new JsonObject { ["source"] = "Twitch", ["type"] = "ChatMessage" } });
+            }
+        });
+        var adapter = new StreamerBotConnection(server.Configuration, () => null, new());
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = adapter.RunAsync((_, _) => Interlocked.Increment(ref received) == 1 ? throw new ArgumentException("synthetic consumer failure") : Task.CompletedTask, lifetime.Token);
+        await Until(() => Volatile.Read(ref received) == 2);
+        Assert.Equal("connected", adapter.State.State); Assert.Equal(1, connections);
+        Assert.Equal("processingFailed", Assert.Single(adapter.Executions).State);
+        await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
+    }
+
+    [Theory]
+    [InlineData("", "ChatMessage")]
+    [InlineData(" ", "ChatMessage")]
+    [InlineData("Twitch", "")]
+    public void RejectsBlankForwardedRouting(string source, string type)
+    {
+        var result = new StreamerBotEventNormalizer(new()).Normalize(new JsonObject { ["event"] = new JsonObject { ["source"] = "General", ["type"] = "Custom" },
+            ["data"] = new JsonObject { ["tdsbliveForwardedSource"] = source, ["tdsbliveForwardedType"] = type } }, DateTimeOffset.UtcNow);
+        Assert.Null(result.Event); Assert.Equal("missingForwardedRouting", result.Limitation);
+    }
+
+    [Fact]
     public async Task HostedIngestionPersistsOnlyLiveAndRejectsReturnedBridgeEvents()
     {
         await using var server = await FakeBot.Start(async socket =>
