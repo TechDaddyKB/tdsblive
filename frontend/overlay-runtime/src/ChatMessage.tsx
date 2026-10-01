@@ -11,5 +11,8 @@ function MediaPart({ part }: { part: Part }) {
 }
 export function ChatMessage({ message }: { message: ChatEvent['message'] }) {
   if (!message?.parts?.length || message.parts.length > 256) return <>{message?.text}</>;
+  // Compatibility with earlier G05 GIF records that duplicated the description.
+  if (message.parts.length === 2 && message.parts[0].kind === 'text' && message.parts[0].text === message.text && message.parts[1].kind === 'gif' && !message.parts[1].text)
+    return <MediaPart part={{ ...message.parts[1], text: message.text ?? '[GIF]' }} />;
   return <>{message.parts.map((part, index) => <MediaPart key={`${index}-${part.imageUrl ?? ''}`} part={part} />)}</>;
 }

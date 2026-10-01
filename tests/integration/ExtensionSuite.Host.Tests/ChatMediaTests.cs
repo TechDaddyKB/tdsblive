@@ -28,7 +28,7 @@ public sealed class ChatMediaTests
         await app.Services.GetRequiredService<EventStore>().AcceptAsync(item, "gif-contract", retainRaw: false);
         var history = (await client.GetFromJsonAsync<CanonicalEvent[]>("/api/overlays/combined-chat/chat", EventStore.JsonOptions))!;
         var stored = Assert.Single(history); Assert.Null(stored.Raw); Assert.Equal(url, Assert.Single(stored.Message!.Parts!, p => p.Kind == "gif").ImageUrl);
-        var delivered = await Read(socket); Assert.Equal(url, delivered["event"]!["message"]!["parts"]![1]!["imageUrl"]!.GetValue<string>());
+        var delivered = await Read(socket); Assert.Equal(url, delivered["event"]!["message"]!["parts"]![0]!["imageUrl"]!.GetValue<string>());
     }
 
     private static async Task<JsonObject> Read(WebSocket socket)
@@ -80,7 +80,7 @@ public sealed class ChatMediaTests
         var result = ChatMediaNormalizer.Normalize(null, data, "twitch")!;
         Assert.Equal("", result.Text); Assert.Equal("gif", Assert.Single(result.Parts!).Kind);
         var attachment = ChatMediaNormalizer.Normalize("Reaction", data, "twitch")!;
-        Assert.Equal("text", attachment.Parts![0].Kind); Assert.Equal("gif", attachment.Parts[1].Kind);
+        Assert.Equal("Reaction", attachment.Text); Assert.Equal("gif", Assert.Single(attachment.Parts!).Kind); Assert.Equal("Reaction", attachment.Parts![0].Text);
         Assert.Null(ChatMediaNormalizer.Normalize("https://example.invalid/reaction.gif", new(), "twitch")!.Parts);
     }
 

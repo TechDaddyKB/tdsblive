@@ -2,6 +2,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { ChatMessage } from './ChatMessage';
 afterEach(cleanup);
+it('uses GIF descriptions as alt text and hides legacy duplicated captions', () => {
+  const view = render(<ChatMessage message={{ text: '[Synthetic GIF]', parts: [{ kind: 'text', text: '[Synthetic GIF]' }, { kind: 'gif', text: '', imageUrl: 'https://example.invalid/reaction.gif' }] }} />);
+  const image = screen.getByRole('img', { name: '[Synthetic GIF]' }); expect(view.container.textContent).toBe(''); expect(image).toHaveAttribute('title', '[Synthetic GIF]');
+  fireEvent.error(image); expect(screen.getByText('[Synthetic GIF]')).toBeVisible();
+});
 it('renders all provider artwork, animated image URLs and zero-width emotes without HTML', () => {
   render(<ChatMessage message={{ text: 'Hello', parts: [{ kind: 'text', text: '<script>Hello</script> ' }, ...['twitch', '7TV', 'BTTV', 'FFZ'].map(source => ({ kind: 'emote', text: source, source, imageUrl: `https://example.invalid/${source}.gif`, zeroWidth: source === '7TV' }))] }} />);
   expect(document.querySelector('script')).toBeNull(); expect(screen.getByText('<script>Hello</script>')).toBeVisible();

@@ -8,6 +8,8 @@ public static class ChatMediaNormalizer
     public static EventMessage? Normalize(string? text, JsonObject data, string platform)
     {
         var parts = ReadParts(data["parts"] as JsonArray, platform);
+        if (parts.Length == 1 && parts[0].Kind == "gif" && parts[0].Text.Length == 0)
+            return new(text ?? "", [parts[0] with { Text = text ?? "[GIF]" }]);
         if (parts.Length > 0 && (text is null || string.Concat(parts.Select(p => p.Text)) == text))
             return new(text ?? string.Concat(parts.Select(p => p.Text)), parts);
         if (text is null) return null;
