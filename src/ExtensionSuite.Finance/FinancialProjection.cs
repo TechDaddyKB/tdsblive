@@ -54,7 +54,12 @@ public sealed class FinancialProjection(IDbContextFactory<FoundationDbContext> f
                     nominal = await rules.FindAsync(item.Platform, item.Support.Kind, item.Support.Tier, cancellationToken);
             }
             // A crash between these writes safely retries against ledger uniqueness. Never turn a storage failure into a receipt.
-            await ledger.AcceptAsync(item, rate, nominal, cancellationToken);
+            try { await ledger.AcceptAsync(item, rate, nominal, cancellationToken); }
+            catch (Exception error) when (error is ArgumentException or OverflowException)
+            {
+                await ReceiptAsync(db, row.Id, "quarantined", "ledger_rejected", cancellationToken);
+                continue;
+            }
             await ReceiptAsync(db, row.Id, "processed", null, cancellationToken);
         }
         return rows.Length;

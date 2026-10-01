@@ -11,6 +11,30 @@ namespace ExtensionSuite.Host.Tests;
 
 public sealed class FinancialProjectionTests
 {
+    [Fact]
+    public async Task RejectedIdentitiesAndValuationOverflowCannotStarveLaterBatches()
+    {
+        using var factory = new FoundationHostFactory();
+        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.RemoveAll<IIsolatedIntegration>()));
+        using var client = app.CreateClient();
+        var contexts = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var events = app.Services.GetRequiredService<EventStore>();
+        var earlier = new DateTimeOffset(2025, 1, 5, 12, 0, 0, TimeSpan.Zero);
+        Assert.True(await events.AcceptAsync(Paid("invalid-identity") with { OccurredAt = earlier,
+            User = new(new string('x', 600)), Support = new("donation", 1, new(100, "USD", 2)) }, "1"));
+        Assert.True(await events.AcceptAsync(Paid("overflow") with { OccurredAt = earlier,
+            Support = new("donation", 1, new(long.MaxValue, "EUR", 2)) }, "2"));
+        for (var index = 0; index < 32; index++) Assert.True(await events.AcceptAsync(Paid("later-" + index), "3"));
+        var projection = new FinancialProjection(contexts, new(contexts), new FixtureRates(), new(contexts));
+        Assert.Equal(32, await projection.ProcessBatchAsync());
+        Assert.Equal(2, await projection.ProcessBatchAsync());
+        Assert.Equal(0, await projection.ProcessBatchAsync());
+        await using var db = await contexts.CreateDbContextAsync();
+        Assert.Equal(32, await db.FinancialEvents.CountAsync());
+        var quarantined = await db.FinancialProjectionReceipts.Where(row => row.State == "quarantined").ToArrayAsync();
+        Assert.Equal(2, quarantined.Length);
+        Assert.All(quarantined, receipt => Assert.Equal("ledger_rejected", receipt.Reason));
+    }
     private static CanonicalEvent Paid(string key, EventProvenance provenance = EventProvenance.Live) => new()
     {
         Source = "owned-fixture", Platform = "youtube", Type = "support.donation", NativeType = "Fixture.SuperChat",
