@@ -53,7 +53,11 @@ def qualify(speaker_port, refresh_contract):
                 if time.monotonic() > deadline: raise RuntimeError('Bot connection qualification timed out')
                 time.sleep(.2)
             discovery = get('/api/integrations/streamerbot/discovery')
-            assert any(t['eventName'] == 'tdsblive.test.trigger' for t in discovery['codeTriggers'])
+            deadline = time.monotonic() + 30
+            while not any(t['eventName'] == 'tdsblive.test.trigger' for t in discovery['codeTriggers']):
+                if time.monotonic() > deadline: raise RuntimeError('Bootstrap registration was not observed')
+                time.sleep(.2)
+                discovery = post('/api/integrations/streamerbot/discovery/refresh', {})
             nonce = str(uuid4())
             result = post('/api/integrations/streamerbot/triggers/execute', {'eventName': 'tdsblive.test.trigger', 'arguments': {'tdsbliveTestId': nonce}, 'executeLive': True})
             assert result['state'] == 'acknowledged'

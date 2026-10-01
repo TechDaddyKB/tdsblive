@@ -29,6 +29,7 @@ configuration.json
 *.sqlite3
 *.sqlite3-*
 *.log
+actions.tdsblive-backup-*.json
 
 # Build, dependency and verification output
 **/bin/

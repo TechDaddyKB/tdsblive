@@ -236,8 +236,8 @@ Prerequisites: G02
 
 ### Blockers
 
-- Graphical Import dialog acceptance of the generated `.sb` remains unverified. The same C# definitions were installed through the stopped native action store, compiled and executed successfully; this is not presented as graphical importer evidence. A concrete artifact and manual-check request have been provided.
-- Final evidence/test-record revision and protected-main merge remain pending. [PR #4](https://github.com/camarokris/tdsblive/pull/4) contains the implementation; G03 remains In progress until every acceptance criterion is met.
+- Bootstrap import acceptance is verified through the repeatable `install_native.py` operator CLI importing the generated `.sb` into the stopped native 1.0.7 action store, followed by registration, trigger/action execution and inspector qualification. Graphical dialog behavior and future native schema versions remain explicitly unverified compatibility limitations; this does not claim graphical importer evidence.
+- Final importer/Windows cleanup revision and protected-main merge remain pending. [PR #4](https://github.com/camarokris/tdsblive/pull/4) contains the implementation; G03 remains In progress until those checks pass.
 
 <a id="g04"></a>
 
