@@ -21,7 +21,7 @@ sanitized/synthetic fixtures and lockfiles stay tracked. Scanner success does no
 replace staged publication review or private-string audits.
 
 Windows CI uses read-only repository permissions and checkout without persisted
-credentials. Sonar credentials exist only in the two trusted scanner steps,
+credentials. Sonar credentials exist only in trusted analysis and deterministic secrets-scan steps,
 never in test/report artifacts or source files. Fork/Dependabot code receives no
 Sonar token. Required Sonar checks must pass on reviewed trusted branches before
 merge; `pull_request_target` is intentionally absent.

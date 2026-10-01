@@ -32,9 +32,11 @@ tooling/configuration are not production coverage targets. Handwritten runtime
 entrypoints and domain/UI code remain included.
 
 Actions upload only TRX, coverage XML and LCOV artifacts, retained for 14 days.
-They never upload scanner state or original references. Fork/Dependabot builds
-run the same tests but omit credential-bearing analysis; protected merges require
-the actual SonarQube check from a reviewed trusted branch.
+They never upload scanner state or original references. The deterministic secrets
+scanner requires a Sonar user token even for local scanning. Fork/Dependabot runs
+receive no token and fail closed before reading source; they require maintainer
+review and promotion to a trusted branch for tests and analysis. Protected merges
+require the actual SonarQube check from that reviewed trusted branch.
 
 The current test corpus does not validate real Rumble purchases, production
 dedupe, Streamer.bot actions, editor interaction, OBS audio, LAN authentication,
