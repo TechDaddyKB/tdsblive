@@ -87,14 +87,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           if (-not $env:SONAR_TOKEN) { throw 'SONAR_TOKEN must be configured for trusted analysis' }
-          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"0.1.0" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
+          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"0.1.0" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**,**/wwwroot/editor/**,frontend/**/generated/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,frontend/**/*.test.ts,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Build .NET solution
-        run: dotnet build TDSBLive.slnx --configuration Release --no-restore --no-incremental
-
-      - name: Test .NET with OpenCover and TRX
-        run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 
       - name: Lint and type-check frontend
         shell: pwsh
@@ -106,6 +100,12 @@ jobs:
 
       - name: Build editor and lightweight runtime
         run: npm run build
+
+      - name: Build .NET solution
+        run: dotnet build TDSBLive.slnx --configuration Release --no-restore --no-incremental
+
+      - name: Test .NET with OpenCover and TRX
+        run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 
       - name: Test frontend with LCOV
         run: npm run test:coverage
@@ -119,6 +119,32 @@ jobs:
           python tools/rumble_evidence.py verify
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s tests/replay -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Qualify isolated host crash recovery and HTTP contract
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
+        run: python tools/qualify_foundation.py
+
+      - name: Qualify rendered editor in an isolated CI browser
+        shell: pwsh
+        run: |
+          npm ci --prefix tools/browser-qualification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run install-browser --prefix tools/browser-qualification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run qualify --prefix tools/browser-qualification
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify generated frontend API types
+        shell: pwsh
+        run: |
+          npm ci --prefix tools/api-type-generator
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run generate --prefix tools/api-type-generator
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code -- frontend/editor/src/generated/api-types.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify coverage reports contain production code
@@ -147,4 +173,5 @@ jobs:
             TestResults/**/coverage.opencover.xml
             TestResults/**/coverage.cobertura.xml
             coverage/lcov.info
+            artifacts/g02-editor.png
           if-no-files-found: warn

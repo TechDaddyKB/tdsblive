@@ -7,13 +7,13 @@ overlays, supporter tracking and automation. MIT licensed.
 
 **Local HTTP is supported. HTTPS and certificates are not required.** The host
 defaults to `http://127.0.0.1:17474`. Optional authenticated LAN operation is a
-planned capability; it is not enabled in the initial scaffold.
+foundation capability; it is disabled by default and requires Windows DPAPI admin setup.
 
 This repository currently contains the qualified Rumble evidence and the G01
-development scaffold: a minimal HTTP status endpoint, editor/runtime build
-targets, shared polling constraints, unit/integration tests and Windows CI.
-It is **not yet a usable streaming companion release**. Integration, persistence,
-the real editor, widgets and installation are tracked by stable goals in the
+application foundation: HTTP editor/login shells, SQLite event persistence and
+outbox, configuration, redacted logging, authenticated LAN, documented APIs,
+unit/integration tests and Windows CI. It is **not yet a usable streaming companion
+release**. Live integrations, visual editing, widgets and installation are tracked by stable goals in the
 [implementation plan](docs/implementation-plan.md).
 
 ## Development
@@ -27,6 +27,7 @@ Scan files before reading them, as specified in [AGENTS.md](AGENTS.md). Then:
 ```bash
 dotnet restore TDSBLive.slnx --locked-mode
 npm ci
+npm run build
 dotnet build TDSBLive.slnx --configuration Release --no-restore
 dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 npm run lint
@@ -38,9 +39,11 @@ python -m unittest discover -s tests/replay -v
 python tools/verify_coverage.py
 ```
 
-Run the minimal host with `dotnet run --project src/ExtensionSuite.Host`; run the
-separate editor scaffold with `npm run dev --workspace @tdsblive/editor`. Serving
-the built editor from the host and persistent configuration belong to G02.
+Run the foundation host with `dotnet run --project src/ExtensionSuite.Host` and open
+`http://127.0.0.1:17474/editor`. Build assets before the host so they are copied to
+its output. Use `npm run dev --workspace @tdsblive/editor` for frontend development.
+See [foundation API](docs/foundation-api.md) for bootstrap configuration, DPAPI
+credential setup, authenticated LAN and generated contracts.
 
 ## Requirements and quality
 

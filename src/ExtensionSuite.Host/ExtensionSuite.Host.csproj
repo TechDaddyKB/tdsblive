@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
+    <Content Update="wwwroot/**/*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <ProjectReference Include="../ExtensionSuite.Core/ExtensionSuite.Core.csproj" />
     <ProjectReference Include="../ExtensionSuite.Data/ExtensionSuite.Data.csproj" />
     <ProjectReference Include="../ExtensionSuite.StreamerBot/ExtensionSuite.StreamerBot.csproj" />

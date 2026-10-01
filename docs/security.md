@@ -1,14 +1,33 @@
 # Security and local HTTP
 
 **HTTPS is not required.** Default host access is loopback HTTP on port 17474.
-The scaffold exposes only product/status metadata. It has no credential setup,
-ledger or asset upload routes yet. G02 adds privileged endpoint protection;
-optional LAN operation must be explicit, authenticated and origin/CSRF protected.
+The foundation exposes editor, configuration, diagnostics and credential setup
+routes with host/origin validation and CSRF protection. Optional LAN operation is
+explicit and requires a Windows DPAPI admin credential before startup.
 HTTP on LAN does not encrypt traffic; optional HTTPS may be used without becoming
 a core requirement. Never expose a privileged editor through an unauthenticated
 LAN binding.
 
-Store integration credentials with DPAPI on Windows. Redact Rumble URLs/query
+Sonar rules S5332 (HTTP listener) and S2092 (non-Secure session cookie) are accepted
+for these specific foundation locations with documented rationale: HTTPS cannot
+be mandatory under the approved requirement, and Secure cookies cannot support
+required HTTP session authentication. This accepts the unencrypted transport
+tradeoff; it does not claim HTTP confidentiality. Other security findings remain
+subject to review and remediation, and no broad rule exclusion is configured.
+
+CodeQL's two matching HTTP-cookie alerts (session and antiforgery) use the same
+specific transport acceptance. Its two `cs/user-controlled-bypass` alerts in
+RequestSecurity were reviewed as false positives: oversized Content-Length and
+cross-site Sec-Fetch-Site cause error responses and immediate returns, denying
+the whole request. They do not grant access. Smaller/absent length and other/absent
+fetch headers continue through mandatory remote-peer authentication, origin
+validation and write CSRF checks. Kestrel independently limits actual body reads.
+The sensitive authentication call is bypassed only when the request is rejected.
+Tests verify denial and actual non-loopback authentication without relying on
+these client headers. Review rationale is recorded on GitHub alerts 1, 2, 3 and 5.
+
+Admin login has a bounded session count and rate limit; rotation invalidates
+sessions atomically. Store integration credentials with DPAPI on Windows. Redact Rumble URLs/query
 credentials, stream keys, integration passwords and tokens before persistence,
 display or diagnostics. Widgets never receive credentials. Sandbox custom widgets
 and mediate permissions in G12. Validate files/package traversal and size limits.

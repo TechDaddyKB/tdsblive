@@ -19,22 +19,21 @@ flowchart LR
 - `ExtensionSuite.Core`: shared contracts and invariants. G01 supplies the
   polling-interval constraint; it does not implement the Rumble adapter.
 - `ExtensionSuite.Data`: EF Core SQLite migrations and transactional repositories
-  in G02 onward; currently a project/dependency boundary without a database engine.
+  for events, checkpoints, outbox, non-secret configuration and redacted logs.
 - `ExtensionSuite.StreamerBot` and `ExtensionSuite.Rumble`: independent adapters
   in G03/G04, referencing Core rather than frontend or each other.
 - `ExtensionSuite.Finance`: idempotent ledger/valuation/identity strategies in G07.
 - `ExtensionSuite.Overlays` and `ExtensionSuite.Web`: widget/transport/API services
   in their owning goals; empty build boundaries until implementation.
-- `ExtensionSuite.Host`: composition root. G01's only endpoint is `/api/status`,
-  returning product name and HTTP support; persistence/auth/OpenAPI are G02 work.
+- `ExtensionSuite.Host`: composition root, HTTP editor assets, typed configuration,
+  DPAPI provisioning, authenticated LAN, diagnostics, OpenAPI and editor WebSockets.
 - `frontend/editor` and `frontend/overlay-runtime`: separate Vite build targets;
   editor-only dependencies must not enter the lightweight OBS runtime.
 
-Normalized UUIDv7 events, transactional dedupe/checkpoint acceptance, durable
-outbox, per-integration failure isolation and replay provenance are specified in
-the implementation plan. A successful build of these boundaries does not make
-those future services complete.
+The foundation implements UUIDv7 events, transactional dedupe/checkpoint acceptance,
+durable outbox, independent integration supervision and replay provenance. Actual
+platform adapters remain G03/G04; the integration shell truthfully shows them disconnected.
 
-The editor and host are separate development servers in G01. G02 adds host asset
-serving/configuration; G05 supplies real OBS event transport; G06 supplies visual
+The host serves the built editor; a separate Vite server supports development.
+G05 supplies real OBS event transport; G06 supplies visual
 editing. Integration placeholders must never claim actual connections.

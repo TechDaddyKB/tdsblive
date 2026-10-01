@@ -62,7 +62,7 @@ Use Windows DPAPI for stored integration credentials. Never send credentials or 
 
 Ignore `references/` entirely, original archives, `.secrets/`, environment files, private certificates, local configuration overrides, capture/runtime databases and sidecars, logs, backups, diagnostic exports, user assets, build/cache output, dependencies, coverage/results, Playwright output, installer/release output, IDE state, Python caches and OS metadata. Deliberately track sample config, lockfiles, source assets and sanitized fixtures. Review staged files and verify ignore behavior before public push. Never import embedded recorder Git history.
 
-Use Windows GitHub Actions for Windows build/test/package work. Backend tests generate OpenCover and TRX; frontend tests generate LCOV. SonarQube imports these reports rather than executing tests. Use trusted CI analysis, disable automatic analysis, keep SONAR_TOKEN in Actions secrets, and never execute fork code using pull_request_target. Fork PRs run tests without secrets. Require trusted build/tests and Sonar quality gate; at least 80% new-code coverage, reviewed security hotspots, and no new blocking quality/security issues. Exclude generated/dependency/build/fixture/test code from production coverage without hiding handwritten logic.
+Use Windows GitHub Actions for Windows build/test/package work. Backend tests generate OpenCover and TRX; frontend tests generate LCOV. SonarQube imports these reports rather than executing tests. Use trusted CI analysis, disable automatic analysis, keep SONAR_TOKEN in Actions secrets, and never execute fork code using pull_request_target. The mandatory scanner currently requires Sonar authentication: fork/Dependabot runs receive no secret and fail closed before reading source; reviewed changes must be promoted to a trusted branch for tests and analysis. Require trusted build/tests and Sonar quality gate; at least 80% new-code coverage, reviewed security hotspots, and no new blocking quality/security issues. Exclude generated/dependency/build/fixture/test code from production coverage without hiding handwritten logic.
 
 ### Scope and evidence limitations
 
@@ -76,8 +76,8 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | ID | Goal | Prerequisites | Status |
 |---|---|---|---|
 | [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
-| [G01](#g01) | Create repository and quality infrastructure | G00 | In progress |
-| [G02](#g02) | Build application foundation | G01 | Not started |
+| [G01](#g01) | Create repository and quality infrastructure | G00 | Complete |
+| [G02](#g02) | Build application foundation | G01 | Complete |
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
@@ -164,7 +164,7 @@ None for G01. Application features and live integrations remain owned by G02–G
 
 ## G02 — Build application foundation
 
-Status: **Not started**
+Status: **Complete**
 Prerequisites: G01
 
 ### Deliverables
@@ -181,11 +181,30 @@ Prerequisites: G01
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+- G01 prerequisite revalidated: protected main and successful Windows run 36838097322 on commit 3a16834.
+- Foundation branch adds validated typed configuration, UUIDv7/UTC canonical contracts, recursive credential redaction, EF SQLite schema/migration, indexed provenance-scoped dedupe, transactional checkpoint/event/outbox acceptance, and explicit test persistence isolation.
+- Local .NET tests pass: 20 core tests and SQLite persistence tests, including reopen/dedupe, raw redaction, transaction rollback and test namespaces. Real Windows DPAPI vault test is intentionally skipped on Linux; Windows CI evidence remains required.
+- Host composition now applies migrations before HTTP startup and checkpoints WAL at shutdown. Typed configuration saves atomically; cookie/bearer LAN authentication, host/origin validation, CSRF protection, bounded bodies and login rate limits are wired. Diagnostics/event/configuration/test-event/credential endpoints exist, with redacted structured logs and 14-day default retention.
+- Local checks: 31 backend tests passed, one real-Windows DPAPI test skipped. Tests exercise actual ASP.NET middleware, LAN peer authentication/session revocation, persisted configuration loaded into a reopened host, invalid configuration rejection, known-value/URL/assignment redaction and dated log retention.
+- Isolated real Kestrel process served status/diagnostics at http://127.0.0.1:17474, rejected an attacker Host (400) and foreign Origin (403). A second process exited 1 with an actionable conflict message. SIGTERM stopped the original process with exit 0, released the port, and left SQLite integrity ok with WAL retained. Test data remained under /tmp, outside repository and normal user data.
+- Added isolated integration health/retry services and a 64-row durable outbox worker. Editor WebSockets support filtered subscription/event/ping envelopes, 32 connection slots, 256-frame queues, bounded inbound operations, credential redaction and shutdown cancellation. The API and event contracts document at-least-once/handoff semantics without claiming browser acknowledgments or external exactly-once actions.
+- Added `/editor` and `/login` hosting, a status-aware React shell, credential-clearing sign-in, generated OpenAPI snapshot and generated frontend API types. The generator has its own lockfile to isolate its TypeScript 5 peer from application TypeScript 6. Build output remains ignored. Windows CI builds assets before host tests, and those tests verify both shell pages and their JavaScript asset.
+- Local suite now passes 35 backend tests (one Windows DPAPI test skipped) and 14 frontend tests with 97.6% frontend line coverage. Socket tests verify filtered durable live delivery, heartbeat, ephemeral simulation without persistence, known-secret scrubbing and integration failure isolation. Overlapping shutdown checkpoint calls are idempotent.
+- Real Kestrel served both editor/login HTML and the compiled React asset with HTTP 200. User Chrome blocked the local page with ERR_BLOCKED_BY_CLIENT; protections were not modified and rendered-browser verification remains missing.
+- Draft implementation PR: https://github.com/camarokris/tdsblive/pull/3. Local suite now passes 38 backend tests; DPAPI and real-LAN tests are intentionally Windows-only. Eight concurrent acceptances produce one durable event/outbox/checkpoint, pending delivery survives reopen, acknowledgments are idempotent, and initial migration rollback/reapply passes.
+- `tools/qualify_foundation.py` launches only temporary-data child processes and verifies HTTP shells, exact OpenAPI drift (excluding runtime server origin), persisted isolated simulation, forced crash, SQLite integrity/redaction, restart, and exclusion from live history. Local qualification passed. Generated frontend types are checked for drift in CI.
+- Windows run 36843854629 passed backend/frontend tests and the crash/restart assertions, then failed temporary-directory cleanup because the Python SQLite context did not close its connection. Explicit closure fixes that issue. Final checkpoint now uses a direct SQLite connection, avoiding disposed EF logging services under concurrent host stop. Binary-relative content root and copied editor assets make DLL launch independent of working directory.
+- Added a real Windows non-loopback HTTP test using a generated isolated DPAPI admin credential, bearer and cookie authentication, CSRF rejection, local-only provisioning checks and logout. Added a separately locked CI-only Playwright browser qualifier for actual editor/status/login rendering and a non-production screenshot. No personal-browser protection is changed.
+- Remaining acceptance: passing updated Windows DPAPI/non-loopback/browser qualification, final security/logging review, trusted CI/Sonar gate and requirement-by-requirement completion audit. G02 remains In progress.
+- Windows run [36846286222](https://github.com/camarokris/tdsblive/actions/runs/36846286222) on `65d944c` passed runtime/test qualification but failed Sonar on the intentional HTTP listener and non-Secure cookie. These two findings were explicitly accepted with documented rationale on 2026-10-01 because HTTP, including optional authenticated LAN, is an approved requirement. The PATH-based executable finding was fixed. Credential rotation/login session limits are atomic; log I/O failures are isolated. The initially recorded run 36846290263 was Advanced Security rather than Windows CI and does not prove the Windows quality gate.
+- Final persistence audit adds the `FoundationState` migration, authoritative non-secret SQLite configuration with atomic bootstrap fallback, and redacted SQLite logs behind an independent bounded queue. Local tests cover migration from the initial schema without event loss, fallback failure rollback, restart, redaction and retention; local crash/contract qualification also passes. Final Windows requalification and completion audit remain pending.
+- Final review adds safe cancellation of disconnected WebSocket subscribers, concurrent disconnect/publish/shutdown qualification, daily log-file pruning and 64-row SQLite log transactions. Local backend suite passes 42 tests with two Windows-only skips. Requirement traceability is maintained in [G02 validation](g02-validation.md). Windows run 36846983150 passed runtime qualification but was superseded/cancelled when the next revision was pushed; it is not recorded as a completed Windows gate.
+- Final qualification: [Windows run 36847673559](https://github.com/camarokris/tdsblive/actions/runs/36847673559), commit `0da0b34`, passed all 44 backend tests (including actual Windows DPAPI and non-loopback HTTP), frontend tests, replay checks, crash/restart/OpenAPI qualification, fresh-browser editor/login rendering, generated type checks and the SonarQube quality gate. Imported backend coverage is 91.2%, frontend lines 97.6%, and Sonar new-code coverage 87.0%, with 0% duplication and ratings A. CodeQL and Gitar checks passed. The requirement-by-requirement audit is in [G02 validation](g02-validation.md).
+- Two HTTP-specific Sonar findings and two HTTP-cookie CodeQL findings were accepted under the explicit HTTP requirement. Two CodeQL negative-rejection guard findings were reviewed as false positives: early returns deny the entire request, while continuing requests still require authentication/CSRF. No broad security exclusion was added. Twenty-six remaining Sonar code-smell findings are non-blocking under the configured gate; no open vulnerability finding remains. See [security review](security.md).
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+None for G02 acceptance. Live platform adapters, OBS behavior, visual editing, financial ingestion and installation retain their owning G03–G13 evidence gates.
 
 <a id="g03"></a>
 

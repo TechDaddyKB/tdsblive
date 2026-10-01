@@ -414,6 +414,11 @@
         "resolved": "10.0.12",
         "contentHash": "dYfCLR52UA+3DL7C4I/pvSaRPkNqxrUAQmbFL2u0zvYKKzqgrFCJl08Df+F1aYc8leu9JvpC9bsURUdpExcBXQ=="
       },
+      "Microsoft.OpenApi": {
+        "type": "Transitive",
+        "resolved": "2.12.0",
+        "contentHash": "0xB/be+f6qYOhvQPUrVsLrau+fkowYv6gt9RIkajMhwT7sZnqtcA797yW3bS5kgSje+AQW4xZgyLnW641YFioQ=="
+      },
       "Microsoft.TestPlatform.ObjectModel": {
         "type": "Transitive",
         "resolved": "18.10.1",
@@ -506,7 +511,8 @@
         "type": "Project",
         "dependencies": {
           "ExtensionSuite.Core": "[0.1.0, )",
-          "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )"
+          "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )",
+          "System.Security.Cryptography.ProtectedData": "[10.0.12, )"
         }
       },
       "extensionsuite.finance": {
@@ -525,7 +531,8 @@
           "ExtensionSuite.Overlays": "[0.1.0, )",
           "ExtensionSuite.Rumble": "[0.1.0, )",
           "ExtensionSuite.StreamerBot": "[0.1.0, )",
-          "ExtensionSuite.Web": "[0.1.0, )"
+          "ExtensionSuite.Web": "[0.1.0, )",
+          "Microsoft.AspNetCore.OpenApi": "[10.0.12, )"
         }
       },
       "extensionsuite.overlays": {
@@ -552,6 +559,15 @@
           "ExtensionSuite.Core": "[0.1.0, )"
         }
       },
+      "Microsoft.AspNetCore.OpenApi": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.12, )",
+        "resolved": "10.0.12",
+        "contentHash": "7RnQ/UKn+kK3JDLmTpW+vVqNErWthGPAVAy1aIiBzv4ucQ6g9NFvOJUuT0PHcpvcJxGVxctMxj6t+NESWMrgHQ==",
+        "dependencies": {
+          "Microsoft.OpenApi": "[2.12.0, 3.0.0)"
+        }
+      },
       "Microsoft.EntityFrameworkCore.Sqlite": {
         "type": "CentralTransitive",
         "requested": "[10.0.12, )",
@@ -566,6 +582,12 @@
           "SQLitePCLRaw.bundle_e_sqlite3": "2.1.12",
           "SQLitePCLRaw.core": "2.1.12"
         }
+      },
+      "System.Security.Cryptography.ProtectedData": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.12, )",
+        "resolved": "10.0.12",
+        "contentHash": "wO0W8VDMeRJZakRySOmemAnrBZMwEFRlbfBtATxUiLf2I3IhSRnCp1Vt157NWptdE4IJ7eftd5n8q9LtaKHFTQ=="
       }
     }
   }

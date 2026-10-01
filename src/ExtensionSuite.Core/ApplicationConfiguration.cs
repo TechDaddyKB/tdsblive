@@ -1,0 +1,62 @@
+using System.Net;
+
+namespace ExtensionSuite.Core;
+
+public sealed record ApplicationConfiguration
+{
+    public ServerConfiguration Server { get; init; } = new();
+    public IntegrationConfiguration StreamerBot { get; init; } = new("127.0.0.1", 8080);
+    public IntegrationConfiguration SpeakerBot { get; init; } = new("127.0.0.1", 7680);
+    public RumbleConfiguration Rumble { get; init; } = new();
+    public int LogRetentionDays { get; init; } = 14;
+    public string MinimumLogLevel { get; init; } = "Information";
+    public bool RetainRawEvents { get; init; } = true;
+    public string DisplayName { get; init; } = "TDSBLive";
+
+    public void Validate()
+    {
+        if (Server is null || StreamerBot is null || SpeakerBot is null || Rumble is null)
+            throw new ArgumentException("Configuration sections cannot be null.");
+        Server.Validate();
+        StreamerBot.Validate();
+        SpeakerBot.Validate();
+        _ = new RumblePollInterval(Rumble.PollIntervalSeconds, Rumble.AdvancedSlowerPolling);
+        if (LogRetentionDays is < 1 or > 365 || string.IsNullOrWhiteSpace(DisplayName) || DisplayName.Length > 128)
+            throw new ArgumentException("Invalid retention or display name.");
+        if (!new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical", "None" }.Contains(MinimumLogLevel))
+            throw new ArgumentException("Invalid minimum log level.");
+    }
+}
+
+public sealed record ServerConfiguration
+{
+    public string Host { get; init; } = "127.0.0.1";
+    public int Port { get; init; } = 17474;
+    public bool EnableLan { get; init; }
+    public string[] AllowedHosts { get; init; } = [];
+    public void Validate()
+    {
+        if (!IPAddress.TryParse(Host, out var address) || Port is < 1 or > 65535)
+            throw new ArgumentException("Server requires a numeric IP address and valid port.");
+        if (!IPAddress.IsLoopback(address) && !EnableLan)
+            throw new ArgumentException("Non-loopback binding requires explicit LAN opt-in.");
+        if (AllowedHosts is null || AllowedHosts.Any(host => Uri.CheckHostName(host) == UriHostNameType.Unknown || host == "*"))
+            throw new ArgumentException("Allowed hosts must be explicit hostnames or IP addresses.");
+    }
+}
+
+public sealed record IntegrationConfiguration(string Host, int Port)
+{
+    public void Validate()
+    {
+        if (string.IsNullOrWhiteSpace(Host) || Uri.CheckHostName(Host) == UriHostNameType.Unknown || Port is < 1 or > 65535)
+            throw new ArgumentException("Integration requires a valid host and port.");
+    }
+}
+
+public sealed record RumbleConfiguration
+{
+    public bool Enabled { get; init; }
+    public int PollIntervalSeconds { get; init; } = 7;
+    public bool AdvancedSlowerPolling { get; init; }
+}
