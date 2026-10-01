@@ -106,10 +106,10 @@
                 "badges": [
                   "premium"
                 ],
-                "created_on": "2026-01-01T00:00:01Z",
-                "expires_on": "2026-01-01T00:02:01Z",
+                "created_on": "2026-01-01T00:16:46Z",
+                "expires_on": "2026-01-01T00:18:46Z",
                 "profile_pic_url": "https://example.invalid/avatar-a",
-                "text": "Synthetic message 1",
+                "text": "Synthetic message 1006",
                 "username": "synthetic-user-a"
               },
               "recent_messages": [],
@@ -120,10 +120,10 @@
                   "badges": [
                     "premium"
                   ],
-                  "created_on": "2026-01-01T00:00:01Z",
-                  "expires_on": "2026-01-01T00:02:01Z",
+                  "created_on": "2026-01-01T00:16:46Z",
+                  "expires_on": "2026-01-01T00:18:46Z",
                   "profile_pic_url": "https://example.invalid/avatar-a",
-                  "text": "Synthetic message 1",
+                  "text": "Synthetic message 1006",
                   "username": "synthetic-user-a"
                 }
               ]
@@ -190,10 +190,10 @@
                 "badges": [
                   "premium"
                 ],
-                "created_on": "2026-01-01T00:00:01Z",
-                "expires_on": "2026-01-01T00:02:01Z",
+                "created_on": "2026-01-01T00:16:46Z",
+                "expires_on": "2026-01-01T00:18:46Z",
                 "profile_pic_url": "https://example.invalid/avatar-a",
-                "text": "Synthetic message 1",
+                "text": "Synthetic message 1006",
                 "username": "synthetic-user-a"
               },
               "recent_messages": [],
@@ -204,10 +204,10 @@
                   "badges": [
                     "premium"
                   ],
-                  "created_on": "2026-01-01T00:00:01Z",
-                  "expires_on": "2026-01-01T00:02:01Z",
+                  "created_on": "2026-01-01T00:16:46Z",
+                  "expires_on": "2026-01-01T00:18:46Z",
                   "profile_pic_url": "https://example.invalid/avatar-a",
-                  "text": "Synthetic message 1",
+                  "text": "Synthetic message 1006",
                   "username": "synthetic-user-a"
                 }
               ]
@@ -242,7 +242,7 @@
     {
       "http_status": 200,
       "kind": "poll",
-      "observed_at": "2026-01-01T00:17:01Z",
+      "observed_at": "2026-01-01T00:19:00Z",
       "outcome": "ok",
       "payload": {
         "channel_id": null,
@@ -302,7 +302,7 @@
     {
       "http_status": 200,
       "kind": "poll",
-      "observed_at": "2026-01-01T00:17:08Z",
+      "observed_at": "2026-01-01T00:19:07Z",
       "outcome": "ok",
       "payload": {
         "channel_id": null,
@@ -334,10 +334,10 @@
                 "badges": [
                   "premium"
                 ],
-                "created_on": "2026-01-01T00:00:01Z",
-                "expires_on": "2026-01-01T00:02:01Z",
+                "created_on": "2026-01-01T00:16:46Z",
+                "expires_on": "2026-01-01T00:18:46Z",
                 "profile_pic_url": "https://example.invalid/avatar-a",
-                "text": "Synthetic message 1",
+                "text": "Synthetic message 1006",
                 "username": "synthetic-user-a"
               },
               "recent_messages": [],
@@ -348,10 +348,10 @@
                   "badges": [
                     "premium"
                   ],
-                  "created_on": "2026-01-01T00:00:01Z",
-                  "expires_on": "2026-01-01T00:02:01Z",
+                  "created_on": "2026-01-01T00:16:46Z",
+                  "expires_on": "2026-01-01T00:18:46Z",
                   "profile_pic_url": "https://example.invalid/avatar-a",
-                  "text": "Synthetic message 1",
+                  "text": "Synthetic message 1006",
                   "username": "synthetic-user-a"
                 }
               ]

@@ -217,6 +217,11 @@ class SyntheticCaseTests(unittest.TestCase):
                          ("dedupe-reset", "dedupe-reset")]:
             self.assertTrue(any(s.get("op") == op for s in self.cases[name]["steps"]))
         self.assertEqual(self.cases["rant-cents-authority"]["expected"]["usdAmountMinor"], 125)
+        steps = self.cases["rant-repeat-expiry"]["steps"]
+        rant = steps[1]["payload"]["livestreams"][0]["chat"]["recent_rants"][0]
+        self.assertGreater(evidence.utc(rant["created_on"]), evidence.utc(steps[0]["observed_at"]))
+        self.assertGreater(evidence.utc(rant["expires_on"]), evidence.utc(steps[1]["observed_at"]))
+        self.assertGreater(evidence.utc(steps[3]["observed_at"]), evidence.utc(rant["expires_on"]))
 
 
 @unittest.skipUnless((ROOT / "references/rumbleLiveAPIScraper.zip").exists(), "Local private archive absent; public fixtures remain testable")

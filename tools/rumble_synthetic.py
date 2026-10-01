@@ -75,6 +75,7 @@ def cases():
     follower = {"username": "synthetic-user-a", "profile_pic_url": "https://example.invalid/avatar-a",
                 "followed_on": stamp(1)}
     r = rant()
+    fresh_rant = rant(1006)
     full = [message(n) for n in range(50, 0, -1)]
     baseline = snapshot([a], [r], [follower])
     data = [
@@ -129,10 +130,10 @@ def cases():
                   poll(snapshot([b, a], stream="synthetic-stream-b"))],
                  {"chat": 1, "online": 1, "offline": 1, "oldStreamOfflineAtStep": 3}),
         scenario("rant-repeat-expiry", "A newly observed Rant persists once even when repeated or later absent.",
-                 [poll(snapshot()), poll(snapshot(rants=[r])), poll(snapshot(rants=[r])), poll(snapshot()),
-                  poll(snapshot(rants=[r]))], {"rants": 1, "financialEntries": 1, "usdAmountMinor": 100}),
+                 [poll(snapshot()), poll(snapshot(rants=[fresh_rant])), poll(snapshot(rants=[fresh_rant])), poll(snapshot()),
+                  poll(snapshot(rants=[fresh_rant]))], {"rants": 1, "financialEntries": 1, "usdAmountMinor": 100}),
         scenario("rant-cents-authority", "Cents override a conflicting dollars display; never use binary float money.",
-                 [poll(snapshot()), poll(snapshot(rants=[{**rant(cents=125), "amount_dollars": 99}]))],
+                 [poll(snapshot()), poll(snapshot(rants=[{**rant(1006, cents=125), "amount_dollars": 99}]))],
                  {"rants": 1, "usdAmountMinor": 125, "amountConflictDiagnostic": True}),
         scenario("new-follow", "A new timestamped follower entry fires once.",
                  [poll(snapshot(followers=[follower])),
@@ -177,6 +178,9 @@ def cases():
     stats = next(c for c in data if c["id"] == "stats-and-count-only-follow")
     stats["steps"][1]["payload"]["livestreams"][0].update(watching_now=0, likes=0)
     stats["steps"][1]["payload"]["followers"].update(num_followers=10, num_followers_total=10)
+    expiry = next(c for c in data if c["id"] == "rant-repeat-expiry")
+    expiry["steps"][3]["observed_at"] = stamp(1140)
+    expiry["steps"][4]["observed_at"] = stamp(1147)
     return data
 
 

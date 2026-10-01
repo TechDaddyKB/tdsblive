@@ -75,7 +75,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 
 | ID | Goal | Prerequisites | Status |
 |---|---|---|---|
-| [G00](#g00) | Analyze and sanitize Rumble evidence | None | In progress |
+| [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
 | [G01](#g01) | Create repository and quality infrastructure | G00 | Not started |
 | [G02](#g02) | Build application foundation | G01 | Not started |
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
@@ -94,7 +94,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 
 ## G00 — Analyze and sanitize Rumble evidence
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: None
 
 ### Deliverables
@@ -116,11 +116,15 @@ Prerequisites: None
 - `python tools/rumble_evidence.py verify --archive references/rumbleLiveAPIScraper.zip`: 785 polls, 88 field paths, full source comparison and private replacement audit passed.
 - `python -m unittest discover -s tests/replay -v`: 20 tests passed, including the original recorder's 10 tests executed inside the source qualification test.
 - 26 synthetic scenarios generated and structurally qualified; these are future G04 acceptance inputs, not production adapter results.
-- Completion still awaits public-checkout qualification, staged publication review and the required local analysis commit.
+- Final public-only tree: fixture verifier passed; 18 tests passed and the 2 local-archive tests skipped intentionally. No private reference files were present.
+- Every one of the 39 publishable files passed deterministic secrets scanning, including decompressed captured replay and synthetic fixture contents. Source-to-fixture checks verified original private strings were replaced; preserved date/amount metadata is documented explicitly.
+- `git check-ignore` verified original ZIP, credential directory, databases/sidecars, build artifacts and Python caches are excluded. Staged paths contain only reviewed G00 documentation/tooling/sanitized fixtures/tests; no production adapter code exists.
+- Analysis and evidence committed locally in `a3bd3ad738a2ae11420383e25498310427648883`, before production implementation. Follow-up closure also qualifies new-Rant/expiry timing.
+- Runtime: Python 3.14.7 and Sonar CLI 1.9.0. Goal completion audit: `docs/g00-validation.md`.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+None for G00. Live subscriber/gift identity, production snapshot-engine acceptance and real bridge/OBS qualification remain explicit gates of later goals, not claimed as complete here.
 
 <a id="g01"></a>
 
