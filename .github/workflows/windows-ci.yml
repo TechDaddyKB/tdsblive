@@ -43,7 +43,7 @@ jobs:
 
       - name: Scan tracked files before reading source
         env:
-          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
         run: |
@@ -112,7 +112,7 @@ jobs:
 
       - name: Qualify sanitized capture and synthetic fixtures
         env:
-          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
         run: |
@@ -123,7 +123,7 @@ jobs:
 
       - name: Verify coverage reports contain production code
         env:
-          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         run: python tools/verify_coverage.py
 
