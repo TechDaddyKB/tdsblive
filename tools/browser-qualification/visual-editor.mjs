@@ -89,7 +89,34 @@ export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
   await frame.getByText('Native synthetic viewer · community.follow', { exact: true }).waitFor();
   const canvasFrame = page.frames().find(f => f.url().includes('/overlay/g06-browser')); assert.ok(canvasFrame);
   assert.equal(await canvasFrame.evaluate(() => window.tdsbliveTestSockets.length), 1, 'Canvas chat and alerts must share a single socket');
+  await frame.getByText('Native synthetic viewer · community.follow', { exact: true }).waitFor({ state: 'hidden' });
+  const chat = await fetch(`${origin}/api/overlays/g06-browser/preview-events`, { method: 'POST', headers: writeHeaders,
+    body: JSON.stringify({ type: 'chat.message', platform: 'twitch', user: 'Synthetic viewer', message: 'Canvas reconnect check' }) });
+  assert.equal(chat.status, 200); await frame.getByText('Canvas reconnect check', { exact: true }).waitFor();
+  await canvasFrame.evaluate(() => window.tdsbliveTestSockets[0].close());
+  await canvasFrame.waitForFunction(() => window.tdsbliveTestSockets.length === 2 && window.tdsbliveTestSockets[1].g05Subscribed);
+  assert.equal(await frame.getByText('Canvas reconnect check', { exact: true }).count(), 1);
+  assert.equal(await frame.locator('[data-alert-event]').count(), 0, 'Reconnect cannot replay completed support alerts');
+  assert.equal(await canvasFrame.evaluate(() => window.tdsbliveTestSockets.filter(socket => socket.readyState === WebSocket.OPEN).length), 1);
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+  await editor.getByRole('button', { name: 'Copy OBS URL', exact: true }).click();
+  await editor.getByText('OBS URL copied.', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), `${origin}/overlay/g06-browser`);
   await editor.screenshot({ path: path.join(root, 'artifacts/g06-editor.png') });
+  const sourceContext = await page.context().browser().newContext();
+  const source = await sourceContext.newPage(); let sourceErrors = 0; source.on('pageerror', () => { sourceErrors++; });
+  try {
+    await source.goto(`${origin}/overlay/g06-browser`); await source.getByLabel('Overlay scene').waitFor();
+    await source.waitForFunction(() => document.querySelector('.runtime-widget > img')?.naturalWidth > 0);
+    await editor.getByRole('button', { name: 'Revision history', exact: true }).click();
+    await editor.getByRole('button', { name: `Restore v${restoreVersion}`, exact: true }).click();
+    await editor.getByText(`Restored revision ${restoreVersion} as a new revision.`, { exact: true }).waitFor();
+    await source.waitForFunction(() => document.querySelectorAll('.runtime-widget').length === 1 && document.querySelector('.runtime-widget')?.style.left === '40px');
+    assert.equal(await source.locator('img,video,audio,.combined-chat').count(), 0, 'Restoring a text-only revision removes obsolete media/chat widgets');
+    assert.equal(await source.locator('.widget-text').innerText(), 'G06 <script>escaped text</script>');
+    assert.equal(sourceErrors, 0);
+  } finally { await sourceContext.close(); }
+
   // No injected test may enter durable event history, including native mode.
   const history = await (await fetch(`${origin}/api/events`)).json();
   assert.ok(!JSON.stringify(history).includes('Native synthetic viewer'));
