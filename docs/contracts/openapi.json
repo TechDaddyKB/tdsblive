@@ -95,6 +95,309 @@
         }
       }
     },
+    "/overlay/{id}": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/chat/{id}": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/overlays/{id}": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayDefinition"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverlayDefinition"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayDefinition"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/overlays/{id}/chat": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CanonicalEvent"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/overlays/{id}/tokens": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOverlayToken"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedOverlayToken"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OverlayTokenInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/overlays/{id}/tokens/{tokenId}": {
+      "delete": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tokenId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets/{id}": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations": {
       "get": {
         "tags": [
@@ -760,6 +1063,55 @@
         },
         "additionalProperties": false
       },
+      "AssetInfo": {
+        "required": [
+          "id",
+          "filename",
+          "mime",
+          "size",
+          "hash",
+          "uploadedAt",
+          "sanitized",
+          "license"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "size": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sanitized": {
+            "type": "boolean"
+          },
+          "license": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "BotAction": {
         "required": [
           "id",
@@ -1032,6 +1384,116 @@
         },
         "additionalProperties": false
       },
+      "ChatSettings": {
+        "type": "object",
+        "properties": {
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "showPlatformIcon": {
+            "type": "boolean"
+          },
+          "showAvatar": {
+            "type": "boolean"
+          },
+          "showBadges": {
+            "type": "boolean"
+          },
+          "showUsername": {
+            "type": "boolean"
+          },
+          "showMessage": {
+            "type": "boolean"
+          },
+          "showTimestamp": {
+            "type": "boolean"
+          },
+          "messageDurationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "maximumMessages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "persistent": {
+            "type": "boolean"
+          },
+          "newestOnTop": {
+            "type": "boolean"
+          },
+          "animationIn": {
+            "type": "string"
+          },
+          "animationOut": {
+            "type": "string"
+          },
+          "backgroundOpacity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "font": {
+            "type": "string"
+          },
+          "fontAssetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fontSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "platformColors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "ignoredUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ignoredPrefixes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hideBotMessages": {
+            "type": "boolean"
+          },
+          "botUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "CodeTriggerExecutionRequest": {
         "required": [
           "eventName"
@@ -1054,6 +1516,37 @@
           "executeLive": {
             "type": "boolean",
             "default": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatedOverlayToken": {
+        "required": [
+          "info",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "info": {
+            "$ref": "#/components/schemas/OverlayTokenInfo"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateOverlayToken": {
+        "type": "object",
+        "properties": {
+          "lifetimeDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 30
           }
         },
         "additionalProperties": false
@@ -1202,6 +1695,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "isBot": {
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false
@@ -1366,6 +1863,74 @@
       },
       "JsonObject": {
         "type": "object"
+      },
+      "OverlayDefinition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "background": {
+            "type": "string"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "chat": {
+            "$ref": "#/components/schemas/ChatSettings"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OverlayTokenInfo": {
+        "required": [
+          "id",
+          "overlayId",
+          "expiresAt",
+          "revoked"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "overlayId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revoked": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
       },
       "RumbleConfiguration": {
         "type": "object",

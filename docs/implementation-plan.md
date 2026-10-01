@@ -80,7 +80,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G02](#g02) | Build application foundation | G01 | Complete |
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Complete |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Complete |
-| [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
+| [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | In progress |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Not started |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Not started |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
@@ -285,7 +285,7 @@ None for the G04 acceptance criteria. Unverified live subscriptions and authorit
 
 ## G05 — Build overlay runtime and combined chat
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G03, G04
 
 ### Deliverables
@@ -293,6 +293,7 @@ Prerequisites: G03, G04
 - Implement separate lightweight transparent OBS runtime, local assets, one shared WebSocket per overlay, bounded delivery/DOM, filtered subscriptions and reconnect.
 - Normalize Twitch/YouTube/Kick/Rumble chat with platform/user/message/raw metadata. Provide configurable icons/avatar/badges/name/timestamp/colors/fonts/duration/max messages/animations/ignore users/prefixes/bots, scrolling and persistent modes.
 - Validate/deduplicate assets by SHA-256; serve IDs rather than filesystem paths. Sanitize SVG and validate MIME/size.
+- Provide a responsive streamer chat page usable in an OBS custom browser dock or ordinary browser, with a persistent light/dark toggle and the same normalized feed.
 
 ### Acceptance criteria
 
@@ -302,11 +303,15 @@ Prerequisites: G03, G04
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+Implemented runtime, settings panel, assets, migration, scoped read-only tokens and streamer chat; owning contract and operating instructions: [G05 overlays and chat](g05-overlays-chat.md). G03/G04 completion and successful main Windows CI run 36878683352 establish prerequisites.
+
+2026-10-01: 193 backend tests passed locally; two Windows-only tests remain for Windows CI. All 41 frontend tests, type checking, lint, lightweight runtime build, fresh isolated browser qualification and foundation process qualification passed. Runtime JavaScript is approximately 71.6 KiB gzipped, with editor dependency exclusion enforced by the build. Existing 785-poll Rumble replay tests pass.
+
+Real installed Streamer.bot → Twitch → isolated host → streamer browser chat verified by the user's test message and confirmation that it appears once and Light/Dark works. Backend history independently contains exactly one matching message. YouTube/Kick are documented-payload/synthetic qualification only. OBS and latest Windows/Sonar evidence remain outstanding.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Actual OBS transparent Browser Source and Custom Browser Dock rendering are awaiting confirmation in a browser-enabled installation; discovered native OBS lacks obs-browser. Latest Windows CI and SonarQube analysis/coverage import remain outstanding. Do not mark complete from Chromium or mocked tests alone.
 
 <a id="g06"></a>
 

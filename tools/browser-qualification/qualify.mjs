@@ -52,8 +52,63 @@ try {
   assert.equal((await page.goto(`${origin}/login`)).status(), 200);
   await page.getByRole('heading', { name: 'TDSBLive sign in', exact: true }).waitFor();
   assert.equal(await page.getByLabel('Admin credential').getAttribute('type'), 'password');
+  await page.addInitScript(() => {
+    const Original = window.WebSocket;
+    window.tdsbliveTestSockets = [];
+    window.WebSocket = class extends Original {
+      constructor(...args) {
+        super(...args); window.tdsbliveTestSockets.push(this);
+        this.addEventListener('message', event => { try { if (JSON.parse(event.data).op === 'subscribed') this.g05Subscribed = true; } catch { /* Malformed-frame qualification is covered by unit tests. */ } });
+      }
+    };
+  });
+  assert.equal((await page.goto(`${origin}/overlay/combined-chat?preview=1`)).status(), 200);
+  await page.getByLabel('Combined chat', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgba(0, 0, 0, 0)');
+  await page.waitForFunction(() => window.tdsbliveTestSockets?.[0]?.g05Subscribed);
+  const csrfResponse = await fetch(`${origin}/api/auth/csrf`);
+  const csrfCookie = csrfResponse.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
+  const csrfToken = (await csrfResponse.json()).requestToken;
+  const writeHeaders = { 'Content-Type': 'application/json', 'Origin': origin, 'Cookie': csrfCookie, 'X-TDSBLive-CSRF': csrfToken };
+  assert.ok(csrfToken);
+  let overlay = await (await fetch(`${origin}/api/overlays/combined-chat`)).json();
+  overlay.chat.persistent = true;
+  overlay.chat.maximumMessages = 10;
+  assert.equal((await fetch(`${origin}/api/overlays/combined-chat`, { method: 'PUT', headers: writeHeaders, body: JSON.stringify(overlay) })).status, 200);
+  for (const platform of ['twitch', 'youtube', 'kick', 'rumble']) {
+    assert.equal((await fetch(`${origin}/api/test-event`, { method: 'POST', headers: writeHeaders, body: JSON.stringify({ event: {
+      occurredAt: new Date().toISOString(), source: 'g05-browser-test', platform, type: 'chat.message', nativeType: 'SyntheticChat', dedupeKey: platform,
+      user: { login: 'synthetic-viewer', displayName: `${platform} viewer`, badges: ['moderator'] }, message: { text: `${platform} synthetic <script>escaped</script>` },
+    } }) })).status, 200);
+    await page.getByText(`${platform} synthetic <script>escaped</script>`, { exact: true }).waitFor();
+  }
+  assert.equal(await page.locator('.chat-row').count(), 4);
+  assert.equal(await page.locator('.chat-content script').count(), 0);
+  assert.equal(await page.evaluate(() => window.tdsbliveTestSockets.length), 1, 'One shared socket must serve the overlay');
+  await page.evaluate(() => window.tdsbliveTestSockets[0].close());
+  await page.waitForFunction(() => window.tdsbliveTestSockets.length === 2 && window.tdsbliveTestSockets[1].g05Subscribed);
+  assert.equal(await page.locator('.chat-row').count(), 4, 'Reconnect must retain messages without duplicate DOM entries');
+  overlay = await (await fetch(`${origin}/api/overlays/combined-chat`)).json();
+  overlay.chat.maximumMessages = 2;
+  assert.equal((await fetch(`${origin}/api/overlays/combined-chat`, { method: 'PUT', headers: writeHeaders, body: JSON.stringify(overlay) })).status, 200);
+  await page.waitForFunction(() => document.querySelectorAll('.chat-row').length === 2);
+  await page.screenshot({ path: path.join(root, 'artifacts/g05-overlay.png') });
+  assert.equal((await page.goto(`${origin}/chat/combined-chat?preview=1`)).status(), 200);
+  await page.getByRole('button', { name: 'Switch to light mode' }).click();
+  assert.equal(await page.locator('.streamer-chat').getAttribute('data-theme'), 'light');
+  await page.reload();
+  await page.getByRole('button', { name: 'Switch to dark mode' }).waitFor();
+  await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+  assert.equal(await page.locator('.streamer-chat').getAttribute('data-theme'), 'dark');
+  await page.getByText('Connected', { exact: true }).waitFor();
+  assert.equal((await fetch(`${origin}/api/test-event`, { method: 'POST', headers: writeHeaders, body: JSON.stringify({ event: {
+    occurredAt: new Date().toISOString(), source: 'g05-browser-test', platform: 'rumble', type: 'chat.message', nativeType: 'SyntheticChat', dedupeKey: 'dock-check',
+    user: { displayName: 'Synthetic Viewer' }, message: { text: 'Streamer dock receives the shared chat feed' },
+  } }) })).status, 200);
+  await page.getByText('Streamer dock receives the shared chat feed', { exact: true }).waitFor();
+  await page.screenshot({ path: path.join(root, 'artifacts/g05-streamer-chat.png') });
   assert.equal(pageErrors, 0, 'Rendered pages raised JavaScript errors');
-  console.log('G02 fresh-browser qualification passed: HTTP editor, real host status, truthful integration state and login shell');
+  console.log('G02/G05 fresh-browser qualification passed: HTTP editor/login, transparent escaped four-platform chat, bounded DOM, one socket, reconnect, saved settings and persistent light/dark streamer view');
 } finally {
   await browser?.close();
   if (host.exitCode === null && !spawnFailed) {

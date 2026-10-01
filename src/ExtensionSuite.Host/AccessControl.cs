@@ -3,6 +3,8 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using ExtensionSuite.Core;
+using ExtensionSuite.Data;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Antiforgery;
 
 namespace ExtensionSuite.Host;
@@ -63,10 +65,13 @@ public sealed class AccessControl
 
 public sealed class RequestSecurity(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context, ApplicationConfiguration configuration, AccessControl access, IAntiforgery antiforgery)
+    public async Task InvokeAsync(HttpContext context, ApplicationConfiguration configuration, AccessControl access, IAntiforgery antiforgery, OverlayStore overlays)
     {
         var request = context.Request;
-        if (request.ContentLength > 65536)
+        var bodyLimit = request.Path == "/api/assets" && HttpMethods.IsPost(request.Method) ? ExtensionSuite.Overlays.AssetValidation.MaximumBytes : 65536;
+        var sizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+        if (sizeFeature is { IsReadOnly: false }) sizeFeature.MaxRequestBodySize = bodyLimit;
+        if (request.ContentLength > bodyLimit)
         {
             context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
             return;
@@ -96,8 +101,11 @@ public sealed class RequestSecurity(RequestDelegate next)
         var localPeer = context.Connection.RemoteIpAddress is { } peer && IPAddress.IsLoopback(peer);
         // TestServer has no network peer; it must still use a loopback Host.
         var local = localPeer || context.Connection.RemoteIpAddress is null && loopbackHost;
-        var login = request.Path == "/api/auth/login" || request.Path == "/api/auth/csrf" || request.Path == "/login" || request.Path.StartsWithSegments("/editor/assets");
-        if (!local && (!configuration.Server.EnableLan || !access.IsAuthenticated(context)) && !login)
+        var parts = request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
+        var shell = HttpMethods.IsGet(request.Method) && (parts.Length == 2 && parts[0] is "overlay" or "chat" && OverlayDefinition.ValidId(parts[1]) || request.Path.StartsWithSegments("/runtime/assets"));
+        var login = request.Path == "/api/auth/login" || request.Path == "/api/auth/csrf" || request.Path == "/login" || request.Path.StartsWithSegments("/editor/assets") || shell;
+        var limited = !local && configuration.Server.EnableLan && !access.IsAuthenticated(context) && await LimitedOverlayAsync(context, parts, overlays);
+        if (!local && (!configuration.Server.EnableLan || !access.IsAuthenticated(context)) && !login && !limited)
         {
             if (request.Path == "/editor") { context.Response.Redirect("/login"); return; }
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -121,5 +129,21 @@ public sealed class RequestSecurity(RequestDelegate next)
         context.Response.Headers["Referrer-Policy"] = "no-referrer";
         context.Response.Headers.CacheControl = "no-store";
         await next(context);
+    }
+
+    private static async Task<bool> LimitedOverlayAsync(HttpContext context, string[] parts, OverlayStore store)
+    {
+        if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method)) return false;
+        string? id = null;
+        if (parts.Length == 3 && parts[0] == "ws" && parts[1] == "overlay") id = parts[2];
+        if (parts.Length is 3 or 4 && parts[0] == "api" && parts[1] == "overlays" && (parts.Length == 3 || parts[3] == "chat")) id = parts[2];
+        if (parts.Length == 2 && parts[0] == "assets") id = context.Request.Headers["X-TDSBLive-Overlay"].ToString();
+        if (id is null) return false;
+        if (parts.Length == 2 && parts[0] == "assets" && (await store.GetAsync(id, context.RequestAborted))?.Chat.FontAssetId != parts[1]) return false;
+        var authorization = context.Request.Headers.Authorization.ToString();
+        var token = authorization.StartsWith("Bearer ", StringComparison.Ordinal) ? authorization[7..] : context.WebSockets.WebSocketRequestedProtocols.FirstOrDefault(p => AssetIdentity.IsValid(p));
+        if (token is null || !await store.AuthorizeAsync(token, id, context.RequestAborted)) return false;
+        context.Items["OverlayToken"] = token;
+        return true;
     }
 }

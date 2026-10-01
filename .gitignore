@@ -46,6 +46,7 @@ actions.tdsblive-backup-*.json
 /release/
 /installer-output/
 /src/ExtensionSuite.Host/wwwroot/editor/
+/src/ExtensionSuite.Host/wwwroot/runtime/
 *.trx
 *.pyc
 __pycache__/

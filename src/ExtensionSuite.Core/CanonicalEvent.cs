@@ -5,7 +5,7 @@ namespace ExtensionSuite.Core;
 public enum EventProvenance { Live, Simulation, Replay }
 
 public sealed record EventUser(string? PlatformUserId = null, string? Login = null,
-    string? DisplayName = null, string? AvatarUrl = null, string[]? Badges = null);
+    string? DisplayName = null, string? AvatarUrl = null, string[]? Badges = null, bool IsBot = false);
 public sealed record EventMessage(string? Text);
 public sealed record EventMoney(long? MinorUnits, string? Currency, string ValuationKind);
 public sealed record EventStream(string? Id, string? Title);

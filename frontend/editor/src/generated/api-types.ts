@@ -163,6 +163,362 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/overlay/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayDefinition"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["OverlayDefinition"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayDefinition"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CanonicalEvent"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayTokenInfo"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateOverlayToken"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreatedOverlayToken"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}/tokens/{tokenId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    tokenId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AssetInfo"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AssetInfo"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/integrations": {
         parameters: {
             query?: never;
@@ -1151,6 +1507,18 @@ export interface components {
             retainRawEvents?: boolean;
             displayName?: string;
         };
+        AssetInfo: {
+            id: string;
+            filename: string;
+            mime: string;
+            /** Format: int64 */
+            size: number | string;
+            hash: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            sanitized: boolean;
+            license: null | string;
+        };
         BotAction: {
             /** Format: uuid */
             id: string;
@@ -1213,11 +1581,52 @@ export interface components {
             correlationId?: null | string;
             bridgePath?: string[];
         };
+        ChatSettings: {
+            platforms?: string[];
+            showPlatformIcon?: boolean;
+            showAvatar?: boolean;
+            showBadges?: boolean;
+            showUsername?: boolean;
+            showMessage?: boolean;
+            showTimestamp?: boolean;
+            /** Format: int32 */
+            messageDurationSeconds?: number | string;
+            /** Format: int32 */
+            maximumMessages?: number | string;
+            persistent?: boolean;
+            newestOnTop?: boolean;
+            animationIn?: string;
+            animationOut?: string;
+            /** Format: double */
+            backgroundOpacity?: number | string;
+            font?: string;
+            fontAssetId?: null | string;
+            /** Format: int32 */
+            fontSize?: number | string;
+            platformColors?: {
+                [key: string]: string;
+            };
+            ignoredUsers?: string[];
+            ignoredPrefixes?: string[];
+            hideBotMessages?: boolean;
+            botUsers?: string[];
+        };
         CodeTriggerExecutionRequest: {
             eventName: string;
             arguments?: null | components["schemas"]["JsonObject"];
             /** @default false */
             executeLive: boolean;
+        };
+        CreatedOverlayToken: {
+            info: components["schemas"]["OverlayTokenInfo"];
+            token: string;
+        };
+        CreateOverlayToken: {
+            /**
+             * Format: int32
+             * @default 30
+             */
+            lifetimeDays: number | string;
         };
         CsrfResponse: {
             requestToken: null | string;
@@ -1248,6 +1657,8 @@ export interface components {
             displayName?: null | string;
             avatarUrl?: null | string;
             badges?: null | string[];
+            /** @default false */
+            isBot: boolean;
         };
         InspectorEntry: {
             /** Format: uuid */
@@ -1288,6 +1699,26 @@ export interface components {
             rumble: string;
         };
         JsonObject: Record<string, never>;
+        OverlayDefinition: {
+            id?: string;
+            name?: string;
+            /** Format: int32 */
+            width?: number | string;
+            /** Format: int32 */
+            height?: number | string;
+            background?: string;
+            /** Format: int32 */
+            version?: number | string;
+            chat?: components["schemas"]["ChatSettings"];
+        };
+        OverlayTokenInfo: {
+            /** Format: uuid */
+            id: string;
+            overlayId: string;
+            /** Format: date-time */
+            expiresAt: string;
+            revoked: boolean;
+        };
         RumbleConfiguration: {
             enabled?: boolean;
             /** Format: int32 */

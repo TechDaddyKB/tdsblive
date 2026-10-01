@@ -180,4 +180,6 @@ jobs:
             TestResults/**/coverage.cobertura.xml
             coverage/lcov.info
             artifacts/g02-editor.png
+            artifacts/g05-overlay.png
+            artifacts/g05-streamer-chat.png
           if-no-files-found: warn

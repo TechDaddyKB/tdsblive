@@ -16,8 +16,10 @@ public static class FoundationServices
         builder.Logging.ClearProviders();
         // The provider applies the validated application level, including Trace.
         builder.Logging.SetMinimumLevel(LogLevel.Trace);
-        builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 65536);
+        builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = ExtensionSuite.Overlays.AssetValidation.MaximumBytes);
         builder.Services.AddSingleton<ApplicationPaths>();
+        builder.Services.AddSingleton<OverlayStore>();
+        builder.Services.AddSingleton<AssetStore>();
         builder.Services.AddSingleton(services => new FoundationStateStore(services.GetRequiredService<ApplicationPaths>().Database));
         builder.Services.AddSingleton<ConfigurationStore>();
         builder.Services.AddSingleton(services => services.GetRequiredService<ConfigurationStore>().Load());
@@ -90,6 +92,7 @@ public static class FoundationServices
         var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
         await using var db = await factory.CreateDbContextAsync();
         await DatabaseLifecycle.InitializeAsync(db);
+        await app.Services.GetRequiredService<OverlayStore>().InitializeAsync();
         app.Services.GetRequiredService<ConfigurationStore>().InitializePersistence(configuration);
         if (OperatingSystem.IsWindows())
         {

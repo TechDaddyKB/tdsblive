@@ -69,6 +69,15 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory, S
         return rows.Select(json => JsonSerializer.Deserialize<CanonicalEvent>(json, JsonOptions)!).ToArray();
     }
 
+    public async Task<CanonicalEvent[]> ChatAsync(int limit, CancellationToken cancellationToken = default)
+    {
+        if (limit is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var rows = await db.Events.AsNoTracking().Where(item => item.Type == "chat.message" && item.Provenance == nameof(EventProvenance.Live))
+            .OrderByDescending(item => item.OccurredAtTicks).ThenByDescending(item => item.Id).Take(limit).Select(item => item.Json).ToArrayAsync(cancellationToken);
+        return rows.Select(json => JsonSerializer.Deserialize<CanonicalEvent>(json, JsonOptions)!).ToArray();
+    }
+
     public async Task MarkDeliveredAsync(Guid id, CancellationToken cancellationToken)
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
