@@ -13,10 +13,14 @@ public static partial class CredentialRedactor
     [GeneratedRegex(@"(?i)https?://[^\s<>""']+")]
     private static partial Regex HttpUrl();
 
+    [GeneratedRegex(@"(?i)(?:password|passwd|secret|token|stream[_-]?key|api[_-]?key)\s*[=:]\s*[^\s,;]+|Bearer\s+[^\s,;]+")]
+    private static partial Regex CredentialAssignment();
+
     public static string Text(string text, IEnumerable<string>? knownSecrets = null)
     {
         foreach (var secret in knownSecrets ?? [])
             if (!string.IsNullOrEmpty(secret)) text = text.Replace(secret, Replacement, StringComparison.Ordinal);
+        text = CredentialAssignment().Replace(text, Replacement);
         return HttpUrl().Replace(text, match =>
         {
             if (!Uri.TryCreate(match.Value, UriKind.Absolute, out var uri)) return Replacement;

@@ -11,6 +11,10 @@ public sealed class WindowsSecretVault(string directory)
     private readonly SemaphoreSlim gate = new(1, 1);
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("TDSBLive.credentials.v1");
 
+    public string[] Names() => Directory.Exists(directory)
+        ? Directory.EnumerateFiles(directory, "*.dpapi").Select(Path.GetFileNameWithoutExtension).OfType<string>().ToArray()
+        : [];
+
     private string FilePath(string name)
     {
         if (string.IsNullOrEmpty(name) || name.Length > 64 || name.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-'))

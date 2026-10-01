@@ -5,8 +5,8 @@ using Xunit;
 
 namespace ExtensionSuite.Host.Tests;
 
-public sealed class HostStatusTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HostStatusTests(FoundationHostFactory factory)
+    : IClassFixture<FoundationHostFactory>
 {
     [Fact]
     public async Task StatusIsAvailableOverHttpWithoutCertificateOrRedirect()

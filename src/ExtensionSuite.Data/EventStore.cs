@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ExtensionSuite.Data;
 
-public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory)
+public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory, SensitiveValues? sensitive = null)
 {
     public static JsonSerializerOptions JsonOptions { get; } = CreateOptions();
 
@@ -23,9 +23,9 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory)
         if (item.Provenance != EventProvenance.Live && !persistTest) return false;
         var sanitized = item with
         {
-            Raw = retainRaw ? CredentialRedactor.Json(item.Raw) as System.Text.Json.Nodes.JsonObject : null,
-            Message = item.Message is null ? null : new EventMessage(CredentialRedactor.Text(item.Message.Text ?? "")),
-            User = item.User is null ? null : item.User with { AvatarUrl = item.User.AvatarUrl is null ? null : CredentialRedactor.Text(item.User.AvatarUrl) }
+            Raw = retainRaw ? CredentialRedactor.Json(item.Raw, sensitive?.Snapshot()) as System.Text.Json.Nodes.JsonObject : null,
+            Message = item.Message is null ? null : new EventMessage(CredentialRedactor.Text(item.Message.Text ?? "", sensitive?.Snapshot())),
+            User = item.User is null ? null : item.User with { AvatarUrl = item.User.AvatarUrl is null ? null : CredentialRedactor.Text(item.User.AvatarUrl, sensitive?.Snapshot()) }
         };
         var provenance = item.Provenance.ToString();
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
@@ -36,7 +36,7 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory)
         {
             db.Events.Add(new StoredEvent { Id = item.Id, Source = item.Source, Provenance = provenance,
                 DedupeKey = item.DedupeKey, Type = item.Type, OccurredAtTicks = item.OccurredAt.UtcTicks,
-                Json = JsonSerializer.Serialize(sanitized, JsonOptions) });
+                Json = CredentialRedactor.Json(JsonSerializer.SerializeToNode(sanitized, JsonOptions), sensitive?.Snapshot())!.ToJsonString(JsonOptions) });
             db.Outbox.Add(new OutboxEntry { EventId = item.Id, CreatedAtTicks = item.ReceivedAt.UtcTicks });
         }
         var position = await db.Checkpoints.FindAsync([item.Source, provenance], cancellationToken);
