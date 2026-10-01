@@ -64,6 +64,21 @@ class SanitizerTests(unittest.TestCase):
                 evidence.safe_read(Path("never-read"))
             read.assert_not_called()
 
+    def test_outside_repository_read_is_rejected_before_scanning(self):
+        with patch.object(evidence.subprocess, "run") as scan, \
+                patch.object(Path, "read_bytes") as read:
+            with self.assertRaises(evidence.EvidenceError):
+                evidence.safe_read(ROOT.parent / "outside-evidence")
+            scan.assert_not_called()
+            read.assert_not_called()
+
+    def test_scanner_arguments_use_absolute_path_after_option_separator(self):
+        clean = subprocess.CompletedProcess([], 0, b"No secrets found", b"")
+        with patch.object(evidence.subprocess, "run", return_value=clean) as scan, \
+                patch.object(Path, "read_bytes", return_value=b"synthetic"):
+            self.assertEqual(evidence.safe_read(ROOT / "--stdin"), b"synthetic")
+            self.assertEqual(scan.call_args.args[0][-2:], ["--", str(ROOT / "--stdin")])
+
     def test_no_substring_copy_from_free_text_or_urls(self):
         sanitizer = evidence.Sanitizer()
         source = {"text": "Synthetic URL https://example.invalid/private?token=placeholder",
