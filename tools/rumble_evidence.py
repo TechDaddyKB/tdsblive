@@ -51,8 +51,11 @@ def scan_bytes(data: bytes, label: str) -> bytes:
 
 
 def safe_read(path: Path) -> bytes:
+    path = path.resolve()
+    if not path.is_relative_to(ROOT):
+        raise EvidenceError("STOP: evidence reads must remain inside the repository.")
     result = subprocess.run(
-        ["sonar", "analyze", "secrets", str(path)],
+        ["sonar", "analyze", "secrets", "--", str(path)],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
     )
     if result.returncode or b"No secrets found" not in result.stdout:

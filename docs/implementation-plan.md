@@ -130,7 +130,7 @@ None for G00. Live subscriber/gift identity, production snapshot-engine acceptan
 
 ## G01 — Create repository and quality infrastructure
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G00
 
 ### Deliverables
@@ -148,17 +148,17 @@ Prerequisites: G00
 
 ### Validation evidence
 
-- Public repository created: https://github.com/camarokris/tdsblive (MIT scaffold pending initial push).
-- SonarQube Cloud project camarokris_tdsblive imported and GitHub binding verified; automatic analysis disabled; credential-free .sonar-config.json links local code tracking.
-- SONAR_TOKEN stored directly from API response in GitHub Actions secrets without writing the value to files/output. Expiration metadata is documented.
-- Pinned Windows workflow, toolchains, dependency locks, initial .NET/React tests and public documentation prepared.
-- Local .NET build passed with zero warnings/errors; 12 .NET tests passed and backend production coverage is 100%.
-- GitHub secret scanning/push protection and Dependabot security updates enabled; weekly dependency/action update configuration prepared.
-- Completion awaits initial public push, real Windows CI/Sonar coverage evidence and protected-branch verification.
+- Public MIT repository: https://github.com/camarokris/tdsblive; fresh history contains only reviewed public artifacts and sanitized fixtures.
+- Windows run https://github.com/camarokris/tdsblive/actions/runs/36836817528 passed on commit fccfe4e: locked restores, build, 12 .NET tests, 9 frontend tests, lint/type checks, frontend builds and public replay qualification (18 passed; two private-archive tests skipped).
+- SonarQube Cloud https://sonarcloud.io/dashboard?id=camarokris_tdsblive is GitHub-bound. CI analysis imported OpenCover and LCOV; all 19 measured production lines across C# and TypeScript have 100% coverage, no test failures/errors, and quality gate OK. Automatic analysis is explicitly disabled.
+- Main requires app-bound Windows build and tests and SonarCloud Code Analysis checks with an up-to-date branch. Administrator enforcement, PRs, linear history and resolved conversations are required; force pushes/deletions are disabled.
+- GitHub secret scanning, push protection and Dependabot security updates are enabled; Actions default to read-only permissions. Scanner credentials are step-scoped, never published. Fork/Dependabot runs fail closed before source reads and require reviewed promotion to a trusted branch.
+- Publication audit scanned 109 source files, decompressed fixtures, checked private-string replacement and representative ignore paths. SDK, dependencies, tools and Actions are pinned; package lockfiles are tracked.
+- Detailed evidence, non-blocking static-analysis debt and maintenance obligations: [G01 validation](g01-validation.md).
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+None for G01. Application features and live integrations remain owned by G02–G13; scaffold coverage does not qualify those capabilities.
 
 <a id="g02"></a>
 
