@@ -2,6 +2,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json.Nodes;
 using ExtensionSuite.Core;
+using ExtensionSuite.Data;
 using ExtensionSuite.Host;
 using ExtensionSuite.StreamerBot;
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +16,88 @@ namespace ExtensionSuite.Host.Tests;
 
 public sealed class BotIntegrationTests
 {
+    [Fact]
+    public async Task HostedIngestionPersistsOnlyLiveAndRejectsReturnedBridgeEvents()
+    {
+        await using var server = await FakeBot.Start(async socket =>
+        {
+            await FakeBot.Send(socket, new() { ["request"] = "Hello" });
+            while (socket.State == WebSocketState.Open)
+            {
+                var request = await FakeBot.Read(socket);
+                var operation = request["request"]!.GetValue<string>();
+                var response = operation switch
+                {
+                    "GetEvents" => new JsonObject { ["events"] = new JsonObject { ["Twitch"] = new JsonArray("ChatMessage") } },
+                    "GetActions" => new JsonObject { ["actions"] = new JsonArray() },
+                    "GetCodeTriggers" => new JsonObject { ["triggers"] = new JsonArray() },
+                    _ => new JsonObject()
+                };
+                await FakeBot.Reply(socket, request, response);
+                if (operation != "Subscribe") continue;
+                foreach (var kind in new[] { "live", "simulation", "loop" })
+                    await FakeBot.Send(socket, new() { ["event"] = new JsonObject { ["source"] = "Twitch", ["type"] = "ChatMessage" },
+                        ["data"] = new JsonObject { ["messageId"] = kind, ["text"] = "synthetic", ["isTest"] = kind == "simulation", ["tdsbliveOrigin"] = kind == "loop" ? "tdsblive" : "external" } });
+            }
+        });
+        await using var factory = new FoundationHostFactory();
+        using var configured = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddSingleton(new StreamerBotConnection(server.Configuration, () => null, new()))));
+        using var client = configured.CreateClient();
+        var inspector = configured.Services.GetRequiredService<EventInspectorStore>();
+        await Until(() => inspector.Read().Length == 3);
+        var store = configured.Services.GetRequiredService<EventStore>();
+        Assert.Single(await store.ReadAsync()); Assert.Empty(await store.ReadAsync(provenance: EventProvenance.Simulation));
+        Assert.Contains(inspector.Read(), entry => entry.Classification == "bridgeLoop");
+    }
+
+    [Theory]
+    [InlineData(false, "missingCredential")]
+    [InlineData(true, "authenticationFailed")]
+    public async Task ReportsAuthenticationFailuresWithoutDiscovery(bool hasCredential, string failure)
+    {
+        await using var server = await FakeBot.Start(async socket =>
+        {
+            await FakeBot.Send(socket, new() { ["request"] = "Hello", ["authentication"] = new JsonObject { ["salt"] = "test-salt", ["challenge"] = "test-challenge" } });
+            if (hasCredential) await FakeBot.Reply(socket, await FakeBot.Read(socket), new(), "error");
+            await FakeBot.WaitForClose(socket);
+        });
+        var adapter = new StreamerBotConnection(server.Configuration, () => hasCredential ? "synthetic-only" : null, new());
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = adapter.RunAsync((_, _) => Task.CompletedTask, lifetime.Token);
+        await Until(() => adapter.State.FailureKind == failure);
+        Assert.Equal("authenticationFailed", adapter.State.State); Assert.Empty(adapter.Discovery.Actions);
+        await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public async Task MalformedResponseAndRemoteRejectionHaveSafeSemantics()
+    {
+        await using var server = await FakeBot.Start(async socket =>
+        {
+            var first = await FakeBot.Read(socket);
+            await FakeBot.Send(socket, new() { ["id"] = first["id"]!.DeepClone(), ["status"] = 7 });
+            await FakeBot.Reply(socket, await FakeBot.Read(socket), new() { ["error"] = "synthetic-private-value" }, "error");
+            await FakeBot.WaitForClose(socket);
+        });
+        await using var session = new BotProtocolSession(); await session.ConnectAsync(server.Uri, false, default);
+        var malformed = await Assert.ThrowsAsync<BotRequestException>(() => session.RequestAsync("One", null, TimeSpan.FromSeconds(2), default));
+        Assert.True(malformed.MayHaveExecuted); Assert.Equal("invalidResponse", malformed.Kind);
+        var rejected = await Assert.ThrowsAsync<BotRequestException>(() => session.RequestAsync("Two", null, TimeSpan.FromSeconds(2), default));
+        Assert.False(rejected.MayHaveExecuted); Assert.Equal("rejected", rejected.Kind); Assert.DoesNotContain("synthetic-private-value", rejected.Message);
+    }
+
+    [Fact]
+    public async Task DisabledAndDisconnectedSpeakerNeverSend()
+    {
+        var adapter = new SpeakerBotConnection(new("127.0.0.1", 1));
+        await adapter.RunAsync(default); Assert.Equal("disabled", adapter.State.State);
+        Assert.Equal("disconnected", (await adapter.QueueAsync("Pause", null, true, default)).State);
+        await Assert.ThrowsAsync<ArgumentException>(() => adapter.QueueAsync("Events", "invalid", true, default));
+        for (var index = 0; index < 201; index++) await adapter.QueueAsync("Pause", null, false, default);
+        Assert.Equal(200, adapter.Executions.Length);
+    }
+
     [Fact]
     public async Task CorrelatesOutOfOrderResponsesAndSeparatesEvents()
     {
