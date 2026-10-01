@@ -8,4 +8,5 @@ public sealed class SensitiveValues
     public void Set(string name, string value) => values[name] = value;
     public void Remove(string name) => values.TryRemove(name, out _);
     public string[] Snapshot() => values.Values.ToArray();
+    public string? Get(string name) => values.TryGetValue(name, out var value) ? value : null;
 }

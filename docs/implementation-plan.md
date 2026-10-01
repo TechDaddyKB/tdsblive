@@ -78,7 +78,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
 | [G01](#g01) | Create repository and quality infrastructure | G00 | Complete |
 | [G02](#g02) | Build application foundation | G01 | Complete |
-| [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
+| [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | In progress |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Not started |
@@ -210,7 +210,7 @@ None for G02 acceptance. Live platform adapters, OBS behavior, visual editing, f
 
 ## G03 — Integrate Streamer.bot and Speaker.bot
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G02
 
 ### Deliverables
@@ -228,11 +228,15 @@ Prerequisites: G02
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+- G02 prerequisite verified on protected main `da53c87`: Windows run 36849059398 and Sonar passed.
+- Implemented correlated bounded protocol sessions, Streamer.bot authentication/discovery/allowlisted dispatch, independent reconnect, Speaker.bot queue requests, conservative normalization, bridge prevention, bounded inspector, isolated replay, C# bootstrap/forwarding templates, deterministic import generator and editor controls. Public schemas and generated frontend types updated; no migration needed. Contracts and limitations are maintained in [G03 integrations](g03-integrations.md).
+- Local Release tests pass: 58 backend tests, two Windows-only skips. Frontend tests pass with meaningful inspector/copy/replay coverage; Windows CI and Sonar evidence remain pending.
+- Live GE-Proton qualification on 2026-10-01 confirmed Streamer.bot **1.0.7**, Speaker.bot **0.1.7** (local port **7580**), all 13 custom-trigger registrations, actual dedicated test-trigger execution and matching synthetic event in the host inspector, safe sample/replay behavior, and Speaker.bot Pause/Resume acknowledgements. Repeat command: `python tools/qualify_bots.py --execute-local-test-trigger-and-queue --speaker-port 7580`. Uses temporary host data and dedicated synthetic actions; no chat/OBS/financial effects. Product default ports are unchanged.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+- Graphical Import dialog acceptance of the generated `.sb` remains unverified. The same C# definitions were installed through the stopped native action store, compiled and executed successfully; this is not presented as graphical importer evidence. A concrete artifact and manual-check request have been provided.
+- Windows CI, SonarQube quality gate/coverage import, and protected-main merge remain pending.
 
 <a id="g04"></a>
 

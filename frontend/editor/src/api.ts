@@ -31,3 +31,15 @@ export const api = {
   login: (credential: string) => write<void>('/api/auth/login', 'POST', { credential } satisfies components['schemas']['AdminLogin']),
   logout: () => write<void>('/api/auth/logout', 'POST'),
 };
+
+export interface BotState { state: string; version?: string | null; failureKind?: string | null }
+export interface BotOverview { streamerBot: BotState; speakerBot: BotState }
+export interface InspectorItem { id: string; classification: string; limitation?: string | null; event?: { nativeType: string; provenance: string | number } | null; payload?: unknown }
+export interface Discovery { actions: { id: string; name: string; enabled: boolean }[]; codeTriggers: { eventName: string; name: string }[]; events: Record<string, string[]> }
+export const bots = {
+  overview: () => request<BotOverview>('/api/integrations'),
+  discovery: () => request<Discovery>('/api/integrations/streamerbot/discovery'),
+  inspector: (filter: string) => request<InspectorItem[]>(`/api/inspector?filter=${encodeURIComponent(filter)}`),
+  fixture: (id: string) => request<unknown>(`/api/inspector/${encodeURIComponent(id)}/fixture`),
+  replay: (id: string) => write<{ liveActionsAllowed: boolean }>(`/api/inspector/${encodeURIComponent(id)}/replay`, 'POST', { persist: false }),
+};

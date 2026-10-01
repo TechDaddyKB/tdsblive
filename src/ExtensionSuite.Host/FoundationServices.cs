@@ -1,5 +1,6 @@
 using ExtensionSuite.Core;
 using ExtensionSuite.Data;
+using ExtensionSuite.StreamerBot;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
@@ -37,6 +38,13 @@ public static class FoundationServices
         builder.Services.AddOpenApi();
         builder.Services.AddSingleton<EditorEventHub>();
         builder.Services.AddSingleton<IntegrationHealthRegistry>();
+        builder.Services.AddSingleton<EventInspectorStore>();
+        builder.Services.AddSingleton<StreamerBotEventNormalizer>();
+        builder.Services.AddSingleton(services => new StreamerBotConnection(services.GetRequiredService<ApplicationConfiguration>().StreamerBot,
+            () => services.GetRequiredService<SensitiveValues>().Get("streamerbot-password"), services.GetRequiredService<SensitiveValues>()));
+        builder.Services.AddSingleton(services => new SpeakerBotConnection(services.GetRequiredService<ApplicationConfiguration>().SpeakerBot));
+        builder.Services.AddSingleton<IIsolatedIntegration, StreamerBotHostedIntegration>();
+        builder.Services.AddSingleton<IIsolatedIntegration, SpeakerBotHostedIntegration>();
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
