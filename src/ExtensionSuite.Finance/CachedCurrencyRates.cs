@@ -6,8 +6,49 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ExtensionSuite.Finance;
 
+public sealed record CachedRateEntry(string Currency, DateOnly RequestedDate, DateOnly RateDate,
+    string Origin, string UsdPerNativeUnit, string Provider, bool Estimated);
+
 public sealed class CachedCurrencyRates(ICurrencyRateProvider remote, IDbContextFactory<FoundationDbContext> factory) : ICurrencyRateProvider
 {
+    public async Task<CachedRateEntry[]> ListAsync(int limit = 500, CancellationToken cancellationToken = default)
+    {
+        if (limit is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var rows = await db.FxRates.AsNoTracking().OrderByDescending(row => row.RequestedDay).ThenBy(row => row.Currency).ThenBy(row => row.Origin)
+            .Take(limit).ToArrayAsync(cancellationToken);
+        return rows.Select(row => new CachedRateEntry(row.Currency, DateOnly.FromDayNumber(row.RequestedDay), DateOnly.FromDayNumber(row.RateDay),
+            row.Origin, row.UsdPerNativeUnit, row.Provider, row.Estimated)).ToArray();
+    }
+
+    public async Task<bool> RefreshAsync(string currency, DateOnly date, CancellationToken cancellationToken = default)
+    {
+        ValidateCurrency(currency);
+        if (currency == "USD") return true;
+        // Explicit refresh is the only operation allowed to replace a provider observation.
+        // Fetch first: failures must preserve both the cache and accepted financial history.
+        var rate = await remote.GetRateAsync(currency, date, cancellationToken);
+        if (rate is null) return false;
+        rate.Validate();
+        if (rate.Currency != currency || rate.RequestedDate != date) throw new ArgumentException("Provider returned mismatched rate routing.");
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var row = await db.FxRates.FindAsync([currency, date.DayNumber, "frankfurter"], cancellationToken);
+        var before = row is null ? "null" : JsonSerializer.Serialize(Decode(row));
+        if (row is null)
+        {
+            row = new() { Currency = currency, RequestedDay = date.DayNumber, Origin = "frankfurter",
+                RateDay = rate.RateDate.DayNumber, UsdPerNativeUnit = rate.UsdPerNativeUnit.ToString(CultureInfo.InvariantCulture), Provider = rate.Provider, Estimated = rate.Estimated };
+            db.FxRates.Add(row);
+        }
+        else
+        {
+            row.RateDay = rate.RateDate.DayNumber; row.UsdPerNativeUnit = rate.UsdPerNativeUnit.ToString(CultureInfo.InvariantCulture);
+            row.Provider = rate.Provider; row.Estimated = rate.Estimated;
+        }
+        db.FinancialAudits.Add(Audit("fx_cache_refresh", before, JsonSerializer.Serialize(rate)));
+        await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); return true;
+    }
     public async Task<CurrencyRate?> GetRateAsync(string currency, DateOnly date, CancellationToken cancellationToken = default)
     {
         ValidateCurrency(currency);

@@ -62,7 +62,11 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
             entity.HasOne<SupporterIdentity>().WithMany().HasForeignKey(item => item.IdentityId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<StoredFxRate>().HasKey(item => new { item.Currency, item.RequestedDay, item.Origin });
-        modelBuilder.Entity<StoredValuationRule>().HasKey(item => new { item.Platform, item.Type, item.Tier });
+        modelBuilder.Entity<StoredValuationRule>(entity =>
+        {
+            entity.HasKey(item => new { item.Platform, item.Type, item.Tier });
+            entity.Property(item => item.Enabled).HasDefaultValue(true);
+        });
         modelBuilder.Entity<FinancialAudit>(entity =>
         {
             entity.HasKey(item => item.Id);

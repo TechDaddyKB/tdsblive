@@ -88,6 +88,7 @@ public sealed class StoredValuationRule
     public required string Tier { get; set; }
     public required string UsdMinorPerUnit { get; set; }
     public int Version { get; set; }
+    public bool Enabled { get; set; } = true;
 }
 
 public sealed class FinancialAudit
