@@ -27,6 +27,13 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
                 CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = OverlayEndpoints.PublicChat(item) }, EventStore.JsonOptions), sensitive.Snapshot())!.ToJsonString(EventStore.JsonOptions))) subscriber.TryStop();
     }
 
+    public void PublishPreview(string overlayId, CanonicalEvent item)
+    {
+        var payload = JsonSerializer.Serialize(new { op = "event", @event = OverlayEndpoints.PublicChat(item) }, EventStore.JsonOptions);
+        foreach (var subscriber in subscribers.Values.Where(s => s.Preview && !s.Limited && s.Overlay?.Id == overlayId))
+            if (subscriber.Accepts(item) && !subscriber.Queue.Writer.TryWrite(payload)) subscriber.TryStop();
+    }
+
     public void UpdateOverlay(OverlayDefinition definition)
     {
         foreach (var subscriber in subscribers.Values.Where(s => s.Overlay?.Id == definition.Id))
@@ -129,7 +136,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
                         throw new JsonException();
                     var types = selected.EnumerateArray().Select(value => value.ValueKind == JsonValueKind.String ? value.GetString()! : "").ToArray();
                     if (types.Any(type => string.IsNullOrWhiteSpace(type) || type.Length > 128)) throw new JsonException();
-                    if (subscriber.Overlay is not null && types.Any(type => type != "chat.message")) throw new JsonException();
+                    if (subscriber.Overlay is { CanvasEnabled: false } && types.Any(type => type != "chat.message")) throw new JsonException();
                     subscriber.Subscribe(types);
                     response = "{\"op\":\"subscribed\"}";
                     break;
@@ -149,7 +156,9 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         public Channel<string> Queue { get; } = Channel.CreateBounded<string>(new BoundedChannelOptions(256)
             { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
         public bool Accepts(CanonicalEvent item) => (types.Contains(item.Type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal)) &&
-            (Overlay is null || Overlay.Chat.Accepts(item) && (item.Provenance == EventProvenance.Live || Preview));
+            (Overlay is null || (item.Provenance == EventProvenance.Live || Preview && !Limited) &&
+                (Overlay.CanvasEnabled ? Overlay.Widgets.Any(w => !w.Hidden && (w.Kind == "chat" && w.Chat.Accepts(item) ||
+                    w.Kind == "alert" && (w.Alert.EventTypes.Contains(item.Type) || w.Alert.EventTypes.Contains("*")) && w.Alert.Platforms.Contains(item.Platform))) : Overlay.Chat.Accepts(item)));
         public void Subscribe(string[] selected) => types = selected;
         public void TryStop()
         {

@@ -65,6 +65,9 @@ public sealed partial record OverlayDefinition
     public string Background { get; init; } = "transparent";
     public int Version { get; init; } = 1;
     public ChatSettings Chat { get; init; } = new();
+    public bool CanvasEnabled { get; init; }
+    public int RevisionLimit { get; init; } = 50;
+    public OverlayWidget[] Widgets { get; init; } = [];
     public static bool ValidId(string id) => IdPattern().IsMatch(id);
     [GeneratedRegex(@"^[a-z0-9][a-z0-9-]{0,63}\z", RegexOptions.NonBacktracking, 100)]
     private static partial Regex IdPattern();
@@ -73,6 +76,13 @@ public sealed partial record OverlayDefinition
         if (Id is null || !ValidId(Id) || string.IsNullOrWhiteSpace(Name) || Name.Length > 128 || Width is < 1 or > 7680 || Height is < 1 or > 7680 ||
             Background != "transparent" || Version < 1 || Version == int.MaxValue || Chat is null) throw new ArgumentException("Invalid overlay definition.");
         Chat.Validate();
+        if (RevisionLimit is < 1 or > 200 || Widgets is null || Widgets.Length > 100 || Widgets.Any(w => w is null) ||
+            Widgets.Select(w => w.Id).Distinct(StringComparer.Ordinal).Count() != Widgets.Length)
+            throw new ArgumentException("Invalid overlay canvas.");
+        foreach (var widget in Widgets) widget.Validate();
+        var groups = Widgets.Where(w => w.Kind == "alert").GroupBy(w => w.Alert.Group);
+        if (groups.Any(g => g.Select(w => (w.Alert.Concurrency, w.Alert.MaximumQueueLength, w.Alert.OverflowPolicy)).Distinct().Count() > 1))
+            throw new ArgumentException("Alert widgets in a queue group must share concurrency, queue limit and overflow policy.");
     }
 }
 

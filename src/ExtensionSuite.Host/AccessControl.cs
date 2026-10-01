@@ -68,7 +68,8 @@ public sealed class RequestSecurity(RequestDelegate next)
     public async Task InvokeAsync(HttpContext context, ApplicationConfiguration configuration, AccessControl access, IAntiforgery antiforgery, OverlayStore overlays)
     {
         var request = context.Request;
-        var bodyLimit = request.Path == "/api/assets" && HttpMethods.IsPost(request.Method) ? ExtensionSuite.Overlays.AssetValidation.MaximumBytes : 65536;
+        var bodyLimit = request.Path == "/api/assets" && HttpMethods.IsPost(request.Method) ? ExtensionSuite.Overlays.AssetValidation.MaximumBytes :
+            request.Path.StartsWithSegments("/api/overlays") && !request.Path.Value!.EndsWith("/preview-events", StringComparison.Ordinal) ? 2 * 1024 * 1024 : 65536;
         var sizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
         if (sizeFeature is { IsReadOnly: false }) sizeFeature.MaxRequestBodySize = bodyLimit;
         if (request.ContentLength > bodyLimit)
@@ -139,7 +140,12 @@ public sealed class RequestSecurity(RequestDelegate next)
         if (parts.Length is 3 or 4 && parts[0] == "api" && parts[1] == "overlays" && (parts.Length == 3 || parts[3] == "chat")) id = parts[2];
         if (parts.Length == 2 && parts[0] == "assets") id = context.Request.Headers["X-TDSBLive-Overlay"].ToString();
         if (id is null) return false;
-        if (parts.Length == 2 && parts[0] == "assets" && (await store.GetAsync(id, context.RequestAborted))?.Chat.FontAssetId != parts[1]) return false;
+        if (parts.Length == 2 && parts[0] == "assets")
+        {
+            var definition = await store.GetAsync(id, context.RequestAborted);
+            if (definition is null || !(definition.Chat.FontAssetId == parts[1] || definition.Widgets.Any(w =>
+                w.AssetId == parts[1] || w.Chat.FontAssetId == parts[1] || w.Alert.MediaAssetId == parts[1] || w.Alert.SoundAssetId == parts[1]))) return false;
+        }
         var authorization = context.Request.Headers.Authorization.ToString();
         var token = authorization.StartsWith("Bearer ", StringComparison.Ordinal) ? authorization[7..] : context.WebSockets.WebSocketRequestedProtocols.FirstOrDefault(p => AssetIdentity.IsValid(p));
         if (token is null || !await store.AuthorizeAsync(token, id, context.RequestAborted)) return false;

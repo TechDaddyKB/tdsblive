@@ -182,4 +182,5 @@ jobs:
             artifacts/g02-editor.png
             artifacts/g05-overlay.png
             artifacts/g05-streamer-chat.png
+            artifacts/g06-editor.png
           if-no-files-found: warn

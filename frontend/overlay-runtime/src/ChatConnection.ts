@@ -8,7 +8,7 @@ export class ChatConnection {
   private failures = 0;
   private lastReply = 0;
   constructor(private readonly id: string, private readonly token: string, private readonly preview: boolean,
-    private readonly settings: (value: OverlayDefinition) => void, private readonly events: (value: ChatEvent[]) => void, private readonly status: (value: string) => void) {}
+    private readonly settings: (value: OverlayDefinition) => void, private readonly events: (value: ChatEvent[]) => void, private readonly status: (value: string) => void, private readonly canvas = false) {}
   private headers(): HeadersInit { return this.token ? { Authorization: `Bearer ${this.token}`, 'X-TDSBLive-Overlay': this.id } : {}; }
   async start(): Promise<void> {
     this.status('Connecting');
@@ -22,7 +22,7 @@ export class ChatConnection {
       url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(url, this.token ? ['tdsblive.overlay.v1', this.token] : ['tdsblive.overlay.v1']);
       this.socket = socket;
-      socket.onopen = () => { this.lastReply = Date.now(); socket.send(JSON.stringify({ op: 'subscribe', types: ['chat.message'] })); };
+      socket.onopen = () => { this.lastReply = Date.now(); socket.send(JSON.stringify({ op: 'subscribe', types: this.canvas && definition.canvasEnabled ? ['*'] : ['chat.message'] })); };
       socket.onmessage = event => {
         try {
           const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition };

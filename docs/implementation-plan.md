@@ -81,7 +81,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Complete |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Complete |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Complete |
-| [G06](#g06) | Build basic visual editor and alerts | G05 | Not started |
+| [G06](#g06) | Build basic visual editor and alerts | G05 | In progress |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Not started |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Not started |
@@ -318,7 +318,7 @@ None for G05 acceptance. Live YouTube/Kick accounts were unavailable; their docu
 
 ## G06 — Build basic visual editor and alerts
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G05
 
 ### Deliverables
@@ -336,11 +336,11 @@ Prerequisites: G05
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+G05 prerequisite verified against merged commit `8053c99eb12edfbca4628c7f82201c82324a9e9e` and successful main Windows CI run 36900637540. Implementation is underway on `g06-visual-editor-alerts`; owning contracts, queue semantics, HTTP/security boundaries and scope are recorded in [G06 editor and alerts](g06-editor-alerts.md). Local checks pass: 224 backend tests (two Windows-only skips), 80 frontend tests, type checking/lint, build (runtime 74.2 kB gzipped), and foundation process/contract qualification. Frontend line coverage is 95.72%. Fresh isolated Playwright verifies create/add/drag/resize/nudge, repeated duplicate/delete/undo/redo, 750ms save/reload/restore, served GIF, embedded chat, synthetic/native alert previews, single socket, and no durable injection history. Backend tests cover transaction rollback, concurrent stale-version rejection, 50-revision retention, validation and scoped LAN media; scheduler tests cover groups/priority/FIFO/concurrency/cooldown/overflow/interrupt behavior. No G06 completion claim is made yet.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g07"></a>
 
@@ -369,7 +369,7 @@ None recorded. Planning inspection is not implementation acceptance.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g08"></a>
 
@@ -396,7 +396,7 @@ None recorded. Planning inspection is not implementation acceptance.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g09"></a>
 
@@ -425,7 +425,7 @@ None recorded. Planning inspection is not implementation acceptance.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g10"></a>
 
@@ -454,7 +454,7 @@ None recorded. Planning inspection is not implementation acceptance.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g11"></a>
 
@@ -481,7 +481,7 @@ None recorded. Planning inspection is not implementation acceptance.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g12"></a>
 
@@ -509,7 +509,7 @@ None recorded. Planning inspection is not implementation acceptance.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g13"></a>
 
@@ -537,7 +537,7 @@ None recorded. Planning inspection is not implementation acceptance.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 ## Official reference documentation
 

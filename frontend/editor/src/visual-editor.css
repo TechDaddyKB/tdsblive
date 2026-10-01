@@ -1,0 +1,18 @@
+.visual-editor { border-top: 1px solid #777; margin-top: 2rem; padding-top: 1rem; }
+.canvas-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; margin: 1rem 0; }
+.visual-editor label { display: flex; flex-direction: column; gap: .2rem; margin-bottom: .5rem; }
+.visual-editor button { padding: .4rem .6rem; cursor: pointer; }
+.visual-editor output { display: block; font-weight: bold; }
+.canvas-workspace { display: grid; grid-template-columns: 180px minmax(200px, 1fr) 260px; gap: 1rem; }
+.canvas-workspace aside { padding: .6rem; background: #24262c; color: #f4f4f6; max-height: 75vh; overflow: auto; }
+.canvas-workspace aside button { display: block; width: 100%; margin: .3rem 0; }
+.canvas-workspace ol { padding-left: 1rem; }
+.canvas-scroll { overflow: auto; height: 70vh; background: #15161a; padding: 1rem; }
+.editor-canvas { position: relative; overflow: hidden; background: repeating-conic-gradient(#333 0% 25%, #444 0% 50%) 50% / 40px 40px; }
+.editor-canvas.show-grid { background-image: linear-gradient(#ffffff18 1px, transparent 1px), linear-gradient(90deg, #ffffff18 1px, transparent 1px); background-size: 10px 10px; background-color: #333; }
+.canvas-widget { position: absolute; touch-action: none; white-space: pre-wrap; overflow: visible; cursor: move; outline: 1px dashed #aaa; }
+.canvas-widget.selected { outline: 3px solid #60baff; }
+.canvas-widget img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.resize-handle { position: absolute; bottom: -10px; right: -10px; width: 30px; height: 30px; touch-action: none; font-size: 18px; }
+.widget-properties input, .widget-properties select, .widget-properties textarea { max-width: 100%; }
+@media (max-width: 900px) { .canvas-workspace { grid-template-columns: 1fr; } .canvas-workspace aside { max-height: 40vh; } }

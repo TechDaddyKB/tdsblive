@@ -13,16 +13,19 @@ function ChatBadge({ name, imageUrl }: { name: string; imageUrl?: string | null 
   return url && !failed ? <img className="badge-image" src={url} alt={name.slice(0, 64)} title={name.slice(0, 64)} referrerPolicy="no-referrer" onError={() => setFailed(true)} />
     : <span className="badge">{name.slice(0, 64)}</span>;
 }
-export function CombinedChat({ id, streamer = false, preview = false, token = '' }: { id: string; streamer?: boolean; preview?: boolean; token?: string }) {
+export function CombinedChat({ id, streamer = false, preview = false, token = '', feed }: { id: string; streamer?: boolean; preview?: boolean; token?: string; feed?: { definition: OverlayDefinition; events: ChatEvent[] } }) {
   const [definition, setDefinition] = useState<OverlayDefinition | null>(null);
   const [messages, setMessages] = useState<ChatEvent[]>([]);
   const [status, setStatus] = useState('Connecting');
   const [theme, setTheme] = useState(initialTheme);
   const [now, setNow] = useState(Date.now);
+  const feedMode = Boolean(feed);
+  const feedBuffer = useRef(new ChatBuffer());
   const list = useRef<HTMLDivElement>(null);
   const nearEnd = useRef(true);
   const settings = useRef<ChatSettings>(defaultSettings);
   useEffect(() => {
+    if (feedMode) return;
     const buffer = new ChatBuffer();
     const connection = new ChatConnection(id, token, preview, value => {
       settings.current = streamer ? { ...value.chat, persistent: true } : value.chat;
@@ -31,7 +34,16 @@ export function CombinedChat({ id, streamer = false, preview = false, token = ''
     void connection.start();
     const timer = setInterval(() => { if (!settings.current.persistent) { setNow(Date.now()); setMessages(buffer.visible(settings.current)); } }, 250);
     return () => { clearInterval(timer); connection.stop(); };
-  }, [id, token, preview, streamer]);
+  }, [id, token, preview, streamer, feedMode]);
+  useEffect(() => {
+    if (!feed) return;
+    settings.current = feed.definition.chat; setDefinition(feed.definition); setMessages(feedBuffer.current.ingest(feed.events, settings.current));
+  }, [feed]);
+  useEffect(() => {
+    if (!feedMode) return;
+    const timer = setInterval(() => { if (!settings.current.persistent) { setNow(Date.now()); setMessages(feedBuffer.current.visible(settings.current)); } }, 250);
+    return () => clearInterval(timer);
+  }, [feedMode]);
   useEffect(() => {
     const element = list.current;
     if (element && nearEnd.current) element.scrollTop = settings.current.newestOnTop ? 0 : element.scrollHeight;

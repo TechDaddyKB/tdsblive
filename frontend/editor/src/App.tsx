@@ -5,6 +5,7 @@ import { Login } from './Login';
 import { BotPanel } from './BotPanel';
 import { RumblePanel } from './RumblePanel';
 import { ChatPanel } from './ChatPanel';
+import { VisualEditor } from './VisualEditor';
 
 export function App() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -29,6 +30,7 @@ export function App() {
     {error && <p role="alert">{error} <a href="/login">Sign in</a></p>}
     {status && <BotPanel />}
     {status && <RumblePanel />}
+    {status && <VisualEditor />}
     {status && <ChatPanel />}
   </main>;
 }

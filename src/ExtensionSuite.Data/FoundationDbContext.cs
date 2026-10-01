@@ -11,6 +11,7 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
     public DbSet<StoredLog> Logs => Set<StoredLog>();
     public DbSet<RumbleSnapshotState> RumbleStates => Set<RumbleSnapshotState>();
     public DbSet<RumbleTriggerDelivery> RumbleDeliveries => Set<RumbleTriggerDelivery>();
+    public DbSet<StoredOverlayRevision> OverlayRevisions => Set<StoredOverlayRevision>();
     public DbSet<StoredOverlay> Overlays => Set<StoredOverlay>();
     public DbSet<StoredAsset> Assets => Set<StoredAsset>();
     public DbSet<StoredOverlayToken> OverlayTokens => Set<StoredOverlayToken>();
@@ -18,6 +19,11 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<StoredOverlay>().HasKey(item => item.Id);
+        modelBuilder.Entity<StoredOverlayRevision>(entity =>
+        {
+            entity.HasKey(item => new { item.OverlayId, item.Version });
+            entity.HasOne<StoredOverlay>().WithMany().HasForeignKey(item => item.OverlayId).OnDelete(DeleteBehavior.Cascade);
+        });
         modelBuilder.Entity<StoredAsset>().HasKey(item => item.Id);
         modelBuilder.Entity<StoredOverlayToken>(entity =>
         {
@@ -124,4 +130,12 @@ public sealed class OutboxEntry
     public Guid EventId { get; set; }
     public long CreatedAtTicks { get; set; }
     public long? DeliveredAtTicks { get; set; }
+}
+
+public sealed class StoredOverlayRevision
+{
+    public required string OverlayId { get; set; }
+    public int Version { get; set; }
+    public long SavedAtTicks { get; set; }
+    public required string Json { get; set; }
 }
