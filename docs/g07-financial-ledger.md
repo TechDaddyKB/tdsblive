@@ -1,0 +1,27 @@
+# G07 financial ledger and supporter identities
+
+Status: In progress. The full acceptance contract remains in [the implementation plan](implementation-plan.md#g07). Donor widgets belong to G08; financial automation belongs to G09.
+
+## Amount and valuation contracts
+
+`NativeMoney` carries integer native minor units, uppercase currency code, and explicit minor-unit digits. USD uses two digits; other source scales must come from verified currency/provider metadata. `FinancialPrecision` uses decimal rates and checked arithmetic, rounding to USD cents once per contribution, with midpoint rounding away from zero. Overflow rejects the valuation rather than truncating or saturating it.
+
+`SupportValuator` gives documented native spend precedence over nominal rules. USD spend is `exact`. Other native spend is `fx` when a matching rate exists, retaining rate/date/provider and the estimated flag; absent rates yield `unknown` with `fx_unavailable`. Native spend is never silently replaced by a nominal amount. Contributions without documented spend use explicitly configured USD minor units per quantity, marked `configured_nominal` and estimated; without a rule they remain `unknown` with `nominal_unconfigured`. No default Bits/subscription prices are installed.
+
+`ICurrencyRateProvider` takes currency and requested date. Rate direction is native major unit to USD major units. The provider implementation will use dated Frankfurter rates and preserve the actual observation date and attribution. The [official API](https://frankfurter.dev/) supports historical dates and provider filtering/attribution. Cache and dated manual overrides precede network lookups. Latest-rate fallback must be visibly estimated. Accepted values are stored and never change merely because the cache/provider changes; reconciliation is explicit and audited.
+
+## Persistence and integration requirements still to implement
+
+- Durable unique source keys and canonical fallback keys, independent of chat retention. Transactional financial acceptance and restart catch-up must cover Streamer.bot and Rumble events even if their delivery outbox was already acknowledged.
+- Normalize required Bits, donations, paid YouTube events, subscriptions/memberships, gifts, Ko-fi and Rants using isolated adapter strategies. Typed financial metadata must survive disabling raw capture. Document uncertain payloads rather than inventing amounts, giver identity, quantities or correlations.
+- Correlate documented gift batch/individual identifiers transactionally so arrival order cannot duplicate total quantity. Unsupported/ambiguous gift accounting stays visibly gated, including Rumble gifts. Do not count recipient membership notifications as additional purchases.
+- Store native spend, frozen valuation, source/event identifiers, occurrence time, quantity, supporter identity, stream identity, estimation/pending state and reconciliation audit. Index occurrence/supporter/platform queries.
+- Persist nominal rules, provider cache and dated manual overrides. Expose explicit reconciliation of pending/selected records without silently recomputing accepted history.
+- Assign platform-qualified identities; matching display names never merge people. Manual linking/unlinking through authenticated, CSRF-protected editor controls changes aggregate attribution without changing original contribution evidence.
+- Provide current-stream, timezone-local today/Monday-week/month/year/all-time and bounded custom periods. Define half-open boundaries and test DST/non-UTC dates. Unknown/pending amounts remain visible and separate from valued totals.
+- Live ingestion excludes simulation/replay regardless of persistence test flags. Developer previews do not write financial rows. Financial actions remain disabled by default in tests.
+- Document HTTP APIs, migrations, settings, provider limits and compatibility. HTTP and authenticated LAN remain supported without an HTTPS requirement.
+
+## Current validation
+
+`dotnet test tests/unit/ExtensionSuite.Core.Tests -c Release --no-restore` passes all 36 tests, including three new financial tests covering decimal precision, scales, rounding, valuation precedence, attribution, pending/nominal labels, invalid input and overflow. Durable ledger, UI, correlation, FX provider and full G07 qualification are not yet implemented. Do not treat the pure valuation tests as proof of complete ingestion or accounting.

@@ -82,7 +82,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Complete |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Complete |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
-| [G07](#g07) | Build financial ledger and supporter identities | G04 | Not started |
+| [G07](#g07) | Build financial ledger and supporter identities | G04 | In progress |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Not started |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
@@ -350,7 +350,7 @@ None for G06 functionality. Protected merge still requires passing Windows/Sonar
 
 ## G07 — Build financial ledger and supporter identities
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G04
 
 ### Deliverables
@@ -369,11 +369,11 @@ Prerequisites: G04
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+G04 prerequisite revalidated against merged PR #5 (`47c122005b74c1a0ce957a9a80d8049f6dd4a26a`) and its maintained capture/replay/live receipt evidence. Work starts from protected main G06 commit `232c59e23e28a63e8d1f349f16c5114bacbd28e8` on `g07-financial-ledger`. Decimal conversion and valuation contracts are implemented with tests for explicit native scales, rounding once per contribution, exact-spend precedence, missing FX, unconfigured nominal values, attribution, invalid inputs and overflow. All 36 core tests pass locally. This is partial implementation evidence, not ledger, UI, provider, replay or live acceptance. Owning design and outstanding checks: [G07 ledger](g07-financial-ledger.md).
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+None preventing implementation. Persistence, platform strategies, gift correlation, historical FX/cache/override/reconciliation, identities/UI, timezone periods, restart/isolation tests and Windows/SonarQube qualification remain unfinished. Unverified Rumble gift accounting remains gated; no real paid event verification is claimed.
 
 <a id="g08"></a>
 
