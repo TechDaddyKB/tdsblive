@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { defaultSettings } from '../../overlay-runtime/src/chat';
-import { createWidget, widgetId, type Scene, type Widget } from '../../overlay-runtime/src/scene';
+import { createWidget, inheritGroupSettings, widgetId, type Scene, type Widget } from '../../overlay-runtime/src/scene';
 import { EditorSession, type EditorState } from './EditorSession';
 import { visualApi, type Revision } from './visualApi';
 import { request } from './api';
@@ -38,6 +38,7 @@ export function VisualEditor() {
   const edit = (value: Scene) => session.current?.edit(value);
   const change = (w: Widget) => {
     if (!doc) return;
+    if (w.kind === 'alert' && doc.widgets.find(old => old.id === w.id)?.alert.group !== w.alert.group) w = inheritGroupSettings(w, doc.widgets);
     edit({ ...doc, widgets: doc.widgets.map(old => old.id === w.id ? w : old.kind === 'alert' && w.kind === 'alert' && old.alert.group === w.alert.group ?
       { ...old, alert: { ...old.alert, concurrency: w.alert.concurrency, maximumQueueLength: w.alert.maximumQueueLength, overflowPolicy: w.alert.overflowPolicy } } : old) });
   };
@@ -54,9 +55,9 @@ export function VisualEditor() {
       setOverlays(await visualApi.list()); install(value);
     } catch { setNotice('Unable to create overlay. Use a unique lowercase slug, a name, and dimensions between 1 and 7680.'); }
   };
-  const add = (kind: Widget['kind']) => { if (!doc || doc.widgets.length >= 100) return; const w = createWidget(kind); edit({ ...doc, widgets: [...doc.widgets, w] }); setSelected(w.id); };
+  const add = (kind: Widget['kind']) => { if (!doc || doc.widgets.length >= 100) return; const w = inheritGroupSettings(createWidget(kind), doc.widgets); edit({ ...doc, widgets: [...doc.widgets, w] }); setSelected(w.id); };
   const remove = () => { if (doc && chosen && !chosen.locked) { edit({ ...doc, widgets: doc.widgets.filter(w => w.id !== chosen.id) }); setSelected(''); } };
-  const duplicate = (source: Widget | undefined = chosen) => { if (!doc || !source || doc.widgets.length >= 100) return; const next = { ...structuredClone(source), id: widgetId(), x: Math.min(7680, source.x + 20), y: Math.min(7680, source.y + 20), locked: false }; edit({ ...doc, widgets: [...doc.widgets, next] }); setSelected(next.id); };
+  const duplicate = (source: Widget | undefined = chosen) => { if (!doc || !source || doc.widgets.length >= 100) return; const next = inheritGroupSettings({ ...structuredClone(source), id: widgetId(), x: Math.min(7680, source.x + 20), y: Math.min(7680, source.y + 20), locked: false }, doc.widgets); edit({ ...doc, widgets: [...doc.widgets, next] }); setSelected(next.id); };
   const begin = (e: ReactPointerEvent<HTMLElement>, widget: Widget, mode: 'move' | 'resize') => {
     e.stopPropagation(); setSelected(widget.id); e.currentTarget.focus(); if (widget.locked || widget.hidden || e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId); gesture.current = { widget, mode, x: e.clientX, y: e.clientY, latest: widget }; setDragView(widget);

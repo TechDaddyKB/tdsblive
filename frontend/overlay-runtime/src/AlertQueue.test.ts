@@ -50,6 +50,11 @@ describe('bounded alert scheduling', () => {
     q.reconcile([{ ...a, volume: .5 }]); expect(q.tick(0)).toEqual([]); expect(q.queued).toBe(0);
     q.enqueue(a, event('next'), 0); q.clear(); expect(q.tick(0)).toEqual([]);
   });
+  it('applies changed cooldown policy immediately after canceling old widget jobs', () => {
+    const q = new AlertQueue(); const a = widget(); a.alert.cooldownMs = 10000; q.enqueue(a, event('old'), 0);
+    const changed = { ...a, alert: { ...a.alert, cooldownMs: 0 } }; q.reconcile([changed]); q.enqueue(changed, event('new'), 1);
+    expect(q.tick(1).map(j => j.event.id)).toEqual(['new']); q.clear(); q.enqueue(changed, event('new'), 2); expect(q.tick(2)).toHaveLength(1);
+  });
   it('formats only recognized text placeholders without treating viewer content as markup', () => {
     expect(alertText('{user} {message} {type} {platform} {unknown}', { ...event('1'), message: { text: '<script>' } }))
       .toBe('<Viewer> <script> community.follow twitch {unknown}');

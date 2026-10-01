@@ -53,9 +53,9 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
     const scheduler = queue.current; scheduler.clear();
     const connection = new ChatConnection(id, token, preview, definition => {
       const value = definition as Scene; settings.current = value; scheduler.reconcile(value.widgets); setScene(value); setActive(scheduler.tick(Date.now()));
-    }, incoming => {
+    }, (incoming, delivery) => {
       const value = settings.current; if (!value) return;
-      const now = Date.now(); for (const event of incoming) for (const widget of value.widgets) scheduler.enqueue(widget, event, now);
+      const now = Date.now(); if (delivery !== 'history') for (const event of incoming) for (const widget of value.widgets) scheduler.enqueue(widget, event, now);
       setActive(scheduler.tick(now)); setEvents(incoming);
     }, setStatus, true);
     void connection.start();

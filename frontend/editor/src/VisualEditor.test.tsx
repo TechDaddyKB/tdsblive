@@ -59,3 +59,12 @@ it('adds every initial widget type, exposes test controls and reports invalid cr
   expect(document.querySelectorAll('.canvas-widget')).toHaveLength(6); fireEvent.click(screen.getByText('Save now')); await waitFor(() => expect(api.get().widgets).toHaveLength(6));
   fireEvent.change(screen.getByLabelText('New overlay ID'), { target: { value: '../invalid' } }); fireEvent.click(screen.getByText('Create overlay')); await screen.findByText(/Unable to create overlay/);
 });
+
+it('inherits group queue policies when adding or copying alert boxes after settings change', async () => {
+  const api = host(); render(<VisualEditor />); await screen.findByLabelText('Overlay canvas');
+  fireEvent.click(screen.getByText('Add AlertBox', { exact: true }));
+  for (const [label, value] of [['Concurrency', '2'], ['Maximum queue length', '3'], ['Overflow policy', 'drop-newest']]) fireEvent.change(screen.getByLabelText(label, { exact: true }), { target: { value } });
+  fireEvent.click(screen.getByText('Add AlertBox', { exact: true })); fireEvent.click(screen.getByText('Duplicate', { exact: true })); fireEvent.click(screen.getByText('Save now'));
+  await waitFor(() => expect(api.get().widgets.filter(w => w.kind === 'alert')).toHaveLength(3));
+  for (const alert of api.get().widgets.filter(w => w.kind === 'alert')) expect(alert.alert).toMatchObject({ concurrency: 2, maximumQueueLength: 3, overflowPolicy: 'drop-newest' });
+});

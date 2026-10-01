@@ -6,11 +6,13 @@ export class AlertQueue {
   private running: AlertJob[] = [];
   private readonly seen = new Set<string>();
   private readonly cooldown = new Map<string, number>();
+  private signatures = new Map<string, string>();
   private sequence = 0;
   dropped = 0; interrupted = 0; completed = 0;
   enqueue(widget: Widget, event: ChatEvent, now: number): void {
     const a = widget.alert;
     if (widget.hidden || widget.kind !== 'alert' || !(a.eventTypes.includes('*') || a.eventTypes.includes(event.type)) || !a.platforms.includes(event.platform)) return;
+    this.signatures.set(widget.id, JSON.stringify(widget));
     const key = `${widget.id}:${event.id}`;
     if (this.seen.has(key)) return;
     this.seen.add(key); if (this.seen.size > 10000) this.seen.delete(this.seen.values().next().value!);
@@ -50,9 +52,10 @@ export class AlertQueue {
     const live = new Map(widgets.filter(w => !w.hidden && w.kind === 'alert').map(w => [w.id, JSON.stringify(w)]));
     const valid = (job: AlertJob) => live.get(job.widget.id) === JSON.stringify(job.widget);
     this.pending = this.pending.filter(valid); this.running = this.running.filter(valid);
-    for (const id of this.cooldown.keys()) if (!live.has(id)) this.cooldown.delete(id);
+    for (const id of this.cooldown.keys()) if (this.signatures.get(id) !== live.get(id)) this.cooldown.delete(id);
+    this.signatures = live;
   }
-  clear(): void { this.pending = []; this.running = []; this.cooldown.clear(); }
+  clear(): void { this.pending = []; this.running = []; this.cooldown.clear(); this.signatures.clear(); this.seen.clear(); }
 }
 export function alertText(template: string, event: ChatEvent): string {
   const values: Record<string, string> = { user: event.user?.displayName ?? event.user?.login ?? 'Viewer', type: event.type, platform: event.platform,

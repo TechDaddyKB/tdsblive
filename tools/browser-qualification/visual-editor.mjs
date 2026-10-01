@@ -1,11 +1,22 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
   const editor = page.getByRole('region', { name: 'Visual overlay editor' });
   const gif = Buffer.from('47494638396101000100800000ff00000000ff21ff0b4e45545343415045322e30030100000021f904000a0000002c000000000100010000020244010021f904000a0000002c00000000010001000002024c01003b', 'hex');
   const uploaded = await fetch(`${origin}/api/assets`, { method: 'POST', headers: { ...writeHeaders, 'Content-Type': 'image/gif', 'X-Asset-Filename': 'g06-owned.gif' }, body: gif });
   assert.equal(uploaded.status, 200);
   const asset = await uploaded.json();
+  // Source-owned VP9 pattern, scanned with tracked files before CI reads it.
+  const video = await readFile(path.join(root, 'tests/fixtures/media/synthetic-pattern.webm'));
+  const wave = Buffer.alloc(44 + 48000); wave.write('RIFF', 0); wave.writeUInt32LE(wave.length - 8, 4); wave.write('WAVEfmt ', 8); wave.writeUInt32LE(16, 16);
+  wave.writeUInt16LE(1, 20); wave.writeUInt16LE(1, 22); wave.writeUInt32LE(48000, 24); wave.writeUInt32LE(96000, 28); wave.writeUInt16LE(2, 32); wave.writeUInt16LE(16, 34);
+  wave.write('data', 36); wave.writeUInt32LE(48000, 40); for (let i = 0; i < 24000; i++) wave.writeInt16LE(Math.round(Math.sin(i * 2 * Math.PI * 440 / 48000) * 3000), 44 + i * 2);
+  const upload = async (body, name, mime) => {
+    const result = await fetch(`${origin}/api/assets`, { method: 'POST', headers: { ...writeHeaders, 'Content-Type': mime, 'X-Asset-Filename': name }, body });
+    assert.equal(result.status, 200); return result.json();
+  };
+  const videoAsset = await upload(video, 'g06-owned.webm', 'video/webm'); const soundAsset = await upload(wave, 'g06-owned.wav', 'audio/wav');
   await page.goto(`${origin}/editor`);
   await editor.getByLabel('New overlay name').fill('Browser qualification');
   await editor.getByLabel('New overlay ID').fill('g06-browser');
@@ -39,13 +50,21 @@ export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
   await saved(); await page.reload(); await editor.getByLabel('Overlay canvas').waitFor();
   await editor.getByRole('listitem').getByRole('button').click(); assert.equal(await editor.getByLabel('X', { exact: true }).inputValue(), '141');
   await editor.getByRole('button', { name: 'Revision history', exact: true }).click();
-  await editor.getByRole('button', { name: `Restore v${restoreVersion}`, exact: true }).click(); await saved();
+  await editor.getByRole('button', { name: `Restore v${restoreVersion}`, exact: true }).click();
+  await editor.getByText(`Restored revision ${restoreVersion} as a new revision.`, { exact: true }).waitFor(); await saved();
   await editor.getByRole('listitem').getByRole('button').click(); assert.equal(await editor.getByLabel('X', { exact: true }).inputValue(), '40');
   await editor.getByRole('button', { name: 'Add image', exact: true }).click();
   await editor.getByLabel('Media asset').selectOption(asset.id); await saved();
   await editor.getByRole('button', { name: 'Add Combined Chat', exact: true }).click(); await saved();
   await editor.getByRole('button', { name: 'Add AlertBox', exact: true }).click();
-  await editor.getByLabel('Duration (ms)', { exact: true }).fill('600'); await saved();
+  await editor.getByLabel('Alert media').selectOption(videoAsset.id); await editor.getByLabel('Alert sound').selectOption(soundAsset.id);
+  await editor.getByLabel('Duration (ms)', { exact: true }).fill('2000');
+  await editor.getByLabel('Layer name').fill('Browser alert'); await editor.getByLabel('Concurrency').fill('2');
+  await editor.getByLabel('Maximum queue length').fill('3'); await editor.getByLabel('Overflow policy').selectOption('drop-newest'); await saved();
+  await editor.getByRole('button', { name: 'Add AlertBox', exact: true }).click();
+  assert.equal(await editor.getByLabel('Concurrency').inputValue(), '2'); assert.equal(await editor.getByLabel('Maximum queue length').inputValue(), '3');
+  assert.equal(await editor.getByLabel('Overflow policy').inputValue(), 'drop-newest'); await editor.getByLabel('Hidden', { exact: true }).check(); await saved();
+  await editor.getByRole('button', { name: 'Browser alert', exact: true }).click();
   await editor.getByRole('button', { name: 'Preview', exact: true }).click();
   const frame = page.frameLocator('iframe[title="Overlay test preview"]');
   await frame.getByLabel('Overlay scene').waitFor();
@@ -56,6 +75,10 @@ export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
   await frame.getByLabel('Combined chat', { exact: true }).waitFor();
   await editor.getByRole('button', { name: 'Send isolated test event', exact: true }).click();
   await frame.getByText('Test viewer · community.follow', { exact: true }).waitFor();
+  await imageFrame.waitForFunction(() => {
+    const video = document.querySelector('.active-alert video'), sound = document.querySelector('.active-alert audio');
+    return video?.videoWidth === 32 && video.currentTime > .1 && sound?.currentTime > .1 && sound.muted;
+  });
   await frame.getByText('Test viewer · community.follow', { exact: true }).waitFor({ state: 'hidden' });
   assert.equal(await frame.locator('script:not([src])').count(), 0);
   const native = { event: { source: 'Twitch', type: 'Follow' }, data: { userName: 'Native synthetic viewer' } };

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ChatBuffer, defaultSettings, safeAvatar, type ChatEvent, type ChatSettings, type OverlayDefinition } from './chat';
 import { ChatConnection } from './ChatConnection';
 import './chat.css';
@@ -14,6 +14,7 @@ function ChatBadge({ name, imageUrl }: { name: string; imageUrl?: string | null 
     : <span className="badge">{name.slice(0, 64)}</span>;
 }
 export function CombinedChat({ id, streamer = false, preview = false, token = '', feed }: { id: string; streamer?: boolean; preview?: boolean; token?: string; feed?: { definition: OverlayDefinition; events: ChatEvent[] } }) {
+  const fontName = `TDSBLiveCustom${useId().replace(/[^a-z0-9]/gi, '')}`;
   const [definition, setDefinition] = useState<OverlayDefinition | null>(null);
   const [messages, setMessages] = useState<ChatEvent[]>([]);
   const [status, setStatus] = useState('Connecting');
@@ -53,14 +54,14 @@ export function CombinedChat({ id, streamer = false, preview = false, token = ''
     if (!fontId || fontId.length !== 64 || !/^[0-9a-f]{64}$/.test(fontId)) return;
     const controller = new AbortController(); let face: FontFace | undefined;
     void fetch(`/assets/${encodeURIComponent(fontId)}`, { headers: token ? { Authorization: `Bearer ${token}`, 'X-TDSBLive-Overlay': id } : {}, signal: controller.signal })
-      .then(async response => { if (!response.ok) { throw new Error('Font unavailable.'); } face = new FontFace('TDSBLiveCustom', await response.arrayBuffer()); await face.load(); if (!controller.signal.aborted) document.fonts.add(face); })
+      .then(async response => { if (!response.ok) { throw new Error('Font unavailable.'); } face = new FontFace(fontName, await response.arrayBuffer()); await face.load(); if (!controller.signal.aborted) document.fonts.add(face); })
       .catch(() => { /* Use the configured system font if the asset cannot load. */ });
     return () => { controller.abort(); if (face) document.fonts.delete(face); };
-  }, [definition?.chat.fontAssetId, id, token]);
+  }, [definition?.chat.fontAssetId, id, token, fontName]);
   const s = settings.current;
   const toggleTheme = () => { const next = theme === 'dark' ? 'light' : 'dark'; setTheme(next); try { localStorage.setItem('tdsblive.chat.theme', next); } catch { /* Session preference still works. */ } };
   return <section className={`combined-chat ${streamer ? 'streamer-chat' : 'obs-chat'}`} data-theme={theme} aria-label="Combined chat"
-    style={{ fontFamily: s.fontAssetId ? `TDSBLiveCustom, ${s.font}, sans-serif` : `${s.font}, sans-serif`, fontSize: s.fontSize }}>
+    style={{ fontFamily: s.fontAssetId ? `${fontName}, ${s.font}, sans-serif` : `${s.font}, sans-serif`, fontSize: s.fontSize }}>
     {streamer && <header><h1>{definition?.name ?? 'Combined Chat'}</h1><button onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</button><output>{status}</output></header>}
     {preview && <div className="preview-label">Test preview · includes simulation/replay</div>}
     {status.includes('Sign in') && <a href="/login">Sign in to this host</a>}

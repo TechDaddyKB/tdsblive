@@ -34,3 +34,10 @@ export const alertPresets = [
   ['Rumble Follow', 'community.follow', 'rumble'], ['Rumble Subscription (unverified)', 'support.subscription', 'rumble'],
   ['Rumble Gift (unverified)', 'support.gift', 'rumble'], ['Custom Streamer.bot Trigger', 'integration.custom', 'general'],
 ] as const;
+
+export function inheritGroupSettings(widget: Widget, widgets: Widget[]): Widget {
+  if (widget.kind !== 'alert') return widget;
+  const peer = widgets.find(w => w.kind === 'alert' && w.id !== widget.id && w.alert.group === widget.alert.group);
+  return peer ? { ...widget, alert: { ...widget.alert, concurrency: peer.alert.concurrency,
+    maximumQueueLength: peer.alert.maximumQueueLength, overflowPolicy: peer.alert.overflowPolicy } } : widget;
+}

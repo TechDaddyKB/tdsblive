@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { CanvasRuntime, MediaAsset, OverlayView } from './CanvasRuntime';
 import { createWidget, type Scene } from './scene';
 import { defaultSettings, type ChatEvent } from './chat';
-const connection = vi.hoisted(() => ({ starts: 0, stops: 0, settings: (v: unknown) => { void v; }, events: (v: unknown) => { void v; }, status: (s: string) => { void s; }, initial: null as unknown }));
+const connection = vi.hoisted(() => ({ starts: 0, stops: 0, settings: (v: unknown) => { void v; }, events: (v: unknown, delivery?: string) => { void v; void delivery; }, status: (s: string) => { void s; }, initial: null as unknown }));
 vi.mock('./ChatConnection', () => ({ ChatConnection: class {
   constructor(_id: string, _token: string, _preview: boolean, settings: typeof connection.settings, events: typeof connection.events, status: typeof connection.status) { Object.assign(connection, { settings, events, status }); }
   start() { connection.starts++; connection.settings(connection.initial); connection.status('Connected'); }
@@ -62,4 +62,12 @@ it('chooses canvas or compatible legacy chat and exposes authentication failures
 it('renders media failures as status rather than retrying failed requests without bound', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
   render(<MediaAsset id={'d'.repeat(64)} overlay="test" token="" volume={1} muted loop name="Missing" />); await screen.findByText('Media unavailable');
+});
+
+it('restores historical chat without firing wildcard or chat-message alerts', () => {
+  const value = scene(); const alert = createWidget('alert'); alert.alert.eventTypes = ['*']; value.widgets = [createWidget('chat'), alert]; connection.initial = value;
+  render(<CanvasRuntime id="test" />); act(() => connection.events([event('chat.message')], 'history'));
+  expect(screen.getByText('Shared canvas chat')).toBeVisible(); expect(document.querySelector('[data-alert-event]')).toBeNull();
+  act(() => connection.events([{ ...event('chat.message'), id: 'fresh' }], 'socket'));
+  expect(document.querySelector('[data-alert-event]')).toHaveAttribute('data-alert-event', 'fresh');
 });

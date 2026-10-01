@@ -8,7 +8,7 @@ export class ChatConnection {
   private failures = 0;
   private lastReply = 0;
   constructor(private readonly id: string, private readonly token: string, private readonly preview: boolean,
-    private readonly settings: (value: OverlayDefinition) => void, private readonly events: (value: ChatEvent[]) => void, private readonly status: (value: string) => void, private readonly canvas = false) {}
+    private readonly settings: (value: OverlayDefinition) => void, private readonly events: (value: ChatEvent[], delivery: 'socket' | 'history') => void, private readonly status: (value: string) => void, private readonly canvas = false) {}
   private headers(): HeadersInit { return this.token ? { Authorization: `Bearer ${this.token}`, 'X-TDSBLive-Overlay': this.id } : {}; }
   async start(): Promise<void> {
     this.status('Connecting');
@@ -28,7 +28,7 @@ export class ChatConnection {
           const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition };
           this.lastReply = Date.now();
           if (message.op === 'subscribed') { this.failures = 0; this.status('Connected'); void this.history(); }
-          if (message.op === 'event' && message.event) this.events([message.event]);
+          if (message.op === 'event' && message.event) this.events([message.event], 'socket');
           if (message.op === 'settings' && message.settings) { this.settings(message.settings); void this.history(); }
         } catch { this.status('Invalid event ignored'); }
       };
@@ -45,7 +45,7 @@ export class ChatConnection {
       const response = await fetch(`/api/overlays/${this.id}/chat`, { headers: this.headers(), signal: this.abort.signal });
       if (response.ok) {
         const events = await response.json() as ChatEvent[];
-        if (!this.abort.signal.aborted) this.events(events);
+        if (!this.abort.signal.aborted) this.events(events, 'history');
       }
       else this.status(response.status === 401 ? 'Sign in or use an overlay token' : 'History unavailable');
     } catch { if (!this.abort.signal.aborted) this.status('History unavailable'); }
