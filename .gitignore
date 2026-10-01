@@ -54,3 +54,8 @@ __pycache__/
 __MACOSX/
 *.tmp
 *~
+
+# Local scanner state and captures outside the private reference directory
+.sonar/
+captures.jsonl
+captures.jsonl.gz

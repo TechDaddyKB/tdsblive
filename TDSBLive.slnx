@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="src/ExtensionSuite.Core/ExtensionSuite.Core.csproj" />
+  <Project Path="src/ExtensionSuite.Data/ExtensionSuite.Data.csproj" />
+  <Project Path="src/ExtensionSuite.StreamerBot/ExtensionSuite.StreamerBot.csproj" />
+  <Project Path="src/ExtensionSuite.Rumble/ExtensionSuite.Rumble.csproj" />
+  <Project Path="src/ExtensionSuite.Overlays/ExtensionSuite.Overlays.csproj" />
+  <Project Path="src/ExtensionSuite.Finance/ExtensionSuite.Finance.csproj" />
+  <Project Path="src/ExtensionSuite.Web/ExtensionSuite.Web.csproj" />
+  <Project Path="src/ExtensionSuite.Host/ExtensionSuite.Host.csproj" />
+  <Project Path="tests/unit/ExtensionSuite.Core.Tests/ExtensionSuite.Core.Tests.csproj" />
+  <Project Path="tests/integration/ExtensionSuite.Host.Tests/ExtensionSuite.Host.Tests.csproj" />
+</Solution>

@@ -76,7 +76,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | ID | Goal | Prerequisites | Status |
 |---|---|---|---|
 | [G00](#g00) | Analyze and sanitize Rumble evidence | None | Complete |
-| [G01](#g01) | Create repository and quality infrastructure | G00 | Not started |
+| [G01](#g01) | Create repository and quality infrastructure | G00 | In progress |
 | [G02](#g02) | Build application foundation | G01 | Not started |
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Not started |
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
@@ -130,7 +130,7 @@ None for G00. Live subscriber/gift identity, production snapshot-engine acceptan
 
 ## G01 — Create repository and quality infrastructure
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G00
 
 ### Deliverables
@@ -148,7 +148,13 @@ Prerequisites: G00
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+- Public repository created: https://github.com/camarokris/tdsblive (MIT scaffold pending initial push).
+- SonarQube Cloud project camarokris_tdsblive imported and GitHub binding verified; automatic analysis disabled; credential-free .sonar-config.json links local code tracking.
+- SONAR_TOKEN stored directly from API response in GitHub Actions secrets without writing the value to files/output. Expiration metadata is documented.
+- Pinned Windows workflow, toolchains, dependency locks, initial .NET/React tests and public documentation prepared.
+- Local .NET build passed with zero warnings/errors; 12 .NET tests passed and backend production coverage is 100%.
+- GitHub secret scanning/push protection and Dependabot security updates enabled; weekly dependency/action update configuration prepared.
+- Completion awaits initial public push, real Windows CI/Sonar coverage evidence and protected-branch verification.
 
 ### Blockers
 

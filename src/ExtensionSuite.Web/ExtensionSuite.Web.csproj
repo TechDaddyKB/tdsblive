@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ExtensionSuite.Core/ExtensionSuite.Core.csproj" />
+  </ItemGroup>
+</Project>
