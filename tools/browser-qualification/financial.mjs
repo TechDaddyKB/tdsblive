@@ -4,6 +4,13 @@ export async function qualifyFinancial(page, origin) {
   await page.goto(`${origin}/editor`);
   const panel = page.getByRole('region', { name: 'Financial ledger' });
   await panel.getByText('All nominal values are unconfigured.', { exact: true }).waitFor();
+  await panel.getByText('3 contributions; page starting at 1.', { exact: true }).waitFor();
+  let ledger = await (await fetch(`${origin}/api/financial/ledger`)).json();
+  const bits = ledger.items.find(row => row.nativeEventId === 'browser-bits');
+  const donation = ledger.items.find(row => row.nativeEventId === 'browser-donation');
+  assert.equal(bits.usdAmountMinor, null);
+  assert.equal(donation.usdAmountMinor, '1250');
+  assert.notEqual(bits.supporterId, donation.supporterId, 'Same display name cannot merge platform identities');
   await panel.getByLabel('Financial timezone').fill('America/Chicago');
   await panel.getByLabel('Current stream start').fill('2026-01-05T12:00:00Z');
   await panel.getByRole('button', { name: 'Save financial periods', exact: true }).click();
@@ -16,6 +23,26 @@ export async function qualifyFinancial(page, origin) {
   await panel.getByText('Nominal value saved; history is unchanged.', { exact: true }).waitFor();
   let rules = await (await fetch(`${origin}/api/financial/rules`)).json();
   assert.equal(rules[0].usdMinorPerUnit, '1.25');
+  ledger = await (await fetch(`${origin}/api/financial/ledger`)).json();
+  assert.equal(ledger.items.find(row => row.id === bits.id).usdAmountMinor, null, 'Rule edits cannot reprice accepted history');
+  await panel.getByLabel(`Select contribution ${bits.id}`).check();
+  await panel.getByRole('button', { name: 'Reconcile selected valuations', exact: true }).click();
+  await panel.getByText('Reconciliation outcomes: reconciled', { exact: true }).waitFor();
+  ledger = await (await fetch(`${origin}/api/financial/ledger`)).json();
+  assert.equal(ledger.items.find(row => row.id === bits.id).usdAmountMinor, '125');
+  const identities = await (await fetch(`${origin}/api/financial/identities`)).json();
+  const twitch = identities.find(row => row.platform === 'twitch');
+  const kofi = identities.find(row => row.platform === 'kofi');
+  await panel.getByLabel('Identity to move').selectOption(twitch.id);
+  await panel.getByLabel('Link to supporter').selectOption(kofi.supporterId);
+  await panel.getByRole('button', { name: 'Link identity', exact: true }).click();
+  await panel.getByText('Identity linked; supporter totals refreshed.', { exact: true }).waitFor();
+  const linked = await (await fetch(`${origin}/api/financial/totals?period=all-time`)).json();
+  assert.equal(linked.supporters.find(row => row.supporterId === kofi.supporterId).usdAmountMinor, '1375');
+  await panel.getByRole('button', { name: 'Unlink identity', exact: true }).click();
+  await panel.getByText('Identity separated; supporter totals refreshed.', { exact: true }).waitFor();
+  const separate = await (await fetch(`${origin}/api/financial/identities`)).json();
+  assert.notEqual(separate.find(row => row.id === twitch.id).supporterId, kofi.supporterId);
   await panel.getByLabel('Rate date').fill('2026-01-05');
   await panel.getByLabel('Manual USD rate').fill('1.23456789');
   await panel.getByRole('button', { name: 'Save manual rate', exact: true }).click();
@@ -35,5 +62,5 @@ export async function qualifyFinancial(page, origin) {
   await panel.getByLabel('End date (exclusive)').fill('2026-02-01');
   await panel.getByText(/Timezone: America\/Chicago/).waitFor();
   assert.equal(await panel.getByRole('button', { name: 'Reconcile selected valuations' }).isDisabled(), true);
-  console.log('G07 isolated browser settings/rule/manual-FX precision and reload qualification passed');
+  console.log('G07 isolated browser ledger/reconciliation/identity/settings/rule/manual-FX precision and reload qualification passed');
 }

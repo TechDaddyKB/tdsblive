@@ -21,6 +21,8 @@ namespace ExtensionSuite.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // Older schemas cannot represent tombstones; preserve removed rules as absent.
+            migrationBuilder.Sql("DELETE FROM ValuationRules WHERE Enabled = 0;");
             migrationBuilder.DropColumn(
                 name: "Enabled",
                 table: "ValuationRules");

@@ -2,13 +2,36 @@ using ExtensionSuite.Core;
 using ExtensionSuite.Data;
 using ExtensionSuite.Finance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using ExtensionSuite.Host;
 using Xunit;
 
 namespace ExtensionSuite.Host.Tests;
 
 public sealed class FinancialMaintenanceTests
 {
+    [Fact]
+    public async Task DowngradeCannotReactivateRemovedRulesOrEraseFinancialHistory()
+    {
+        using var factory = new FoundationHostFactory();
+        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.RemoveAll<IIsolatedIntegration>()));
+        using var client = app.CreateClient();
+        var contexts = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var rules = new ValuationRuleStore(contexts);
+        var ledger = new FinancialStore(contexts);
+        Assert.True(await rules.SetAsync("twitch", "bits", "", 1m, 0));
+        await ledger.AcceptAsync(Contribution(new("bits", 500)), nominalUsdMinorPerUnit: 1m);
+        Assert.True(await rules.RemoveAsync("twitch", "bits", "", 1));
+        await using var db = await contexts.CreateDbContextAsync();
+        await db.GetService<IMigrator>().MigrateAsync("20261001222806_GiftAccountingClaims");
+        await db.Database.MigrateAsync();
+        Assert.Empty(await rules.ListAsync());
+        Assert.Equal("500", Assert.Single(await ledger.TotalsAsync(new(null, null))).UsdAmountMinor);
+        Assert.Equal(1, await db.FinancialAudits.CountAsync(row => row.Operation == "nominal_rule_remove"));
+    }
     private static readonly DateOnly Day = new(2026, 1, 5);
     private static CanonicalEvent Contribution(SupportDetails support) => new()
     {
