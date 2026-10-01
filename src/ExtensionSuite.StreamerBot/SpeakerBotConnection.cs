@@ -37,7 +37,7 @@ public sealed class SpeakerBotConnection(IntegrationConfiguration configuration)
                     var info = await current.RequestAsync("GetInfo", null, TimeSpan.FromSeconds(configuration.RequestTimeoutSeconds), cancellationToken);
                     version = info["result"]?["version"]?.GetValue<string>();
                 }
-                catch (BotRequestException error) when (error.Kind == "rejected") { /* Optional runtime metadata. */ }
+                catch (BotRequestException error) when (error.Kind is "rejected" or "timeout") { /* Optional runtime metadata. */ }
                 Volatile.Write(ref state, new("connected", version));
                 attempt = 0;
                 await current.Completion.WaitAsync(cancellationToken);

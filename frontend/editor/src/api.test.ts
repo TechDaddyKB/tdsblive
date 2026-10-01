@@ -34,7 +34,10 @@ it('uses encoded inspector queries and protected replay endpoints', async () => 
   const { bots } = await import('./api');
   const fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ requestToken: 'synthetic-csrf' }))));
   vi.stubGlobal('fetch', fetch);
-  await bots.overview(); await bots.discovery(); await bots.inspector('chat & gift'); await bots.fixture('test-id'); await bots.replay('test-id');
+  const id = '10000000-0000-4000-8000-000000000001';
+  await bots.overview(); await bots.discovery(); await bots.inspector('chat & gift'); await bots.fixture(id); await bots.replay(id);
   expect(fetch.mock.calls.map(call => call[0])).toContain('/api/inspector?filter=chat%20%26%20gift');
   expect(fetch.mock.calls.at(-1)?.[1]).toMatchObject({ method: 'POST', body: '{"persist":false}' });
+  expect(() => bots.fixture('../../auth')).toThrow('Invalid inspector identifier');
+  expect(() => bots.replay('https://attacker.invalid')).toThrow('Invalid inspector identifier');
 });

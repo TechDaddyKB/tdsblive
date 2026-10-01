@@ -36,10 +36,14 @@ export interface BotState { state: string; version?: string | null; failureKind?
 export interface BotOverview { streamerBot: BotState; speakerBot: BotState }
 export interface InspectorItem { id: string; classification: string; limitation?: string | null; event?: { nativeType: string; provenance: string | number } | null; payload?: unknown }
 export interface Discovery { actions: { id: string; name: string; enabled: boolean }[]; codeTriggers: { eventName: string; name: string }[]; events: Record<string, string[]> }
+function inspectorId(id: string): string {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) throw new Error('Invalid inspector identifier');
+  return id;
+}
 export const bots = {
   overview: () => request<BotOverview>('/api/integrations'),
   discovery: () => request<Discovery>('/api/integrations/streamerbot/discovery'),
   inspector: (filter: string) => request<InspectorItem[]>(`/api/inspector?filter=${encodeURIComponent(filter)}`),
-  fixture: (id: string) => request<unknown>(`/api/inspector/${encodeURIComponent(id)}/fixture`),
-  replay: (id: string) => write<{ liveActionsAllowed: boolean }>(`/api/inspector/${encodeURIComponent(id)}/replay`, 'POST', { persist: false }),
+  fixture: (id: string) => request<unknown>(`/api/inspector/${inspectorId(id)}/fixture`),
+  replay: (id: string) => write<{ liveActionsAllowed: boolean }>(`/api/inspector/${inspectorId(id)}/replay`, 'POST', { persist: false }),
 };

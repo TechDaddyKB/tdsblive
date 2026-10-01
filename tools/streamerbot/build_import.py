@@ -33,6 +33,9 @@ def build():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(); parser.add_argument('output', type=Path); args = parser.parse_args()
-    args.output.parent.mkdir(parents=True, exist_ok=True)
+    output = args.output.resolve()
+    if not output.is_relative_to((ROOT / 'artifacts').resolve()) or output.suffix != '.sb':
+        parser.error('Output must be an .sb file inside the repository artifacts directory')
+    output.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(build(), separators=(',', ':')).encode()
-    args.output.write_text(base64.b64encode(b'SBAE' + gzip.compress(payload, mtime=0)).decode(), encoding='ascii')
+    output.write_text(base64.b64encode(b'SBAE' + gzip.compress(payload, mtime=0)).decode(), encoding='ascii')

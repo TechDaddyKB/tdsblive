@@ -99,6 +99,42 @@ public sealed class BotIntegrationTests
     }
 
     [Fact]
+    public async Task SpeakerMetadataTimeoutDoesNotDisableDocumentedQueueProtocol()
+    {
+        await using var server = await FakeBot.Start(async socket =>
+        {
+            Assert.Equal("GetInfo", (await FakeBot.Read(socket))["request"]!.GetValue<string>());
+            var request = await FakeBot.Read(socket);
+            Assert.Equal("Pause", request["request"]!.GetValue<string>());
+            await FakeBot.Reply(socket, request, new());
+            await FakeBot.WaitForClose(socket);
+        });
+        var adapter = new SpeakerBotConnection(server.Configuration with { RequestTimeoutSeconds = 1 });
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = adapter.RunAsync(lifetime.Token); await Until(() => adapter.State.State == "connected");
+        Assert.Null(adapter.State.Version); Assert.Equal("acknowledged", (await adapter.QueueAsync("Pause", null, true, default)).State);
+        await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public async Task FragmentedMessagesReassembleAndBinaryFramesReject()
+    {
+        await using var server = await FakeBot.Start(async socket =>
+        {
+            var request = await FakeBot.Read(socket);
+            var response = Encoding.UTF8.GetBytes(new JsonObject { ["id"] = request["id"]!.DeepClone(), ["status"] = "ok" }.ToJsonString());
+            await socket.SendAsync(new ArraySegment<byte>(response, 0, 10), WebSocketMessageType.Text, false, default);
+            await socket.SendAsync(new ArraySegment<byte>(response, 10, response.Length - 10), WebSocketMessageType.Text, true, default);
+            await FakeBot.Read(socket); await socket.SendAsync(new ArraySegment<byte>(new byte[] { 1 }), WebSocketMessageType.Binary, true, default);
+            await FakeBot.WaitForClose(socket);
+        });
+        await using var session = new BotProtocolSession(); await session.ConnectAsync(server.Uri, false, default);
+        Assert.Equal("ok", (await session.RequestAsync("One", null, TimeSpan.FromSeconds(2), default))["status"]!.GetValue<string>());
+        var error = await Assert.ThrowsAsync<BotRequestException>(() => session.RequestAsync("Two", null, TimeSpan.FromSeconds(2), default));
+        Assert.Equal("disconnected", error.Kind); Assert.True(error.MayHaveExecuted);
+    }
+
+    [Fact]
     public async Task CorrelatesOutOfOrderResponsesAndSeparatesEvents()
     {
         await using var server = await FakeBot.Start(async socket =>
@@ -283,6 +319,52 @@ public sealed class BotIntegrationTests
         Assert.Equal(expected, result.Event!.Type); result.Event.Validate();
         if (expected == "support.bits") Assert.Equal(100, result.Event.Monetary!.MinorUnits);
         if (expected is "support.gift" or "support.donation") Assert.Null(result.Event.Monetary!.MinorUnits);
+    }
+
+    [Fact]
+    public void NormalizerPreservesNativeMetadataAndHandlesMalformedOptionalFields()
+    {
+        var normalizer = new StreamerBotEventNormalizer(new());
+        var payload = JsonNode.Parse("""{"timeStamp":"2026-10-01T00:00:00Z","event":{"source":"Twitch","type":"ChatMessage"},"data":{"id":"native","text":"hello","user":{"id":"42","login":"tester","name":"Test","avatarUrl":"http://localhost/avatar","badges":[{"name":"moderator"}]},"tdsbliveBridgePath":["streamerbot"],"tdsbliveProvenance":"Replay","tdsbliveCorrelationId":"10000000-0000-4000-8000-000000000001"}}""")!.AsObject();
+        var item = normalizer.Normalize(payload, DateTimeOffset.UtcNow).Event!;
+        Assert.Equal("42", item.User!.PlatformUserId); Assert.Equal("tester", item.User.Login); Assert.Equal("Test", item.User.DisplayName);
+        Assert.Equal("moderator", Assert.Single(item.User.Badges!)); Assert.Equal(EventProvenance.Replay, item.Provenance); Assert.NotNull(item.CorrelationId);
+        Assert.Equal(TimeSpan.Zero, item.OccurredAt.Offset); Assert.Equal(new[] { "streamerbot", "tdsblive" }, item.BridgePath);
+        var data = payload["data"]!.AsObject(); data.Remove("id"); data["user"] = new JsonObject { ["displayName"] = "Fallback", ["badges"] = new JsonArray(new JsonObject(), 7) };
+        data["message"] = new JsonObject { ["msgId"] = "legacy-id", ["message"] = "legacy text" }; data.Remove("text");
+        Assert.Equal("legacy-id", normalizer.Normalize(payload, DateTimeOffset.UtcNow).Event!.NativeId);
+        data.Remove("message"); var hash = normalizer.Normalize(payload, DateTimeOffset.UtcNow).Event!.DedupeKey;
+        Assert.Equal(hash, normalizer.Normalize(payload, DateTimeOffset.UtcNow).Event!.DedupeKey);
+        payload.Remove("timeStamp"); data["createdAt"] = "invalid-date"; data["meta"] = new JsonObject { ["isTest"] = true };
+        Assert.Equal(EventProvenance.Simulation, normalizer.Normalize(payload, DateTimeOffset.UtcNow).Event!.Provenance);
+        data.Remove("createdAt"); data["bits"] = -1; data["tdsbliveProvenance"] = "invalid";
+        Assert.NotEqual(normalizer.Normalize(payload, DateTimeOffset.UtcNow).Event!.DedupeKey, normalizer.Normalize(payload, DateTimeOffset.UtcNow).Event!.DedupeKey);
+        data["tdsbliveBridgePath"] = new JsonArray(Enumerable.Repeat((JsonNode?)JsonValue.Create("hop"), 16).Select(node => node!.DeepClone()).ToArray());
+        Assert.Equal("bridgePathLimit", normalizer.Normalize(payload, DateTimeOffset.UtcNow).Limitation);
+        payload["event"] = new JsonObject { ["source"] = "General", ["type"] = "Custom" }; payload["data"] = new JsonObject { ["data"] = "{invalid" };
+        Assert.Equal("invalidCustomBroadcast", normalizer.Normalize(payload, DateTimeOffset.UtcNow).Limitation);
+    }
+
+    [Theory]
+    [InlineData("Twitch", "Follow", "community.follow")]
+    [InlineData("YouTube", "NewSubscriber", "community.follow")]
+    [InlineData("Twitch", "ReSub", "support.subscription")]
+    [InlineData("Kick", "Subscription", "support.subscription")]
+    [InlineData("YouTube", "NewSponsor", "support.subscription")]
+    [InlineData("Kofi", "Resubscription", "support.subscription")]
+    [InlineData("Twitch", "GiftBomb", "support.gift")]
+    [InlineData("YouTube", "MembershipGift", "support.gift")]
+    [InlineData("YouTube", "SuperChat", "support.donation")]
+    [InlineData("Kick", "KicksGifted", "support.donation")]
+    [InlineData("Twitch", "StreamOnline", "stream.online")]
+    [InlineData("YouTube", "BroadcastStarted", "stream.online")]
+    [InlineData("Kick", "StreamOffline", "stream.offline")]
+    [InlineData("YouTube", "BroadcastEnded", "stream.offline")]
+    [InlineData("Custom", "CodeEvent", "integration.custom")]
+    public void ClassifiesDocumentedNamesWithoutInventingAmounts(string source, string nativeType, string canonical)
+    {
+        var result = new StreamerBotEventNormalizer(new()).Normalize(new JsonObject { ["event"] = new JsonObject { ["source"] = source, ["type"] = nativeType }, ["data"] = new JsonObject() }, DateTimeOffset.UtcNow);
+        Assert.Equal(canonical, result.Event!.Type); Assert.Null(result.Event.Monetary?.MinorUnits);
     }
 
     [Fact]

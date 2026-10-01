@@ -19,6 +19,8 @@ from rumble_evidence import ROOT, scan_bytes
 
 
 def qualify(speaker_port, refresh_contract):
+    if not isinstance(speaker_port, int) or not 1 <= speaker_port <= 65535:
+        raise ValueError('Speaker.bot port must be an integer from 1 to 65535')
     with tempfile.TemporaryDirectory(prefix='tdsblive-g03-') as directory:
         port = unused_port()
         configuration = {'server': {'host': '127.0.0.1', 'port': port},

@@ -55,19 +55,7 @@ public sealed class StreamerBotConnection(IntegrationConfiguration configuration
                 await SubscribeAsync(current, cancellationToken);
                 Volatile.Write(ref state, new("connected", version, authRequired));
                 attempt = 0;
-                var consuming = ConsumeAsync(current, onEvent, connectionLifetime.Token);
-                try
-                {
-                    var finished = await Task.WhenAny(current.Completion, consuming);
-                    await finished;
-                    throw new BotRequestException("disconnected");
-                }
-                finally
-                {
-                    await connectionLifetime.CancelAsync();
-                    try { await consuming; }
-                    catch (OperationCanceledException) when (connectionLifetime.IsCancellationRequested) { /* Expected reconnect/shutdown. */ }
-                }
+                await RunConnectedAsync(current, onEvent, connectionLifetime);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
             catch (Exception error) when (error is BotRequestException or WebSocketException or JsonException or InvalidOperationException or OperationCanceledException)
@@ -81,6 +69,24 @@ public sealed class StreamerBotConnection(IntegrationConfiguration configuration
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
         }
         Volatile.Write(ref state, new("disconnected"));
+    }
+
+    private static async Task RunConnectedAsync(BotProtocolSession current, Func<JsonObject, CancellationToken, Task> onEvent,
+        CancellationTokenSource connectionLifetime)
+    {
+        var consuming = ConsumeAsync(current, onEvent, connectionLifetime.Token);
+        try
+        {
+            var finished = await Task.WhenAny(current.Completion, consuming);
+            await finished;
+            throw new BotRequestException("disconnected");
+        }
+        finally
+        {
+            await connectionLifetime.CancelAsync();
+            try { await consuming; }
+            catch (OperationCanceledException) when (connectionLifetime.IsCancellationRequested) { /* Expected reconnect/shutdown. */ }
+        }
     }
 
     private async Task AuthenticateAsync(BotProtocolSession current, JsonObject hello, string? version, bool required, CancellationToken cancellationToken)
