@@ -1631,6 +1631,11 @@ export interface components {
         CsrfResponse: {
             requestToken: null | string;
         };
+        EventBadge: {
+            name: string;
+            imageUrl?: null | string;
+            version?: null | string;
+        };
         EventMessage: {
             text: null | string;
         };
@@ -1659,6 +1664,7 @@ export interface components {
             badges?: null | string[];
             /** @default false */
             isBot: boolean;
+            badgeDetails?: null | components["schemas"]["EventBadge"][];
         };
         InspectorEntry: {
             /** Format: uuid */

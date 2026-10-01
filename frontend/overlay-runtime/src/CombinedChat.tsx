@@ -6,6 +6,12 @@ import './chat.css';
 function initialTheme(): string {
   try { return localStorage.getItem('tdsblive.chat.theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
 }
+function ChatBadge({ name, imageUrl }: { name: string; imageUrl?: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const url = safeAvatar(imageUrl);
+  return url && !failed ? <img className="badge-image" src={url} alt={name.slice(0, 64)} title={name.slice(0, 64)} referrerPolicy="no-referrer" onError={() => setFailed(true)} />
+    : <span className="badge">{name.slice(0, 64)}</span>;
+}
 export function CombinedChat({ id, streamer = false, preview = false, token = '' }: { id: string; streamer?: boolean; preview?: boolean; token?: string }) {
   const [definition, setDefinition] = useState<OverlayDefinition | null>(null);
   const [messages, setMessages] = useState<ChatEvent[]>([]);
@@ -57,7 +63,7 @@ export function CombinedChat({ id, streamer = false, preview = false, token = ''
           {s.showAvatar && avatar && <img className="avatar" src={avatar} alt="" referrerPolicy="no-referrer" onError={e => { e.currentTarget.hidden = true; }} />}
           <div className="chat-content">
             {s.showTimestamp && <time dateTime={event.occurredAt}>{new Date(event.occurredAt).toLocaleTimeString()}</time>}
-            {s.showBadges && (event.user?.badges ?? []).slice(0, 20).map((badge, index) => <span className="badge" key={`${badge}-${index}`}>{badge.slice(0, 64)}</span>)}
+            {s.showBadges && (event.user?.badgeDetails ?? (event.user?.badges ?? []).map(name => ({ name }))).slice(0, 20).map((badge, index) => <ChatBadge key={`${badge.name}-${index}`} {...badge} />)}
             {s.showUsername && <strong className="username" style={{ color: s.platformColors[event.platform] }}>{event.user?.displayName ?? event.user?.login ?? 'Viewer'}: </strong>}
             {s.showMessage && <span className="message-text">{event.message?.text}</span>}
           </div>

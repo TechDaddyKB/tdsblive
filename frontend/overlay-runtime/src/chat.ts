@@ -9,7 +9,7 @@ export interface ChatSettings extends WireChatSettings {
 export interface OverlayDefinition extends WireOverlayDefinition { id: string; name: string; width: number; height: number; background: string; version: number; chat: ChatSettings }
 export interface ChatEvent {
   id: string; type: string; platform: Platform; occurredAt: string; receivedAt: string; provenance: 'live' | 'simulation' | 'replay';
-  user?: { platformUserId?: string | null; login?: string | null; displayName?: string | null; avatarUrl?: string | null; badges?: string[] | null; isBot?: boolean } | null;
+  user?: { platformUserId?: string | null; login?: string | null; displayName?: string | null; avatarUrl?: string | null; badges?: string[] | null; isBot?: boolean; badgeDetails?: { name: string; imageUrl?: string | null; version?: string | null }[] | null } | null;
   message?: { text?: string | null } | null;
 }
 export const defaultSettings: ChatSettings = {
@@ -38,9 +38,11 @@ export class ChatBuffer {
     return this.visible(settings, now);
   }
   visible(settings: ChatSettings, now = Date.now()): ChatEvent[] {
-    this.messages = this.messages.filter(e => accepts(e, settings) && (settings.persistent || now < Date.parse(e.receivedAt) + settings.messageDurationSeconds * 1000 + 300))
-      .sort((a, b) => Date.parse(a.receivedAt) - Date.parse(b.receivedAt) || a.id.localeCompare(b.id)).slice(-settings.maximumMessages);
-    return settings.newestOnTop ? [...this.messages].reverse() : [...this.messages];
+    this.messages.sort((a, b) => Date.parse(a.receivedAt) - Date.parse(b.receivedAt) || a.id.localeCompare(b.id));
+    this.messages = this.messages.slice(-500);
+    const shown = this.messages.filter(e => accepts(e, settings) && (settings.persistent || now < Date.parse(e.receivedAt) + settings.messageDurationSeconds * 1000 + 300))
+      .slice(-settings.maximumMessages);
+    return settings.newestOnTop ? shown.reverse() : shown;
   }
 }
 export function safeAvatar(value: string | null | undefined): string | undefined {

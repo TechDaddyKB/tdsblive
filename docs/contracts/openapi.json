@@ -1566,6 +1566,30 @@
         },
         "additionalProperties": false
       },
+      "EventBadge": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "EventMessage": {
         "required": [
           "text"
@@ -1699,6 +1723,15 @@
           "isBot": {
             "type": "boolean",
             "default": false
+          },
+          "badgeDetails": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/EventBadge"
+            }
           }
         },
         "additionalProperties": false

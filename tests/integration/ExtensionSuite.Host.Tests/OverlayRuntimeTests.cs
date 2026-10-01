@@ -189,12 +189,14 @@ public sealed class OverlayRuntimeTests
             [idField] = "synthetic-native-message", [platform == "YouTube" ? "publishedAt" : "createdAt"] = "2026-10-01T00:00:00Z",
             [platform == "YouTube" ? "message" : "text"] = "Synthetic documented chat", ["user"] = new JsonObject {
                 ["id"] = "synthetic-user", ["login"] = "viewer", ["name"] = "Viewer", [avatarField] = "https://example.invalid/avatar.png",
-                ["badges"] = new JsonArray(new JsonObject { ["name"] = "moderator" }) } } };
+                ["badges"] = new JsonArray(new JsonObject { ["name"] = "moderator", ["imageUrl"] = "https://example.invalid/moderator.png", ["version"] = "1" }) } } };
         var item = new StreamerBotEventNormalizer(new()).Normalize(envelope, DateTimeOffset.UtcNow).Event!;
         Assert.Equal("synthetic-native-message", item.NativeId); Assert.Equal("https://example.invalid/avatar.png", item.User!.AvatarUrl);
         Assert.Equal("chat.message", item.Type); Assert.Equal(["moderator"], item.User.Badges!);
+        Assert.Equal(new EventBadge("moderator", "https://example.invalid/moderator.png", "1"), Assert.Single(item.User.BadgeDetails!));
         var store = app.Services.GetRequiredService<EventStore>(); Assert.True(await store.AcceptAsync(item, "native")); Assert.False(await store.AcceptAsync(item, "native"));
         var history = (await client.GetFromJsonAsync<CanonicalEvent[]>("/api/overlays/combined-chat/chat", EventStore.JsonOptions))!;
         Assert.Single(history); Assert.Equal(platform.ToLowerInvariant(), history[0].Platform); Assert.Null(history[0].Raw);
+        Assert.Equal(item.User.BadgeDetails, history[0].User!.BadgeDetails);
     }
 }

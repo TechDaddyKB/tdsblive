@@ -2,6 +2,17 @@ import { expect, it } from 'vitest';
 import { ChatBuffer, accepts, defaultSettings, safeAvatar, type ChatEvent } from './chat';
 
 const event = (id: string, changes: Partial<ChatEvent> = {}): ChatEvent => ({ id, type: 'chat.message', platform: 'rumble', occurredAt: new Date(0).toISOString(), receivedAt: new Date(0).toISOString(), provenance: 'live', user: { login: 'Viewer', badges: ['moderator'] }, message: { text: 'hello' }, ...changes });
+it('restores retained messages when display filters, duration or maximum change', () => {
+  const buffer = new ChatBuffer(); const settings = { ...defaultSettings, persistent: true, maximumMessages: 2 };
+  expect(buffer.ingest([event('a'), event('b'), event('c')], settings)).toHaveLength(2);
+  expect(buffer.visible({ ...settings, platforms: ['twitch'] })).toHaveLength(0);
+  expect(buffer.ingest([event('a'), event('b'), event('c')], { ...settings, maximumMessages: 3 })).toHaveLength(3);
+  expect(buffer.visible({ ...settings, ignoredUsers: ['Viewer'] })).toHaveLength(0);
+  expect(buffer.visible({ ...settings, persistent: false, messageDurationSeconds: 1 }, 2000)).toHaveLength(0);
+  expect(buffer.visible({ ...settings, maximumMessages: 3 })).toHaveLength(3);
+  buffer.ingest(Array.from({ length: 600 }, (_, n) => event(String(n))), settings);
+  expect(buffer.visible({ ...settings, maximumMessages: 500 })).toHaveLength(500);
+});
 it('deduplicates repeated delivery/history, bounds the visible list and orders both directions', () => {
   const buffer = new ChatBuffer(); const settings = { ...defaultSettings, persistent: true, maximumMessages: 2 };
   expect(buffer.ingest([event('a'), event('a'), event('b')], settings)).toHaveLength(2);

@@ -54,7 +54,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         if (Boolean(data["isTest"]) || Boolean(bridgeData["tdsbliveTest"]) || Boolean((data["meta"] as JsonObject)?["isTest"])) provenance = EventProvenance.Simulation;
         var eventUser = user is null && platform != "kofi" && String(data["userId"]) is null && String(data["userName"]) is null ? null : new EventUser(String(user?["id"]) ?? String(data["userId"]), String(user?["login"]) ?? String(data["userLogin"]) ?? String(data["user"]),
             String(user?["name"]) ?? String(user?["displayName"]) ?? String(data["userName"]) ?? String(data["from"]),
-            String(user?["avatarUrl"]) ?? String(user?["profileImageUrl"]) ?? String(user?["profilePicture"]) ?? String(data["avatarUrl"]), BadgeNames(user?["badges"] ?? data["badges"]), Boolean(user?["isBot"]) || Boolean(data["isBot"]));
+            String(user?["avatarUrl"]) ?? String(user?["profileImageUrl"]) ?? String(user?["profilePicture"]) ?? String(data["avatarUrl"]), BadgeDetails(user?["badges"] ?? data["badges"]).Select(b => b.Name).ToArray(), Boolean(user?["isBot"]) || Boolean(data["isBot"]), BadgeDetails(user?["badges"] ?? data["badges"]));
         var currency = String(data["currency"]);
         EventMoney? money = null;
         if (nativeType is "Cheer" && Integer(data["bits"]) is { } bits)
@@ -96,5 +96,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         return value.TryGetValue<int>(out var integer) && integer >= 0 ? integer : null;
     }
     private static string[] Strings(JsonNode? node) => node is JsonArray array ? array.Select(String).Where(value => value is not null).Cast<string>().ToArray() : [];
-    private static string[] BadgeNames(JsonNode? node) => node is JsonArray array ? array.OfType<JsonObject>().Select(item => String(item["name"])).Where(value => value is not null).Cast<string>().ToArray() : [];
+    private static EventBadge[] BadgeDetails(JsonNode? node) => node is JsonArray array ? array.Take(128)
+        .Select(item => item is JsonObject badge ? new EventBadge(String(badge["name"]) ?? "Badge", String(badge["imageUrl"]), String(badge["version"]))
+            : String(item) is { } name ? new EventBadge(name) : null).OfType<EventBadge>().ToArray() : [];
 }

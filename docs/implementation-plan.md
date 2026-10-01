@@ -305,13 +305,13 @@ Prerequisites: G03, G04
 
 Implemented runtime, settings panel, assets, migration, scoped read-only tokens and streamer chat; owning contract and operating instructions: [G05 overlays and chat](g05-overlays-chat.md). G03/G04 completion and successful main Windows CI run 36878683352 establish prerequisites.
 
-2026-10-01: 193 backend tests passed locally; two Windows-only tests remain for Windows CI. All 41 frontend tests, type checking, lint, lightweight runtime build, fresh isolated browser qualification and foundation process qualification passed. Runtime JavaScript is approximately 71.6 KiB gzipped, with editor dependency exclusion enforced by the build. Existing 785-poll Rumble replay tests pass.
+2026-10-01: 193 backend tests passed locally; two Windows-only tests remain for Windows CI. All 43 frontend tests, type checking, lint, lightweight runtime build, fresh isolated browser qualification and foundation process qualification passed. Runtime JavaScript is approximately 71.6 KiB gzipped, with editor dependency exclusion enforced by the build. Existing 785-poll Rumble replay tests pass.
 
-Real installed Streamer.bot → Twitch → isolated host → streamer browser chat verified by the user's test message and confirmation that it appears once and Light/Dark works. Backend history independently contains exactly one matching message. YouTube/Kick are documented-payload/synthetic qualification only. OBS and latest Windows/Sonar evidence remain outstanding.
+Real installed Streamer.bot → Twitch → isolated host → streamer browser chat verified by the user's test message and confirmation that it appears once and Light/Dark works. Backend history independently contains exactly one matching message. YouTube/Kick are documented-payload/synthetic qualification only. The user also confirmed actual OBS transparent source and dock/theme behavior, then reported label-only badges. Badge artwork preservation/rendering is corrected and tested; final live badge confirmation and latest Windows/Sonar evidence remain outstanding.
 
 ### Blockers
 
-Actual OBS transparent Browser Source and Custom Browser Dock rendering are awaiting confirmation in a browser-enabled installation; discovered native OBS lacks obs-browser. Latest Windows CI and SonarQube analysis/coverage import remain outstanding. Do not mark complete from Chromium or mocked tests alone.
+Final live badge-image confirmation is pending after the user verified OBS source/dock rendering and identified label-only badge rendering. Latest Windows CI and SonarQube analysis/coverage import remain outstanding. Do not mark complete from Chromium or mocked tests alone.
 
 <a id="g06"></a>
 

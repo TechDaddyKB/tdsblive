@@ -10,6 +10,18 @@ vi.mock('./ChatConnection', () => ({ ChatConnection: class {
   stop() {}
 } }));
 afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); });
+it('renders badge artwork and falls back safely when missing, unsafe or unavailable', () => {
+  render(<CombinedChat id="combined-chat" />);
+  act(() => callbacks.events([{ ...message, user: { badgeDetails: [
+    { name: 'moderator', imageUrl: 'https://example.invalid/mod.png' },
+    { name: 'subscriber', imageUrl: 'javascript:alert(1)' }, { name: 'vip' },
+  ] } }]));
+  const image = screen.getByRole('img', { name: 'moderator' });
+  expect(image).toHaveAttribute('src', 'https://example.invalid/mod.png');
+  expect(image).toHaveAttribute('referrerpolicy', 'no-referrer');
+  expect(screen.queryByText('moderator')).toBeNull(); expect(screen.getByText('subscriber')).toBeVisible(); expect(screen.getByText('vip')).toBeVisible();
+  fireEvent.error(image); expect(screen.getByText('moderator')).toBeVisible();
+});
 const message: ChatEvent = { id: 'synthetic-chat', type: 'chat.message', platform: 'rumble', receivedAt: new Date().toISOString(), occurredAt: new Date().toISOString(), provenance: 'live', user: { displayName: 'Viewer', badges: ['moderator'], avatarUrl: 'https://example.invalid/avatar.png' }, message: { text: '<img onerror=alert(1)>hello' } };
 it('renders duplicate snapshots once, escapes text, shows metadata and obeys display settings', () => {
   render(<CombinedChat id="combined-chat" />);
