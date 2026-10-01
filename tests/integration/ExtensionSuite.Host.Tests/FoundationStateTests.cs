@@ -49,6 +49,13 @@ public sealed class FoundationStateTests
             state.FlushLogs(CancellationToken.None);
             Assert.Equal(2, await db.Logs.CountAsync());
             Assert.Equal(0, provider.WriteFailures);
+            await db.Database.ExecuteSqlRawAsync("DROP TABLE Logs");
+            provider.CreateLogger("tests").LogInformation("Database failure fallback");
+            state.FlushLogs(CancellationToken.None);
+            Assert.Equal(1, state.LogPersistenceFailures);
+            Assert.Contains("Database failure fallback", File.ReadAllText(Path.Combine(paths.Logs, DateTime.UtcNow.ToString("yyyy-MM-dd") + ".jsonl")));
+            for (var index = 0; index < 1025; index++) state.AppendLog("{}", DateTimeOffset.UtcNow, 14);
+            Assert.Equal(2, state.LogPersistenceFailures);
         }
         finally
         {

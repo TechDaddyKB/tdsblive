@@ -8,6 +8,13 @@ HTTP on LAN does not encrypt traffic; optional HTTPS may be used without becomin
 a core requirement. Never expose a privileged editor through an unauthenticated
 LAN binding.
 
+Sonar rules S5332 (HTTP listener) and S2092 (non-Secure session cookie) are accepted
+for these specific foundation locations with documented rationale: HTTPS cannot
+be mandatory under the approved requirement, and Secure cookies cannot support
+required HTTP session authentication. This accepts the unencrypted transport
+tradeoff; it does not claim HTTP confidentiality. Other security findings remain
+subject to review and remediation, and no broad rule exclusion is configured.
+
 Admin login has a bounded session count and rate limit; rotation invalidates
 sessions atomically. Store integration credentials with DPAPI on Windows. Redact Rumble URLs/query
 credentials, stream keys, integration passwords and tokens before persistence,

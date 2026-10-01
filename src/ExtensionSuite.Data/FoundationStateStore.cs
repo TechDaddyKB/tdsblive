@@ -15,7 +15,7 @@ public sealed class FoundationStateStore(string database)
     private SqliteConnection Open()
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
-            { DataSource = database, ForeignKeys = true }.ToString());
+            { DataSource = database, ForeignKeys = true, DefaultTimeout = 2 }.ToString());
         connection.Open();
         return connection;
     }
