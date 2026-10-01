@@ -312,7 +312,7 @@ Real installed Streamer.bot → Twitch → isolated host → streamer browser ch
 
 ### Blockers
 
-Live emote/GIF confirmation is pending for the added media scope. Initial Windows CI run 36889440276 passed build/tests/browser qualification but failed SonarQube security conditions; new-code coverage was 92.1%. Reported path construction, reconnect randomness and regex findings have code fixes and regression tests; corrected Windows/Sonar analysis remains outstanding. Do not mark complete from Chromium or mocked tests alone.
+Live emote/GIF confirmation is pending for the added media scope. Initial Windows CI run 36889440276 passed build/tests/browser qualification but failed SonarQube security conditions; new-code coverage was 92.1%. Run 36892792188 passed Windows build/tests/browser qualification and imported 92.4% new-code coverage; one client-side token-ID finding remained. Strict GUID validation now rejects malformed IDs before mutation, alongside encoded paths, secure reconnect jitter and bounded regex validation. The next Windows/Sonar analysis remains outstanding. Do not mark complete from Chromium or mocked tests alone.
 
 <a id="g06"></a>
 

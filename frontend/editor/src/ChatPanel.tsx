@@ -32,6 +32,14 @@ export function ChatPanel() {
     try { const result = await request<{ token: string }>('/api/overlays/combined-chat/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-TDSBLive-CSRF': await csrf() }, body: JSON.stringify({ lifetimeDays: 30 }) }); setToken(result.token); setStatus('Read-only link created. Keep it private; it expires in 30 days.'); }
     catch { setStatus('Unable to create link.'); }
   };
+  const revoke = async (id: string) => {
+    if (id.length !== 36 || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) { setStatus('Invalid viewing link identifier.'); return; }
+    try {
+      const response = await fetch(`/api/overlays/combined-chat/tokens/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'X-TDSBLive-CSRF': await csrf() } });
+      if (!response.ok) throw new Error('Revocation failed.');
+      setTokens(tokens.map(x => x.id === id ? { ...x, revoked: true } : x)); setToken(''); setStatus('Viewing link revoked.');
+    } catch { setStatus('Unable to revoke link.'); }
+  };
   return <section aria-label="Combined chat setup"><h2>Combined Chat</h2>
     <p>Use the transparent overlay in an OBS Browser Source. Open the streamer view in a browser or add its URL under OBS Docks → Custom Browser Docks.</p>
     <p><a href={`/overlay/combined-chat${fragment}`} target="_blank" rel="noreferrer">Open transparent overlay</a> · <a href={`/chat/combined-chat${fragment}`} target="_blank" rel="noreferrer">Open streamer chat</a> · <a href="/overlay/combined-chat?preview=1" target="_blank" rel="noreferrer">Open test preview</a></p>
@@ -40,7 +48,7 @@ export function ChatPanel() {
     <button onClick={() => { void mint(); }}>Create private LAN viewing links</button>
     {token && <button onClick={() => setToken('')}>Hide private links</button>}
     <button onClick={() => { void request<typeof tokens>('/api/overlays/combined-chat/tokens').then(setTokens).catch(() => setStatus('Unable to load viewing links.')); }}>Manage viewing links</button>
-    {tokens.map(t => <p key={t.id}>Expires {new Date(t.expiresAt).toLocaleDateString()} · {t.revoked ? 'Revoked' : <button onClick={() => { void csrf().then(value => fetch(`/api/overlays/combined-chat/tokens/${encodeURIComponent(t.id)}`, { method: 'DELETE', headers: { 'X-TDSBLive-CSRF': value } })).then(response => { if (!response.ok) { throw new Error('Revocation failed.'); } setTokens(tokens.map(x => x.id === t.id ? { ...x, revoked: true } : x)); setToken(''); setStatus('Viewing link revoked.'); }).catch(() => setStatus('Unable to revoke link.')); }}>Revoke viewing link</button>}</p>)}
+    {tokens.map(t => <p key={t.id}>Expires {new Date(t.expiresAt).toLocaleDateString()} · {t.revoked ? 'Revoked' : <button onClick={() => { void revoke(t.id); }}>Revoke viewing link</button>}</p>)}
     <details><summary>Chat appearance and filters</summary>
       <fieldset><legend>Platforms</legend>{platforms.map(platform => <label key={platform}><input type="checkbox" checked={overlay.chat.platforms.includes(platform)} onChange={e => change('platforms', e.target.checked ? [...overlay.chat.platforms, platform] : overlay.chat.platforms.filter(p => p !== platform))} />{platform}</label>)}</fieldset>
       <fieldset><legend>Display</legend>{displayFields.map(key => <label key={key}><input type="checkbox" checked={overlay.chat[key]} onChange={e => change(key, e.target.checked)} />{labels[key]}</label>)}</fieldset>
