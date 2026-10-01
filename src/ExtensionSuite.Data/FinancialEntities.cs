@@ -1,5 +1,13 @@
 namespace ExtensionSuite.Data;
 
+public sealed class FinancialProjectionReceipt
+{
+    public Guid EventId { get; set; }
+    public required string State { get; set; }
+    public string? Reason { get; set; }
+    public long ProcessedAtTicks { get; set; }
+}
+
 public sealed class Supporter
 {
     public Guid Id { get; set; }

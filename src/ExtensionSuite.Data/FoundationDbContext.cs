@@ -21,9 +21,16 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
     public DbSet<StoredFxRate> FxRates => Set<StoredFxRate>();
     public DbSet<StoredValuationRule> ValuationRules => Set<StoredValuationRule>();
     public DbSet<FinancialAudit> FinancialAudits => Set<FinancialAudit>();
+    public DbSet<FinancialProjectionReceipt> FinancialProjectionReceipts => Set<FinancialProjectionReceipt>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<FinancialProjectionReceipt>(entity =>
+        {
+            entity.HasKey(item => item.EventId);
+            entity.HasIndex(item => item.State);
+            entity.HasOne<StoredEvent>().WithMany().HasForeignKey(item => item.EventId).OnDelete(DeleteBehavior.Cascade);
+        });
         modelBuilder.Entity<Supporter>().HasKey(item => item.Id);
         modelBuilder.Entity<SupporterIdentity>(entity =>
         {
