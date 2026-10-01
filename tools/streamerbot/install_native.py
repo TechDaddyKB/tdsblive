@@ -53,7 +53,7 @@ def load_bundle(path):
     return document
 
 
-def install(bundle, data_directory, port, bind_probe):
+def install(bundle, data_directory, port, bind_probe, bind_rumble=False):
     if not 1 <= port <= 65535: raise ValueError('Port must be 1..65535')
     with socket.socket() as check:
         check.settimeout(.5)
@@ -80,6 +80,11 @@ def install(bundle, data_directory, port, bind_probe):
             trigger_id = str(uuid5(NAMESPACE, 'qualification-trigger'))
             action['triggers'] = [t for t in action['triggers'] if t.get('type') != 18002 or t.get('eventName') != 'tdsblive.test.trigger']
             action['triggers'].append({'id': trigger_id, 'type': 18002, 'enabled': True, 'eventName': 'tdsblive.test.trigger'})
+        if bind_rumble and action['name'] == 'TDSBLive qualification probe':
+            for event_name in ('tdsblive.rumble.health', 'tdsblive.rumble.chat', 'tdsblive.rumble.rant', 'tdsblive.rumble.follow',
+                               'tdsblive.rumble.online', 'tdsblive.rumble.offline', 'tdsblive.rumble.viewers', 'tdsblive.rumble.likes'):
+                action['triggers'] = [t for t in action['triggers'] if t.get('type') != 18002 or t.get('eventName') != event_name]
+                action['triggers'].append({'id': str(uuid5(NAMESPACE, 'qualification-' + event_name)), 'type': 18002, 'enabled': True, 'eventName': event_name})
         existing[action['id']] = action
     native['actions'] = list(existing.values())
     queue_ids = {q['id'] for q in native['queues']}
@@ -105,6 +110,7 @@ if __name__ == '__main__':
     parser.add_argument('--data-directory', type=Path, required=True)
     parser.add_argument('--streamer-port', type=int, default=8080)
     parser.add_argument('--bind-qualification-probe', action='store_true')
+    parser.add_argument('--bind-rumble-qualification', action='store_true', help='Bind only the synthetic receipt probe to qualified Rumble triggers')
     parser.add_argument('--native-version', choices=['1.0.7'], required=True)
     args = parser.parse_args()
-    install(args.bundle, args.data_directory, args.streamer_port, args.bind_qualification_probe)
+    install(args.bundle, args.data_directory, args.streamer_port, args.bind_qualification_probe, args.bind_rumble_qualification)

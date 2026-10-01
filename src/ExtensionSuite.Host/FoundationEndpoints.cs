@@ -20,14 +20,15 @@ public static class FoundationEndpoints
 {
     public static void MapFoundationEndpoints(this WebApplication app)
     {
+        app.MapRumbleEndpoints();
         app.Map("/ws/editor", (HttpContext context, EditorEventHub hub) => hub.ConnectAsync(context));
         app.MapBotEndpoints();
         app.MapOpenApi("/api/openapi/{documentName}.json");
         app.MapGet("/", () => Results.Redirect("/editor"));
         app.MapGet("/editor", () => EditorShell(app));
         app.MapGet("/login", () => EditorShell(app));
-        app.MapGet("/api/status", (ApplicationConfiguration configuration, StreamerBotConnection streamer, SpeakerBotConnection speaker) => TypedResults.Ok(new StatusResponse(
-            configuration.DisplayName, true, configuration.Server.EnableLan, new IntegrationStates(streamer.State.State, speaker.State.State, "notStarted"))));
+        app.MapGet("/api/status", (ApplicationConfiguration configuration, StreamerBotConnection streamer, SpeakerBotConnection speaker, RumbleIntegration rumble) => TypedResults.Ok(new StatusResponse(
+            configuration.DisplayName, true, configuration.Server.EnableLan, new IntegrationStates(streamer.State.State, speaker.State.State, rumble.Status.State))));
         app.MapGet("/api/auth/csrf", (HttpContext context, IAntiforgery antiforgery) =>
             TypedResults.Ok(new CsrfResponse(antiforgery.GetAndStoreTokens(context).RequestToken)));
         app.MapPost("/api/auth/login", (AdminLogin login, HttpContext context, AccessControl access) =>

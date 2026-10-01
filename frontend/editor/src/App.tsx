@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError, type Status } from './api';
 import { Login } from './Login';
 import { BotPanel } from './BotPanel';
+import { RumblePanel } from './RumblePanel';
 
 export function App() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -23,9 +24,9 @@ export function App() {
     <nav aria-label="Application"><a href="/editor">Overview</a> <a href="/api/diagnostics">Diagnostics</a></nav>
     {!status && <><ConnectionIndicator integration="Streamer.bot" state="disconnected" />
     <ConnectionIndicator integration="Speaker.bot" state="disconnected" /></>}
-    <p>Rumble ingestion has not started.</p>
     {status && <p role="status">Host ready. {status.lanEnabled ? 'Authenticated LAN access enabled.' : 'Loopback access only.'}</p>}
     {error && <p role="alert">{error} <a href="/login">Sign in</a></p>}
     {status && <BotPanel />}
+    {status && <RumblePanel />}
   </main>;
 }

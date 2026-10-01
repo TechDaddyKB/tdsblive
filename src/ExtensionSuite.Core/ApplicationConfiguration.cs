@@ -21,6 +21,7 @@ public sealed record ApplicationConfiguration
         StreamerBot.Validate();
         SpeakerBot.Validate();
         _ = new RumblePollInterval(Rumble.PollIntervalSeconds, Rumble.AdvancedSlowerPolling);
+        Rumble.Validate();
         if (LogRetentionDays is < 1 or > 365 || string.IsNullOrWhiteSpace(DisplayName) || DisplayName.Length > 128)
             throw new ArgumentException("Invalid retention or display name.");
         if (!new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical", "None" }.Contains(MinimumLogLevel))
@@ -74,4 +75,12 @@ public sealed record RumbleConfiguration
     public bool Enabled { get; init; }
     public int PollIntervalSeconds { get; init; } = 7;
     public bool AdvancedSlowerPolling { get; init; }
+    public bool ForwardTriggers { get; init; }
+    public int RequestTimeoutSeconds { get; init; } = 15;
+    public int OfflineConfirmationPolls { get; init; } = 2;
+    public void Validate()
+    {
+        if (RequestTimeoutSeconds is < 1 or > 60 || OfflineConfirmationPolls is < 2 or > 10 || PollIntervalSeconds > 86400)
+            throw new ArgumentException("Rumble timeout, debounce or advanced polling bounds are invalid.");
+    }
 }

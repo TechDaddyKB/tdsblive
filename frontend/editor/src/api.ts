@@ -48,3 +48,11 @@ export const bots = {
   fixture: (id: string) => request<unknown>(`/api/inspector/${inspectorId(id)}/fixture`),
   replay: (id: string) => write<{ liveActionsAllowed: boolean }>(`/api/inspector/${inspectorId(id)}/replay`, 'POST', { persist: false }),
 };
+
+export type RumbleStatus = components['schemas']['RumbleStatus'];
+export const rumble = {
+  status: () => request<RumbleStatus>('/api/rumble/status'),
+  connect: (value: string, sessionOnly: boolean) => write<void>('/api/rumble/credential', 'POST', { value, sessionOnly } satisfies components['schemas']['RumbleCredentialRequest']),
+  resetBaseline: () => write<void>('/api/rumble/reset-baseline', 'POST'),
+  disconnect: () => write<void>('/api/rumble/credential', 'DELETE'),
+};

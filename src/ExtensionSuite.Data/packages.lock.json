@@ -350,6 +350,12 @@
       },
       "extensionsuite.core": {
         "type": "Project"
+      },
+      "extensionsuite.rumble": {
+        "type": "Project",
+        "dependencies": {
+          "ExtensionSuite.Core": "[0.1.0, )"
+        }
       }
     }
   }

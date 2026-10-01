@@ -1,6 +1,7 @@
 using ExtensionSuite.Core;
 using ExtensionSuite.Data;
 using ExtensionSuite.StreamerBot;
+using ExtensionSuite.Rumble;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
@@ -39,6 +40,16 @@ public static class FoundationServices
         builder.Services.AddSingleton<EditorEventHub>();
         builder.Services.AddSingleton<IntegrationHealthRegistry>();
         builder.Services.AddSingleton<EventInspectorStore>();
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddSingleton<RumbleStore>();
+        builder.Services.AddSingleton<IRumbleStore>(services => services.GetRequiredService<RumbleStore>());
+        builder.Services.AddSingleton(_ => new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false,
+            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate }) { Timeout = Timeout.InfiniteTimeSpan });
+        builder.Services.AddSingleton(services => new RumbleHttpTransport(services.GetRequiredService<HttpClient>(), services.GetRequiredService<TimeProvider>(),
+            services.GetRequiredService<ApplicationConfiguration>().Rumble.RequestTimeoutSeconds));
+        builder.Services.AddSingleton<RumbleIntegration>();
+        builder.Services.AddSingleton<IIsolatedIntegration>(services => services.GetRequiredService<RumbleIntegration>());
+        builder.Services.AddSingleton<IIsolatedIntegration, RumbleTriggerDispatcher>();
         builder.Services.AddSingleton<StreamerBotEventNormalizer>();
         builder.Services.AddSingleton(services => new StreamerBotConnection(services.GetRequiredService<ApplicationConfiguration>().StreamerBot,
             () => services.GetRequiredService<SensitiveValues>().Get("streamerbot-password"), services.GetRequiredService<SensitiveValues>()));

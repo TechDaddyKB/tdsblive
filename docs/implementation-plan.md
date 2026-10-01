@@ -79,7 +79,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G01](#g01) | Create repository and quality infrastructure | G00 | Complete |
 | [G02](#g02) | Build application foundation | G01 | Complete |
 | [G03](#g03) | Integrate Streamer.bot and Speaker.bot | G02 | Complete |
-| [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Not started |
+| [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | In progress |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Not started |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Not started |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Not started |
@@ -247,7 +247,7 @@ None. Compatibility beyond native Streamer.bot 1.0.7 remains unverified and docu
 
 ## G04 — Implement reliable Rumble ingestion
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G00, G02, G03
 
 ### Deliverables
@@ -268,11 +268,15 @@ Prerequisites: G00, G02, G03
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+- Prerequisites revalidated on protected main `fb860e0`: G00 analysis/fixtures present, G02 migrations/contracts intact, G03 merged in PR #4; [Windows main run 36864616946](https://github.com/camarokris/tdsblive/actions/runs/36864616946) passed.
+- Implemented bounded HTTPS transport, typed parser, functional snapshot engine, account/channel/stream state, persistent multiset reconciliation, baseline suppression, monetary uniqueness, debounced offline/health/statistics/gap diagnostics and independent durable trigger delivery. Migration `20261001131537_RumbleIngestion`, public OpenAPI/generated types, local credential/polling controls and compatibility rules are documented in [G04 ingestion](g04-rumble-ingestion.md).
+- All 785 captured polls passed through the production .NET parser/engine and temporary SQLite store: 97 post-baseline chat events, four follows, no new repeated Rant, one online/offline transition each, no false zero-overlap gap. All 26 synthetic scenarios passed through the same implementation, including reopened persistent stores, error/debounce cases and explicitly labeled subscription/gift limits.
+- Regression coverage verifies transactional checkpoint/state/event/outbox rollback, uncertain trigger claims after crash, late bootstrap discovery refresh, chat retention, permanent Rant identity across credential rotation, timeout/429/500/malformed/oversized HTTP behavior, CSRF-protected session/Windows credentials and isolated replay. Local backend/frontend, type/lint and import tests pass; Windows/quality gate remain pending for this revision.
+- 2026-10-01 actual Rumble polling via operator-entered session-only credential established a healthy baseline. A canonical Rumble health event was acknowledged by Streamer.bot 1.0.7 and its namespaced synthetic receipt matched the original event ID, proving action execution. The account was offline; no live chat, paid Rant, subscription or gift interaction is claimed. Qualification uses temporary data and receipt-only bindings, never production financial totals.
 
 ### Blockers
 
-None identified for starting prerequisite work. Any acceptance evidence unavailable during implementation must be recorded here.
+Final Windows CI, SonarQube coverage/quality gate and protected delivery remain pending. Unverified live subscriptions and authoritative gifts remain explicitly gated by design.
 
 <a id="g05"></a>
 

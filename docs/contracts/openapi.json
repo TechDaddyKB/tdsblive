@@ -5,6 +5,96 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/rumble/status": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RumbleStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rumble/deliveries": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "pattern": "^-?(?:0|[1-9]\\d*)$",
+                    "type": [
+                      "integer",
+                      "string"
+                    ],
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rumble/credential": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RumbleCredentialRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/rumble/reset-baseline": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/integrations": {
       "get": {
         "tags": [
@@ -900,6 +990,16 @@
               }
             ]
           },
+          "metrics": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EventMetrics"
+              }
+            ]
+          },
           "dedupeKey": {
             "type": "string"
           },
@@ -980,6 +1080,27 @@
         "type": "object",
         "properties": {
           "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "EventMetrics": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "health": {
             "type": [
               "null",
               "string"
@@ -1262,6 +1383,118 @@
           },
           "advancedSlowerPolling": {
             "type": "boolean"
+          },
+          "forwardTriggers": {
+            "type": "boolean"
+          },
+          "requestTimeoutSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offlineConfirmationPolls": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RumbleCredentialRequest": {
+        "required": [
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "sessionOnly": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RumbleStatus": {
+        "required": [
+          "state",
+          "enabled",
+          "credentialPresent",
+          "lastPollAt",
+          "nextPollAt",
+          "consecutiveFailures",
+          "baselineEstablished",
+          "pollSequence",
+          "forwardTriggers",
+          "liveStreams"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "credentialPresent": {
+            "type": "boolean"
+          },
+          "lastPollAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "nextPollAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "consecutiveFailures": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "baselineEstablished": {
+            "type": "boolean"
+          },
+          "pollSequence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "forwardTriggers": {
+            "type": "boolean"
+          },
+          "liveStreams": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subscriptionsLiveVerified": {
+            "type": "boolean",
+            "default": false
+          },
+          "giftsAuthoritative": {
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false

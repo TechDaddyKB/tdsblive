@@ -41,3 +41,13 @@ it('uses encoded inspector queries and protected replay endpoints', async () => 
   expect(() => bots.fixture('../../auth')).toThrow('Invalid inspector identifier');
   expect(() => bots.replay('https://attacker.invalid')).toThrow('Invalid inspector identifier');
 });
+
+it('uses protected Rumble operations with credentials only in request bodies', async () => {
+  const { rumble } = await import('./api');
+  const fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ requestToken: 'synthetic-csrf' }))));
+  vi.stubGlobal('fetch', fetch);
+  await rumble.status(); await rumble.connect('synthetic-value', true); await rumble.resetBaseline(); await rumble.disconnect();
+  expect(fetch.mock.calls.map(call => call[0])).not.toContain(expect.stringContaining('synthetic-value'));
+  expect(fetch.mock.calls.find(call => call[1]?.method === 'POST' && call[0] === '/api/rumble/credential')?.[1].body).toBe('{"value":"synthetic-value","sessionOnly":true}');
+  expect(fetch.mock.calls.at(-1)?.[1].method).toBe('DELETE');
+});
