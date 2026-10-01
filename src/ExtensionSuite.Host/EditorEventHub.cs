@@ -15,7 +15,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
     public int SubscriberCount => subscribers.Count;
     public void Shutdown()
     {
-        foreach (var subscriber in subscribers.Values) subscriber.Stop.Cancel();
+        foreach (var subscriber in subscribers.Values) subscriber.TryStop();
     }
 
     public void Publish(CanonicalEvent item)
@@ -23,7 +23,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         var payload = CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = item }, EventStore.JsonOptions), sensitive.Snapshot())!
             .ToJsonString(EventStore.JsonOptions);
         foreach (var subscriber in subscribers.Values)
-            if (subscriber.Accepts(item.Type) && !subscriber.Queue.Writer.TryWrite(payload)) subscriber.Stop.Cancel();
+            if (subscriber.Accepts(item.Type) && !subscriber.Queue.Writer.TryWrite(payload)) subscriber.TryStop();
     }
 
     public async Task ConnectAsync(HttpContext context)
@@ -113,5 +113,10 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
         public bool Accepts(string type) => types.Contains(type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal);
         public void Subscribe(string[] selected) => types = selected;
+        public void TryStop()
+        {
+            try { Stop.Cancel(); }
+            catch (ObjectDisposedException) { /* A snapshot can retain a subscriber after disconnect/disposal. */ }
+        }
     }
 }

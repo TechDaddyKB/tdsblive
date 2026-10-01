@@ -54,7 +54,7 @@ Structured redacted logs are retained for 14 days by default in SQLite and dated
 JSONL files. Pre-migration startup diagnostics use the file sink. A failed file or
 SQLite log write increments a diagnostic failure counter and does not terminate
 the application. SQLite log writes use an independent 1,024-row bounded queue,
-so EF transaction logging cannot block its own database transaction. A full queue
+with up to 64 rows per transaction, so EF logging cannot block its own transaction. A full queue
 or database failure leaves the file sink as fallback; shutdown drains the queue
 before the final database checkpoint. Diagnostics expose file/SQLite write failure
 counts and isolated integration health. Log messages omit credential values and exception messages.

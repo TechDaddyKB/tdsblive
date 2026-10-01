@@ -69,26 +69,37 @@ public sealed class FoundationStateStore(string database)
 
     public void FlushLogs(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested && logs.Reader.TryRead(out var row))
+        while (!cancellationToken.IsCancellationRequested)
         {
-            try { WriteLog(row.Json, row.Timestamp, row.RetentionDays); }
-            catch (SqliteException) { Interlocked.Increment(ref logPersistenceFailures); }
-            catch (IOException) { Interlocked.Increment(ref logPersistenceFailures); }
-            catch (UnauthorizedAccessException) { Interlocked.Increment(ref logPersistenceFailures); }
+            var batch = new List<(string Json, DateTimeOffset Timestamp, int RetentionDays)>();
+            while (batch.Count < 64 && logs.Reader.TryRead(out var row)) batch.Add(row);
+            if (batch.Count == 0) return;
+            try { WriteLogs(batch); }
+            catch (Exception error) when (error is SqliteException or IOException or UnauthorizedAccessException)
+            { Interlocked.Add(ref logPersistenceFailures, batch.Count); }
         }
     }
 
-    private void WriteLog(string json, DateTimeOffset timestamp, int retentionDays)
+    private void WriteLogs(List<(string Json, DateTimeOffset Timestamp, int RetentionDays)> batch)
     {
         using var connection = Open();
         using var transaction = connection.BeginTransaction();
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = "INSERT INTO Logs (TimestampTicks, Json) VALUES ($time, $json); DELETE FROM Logs WHERE TimestampTicks < $cutoff";
-        command.Parameters.AddWithValue("$time", timestamp.UtcTicks);
-        command.Parameters.AddWithValue("$json", json);
-        command.Parameters.AddWithValue("$cutoff", timestamp.UtcDateTime.Date.AddDays(1 - retentionDays).Ticks);
-        command.ExecuteNonQuery();
+        command.CommandText = "INSERT INTO Logs (TimestampTicks, Json) VALUES ($time, $json)";
+        var time = command.Parameters.Add("$time", SqliteType.Integer);
+        var json = command.Parameters.Add("$json", SqliteType.Text);
+        foreach (var row in batch)
+        {
+            time.Value = row.Timestamp.UtcTicks;
+            json.Value = row.Json;
+            command.ExecuteNonQuery();
+        }
+        using var prune = connection.CreateCommand();
+        prune.Transaction = transaction;
+        prune.CommandText = "DELETE FROM Logs WHERE TimestampTicks < $cutoff";
+        prune.Parameters.AddWithValue("$cutoff", batch.Min(row => row.Timestamp.UtcDateTime.Date.AddDays(1 - row.RetentionDays).Ticks));
+        prune.ExecuteNonQuery();
         transaction.Commit();
     }
 }

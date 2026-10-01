@@ -9,6 +9,7 @@ public sealed class RedactedFileLoggerProvider(ApplicationPaths paths, Applicati
     private readonly object sync = new();
     private readonly LogLevel minimum = Enum.Parse<LogLevel>(configuration.MinimumLogLevel);
     private long writeFailures;
+    private DateTime lastPrune;
     public long WriteFailures => Interlocked.Read(ref writeFailures);
     public ILogger CreateLogger(string categoryName) => new FileLogger(this, categoryName);
     public void Dispose() { }
@@ -30,10 +31,15 @@ public sealed class RedactedFileLoggerProvider(ApplicationPaths paths, Applicati
         lock (sync)
         {
             Directory.CreateDirectory(paths.Logs);
-            var cutoff = DateTime.UtcNow.Date.AddDays(1 - configuration.LogRetentionDays);
-            foreach (var file in Directory.EnumerateFiles(paths.Logs, "*.jsonl"))
-                if (DateTime.TryParseExact(Path.GetFileNameWithoutExtension(file), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.None, out var date) && date < cutoff) File.Delete(file);
+            var today = DateTime.UtcNow.Date;
+            if (today != lastPrune)
+            {
+                var cutoff = today.AddDays(1 - configuration.LogRetentionDays);
+                foreach (var file in Directory.EnumerateFiles(paths.Logs, "*.jsonl"))
+                    if (DateTime.TryParseExact(Path.GetFileNameWithoutExtension(file), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out var date) && date < cutoff) File.Delete(file);
+                lastPrune = today;
+            }
             File.AppendAllText(Path.Combine(paths.Logs, DateTime.UtcNow.ToString("yyyy-MM-dd") + ".jsonl"), json + Environment.NewLine);
         }
     }

@@ -13,6 +13,39 @@ namespace ExtensionSuite.Host.Tests;
 
 public sealed class WebSocketDeliveryTests
 {
+    [Fact]
+    public async Task PublicationAndShutdownRemainSafeDuringConcurrentDisconnects()
+    {
+        using var factory = new FoundationHostFactory();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var client = factory.Server.CreateWebSocketClient();
+        client.ConfigureRequest = request => request.Headers.Origin = "http://127.0.0.1";
+        var hub = factory.Services.GetRequiredService<EditorEventHub>();
+        var item = new CanonicalEvent { Source = "internal", Platform = "system", Type = "test", NativeType = "test",
+            DedupeKey = "disconnect-test", OccurredAt = DateTimeOffset.UtcNow };
+        var sockets = new List<WebSocket>();
+        try
+        {
+            for (var index = 0; index < 16; index++)
+            {
+                var socket = await client.ConnectAsync(new Uri("ws://127.0.0.1/ws/editor"), timeout.Token);
+                sockets.Add(socket);
+                await SendAsync(socket, """{"op":"subscribe","types":["*"]}""", timeout.Token);
+                using var ack = await ReceiveAsync(socket, timeout.Token);
+            }
+            await Task.WhenAll(Task.Run(() => { for (var index = 0; index < 1000; index++) hub.Publish(item); }),
+                Task.Run(() => { foreach (var socket in sockets) socket.Abort(); hub.Shutdown(); }));
+            using var http = factory.CreateClient(new() { BaseAddress = new Uri("http://127.0.0.1") });
+            Assert.True((await http.GetAsync("/api/status", timeout.Token)).IsSuccessStatusCode);
+            using var reopened = await client.ConnectAsync(new Uri("ws://127.0.0.1/ws/editor"), timeout.Token);
+            await SendAsync(reopened, """{"op":"ping"}""", timeout.Token);
+            using var pong = await ReceiveAsync(reopened, timeout.Token);
+            Assert.Equal("pong", pong.RootElement.GetProperty("op").GetString());
+            await reopened.CloseAsync(WebSocketCloseStatus.NormalClosure, "test complete", timeout.Token);
+        }
+        finally { foreach (var socket in sockets) socket.Dispose(); }
+    }
+
     private static async Task SendAsync(WebSocket socket, string json, CancellationToken token) =>
         await socket.SendAsync(Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, token);
 

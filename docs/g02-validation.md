@@ -33,10 +33,14 @@ G01 prerequisite is complete; G03–G13 remain separate goals.
   requirement-specific rationale. No broad security-rule exclusion was applied.
 - Run 36846290263 was Advanced Security, not Windows CI; an earlier gate-pass
   attribution to that run was corrected. Final evidence uses the named workflow.
-- Final SQLite persistence revision: local 41 backend tests pass, with two actual
+- Final SQLite persistence revision: local 42 backend tests pass, with two actual
   Windows tests intentionally skipped on Linux. Frontend's previous unchanged
   suite passed 14 tests. `tools/qualify_foundation.py` passes against the real
   Release host with temporary data and no production automation.
+- Concurrent WebSocket disconnect/publish/shutdown qualification preserves host
+  availability and permits a new heartbeat connection. Snapshot cancellation of
+  an already disposed subscriber is harmless. Log file retention scans once per
+  UTC day; SQLite writes at most 64 queued rows per transaction.
 - All tracked/new source candidates passed `sonar analyze secrets`; runtime
   databases/configuration/credentials/logs, generated assets and reports are ignored.
 
