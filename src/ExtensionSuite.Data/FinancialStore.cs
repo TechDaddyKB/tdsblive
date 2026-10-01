@@ -93,28 +93,47 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
 
     public async Task LinkIdentityAsync(Guid identityId, Guid supporterId, CancellationToken cancellationToken = default)
     {
+        if (await MoveIdentityAsync(identityId, null, supporterId, cancellationToken) is null)
+            throw new InvalidOperationException("Supporter identity changed concurrently.");
+    }
+
+    public Task<Guid?> TransferIdentityAsync(Guid identityId, Guid expectedSupporterId, Guid? targetSupporterId,
+        CancellationToken cancellationToken = default) => MoveIdentityAsync(identityId, expectedSupporterId, targetSupporterId, cancellationToken);
+
+    private async Task<Guid?> MoveIdentityAsync(Guid identityId, Guid? expectedSupporterId, Guid? targetSupporterId,
+        CancellationToken cancellationToken = default)
+    {
+        if (identityId == Guid.Empty || expectedSupporterId == Guid.Empty || targetSupporterId == Guid.Empty)
+            throw new ArgumentException("Identity transfers require nonempty identifiers.");
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var identity = await db.SupporterIdentities.SingleOrDefaultAsync(row => row.Id == identityId, cancellationToken)
+        var identity = await db.SupporterIdentities.AsNoTracking().SingleOrDefaultAsync(row => row.Id == identityId, cancellationToken)
             ?? throw new KeyNotFoundException("Supporter identity not found.");
-        if (!await db.Supporters.AnyAsync(row => row.Id == supporterId, cancellationToken))
-            throw new KeyNotFoundException("Supporter not found.");
-        if (identity.SupporterId == supporterId) return;
+        if (expectedSupporterId is { } expected && identity.SupporterId != expected) return null;
         var previous = identity.SupporterId;
-        identity.SupporterId = supporterId;
+        if (targetSupporterId == previous) return previous;
+        var target = targetSupporterId ?? Guid.CreateVersion7();
+        if (targetSupporterId is null)
+        {
+            db.Supporters.Add(new() { Id = target, Name = identity.DisplayName });
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        else if (!await db.Supporters.AnyAsync(row => row.Id == target, cancellationToken)) throw new KeyNotFoundException("Supporter not found.");
+        if (await db.SupporterIdentities.Where(row => row.Id == identityId && row.SupporterId == previous)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.SupporterId, target), cancellationToken) != 1) return null;
         await db.FinancialEvents.Where(row => row.IdentityId == identityId)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.SupporterId, supporterId), cancellationToken);
-        db.FinancialAudits.Add(new FinancialAudit { Id = Guid.CreateVersion7(), CreatedAtTicks = DateTimeOffset.UtcNow.UtcTicks,
-            Operation = "identity_link", BeforeJson = JsonSerializer.Serialize(new { identityId, supporterId = previous }),
-            AfterJson = JsonSerializer.Serialize(new { identityId, supporterId }) });
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.SupporterId, target), cancellationToken);
+        db.FinancialAudits.Add(new() { Id = Guid.CreateVersion7(), CreatedAtTicks = DateTimeOffset.UtcNow.UtcTicks,
+            Operation = targetSupporterId is null ? "identity_unlink" : "identity_link",
+            BeforeJson = JsonSerializer.Serialize(new { identityId, supporterId = previous }),
+            AfterJson = JsonSerializer.Serialize(new { identityId, supporterId = target }) });
+        await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); return target;
     }
 
     public async Task<bool> ReconcileAsync(Guid id, int expectedVersion, CurrencyRate? rate = null,
         decimal? nominalUsdMinorPerUnit = null, CancellationToken cancellationToken = default)
     {
-        if (expectedVersion < 1) throw new ArgumentOutOfRangeException(nameof(expectedVersion));
+        if (expectedVersion < 1 || expectedVersion == int.MaxValue) throw new ArgumentOutOfRangeException(nameof(expectedVersion));
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var row = await db.FinancialEvents.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, cancellationToken)

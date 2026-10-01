@@ -43,7 +43,15 @@ public sealed class FoundationHostFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         if (disposing)
         {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            // Other test hosts run concurrently. Global pool clearing can invalidate their live log connections.
+            var database = Path.Combine(DirectoryPath, "tdsblive.db");
+            foreach (var timeout in new int?[] { null, 2 })
+            {
+                var options = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = database, ForeignKeys = true };
+                if (timeout is { } seconds) options.DefaultTimeout = seconds;
+                using var connection = new Microsoft.Data.Sqlite.SqliteConnection(options.ToString());
+                Microsoft.Data.Sqlite.SqliteConnection.ClearPool(connection);
+            }
             if (Directory.Exists(DirectoryPath)) Directory.Delete(DirectoryPath, recursive: true);
         }
     }

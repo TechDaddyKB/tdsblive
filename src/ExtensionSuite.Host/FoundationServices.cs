@@ -40,6 +40,9 @@ public static class FoundationServices
         });
         builder.Services.AddSingleton<EventStore>();
         builder.Services.AddSingleton<FinancialStore>();
+        builder.Services.AddSingleton<FinancialSettingsStore>();
+        builder.Services.AddSingleton<FinancialReadStore>();
+        builder.Services.AddSingleton<FinancialReconciliation>();
         builder.Services.AddSingleton<ValuationRuleStore>();
         builder.Services.AddSingleton<FrankfurterRateProvider>();
         builder.Services.AddSingleton(services => new CachedCurrencyRates(services.GetRequiredService<FrankfurterRateProvider>(),

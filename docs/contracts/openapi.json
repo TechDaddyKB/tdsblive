@@ -4,11 +4,6 @@
     "title": "ExtensionSuite.Host | v1",
     "version": "1.0.0"
   },
-  "servers": [
-    {
-      "url": "http://127.0.0.1:39491/"
-    }
-  ],
   "paths": {
     "/api/rumble/status": {
       "get": {
@@ -1172,6 +1167,539 @@
           }
         }
       }
+    },
+    "/api/financial/settings": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialSettings"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialSettings"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/ledger": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialLedgerPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/totals": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endExclusive",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialTotalsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/identities": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FinancialIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/identities/{id}/link": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityTransferResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/identities/{id}/unlink": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityUnlinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityTransferResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/rules": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NominalValuationRule"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NominalRuleUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NominalRuleRemoval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/financial/rates": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CachedRateEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/rates/lookup": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLookupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/rates/override": {
+      "put": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualRateUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/financial/rates/refresh": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateRefreshResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/reconcile": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReconcileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FinancialReconcileResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/financial/diagnostics": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialProjectionDiagnostics"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1537,6 +2065,44 @@
         },
         "additionalProperties": false
       },
+      "CachedRateEntry": {
+        "required": [
+          "currency",
+          "requestedDate",
+          "rateDate",
+          "origin",
+          "usdPerNativeUnit",
+          "provider",
+          "estimated"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "requestedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "usdPerNativeUnit": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "estimated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "CanonicalEvent": {
         "required": [
           "source",
@@ -1604,6 +2170,16 @@
               },
               {
                 "$ref": "#/components/schemas/EventMoney"
+              }
+            ]
+          },
+          "support": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SupportDetails"
               }
             ]
           },
@@ -2052,6 +2628,526 @@
         },
         "additionalProperties": false
       },
+      "FinancialEntry": {
+        "required": [
+          "id",
+          "eventId",
+          "supporterId",
+          "identityId",
+          "supporterName",
+          "platform",
+          "type",
+          "source",
+          "nativeEventId",
+          "occurredAt",
+          "quantity",
+          "nativeAmountMinor",
+          "nativeCurrency",
+          "nativeMinorUnitDigits",
+          "usdAmountMinor",
+          "valuationMethod",
+          "estimated",
+          "fxRate",
+          "fxRateDate",
+          "fxProvider",
+          "accountingState",
+          "pendingReason",
+          "tier",
+          "giftRole",
+          "metadataJson",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supporterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "identityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supporterName": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "nativeEventId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "nativeAmountMinor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nativeCurrency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nativeMinorUnitDigits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "usdAmountMinor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "valuationMethod": {
+            "type": "string"
+          },
+          "estimated": {
+            "type": "boolean"
+          },
+          "fxRate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fxRateDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fxProvider": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accountingState": {
+            "type": "string"
+          },
+          "pendingReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tier": {
+            "type": "string"
+          },
+          "giftRole": {
+            "type": "string"
+          },
+          "metadataJson": {
+            "type": "string"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialIdentity": {
+        "required": [
+          "id",
+          "supporterId",
+          "supporterName",
+          "platform",
+          "identityKey",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supporterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supporterName": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "identityKey": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialLedgerPage": {
+        "required": [
+          "items",
+          "totalCount",
+          "offset",
+          "limit"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialEntry"
+            }
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offset": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialProjectionDiagnostics": {
+        "required": [
+          "processed",
+          "unsupported",
+          "quarantined",
+          "pending",
+          "pendingConversions",
+          "gatedContributions"
+        ],
+        "type": "object",
+        "properties": {
+          "processed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unsupported": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "quarantined": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pending": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pendingConversions": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "gatedContributions": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialReconcileRequest": {
+        "required": [
+          "selected"
+        ],
+        "type": "object",
+        "properties": {
+          "selected": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialVersionRef"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialReconcileResult": {
+        "required": [
+          "id",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialSettings": {
+        "type": "object",
+        "properties": {
+          "timeZone": {
+            "type": "string",
+            "default": "UTC"
+          },
+          "currentStreamStartUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialTotals": {
+        "required": [
+          "supporterId",
+          "name",
+          "usdAmountMinor",
+          "exactAmountMinor",
+          "fxAmountMinor",
+          "nominalAmountMinor",
+          "contributionCount",
+          "unknownCount",
+          "estimatedCount",
+          "gatedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "supporterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "usdAmountMinor": {
+            "type": "string"
+          },
+          "exactAmountMinor": {
+            "type": "string"
+          },
+          "fxAmountMinor": {
+            "type": "string"
+          },
+          "nominalAmountMinor": {
+            "type": "string"
+          },
+          "contributionCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "unknownCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "estimatedCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "gatedCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialTotalsResponse": {
+        "required": [
+          "period",
+          "timeZone",
+          "range",
+          "supporters"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "range": {
+            "$ref": "#/components/schemas/LedgerPeriodRange"
+          },
+          "supporters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialTotals"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancialVersionRef": {
+        "required": [
+          "id",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IdentityLinkRequest": {
+        "required": [
+          "expectedSupporterId",
+          "targetSupporterId"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedSupporterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetSupporterId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IdentityTransferResponse": {
+        "required": [
+          "supporterId"
+        ],
+        "type": "object",
+        "properties": {
+          "supporterId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IdentityUnlinkRequest": {
+        "required": [
+          "expectedSupporterId"
+        ],
+        "type": "object",
+        "properties": {
+          "expectedSupporterId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "InspectorEntry": {
         "required": [
           "id",
@@ -2212,6 +3308,180 @@
       },
       "JsonObject": {
         "type": "object"
+      },
+      "LedgerPeriodRange": {
+        "required": [
+          "startInclusive",
+          "endExclusive"
+        ],
+        "type": "object",
+        "properties": {
+          "startInclusive": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endExclusive": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ManualRateUpdate": {
+        "required": [
+          "currency",
+          "date",
+          "usdPerNativeUnit"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "usdPerNativeUnit": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NativeMoney": {
+        "required": [
+          "amountMinor",
+          "currency",
+          "minorUnitDigits"
+        ],
+        "type": "object",
+        "properties": {
+          "amountMinor": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "minorUnitDigits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NominalRuleRemoval": {
+        "required": [
+          "platform",
+          "type",
+          "tier",
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "expectedVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NominalRuleUpdate": {
+        "required": [
+          "platform",
+          "type",
+          "tier",
+          "usdMinorPerUnit",
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "usdMinorPerUnit": {
+            "type": "string"
+          },
+          "expectedVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NominalValuationRule": {
+        "required": [
+          "platform",
+          "type",
+          "tier",
+          "usdMinorPerUnit",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "usdMinorPerUnit": {
+            "type": "string"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false
       },
       "OverlayDefinition": {
         "type": "object",
@@ -2459,6 +3729,58 @@
           "mode": {
             "type": "string",
             "default": "synthetic"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RateLookupResponse": {
+        "required": [
+          "available",
+          "rate"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "rate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CachedRateEntry"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RateRefreshResponse": {
+        "required": [
+          "refreshed"
+        ],
+        "type": "object",
+        "properties": {
+          "refreshed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RateRequest": {
+        "required": [
+          "currency",
+          "date"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
           }
         },
         "additionalProperties": false
@@ -2716,6 +4038,98 @@
           },
           "integrations": {
             "$ref": "#/components/schemas/IntegrationStates"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupportDetails": {
+        "required": [
+          "kind",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "nativeMoney": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NativeMoney"
+              }
+            ]
+          },
+          "tier": {
+            "type": "string",
+            "default": ""
+          },
+          "giftCorrelationKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "giftRole": {
+            "type": "string",
+            "default": "none"
+          },
+          "gatedReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportedAmountMajor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportedCurrency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "giftRecipientKeys": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "giftScopeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "giftPeriodStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "giftPeriodEnd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false
