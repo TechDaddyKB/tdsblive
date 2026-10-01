@@ -15,9 +15,44 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
     public DbSet<StoredOverlay> Overlays => Set<StoredOverlay>();
     public DbSet<StoredAsset> Assets => Set<StoredAsset>();
     public DbSet<StoredOverlayToken> OverlayTokens => Set<StoredOverlayToken>();
+    public DbSet<Supporter> Supporters => Set<Supporter>();
+    public DbSet<SupporterIdentity> SupporterIdentities => Set<SupporterIdentity>();
+    public DbSet<FinancialContribution> FinancialEvents => Set<FinancialContribution>();
+    public DbSet<StoredFxRate> FxRates => Set<StoredFxRate>();
+    public DbSet<StoredValuationRule> ValuationRules => Set<StoredValuationRule>();
+    public DbSet<FinancialAudit> FinancialAudits => Set<FinancialAudit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Supporter>().HasKey(item => item.Id);
+        modelBuilder.Entity<SupporterIdentity>(entity =>
+        {
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.Platform, item.IdentityKey }).IsUnique();
+            entity.HasIndex(item => item.SupporterId);
+            entity.HasOne<Supporter>().WithMany().HasForeignKey(item => item.SupporterId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<FinancialContribution>(entity =>
+        {
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.EventId).IsUnique();
+            entity.HasIndex(item => new { item.Platform, item.NativeEventId }).IsUnique().HasFilter("NativeEventId IS NOT NULL");
+            entity.HasIndex(item => new { item.Platform, item.DedupeKey }).IsUnique();
+            entity.HasIndex(item => item.OccurredAtTicks);
+            entity.HasIndex(item => item.SupporterId);
+            entity.HasIndex(item => item.Platform);
+            entity.HasIndex(item => new { item.StreamId, item.OccurredAtTicks });
+            entity.HasOne<Supporter>().WithMany().HasForeignKey(item => item.SupporterId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<SupporterIdentity>().WithMany().HasForeignKey(item => item.IdentityId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<StoredFxRate>().HasKey(item => new { item.Currency, item.RequestedDay, item.Origin });
+        modelBuilder.Entity<StoredValuationRule>().HasKey(item => new { item.Platform, item.Type, item.Tier });
+        modelBuilder.Entity<FinancialAudit>(entity =>
+        {
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.ContributionId);
+            entity.HasIndex(item => item.CreatedAtTicks);
+        });
         modelBuilder.Entity<StoredOverlay>().HasKey(item => item.Id);
         modelBuilder.Entity<StoredOverlayRevision>(entity =>
         {

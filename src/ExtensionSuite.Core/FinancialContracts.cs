@@ -8,6 +8,21 @@ public static class ValuationMethods
     public const string Unknown = "unknown";
 }
 
+/// <summary>Verified financial facts carried independently of optional raw capture.</summary>
+public sealed record SupportDetails(string Kind, long Quantity, NativeMoney? NativeMoney = null,
+    string Tier = "", string? GiftCorrelationKey = null, string GiftRole = "none", string? GatedReason = null)
+{
+    public void Validate()
+    {
+        if (!new[] { "bits", "donation", "subscription", "membership", "gift", "rant" }.Contains(Kind) ||
+            Quantity <= 0 || Tier is null || Tier.Length > 64 ||
+            GiftCorrelationKey?.Length > 256 || GatedReason?.Length > 128 ||
+            !new[] { "none", "batch", "individual", "recipient" }.Contains(GiftRole))
+            throw new ArgumentException("Invalid financial support facts.");
+        NativeMoney?.Validate();
+    }
+}
+
 /// <summary>Native spend, distinct from a configured supporter-value estimate.</summary>
 public sealed record NativeMoney(long AmountMinor, string Currency, int MinorUnitDigits)
 {

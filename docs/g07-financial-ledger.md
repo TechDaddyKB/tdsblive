@@ -10,7 +10,7 @@ Status: In progress. The full acceptance contract remains in [the implementation
 
 `ICurrencyRateProvider` takes currency and requested date. Rate direction is native major unit to USD major units. The provider implementation will use dated Frankfurter rates and preserve the actual observation date and attribution. The [official API](https://frankfurter.dev/) supports historical dates and provider filtering/attribution. Cache and dated manual overrides precede network lookups. Latest-rate fallback must be visibly estimated. Accepted values are stored and never change merely because the cache/provider changes; reconciliation is explicit and audited.
 
-## Persistence and integration requirements still to implement
+## Persistence and integration contract
 
 - Durable unique source keys and canonical fallback keys, independent of chat retention. Transactional financial acceptance and restart catch-up must cover Streamer.bot and Rumble events even if their delivery outbox was already acknowledged.
 - Normalize required Bits, donations, paid YouTube events, subscriptions/memberships, gifts, Ko-fi and Rants using isolated adapter strategies. Typed financial metadata must survive disabling raw capture. Document uncertain payloads rather than inventing amounts, giver identity, quantities or correlations.
@@ -24,4 +24,8 @@ Status: In progress. The full acceptance contract remains in [the implementation
 
 ## Current validation
 
-`dotnet test tests/unit/ExtensionSuite.Core.Tests -c Release --no-restore` passes all 36 tests, including three new financial tests covering decimal precision, scales, rounding, valuation precedence, attribution, pending/nominal labels, invalid input and overflow. Durable ledger, UI, correlation, FX provider and full G07 qualification are not yet implemented. Do not treat the pure valuation tests as proof of complete ingestion or accounting.
+`dotnet test tests/unit/ExtensionSuite.Core.Tests -c Release --no-restore` passes all 36 tests, including three new financial tests covering decimal precision, scales, rounding, valuation precedence, attribution, pending/nominal labels, invalid input and overflow. End-to-end ledger ingestion, UI, correlation, FX provider and full G07 qualification are not yet implemented. Do not treat the pure valuation tests as proof of complete ingestion or accounting.
+
+The initial persistence layer is implemented by `FinancialStore` and migration `20261001213840_FinancialLedger`. Platform/native-ID and platform/dedupe uniqueness survive fresh repository construction against the same SQLite file. Identity and contribution acceptance commit together; manual linking updates indexed attribution and records an audit in the same transaction. Repeated deliveries do not revalue accepted FX history. Typed `CanonicalEvent.Support` survives absence of raw capture. All gift accounting is temporarily gated until the documented correlation strategy is implemented; this is an unfinished implementation state, not a reduction of the required platform scope.
+
+Five SQLite integration tests pass; the complete host suite passes 199 tests with two Windows-only skips. Actual process restart/backfill, adapter metadata, gift correlation, provider/cache/rules/reconciliation, editor APIs/UI and period queries still require implementation and acceptance evidence.

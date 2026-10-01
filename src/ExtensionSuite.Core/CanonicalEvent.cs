@@ -26,6 +26,7 @@ public sealed record CanonicalEvent
     public EventUser? User { get; init; }
     public EventMessage? Message { get; init; }
     public EventMoney? Monetary { get; init; }
+    public SupportDetails? Support { get; init; }
     public EventStream? Stream { get; init; }
     public EventMetrics? Metrics { get; init; }
     public required string DedupeKey { get; init; }
