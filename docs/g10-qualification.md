@@ -23,7 +23,7 @@ passing one row does not complete the other requirements. The owning contract is
 | Guided setup without normal-user commands | Local browser review/resume and configuration persistence pass; password entry defaults to session-only; import and action permissions are documented | Follow the guide against the final shipped package with local bots and OBS |
 | SQLite-safe backup and restore | Archive/backend checks and local real-process recovery pass; Windows run `37031475607` passes managed-process restart/restore and cleanup | Final portable/installed EXE and Wine recovery; review actual safety-paused configuration and retained data |
 | Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; public wiki commit `48900b9`; all chapters and screenshots render in both public wiki and offline browser checks | Verify the guide included in the final shipped package and its setup instructions |
-| Windows CI and SonarQube gate | Run `37031475607` passed recovery and 82.7% new coverage but failed the remaining executable-path security findings; the interface now accepts fixed modes instead of executable paths | Terminal success for the corrected final implementation head; coverage import and quality-gate evidence |
+| Windows CI and SonarQube gate | Run `37033816613` passed SonarQube: A ratings, 82.7% new coverage, 0.5% duplication and 100% hotspot review; package guide generation then failed because its scanner lacked CI authentication | Terminal success for the corrected final implementation head, including packaging and native package checks |
 | Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Existing goal-specific evidence and full rebuilt local browser suite pass; Streamer.bot MCP confirms 1.0.7, three TDSBLive actions and thirteen triggers | Final shipped-package integration qualification, distinguishing live API/platform observations from owned replay/probe events |
 | OBS rendering and audible output | Earlier operator observations are recorded in the owning G05/G06/G09 evidence | Final integrated OBS rendering/audio/reconnect checks; actual dispatch receipts alone are insufficient |
 | Authenticated LAN HTTP | Existing Windows-specific authentication tests and authenticated owner-only recovery checks; editor LAN settings preserve unrelated configuration in browser checks | Final package authenticated remote HTTP behavior, credential rotation and restricted operations |
@@ -38,8 +38,9 @@ Inspected on 2026-10-02:
 - OBS MCP is connected to the local Linux OBS instance; streaming and recording
   are inactive. This is distinct from running the Windows application under Wine.
 - Streamer.bot 1.0.7 is reachable over WebSocket 8080 and HTTP 7474.
-- Speaker.bot was not listening on its documented local test ports during the
-  latest check. Final audio testing waits for the operator to start it.
+- Speaker.bot 0.1.7 is now listening on port 7580 after starting its normal
+  launcher directly. Its GTK desktop launch attempt did not produce a running
+  process. No voice or application settings were changed.
 
 Do not normalize CPU usage by all 32 logical processors without saying so.
 Report process CPU and memory separately from OBS/browser and Wine helper overhead.
@@ -55,6 +56,15 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
 - Local real-process restart and restore each create a new generation; restart
   retains later setup progress, restore recovers earlier progress, restored
   integrations/LAN are disabled, and quit stops the owned host.
+- `python tools/qualify_bots.py --execute-local-test-trigger-and-queue --speaker-port 7580`
+  passes against the current managed backend and actual installed bots: dedicated
+  custom-trigger receipt, inspector observation, isolated replay, synthetic
+  forwarder execution and Speaker.bot Pause/Resume. This does not establish
+  final Windows-package behavior or audible output.
+- `python tools/qualify_kofi.py --execute-synthetic-forwarding-action` passes
+  installed CPH forwarding through `General.Custom` into typed USD support; the
+  owned simulated contribution stays out of the financial ledger. This is a
+  synthetic bridge check, not a real paid donation.
 - Run `37030077956` passed recovery assertions but failed transient SQLite WAL
   cleanup on Windows. Bounded retries address that test cleanup race; the same
   recovery step passes in `37031475607`.
@@ -63,6 +73,14 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
   argument entirely. Only `managed`, `portable` and `installed` modes are accepted;
   arbitrary paths are rejected before creating test data. The corrected final
   gate must still be observed, not inferred from these edits.
+- Windows run `37033816613` evaluated `a65636a` and passed the security gate.
+  Packaging failed while scanning guide sources without its authenticated CI
+  environment. Packaging and native package checks now receive the same
+  conditional scanner environment as existing trusted scan steps; forks receive
+  no secrets. Native package contents are scanned before semantic inspection.
+- Local Codex/VS Code MCP settings and standalone MCP configuration are excluded
+  from public Git. The visual editor now offers manual URL copying when an HTTP
+  browser omits or denies its clipboard API.
 
 ## Completion rule
 

@@ -550,6 +550,8 @@ Release qualification checkpoint: Windows run `37030077956` completed real-proce
 
 Windows run `37031475607` passed managed-process recovery and cleanup, but its SonarQube gate still failed security findings in the executable-path qualification interface. New-code coverage passed at 82.7%, duplication at 0.5%, and all hotspots were reviewed. The offline-guide path finding is resolved. Packaged recovery qualification now accepts only literal `portable`/`installed` modes and derives a fixed executable path from the runner-owned package directory, rather than accepting an executable argument. Managed recovery still passes locally; an arbitrary executable-path argument is rejected before any temporary test data is created. A new exact-head analysis is required. Wiki commit `48900b9` publishes all eight screenshots, and fresh browser checks verify all ten chapters and all eight images in both wiki and offline HTML.
 
+Windows run `37033816613` passed SonarQube with A ratings, 82.7% new coverage, 0.5% duplication and 100% hotspot review, then failed package guide generation because the child deterministic scanner lacked its authenticated CI environment. Packaging/native qualification now receive the same conditionally supplied scanner credentials as the existing trusted scan steps; fork builds do not receive those secrets. Decompressed/installed package contents are scanned before inspection. Local Codex/VS Code MCP configuration is now ignored, and the visual editor offers manual OBS-URL copying when HTTP browsers omit or deny clipboard access. Three clipboard-environment regression cases are added. Final exact-head Windows packaging and Wine qualification remain pending.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets

@@ -175,6 +175,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build self-contained Windows ZIP and per-user installer
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
         run: |
           $innoRoot = Join-Path $env:RUNNER_TEMP 'tdsblive-inno-6.7.3'
@@ -186,6 +189,9 @@ jobs:
           ./tools/build_windows_package.ps1 -Version '0.1.0' -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
 
       - name: Qualify native Windows packages
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
         run: ./tools/qualify_windows_package.ps1 -Version '0.1.0'
 

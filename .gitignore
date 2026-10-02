@@ -54,6 +54,9 @@ __pycache__/
 .cache/
 
 # Editor/OS and scratch files
+.codex/
+.vscode/
+.mcp.json
 .vs/
 .idea/
 *.user

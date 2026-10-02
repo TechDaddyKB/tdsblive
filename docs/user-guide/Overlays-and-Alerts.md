@@ -34,6 +34,10 @@ resolve that message before assuming your changes are stored.
 3. Match the source width and height to your canvas.
 4. Check the actual source in OBS. Keep TDSBLive running.
 
+If your browser cannot copy automatically, TDSBLive displays **OBS URL:**
+followed by the link. Select that link and copy it manually, then paste it into
+OBS. Automatic clipboard access is a convenience; HTTP still works without it.
+
 The URL uses local HTTP and needs no certificate. On another computer,
 `127.0.0.1` means that other computer; it does not point back to your streaming
 PC. Remote viewing requires the separately configured authenticated LAN flow.
