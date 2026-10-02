@@ -61,3 +61,38 @@ it('loads saved addresses and preserves unrelated settings when saving one conne
   })));
   expect(await screen.findByText(/Streamer.bot connection saved/)).toBeVisible();
 });
+
+it.each([
+  ['streamerBot', 'Streamer.bot', { state: 'connected' }, 'answered the read-only connection test'],
+  ['speakerBot', 'Speaker.bot', { state: 'connected' }, 'answered the read-only connection test'],
+  ['speakerBot', 'Speaker.bot', { state: 'probeFailed', failureKind: 'rejected' }, 'does not support the read-only test request'],
+  ['streamerBot', 'Streamer.bot', { state: 'disabled' }, 'did not pass the connection test'],
+] as const)('tests %s without saving configuration or running automation', async (bot, label, response, notice) => {
+  vi.mocked(api.configuration).mockResolvedValue({ streamerBot: { host: 'localhost', port: 8080 }, speakerBot: { host: 'localhost', port: 7680 } });
+  vi.mocked(write).mockImplementation(async (path, _method, progress) => path.endsWith('/test') ? response : { ...progress as object, step: 1, version: 1 });
+  render(<SetupWizard />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Open guided setup' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Open guided setup' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next setup step' }));
+  const button = await screen.findByRole('button', { name: `Test ${label} connection` });
+  await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button);
+  expect(await screen.findByText(new RegExp(notice))).toBeVisible();
+  expect(write).toHaveBeenCalledWith(`/api/integrations/${bot === 'streamerBot' ? 'streamerbot' : 'speakerbot'}/test`, 'POST');
+  expect(api.saveConfiguration).not.toHaveBeenCalled();
+});
+
+it('reports connection test failures without exposing remote bodies', async () => {
+  vi.mocked(api.configuration).mockResolvedValue({ streamerBot: { host: 'localhost', port: 8080 }, speakerBot: { host: 'localhost', port: 7680 } });
+  vi.mocked(write).mockImplementation(async (path) => {
+    if (path.endsWith('/test')) throw new Error('private server body');
+    return { step: 1, version: 1 };
+  });
+  render(<SetupWizard />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Open guided setup' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Open guided setup' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next setup step' }));
+  const button = await screen.findByRole('button', { name: 'Test Speaker.bot connection' });
+  await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button);
+  expect(await screen.findByText('Unable to test this connection. Check the connection status and try again.')).toBeVisible();
+  expect(screen.queryByText('private server body')).not.toBeInTheDocument();
+});

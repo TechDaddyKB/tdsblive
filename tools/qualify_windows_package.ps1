@@ -40,8 +40,8 @@ function Test-Application([string]$Directory) {
             if (-not (Test-Path (Join-Path $guide $target))) { throw 'Offline guide contains a broken local link.' }
         }
     }
-    $home = Get-Content (Join-Path $guide 'Home.html') -Raw -Encoding utf8
-    if ($home -notmatch 'href="https://github.com/TechDaddyKB/tdsblive/blob/[^" ]+/docs/implementation-plan\.md"') {
+    $guideHomeDocument = Get-Content (Join-Path $guide 'Home.html') -Raw -Encoding utf8
+    if ($guideHomeDocument -notmatch 'href="https://github.com/TechDaddyKB/tdsblive/blob/[^" ]+/docs/implementation-plan\.md"') {
         throw 'Offline guide must preserve the external implementation-plan Markdown link.'
     }
     New-Item -ItemType Directory -Path $data -Force | Out-Null

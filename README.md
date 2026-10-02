@@ -60,7 +60,11 @@ credential setup, authenticated LAN and generated contracts.
 - [Rumble evidence analysis](docs/rumble-analysis.md), including unknown schemas,
   snapshot limits and sanitization boundaries.
 - [Architecture](docs/architecture.md), [security](docs/security.md),
-  [testing](docs/testing.md) and [contributing](CONTRIBUTING.md).
+  [development](docs/development.md), [testing](docs/testing.md) and
+  [contributing](CONTRIBUTING.md).
+- [Installation](docs/installation.md), [Rumble](docs/rumble.md),
+  [events](docs/events.md), [overlays](docs/overlays.md), [widgets](docs/widgets.md),
+  [automation](docs/automation.md) and [database/recovery](docs/database.md).
 - [SonarQube Cloud project](https://sonarcloud.io/summary/new_code?id=camarokris_tdsblive).
 
 Original archives, credentials, private captures, user data, generated reports

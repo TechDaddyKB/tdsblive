@@ -4,11 +4,6 @@
     "title": "ExtensionSuite.Host | v1",
     "version": "1.0.0"
   },
-  "servers": [
-    {
-      "url": "http://127.0.0.1:56859/"
-    }
-  ],
   "paths": {
     "/api/application/status": {
       "get": {
@@ -785,6 +780,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IntegrationOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/streamerbot/test": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotConnectionState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/speakerbot/test": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotConnectionState"
                 }
               }
             }

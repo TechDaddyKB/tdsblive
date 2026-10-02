@@ -39,6 +39,17 @@ function ConnectionSetup({ bot, label, defaultPort }: { bot: 'streamerBot' | 'sp
       <label>{label} host <input required value={host} onChange={event => setHost(event.target.value)} /></label>
       <label>{label} port <input required type="number" min="1" max="65535" value={port} onChange={event => setPort(Number(event.target.value))} /></label>
       <button type="submit">Save {label} connection</button>
+      <button type="button" onClick={() => {
+        setBusy(true); setMessage('');
+        void write<{ state: string; failureKind?: string }>(`/api/integrations/${bot === 'streamerBot' ? 'streamerbot' : 'speakerbot'}/test`, 'POST')
+          .then(result => setMessage(result.state === 'connected'
+            ? `${label} answered the read-only connection test. This does not test audio or run an action.`
+            : result.state === 'probeFailed' && result.failureKind === 'rejected'
+              ? `${label} does not support the read-only test request. Its connection may still work; check the status below.`
+              : `${label} did not pass the connection test. Check its server settings, save the matching address and restart TDSBLive before retrying.`))
+          .catch(() => setMessage('Unable to test this connection. Check the connection status and try again.'))
+          .finally(() => setBusy(false));
+      }}>Test {label} connection</button>
     </fieldset>
     {message && <p role="status">{message}</p>}
   </form>;

@@ -48,6 +48,20 @@ secret-store fallback; Windows qualification remains required.
 not integration verification. Setup writes require the usual authentication and
 request protection. Progress is stored in SQLite and included in backups.
 
+`POST /api/integrations/streamerbot/test` and
+`POST /api/integrations/speakerbot/test` issue a correlated read-only `GetInfo`
+request on the existing connection. They return a `BotConnectionState`, with
+`connected` only after a successful response. Disabled/disconnected states are
+reported without enabling a connection or changing saved settings. Failed probes
+return `probeFailed` with a bounded failure kind; response bodies are not exposed.
+They never speak, change queues, run actions or change the live connection state.
+Writes require ordinary request protection. Save/restart connection settings
+before testing; this does not probe unsaved form values. Streamer.bot documents
+[`GetInfo`](https://docs.streamer.bot/api/websocket/requests#getinfo); Speaker.bot
+0.1.7 supports it in the observed runtime, but older versions may reject optional
+metadata while their documented speech/queue connection remains usable. Rejection
+is a test limitation, not proof that those older runtimes cannot speak.
+
 `POST /api/integrations/streamerbot/credential` accepts `{value, sessionOnly:true}`.
 Session-only values stay in host memory and are cleared on restart. Setting
 `sessionOnly:false` requires Windows DPAPI; other platforms return 501. Responses

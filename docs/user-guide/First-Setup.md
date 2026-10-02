@@ -29,7 +29,14 @@ automatically enable integrations or run actions.
 4. If using Speaker.bot, enable its WebSocket server and save its matching
    connection. TDSBLive defaults to port **7680**.
 5. Restart TDSBLive using **Backup and recovery → Restart TDSBLive**. Reopen the
-   editor and check the bot connection indicators.
+   editor and click **Test Streamer.bot connection** and, if used,
+   **Test Speaker.bot connection**. A passing test says the bot answered.
+
+The tests read information only. They do not speak, clear a queue or run an
+action. Save and restart first: testing uses the active connection, not an
+unsaved address. Older Speaker.bot versions may not support the test request;
+that limitation is shown separately from their connection status. A passing
+connection test does not prove audible speech.
 
 If Streamer.bot requires authentication, enter its password in **Streamer.bot
 authentication**. Leave the form unused if authentication is disabled.

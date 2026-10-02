@@ -25,7 +25,7 @@ passing one row does not complete the other requirements. The owning contract is
 | --- | --- | --- |
 | G00–G09 prerequisites | Maintained goal entries report completion; G09 protected merge is `26bb2eeea61ad5d4fbe6435f91778996de02d926` | Confirm final integrated behavior below; discovery alone is insufficient |
 | Self-contained ZIP and per-user installer | Run `37049814743` / `d3a01e9` passes native ZIP/installer, browser-connected recovery, startup off/opt-in, reinstall/uninstall and retained-data checks; downloaded ZIP/installer checksums match | Publish the qualified release after remaining checks |
-| Guided setup without normal-user commands | Local browser review/resume and configuration persistence pass; password entry defaults to session-only; import and action permissions are documented | Follow the guide against the final shipped package with local bots and OBS |
+| Guided setup without normal-user commands | Browser review/resume and configuration persistence pass; session-only password entry and import/permissions documented. New explicit bot tests pass in a real browser against installed bots without action/speech/queue executions | Qualify the read-only test additions in the final Windows package |
 | SQLite-safe backup and restore | Actual `d3a01e9` Actions EXE under Wine passes restart, restore, paused integrations and the additional restart after restoring owned bot configuration; delayed-handshake regression passes | None for these checks |
 | Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; public wiki commit `0b98615` includes approved paid-event limits. Final-package inspection found external Markdown links being rewritten; the corrected generated guide passes all ten pages/eight images, navigation, external-link preservation and UTF-8 | Package the guide correction and verify protected Windows checks before release |
 | Windows CI and SonarQube gate | Run `37049814743` / `d3a01e9` completes successfully, including SonarQube, packaging and native package checks | Any later release-source commit must pass protected checks |
@@ -202,6 +202,37 @@ Idle/chat CPU does not satisfy the respective 1%/3% targets using one-core
 normalization. OBS and the wineserver are excluded from backend RSS; the table
 does not sum every Wine helper or OBS child process. This measured deviation
 remains visible, and native Windows streaming-PC performance remains deferred.
+
+## Source-spec completion audit corrections
+
+- Specification section 86 requires explicit integration connection tests. Setup
+  now provides **Test Streamer.bot connection** and **Test Speaker.bot connection**.
+  Each sends a correlated read-only `GetInfo` on the existing connection; it does
+  not save form values, enable integrations, speak, change queues or run actions.
+  Disabled, rejected and timed-out probes are reported truthfully. Older Speaker.bot
+  metadata rejection does not disconnect an otherwise usable session. Rumble's
+  **Connect Rumble** tests its actual URL and establishes the polling baseline.
+- Seven targeted backend cases and eight setup UI cases pass. A real browser
+  against an isolated managed host connected to the installed Streamer.bot 1.0.7
+  and Speaker.bot 0.1.7 passes both new tests; their execution histories remain
+  empty. The refreshed OpenAPI snapshot/generated types pass actual-process
+  contract/recovery qualification. Full local suites pass 175 frontend tests
+  (88.97% line coverage) and 380 host tests with four Windows-only skips. New
+  probe behavior still requires Windows package qualification.
+- Specification section 91's required documentation filenames are now present:
+  architecture, installation, Rumble, events, overlays, widgets, automation,
+  database, security and development. Seven added entry points link canonical
+  plain-language guides and detailed contracts instead of duplicating instructions.
+  README and all public Markdown local links resolve. Stale architecture/index
+  statements are corrected against actual merged G08/G09 evidence.
+- Wiki commit `e017419` publishes the read-only test instructions. The regenerated
+  offline guide passes ten pages, eight images, navigation, UTF-8 and preserved
+  external Markdown links in a real browser.
+- Windows run `37054493247` / `86814ff` passed analysis and SonarQube, then failed
+  native package checking because the new PowerShell `$home` variable collided
+  with its reserved, read-only `$HOME`. It is renamed to `$guideHomeDocument`.
+  The failed run is not counted as successful package qualification. The corrected
+  verifier and new setup probes require a fresh successful Windows run.
 
 ## Completion rule
 

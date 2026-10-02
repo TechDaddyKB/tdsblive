@@ -23,6 +23,8 @@ public sealed class StreamerBotConnection(IntegrationConfiguration configuration
     private readonly Queue<BotExecution> executions = new();
     public BotConnectionState State => Volatile.Read(ref state);
     public BotDiscovery Discovery => Volatile.Read(ref discovery);
+    public Task<BotConnectionState> TestConnectionAsync(CancellationToken cancellationToken) =>
+        BotConnectionProbe.TestAsync(Volatile.Read(ref session), State, Timeout, cancellationToken);
     public BotExecution[] Executions { get { lock (executionsSync) return executions.ToArray(); } }
 
     public static string AuthenticationResponse(string password, string salt, string challenge)

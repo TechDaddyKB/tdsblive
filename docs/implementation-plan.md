@@ -41,12 +41,12 @@ Generic Streamer.bot action discovery, stable action IDs, allowlisted dispatch, 
 | Speaker.bot | Configurable host/port, default 127.0.0.1:7680 |
 | Application data | `%LOCALAPPDATA%\TDSBLive`, separate from installed binaries |
 | SonarQube | SonarQube Cloud organization `camarokris`, project key `camarokris_tdsblive` |
-
-GitHub account renamed to `TechDaddyKB`; repository links and Git origin now use `techdaddykb/tdsblive`. The existing SonarQube organization and project keys above are independent service identifiers and are retained to preserve analysis history. The next G08 CI analysis must verify the GitHub binding after the rename.
 | Currency conversion | Replaceable Frankfurter provider, cached historical rates, dated manual overrides |
 | Time periods | OS timezone confirmed at setup; Monday-start weeks; UTC event storage |
 | Rumble polling | 7 seconds, positive jitter up to 10%; normal UI 5–10 seconds, advanced slower only |
 | Editor history | 750 ms autosave debounce, 50 revisions by default |
+
+GitHub account renamed to `TechDaddyKB`; repository links and Git origin use `techdaddykb/tdsblive`. SonarQube service identifiers remain unchanged to preserve analysis history. G08 PR analysis verified the renamed GitHub binding; its protected delivery evidence is recorded below.
 
 Streamer.bot remains the authority for existing platform integration and action execution. TDSBLive provides missing services: Rumble polling, normalization, persistence, aggregation, overlays, visual editing, supporter accounting, replay, and rules. Use isolated hosted services and adapters/strategies; an integration failure must not stop the host or other integrations. Design backend boundaries for future Linux hosting without claiming Linux release qualification.
 
@@ -91,7 +91,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Complete |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
-| [G08](#g08) | Build donor widgets | G05, G07 | Not started |
+| [G08](#g08) | Build donor widgets | G05, G07 | Complete |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | In progress |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
@@ -428,7 +428,7 @@ None. Actual OBS rendering, refresh and platform-logo confirmation are recorded 
 
 ## G09 — Build automation rules
 
-Status: **Complete under the approved scope; protected delivery of this record is gated by PR #12**
+Status: **Complete under the approved scope**
 Prerequisites: G03, G06, G07
 
 ### Deliverables
@@ -486,6 +486,7 @@ Current acceptance audit: [release qualification checklist](g10-qualification.md
 
 - Build self-contained Windows x64 ZIP and Inno Setup installer in Actions; attach checksums after release validation.
 - Implement first-run connection/bootstrap/Rumble/Speaker/timezone/valuation/overlay wizard and optional login startup; ordinary runtime unelevated.
+- Provide explicit read-only bot connection tests in setup, distinguishing successful protocol responses from disabled, rejected or timed-out tests; connection tests do not execute speech, queue changes or automation. Rumble connection/baseline checks use the operator-entered URL.
 - Provide SQLite-safe backup/validated restore with safety backup and paused consumers, secret-free config export/import, installation/recovery docs.
 - Publish a complete, plain-language release guide in the repository and its GitHub wiki, with screenshots from isolated owned examples where available. Cover installation, first setup, everyday use, Streamer.bot/Speaker.bot/Rumble connections, OBS sources/docks, chat, overlays/alerts, supporter totals, automation, LAN HTTP, backup/restore, updates, troubleshooting and uninstall. Explain unfamiliar terms, use numbered steps and expected results, and avoid assuming command-line knowledge. Keep developer/API references separate and link them from the guide. Validate instructions against the actual packaged application; keep screenshot credentials and private content out of public artifacts.
 - Validate integrated MVP, authenticated LAN HTTP, rendering/audio and restart in the available Wine/Proton environment, with native Windows packaging and installer checks in GitHub Actions. Native Windows streaming-PC performance qualification is explicitly deferred by the operator; it is not a G10 completion blocker under this approved scope.
@@ -504,6 +505,19 @@ Operator-approved qualification scope: only the current Wine/Proton environment 
 
 Operator-approved paid-event scope (2026-10-02): “Use owned examples and explicitly leave actual paid-platform delivery unverified.” No test payments are required. Exercise reviewed synthetic Rants and owned Ko-fi/Bits examples through production libraries and the packaged runtime in disposable data, with explicit local-action opt-in. Keep this evidence distinct from real Rumble API health and Streamer.bot forwarding/trigger receipts. Do not claim real Rant, donation or cheer delivery, subscriber/gift compatibility, or effects on production financial totals from these examples.
 
+### Current acceptance evidence
+
+- Protected G08 delivery is merged in PRs #10/#11; G09 delivery is merged in PR #12 as `26bb2eeea61ad5d4fbe6435f91778996de02d926`. G00–G09 prerequisites remain complete under their approved scope.
+- Windows run `37049814743` / `d3a01e9` passes SonarQube, native ZIP/installer and browser-connected recovery. Its actual downloaded package passes Wine LAN, recovery, installed-bot receipts and the full browser suite. This candidate corrects the observed shutdown crash.
+- Explicitly opted-in owned examples qualify paid-event ingestion, persistent Rumble dedupe, exact/nominal totals, crown/leaderboard updates and local automation receipts in disposable data. Actual paid-platform delivery remains unverified by operator choice. Final audible output requires separate confirmation.
+- Ten plain-language chapters and eight owned screenshots are in the repository, wiki and offline guide. Wiki commits `0b98615`/`e017419` publish approved paid-event limits and read-only test instructions. The regenerated guide passes real-browser checks. Run `37054493247` / `86814ff` passes SonarQube but fails package checking on a reserved PowerShell variable; the corrected verifier and setup probes require new native qualification.
+- Available Wine measurements cover connected bots and OBS with Rumble disabled: backend peak RSS 297.14 MB; idle/chat CPU 4.449%/5.383% with one core as 100%. CPU targets are not met; native Windows streaming-PC performance remains deferred. Complete methodology is in the release checklist.
+
+### Historical implementation checkpoints
+
+The following records preserve intermediate results. Current acceptance evidence
+above supersedes earlier statements that a now-verified check was still pending.
+
 Recovery checkpoint (2026-10-02): 27 local recovery/archive/restore and browser-launch checks passed. Recovery checks exercise SQLite WAL snapshots, archive integrity and asset validation, actual managed-host shutdown, retained safety copies, disabled restored connections/rules, suppressed stale deliveries, and revoked overlay tokens. Backup configuration reads are bounded to 64 KiB; temporary backup/upload files use owner-only Unix permissions. Recovery endpoints, user controls and native packaged restart/restore qualification remain incomplete; these checks do not prove the complete recovery workflow.
 
 Recovery controls checkpoint: the editor now exposes backup download, check-before-restore with explicit replacement confirmation, connection-settings export/import, restart and quit. A draft plain-language recovery guide accompanies it. Two UI tests verify confirmation gating, invalidation when the selected file changes, and the owner-only error message. Twenty-six backend recovery/lifecycle tests pass, including backup API round-trip, malformed ZIP rejection, unconfirmed/unknown restore rejection, request protection, one-operation concurrency and relaunch argument/error handling. Failed restore does not automatically launch another host. Full browser, authenticated remote-owner restrictions, expiry and native packaged restart/restore qualification remain pending.
@@ -513,10 +527,6 @@ Packaging foundation: a self-contained `win-x64` publish profile, separate locke
 Guide checkpoint: canonical Home and Chat/OBS pages, three owned screenshots and a scan-before-copy wiki synchronization tool are added. Wiki commit `fc519c4` publishes those illustrations; browser inspection verified all three images loaded. Eleven browser-launch unit/startup cases passed, including flag-off and failed browser launch with a healthy host. Frontend type checking/lint and 19 targeted chat/settings/logo tests passed. The rebuilt full isolated browser qualifier passed editor/chat/visual-editor/finance/donor/automation checks after the readability and chat-logo changes. The remainder of the guide and G10 functionality are still pending.
 
 G01–G09 prerequisites are delivered on main, including protected G09 merge `26bb2eeea61ad5d4fbe6435f91778996de02d926`. G10 implementation is isolated on `feat/g10-mvp-release` in draft PR #13. The operator's VTube Studio scope hold remains in force. The wiki was initialized and its in-progress Home and Chat/OBS guide published at wiki commit `4ac015c`; the complete guide and illustrations remain to deliver. Initial Windows run `37014293135` passed its build/tests/qualifiers but failed the new-code coverage gate (70.8% versus 80%), so package steps were not reached. Browser-launch startup integration cases are being added to cover this path. Windows packaging, setup, backup/restore and integrated/performance qualification remain to implement and verify.
-
-### Blockers
-
-Final operator confirmation of audible output, real API health, available-environment performance measurements and final release/documentation publication remain acceptance gates. Current final-package CI, SonarQube, recovery, LAN, browser and owned paid-event evidence are recorded below. Implementation and verification continue; G10 is not complete.
 
 Additional recovery validation: 34 combined backend recovery/lifecycle checks passed locally. Seven authenticated LAN endpoint cases prove owner-only recovery/settings/process operations return 403 while ordinary authenticated status remains available. An actual prepared archive verifies expiry at the 15-minute boundary, old-stage deletion on replacement, rejection of stale confirmation IDs and ownership transfer of queued restore data through lifecycle disposal. Native packaged behavior remains to qualify.
 
@@ -575,6 +585,18 @@ Owned paid-event integrated checkpoint: production libraries from that exact pac
 Guide correction checkpoint: final-package inspection found external GitHub Markdown links rewritten as `.html`. The builder now rewrites only local chapter links. A real-browser check passes all ten corrected offline chapters, eight images, navigation, UTF-8 and the preserved remote plan URL. Native package checks assert local-link resolution and the external plan link. Wiki commit `0b98615` publishes the approved owned paid-event limitation. Corrected guide packaging and final release publication remain pending.
 
 Final-candidate performance checkpoint: actual `d3a01e9` Actions EXE with connected bots, two owned OBS browser sources, Info logging and disabled test rules measures 4.449% idle CPU over 60.02 seconds and 5.383% chat CPU over 180 seconds (360 synthetic preview messages, two/second); one logical core is 100%. Peak backend RSS is 297.14 MB. The memory target passes in this workload; CPU targets do not. Rumble is disabled pending local session credential entry, so enabled polling is not covered. All-32-processor normalization is separately reported as 0.1390%/0.1682%, not used to silently replace the one-core comparison. OBS and wineserver measurements are recorded separately in the qualification checklist. This is available Wine evidence, not native Windows streaming-PC performance.
+
+Source-spec completion audit: section 86's explicit bot connection-test buttons were missing. They now issue correlated read-only metadata requests and truthfully report disabled/rejected/timeout states without speech, queue changes, actions or configuration writes. Seven backend cases and eight setup UI cases pass; actual installed Streamer.bot/Speaker.bot answer both buttons in a real isolated browser with empty execution histories. Full local tests pass 175 frontend (88.97% line coverage) and 380 host cases, with four Windows-only skips. Refreshed OpenAPI/generated types pass actual-process contract/recovery checks. Section 91's ten required documentation entry points are present, with seven new canonical-guide/contract indexes; public Markdown links resolve. Stale G08/G09 index/delivery statements and architecture placeholders are corrected using merged PR evidence. Wiki commit `e017419` publishes new test instructions; ten offline chapters/eight images pass browser checks. Run `37054493247` passes analysis/SonarQube but fails native verification because `$home` collides with reserved `$HOME`; renamed `$guideHomeDocument` and the new probes still require successful Windows qualification.
+
+### Blockers
+
+- Final audible confirmation of the owned Ko-fi speech and OBS Bits tone is pending.
+- Final real Rumble API health is pending operator entry of the session-only URL; credential files are not read. Available measurements do not include enabled Rumble polling.
+- One-core Wine CPU targets were exceeded. The operator was asked whether to carry this as a documented Wine limitation or require tuning before release; no disposition is inferred from elapsed time.
+- Corrected offline-guide native packaging, protected delivery and release/checksum publication remain to finish. Exact code/package evidence is kept separate from earlier candidates.
+
+G10 remains In progress. Actual paid-platform delivery and native Windows
+streaming-PC performance are explicit scope limitations, not claims of success.
 
 <a id="g11"></a>
 
