@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { FinancialPanel } from './FinancialPanel';
 import { finance, type FinancialEntry } from './financialApi';
@@ -61,8 +61,9 @@ it('retains the selected version across live polling and exposes reconciliation 
 it('prevents reconciliation of gated entries and reports fetch failures without payload details', async () => {
   vi.mocked(finance.ledger).mockResolvedValue({ items: [{ ...contribution, accountingState: 'gated' }], totalCount: 1, offset: 0, limit: 50 });
   render(<FinancialPanel />);
-  expect(await screen.findByLabelText('Select contribution owned-contribution')).toBeDisabled();
-  expect(screen.getByText('Needs evidence')).toBeVisible();
+  const selection = await screen.findByLabelText('Select contribution owned-contribution');
+  expect(selection).toBeDisabled();
+  expect(within(selection.closest('tr')!).getByRole('cell', { name: /Needs evidence/ })).toBeVisible();
   vi.mocked(finance.ledger).mockRejectedValue(new Error('private upstream detail'));
   fireEvent.change(screen.getByLabelText('Ledger state'), { target: { value: 'gated' } });
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to refresh financial data.');
