@@ -104,7 +104,23 @@ try {
   const card = page.getByRole('region', { name: 'Combined chat setup' });
   await card.getByText('Chat appearance and filters', { exact: true }).click();
   await card.screenshot({ path: path.join(output, 'chat-settings.png') });
-  console.log('Guide chat/setup/recovery illustrations generated from owned simulation only; inspect and secrets-scan before publishing.');
+  await page.getByRole('region', { name: 'Financial ledger', exact: true }).screenshot({ path: path.join(output, 'supporter-totals.png') });
+  const automation = page.getByRole('region', { name: 'Automation rules', exact: true });
+  await automation.getByRole('button', { name: 'New speech rule', exact: true }).click();
+  await automation.getByLabel('Rule name', { exact: true }).fill('Read Ko-fi messages');
+  await automation.getByLabel('Voice alias', { exact: true }).fill('local english');
+  assert.equal(await automation.getByLabel('Enable live automation', { exact: true }).isChecked(), false);
+  await automation.screenshot({ path: path.join(output, 'automation-rules.png') });
+  const editor = page.getByRole('region', { name: 'Visual overlay editor', exact: true });
+  await editor.getByLabel('New overlay name').fill('My stream overlay');
+  await editor.getByLabel('New overlay ID').fill('my-stream-overlay');
+  await editor.getByRole('button', { name: 'Create overlay', exact: true }).click();
+  await editor.getByLabel('Overlay canvas').waitFor();
+  await editor.getByRole('button', { name: 'Add text', exact: true }).click();
+  await editor.getByLabel('Widget text').fill('Welcome to the stream!');
+  await page.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
+  await editor.screenshot({ path: path.join(output, 'visual-editor.png') });
+  console.log('Guide illustrations generated from owned simulation only; inspect and secrets-scan before publishing.');
 } finally {
   await browser?.close();
   if (!spawnFailed && host.exitCode === null) {

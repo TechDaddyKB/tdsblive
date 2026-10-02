@@ -14,6 +14,14 @@
 .tdsblive-editor details { margin: 16px 0; }
 .tdsblive-editor summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
 .tdsblive-editor output { display: block; margin-top: 12px; }
+.tdsblive-editor #financial-ledger label,
+.tdsblive-editor [aria-label="Automation rules"] label { display: inline-flex; flex-direction: column; vertical-align: top; gap: 4px; margin: 8px 16px 8px 0; max-width: 100%; }
+.tdsblive-editor #financial-ledger label:has(input[type=checkbox]),
+.tdsblive-editor [aria-label="Automation rules"] label:has(input[type=checkbox]) { flex-direction: row; align-items: center; }
+.tdsblive-editor #financial-ledger fieldset,
+.tdsblive-editor [aria-label="Automation rules"] fieldset { border: 1px solid #c4cfdf; border-radius: 8px; margin: 12px 0; padding: 12px; }
+.tdsblive-editor #financial-ledger th,
+.tdsblive-editor #financial-ledger td { padding: 6px 12px; text-align: left; }
 .tdsblive-editor [aria-label="Combined chat setup"] > label { display: flex; flex-direction: column; margin: 12px 0; gap: 4px; }
 .tdsblive-editor [aria-label="Combined chat setup"] > label input { width: 100%; }
 .tdsblive-editor [aria-label="Combined chat setup"] details > label { display: inline-flex; flex-direction: column; vertical-align: top; gap: 4px; margin: 8px 16px 8px 0; min-width: 170px; }
@@ -25,4 +33,6 @@
   .tdsblive-editor { padding: 12px; }
   .tdsblive-editor > section { padding: 16px; }
   .tdsblive-editor [aria-label="Combined chat setup"] details > label { width: 100%; margin-right: 0; }
+  .tdsblive-editor #financial-ledger label,
+  .tdsblive-editor [aria-label="Automation rules"] label { width: 100%; margin-right: 0; }
 }

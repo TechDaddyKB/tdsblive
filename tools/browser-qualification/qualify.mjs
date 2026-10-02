@@ -69,6 +69,24 @@ try {
   const setupConfiguration = await (await fetch(`${origin}/api/configuration`)).json();
   assert.equal(setupConfiguration.streamerBot.enabled, false);
   assert.equal(setupConfiguration.speakerBot.enabled, false);
+  // Exercise the ordinary release UI against real configuration persistence.
+  await page.getByText('Streamer.bot action permissions', { exact: true }).click();
+  await page.getByRole('button', { name: 'Load action permissions', exact: true }).click();
+  await page.getByRole('button', { name: 'Save action permissions', exact: true }).waitFor();
+  assert.equal(await page.getByLabel('Allow qualified live event forwarding to Streamer.bot', { exact: true }).isChecked(), false);
+  await page.getByRole('button', { name: 'Save action permissions', exact: true }).click();
+  await page.getByText('Permissions saved. Restart TDSBLive to apply them, then review live rules and trigger bindings.', { exact: true }).waitFor();
+  assert.equal(await page.getByLabel('Enable authenticated LAN access', { exact: true }).isChecked(), false);
+  assert.equal(Number(await page.getByLabel('HTTP port', { exact: true }).inputValue()), port);
+  await page.getByRole('button', { name: 'Save access settings', exact: true }).click();
+  await page.getByText('Access settings saved. Restart TDSBLive to apply them. Update OBS URLs if you changed the port.', { exact: true }).waitFor();
+  const permissionsConfiguration = await (await fetch(`${origin}/api/configuration`)).json();
+  assert.equal(permissionsConfiguration.server.port, port);
+  assert.equal(permissionsConfiguration.server.enableLan, false);
+  assert.equal(permissionsConfiguration.streamerBot.forwardLiveEvents, false);
+  assert.deepEqual(permissionsConfiguration.streamerBot.allowedActionIds, []);
+  assert.equal(permissionsConfiguration.streamerBot.enabled, false);
+  assert.equal(permissionsConfiguration.speakerBot.enabled, false);
   const backupDownload = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download backup', exact: true }).click();
   const backup = await backupDownload;

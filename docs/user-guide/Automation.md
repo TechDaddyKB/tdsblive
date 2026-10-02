@@ -16,6 +16,17 @@ disabling a rule does not disable supporter accounting.
 6. Review cooldown, queue group, queue policy and queue limit.
 7. Leave **Enable live automation** unchecked while testing, then save.
 
+This draft uses the tested **local english** voice alias. Live automation stays
+unchecked; filling in the form does not speak or run an action.
+
+![Draft Ko-fi speech rule with live automation disabled](images/automation-rules.png)
+
+For a USD donation, **Native minor units** means cents. With **Minor-unit digits**
+set to `2`, enter `500` for a $5 minimum or `1000` for a $10 minimum. The example
+uses $10, so smaller donations will not match it. For a Bits rule using
+**Quantity**, enter the number of Bits instead. Always simulate an amount below
+and an amount at your chosen minimum before enabling the rule.
+
 A cooldown limits how frequently the rule can run. A queue waits its turn;
 ignore skips when the group is busy; interrupt requests interruption according
 to the action's supported behavior. Interruption is not a promise that every

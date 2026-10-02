@@ -16,6 +16,11 @@ reported contribution and the amount ultimately paid to you can differ.
 Daily periods use your saved financial timezone; weeks start Monday. Use
 **Refresh financial data** if you want to reload the current view.
 
+The example below has no contributions yet. An empty ledger is expected before
+real supported events arrive. The timezone and stream-start controls are at the top.
+
+![Financial ledger and supporter settings before contributions arrive](images/supporter-totals.png)
+
 Three valuation descriptions matter:
 
 - **Exact**: the event supplies an amount and currency.

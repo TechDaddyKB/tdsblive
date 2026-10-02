@@ -90,5 +90,7 @@ try {
   // Stop only the host at the random port belonging to this temporary data root.
   try { await protect(); await write('/api/application/quit'); await delay(500); } catch { /* Already stopped. */ }
   if (child.exitCode === null) child.kill();
-  await rm(directory, { recursive: true, force: true });
+  // HTTP stops accepting requests before the final SQLite handles close on Windows.
+  // Retry only the owned directory; persistent locks still fail qualification.
+  await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
 }

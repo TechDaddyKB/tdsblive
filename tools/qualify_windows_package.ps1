@@ -11,6 +11,8 @@ $installed = Join-Path $root 'installed'
 $data = Join-Path $root 'data'
 $installer = Join-Path $package "TDSBLive-$Version-win-x64-setup.exe"
 $process = $null
+$startupShortcut = Join-Path ([Environment]::GetFolderPath('Startup')) 'TDSBLive.lnk'
+if (Test-Path $startupShortcut) { throw 'Package qualification requires a runner without an existing TDSBLive startup shortcut.' }
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
 $listener.Start()
 $port = $listener.LocalEndpoint.Port
@@ -61,17 +63,28 @@ try {
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') (Join-Path $portable 'TDSBLive.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Portable EXE restart/restore qualification failed.' }
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
+    if (Test-Path $startupShortcut) { throw 'Login startup must be disabled by default.' }
     Test-Application $installed
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') (Join-Path $installed 'TDSBLive.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Installed EXE restart/restore qualification failed.' }
     # A repeated install exercises replacement/upgrade mechanics without inventing a prior release.
-    Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
+    Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"startup`""
+    if (-not (Test-Path $startupShortcut)) { throw 'Opt-in login startup shortcut was not installed.' }
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($startupShortcut)
+    if ($shortcut.TargetPath -ne (Join-Path $installed 'TDSBLive.exe') -or $shortcut.Arguments) {
+        throw 'Startup shortcut must target only the installed executable without opening an editor.'
+    }
     Test-Application $installed
     Invoke-Installer (Join-Path $installed 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
     if (Test-Path (Join-Path $installed 'TDSBLive.exe')) { throw 'Uninstall left the application executable behind.' }
+    if (Test-Path $startupShortcut) { throw 'Uninstall left the login startup shortcut behind.' }
     if (-not (Test-Path (Join-Path $data 'tdsblive.db'))) { throw 'Uninstall removed separately stored user data.' }
     Write-Output 'Native Windows portable/install/reinstall/uninstall checks passed. Streaming-PC performance and OBS rendering are separate checks.'
 } finally {
     if ($process -and -not $process.HasExited) { Stop-Process -Id $process.Id -Force; $process.WaitForExit() }
+    # Failed qualification must not leave an enabled startup entry on the runner.
+    if (Test-Path (Join-Path $installed 'unins000.exe')) {
+        Invoke-Installer (Join-Path $installed 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
+    }
     Remove-Item $root -Recurse -Force
 }

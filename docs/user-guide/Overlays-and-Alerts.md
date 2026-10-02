@@ -13,6 +13,11 @@ that page, such as chat, an image, a donor list or an alert.
 4. Click **Create overlay**.
 5. Add the widgets you need from the Widgets list.
 
+This example shows a saved text widget. The center is your canvas; its settings
+are on the right. Your overlay starts empty until you add a widget.
+
+![Visual editor with a welcome text widget](images/visual-editor.png)
+
 Choose a widget on the canvas or in Layers. Drag it to position it, use its
 resize handle to change its size, and adjust its properties. Grid snapping
 helps keep positions neat. Raise or lower a layer to change which item appears
