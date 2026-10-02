@@ -453,6 +453,10 @@ Commit `5ec62fba322cfaaa2064089b5f08810dce860e8c` subsequently passed [Windows C
 
 An explicitly opted-in owned event in a marked temporary G09 database traversed the durable automation inbox, live rule dispatcher, overlay WebSocket and real Chromium audio player. One sound command was received and its durable execution completed. External integrations were disabled; the enabled qualification rule was then disabled. This proves browser playback of generated WAV audio, not OBS capture. A separate transparent OBS source is prepared at `http://127.0.0.1:17476/overlay/g09-sound-qualification` for operator verification.
 
+The maintained [G09 qualification audit](g09-qualification.md) maps the full requirement scope to inspected evidence and explicitly lists remaining live and exact-head delivery checks.
+
+Run 36981696581 subsequently finished: all builds/tests/qualification passed and new-code coverage reached 82.3%, but the Sonar gate failed reliability finding `javascript:S2871` in the newly added browser qualification's default `sort()`. An explicit ID comparator addresses that finding; final-head CI must pass before delivery.
+
 ### Blockers
 
 Real Ko-fi-path Speaker.bot speech, OBS sound capture and reversible Streamer.bot-to-VTube Studio behavior remain unverified. VTube Studio availability is awaiting operator information. Queue/timer/reconnect and security audits, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.

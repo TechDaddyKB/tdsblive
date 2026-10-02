@@ -38,7 +38,8 @@ export async function qualifyAutomation(page, origin, writeHeaders) {
   const saved = (await read('/api/automation/rules')).find(rule => rule.name === ruleName);
   assert.ok(saved); assert.equal(saved.enabled, false);
   assert.equal(saved.actions[0].overlayId, overlayId);
-  assert.deepEqual(saved.actions[0].soundAssetIds.sort(), assets.map(asset => asset.id).sort());
+  const compareIds = (left, right) => left.localeCompare(right);
+  assert.deepEqual(saved.actions[0].soundAssetIds.sort(compareIds), assets.map(asset => asset.id).sort(compareIds));
   assert.equal(Number(saved.actions[0].volume), 0.5);
   await page.reload();
   await panel.getByRole('button', { name: `Edit ${ruleName}`, exact: true }).click();

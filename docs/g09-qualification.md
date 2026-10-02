@@ -1,0 +1,31 @@
+# G09 qualification audit
+
+Status: **In progress**. This audit preserves G09's full scope; passing automated checks do not replace the required live checks. Requirements were re-read from specification sections 32–36, 38, 59–62 and `implementation-plan.md` on 2026-10-02.
+
+| Requirement | Inspected evidence | Remaining qualification |
+|---|---|---|
+| Platform/event filters; exact, minimum, half-open range and multiple-of | `AutomationConditionTests`: quantity boundaries, matching currency/scale, gated recipients, unrelated events and invalid inputs | No live platform payload inferred from these unit cases |
+| Ko-fi uses Streamer.bot events and persists before automation | Canonical normalization and accepted-live transactional inbox; `AutomationPlanningTests` and `AutomationHostedTests` | Real owned Ko-fi-path speech through installed Speaker.bot |
+| Configurable Speaker.bot host/port, voice and bad-word flag | Existing independent connection; actual 0.1.7 connectivity on local port 7580; speech adapter uses configured alias/filter | Configured alias and audible speech remain unverified; product default remains 7680 |
+| Minimum donation, template fields, maximum length, username/amount/message switches | `AutomationSpeechTests` plus editor controls and condition evaluator | Live alias/audio evidence does not yet exist |
+| Anonymous/private-message safeguards; URL, punctuation, repetition and bad-word controls | Speech tests cover private/unknown Ko-fi visibility, one-pass expansion, suppression, grapheme limits and sanitization | Forwarded metadata limitations remain explicit; unknown privacy cannot authorize message speech |
+| Allowed languages and manual moderation | Speech and execution-store tests; explicit allowed-language resolution followed by separate moderation | These decisions cannot be bypassed by missing metadata |
+| Queue groups, order, cooldown, bounded capacity and interruption | SQLite execution stores; `AutomationQueueDispatchTests` verify replacement interruption, independent groups and large blocked backlogs | Speaker.bot owns speech already acknowledged; pending-dispatch policies do not promise external playback cancellation |
+| Existing alert priority/duration/concurrency/interruptibility | G06's delivered canvas alert scheduler owns visual-alert scheduling; G09 owns durable automation dispatch groups | Do not infer visual-alert playback completion from bot acknowledgment |
+| Local audio assets, volume, random variants, timeout and ducking metadata | Real WebSocket/HTTP sound tests and browser sound player; named editor asset selection | Ducking is metadata, not a promise to adjust unrelated OBS mixer channels |
+| Actual overlay sound playback | Owned live event traversed durable inbox/dispatcher/socket to a fresh Chromium audio element; exactly one sound command and completed receipt | Actual OBS meter/captured audio remains unverified |
+| Rule CRUD, multiple actions, discovery and visible missing dependencies | Editor tests, capability endpoint tests, real Chromium save/reload/edit/delete; stable action IDs and ordered actions | Actual VTube Studio action/model availability remains unknown |
+| Timed toggle or separate enable/disable; Extend/Restart/Ignore/Queue | `AutomationTemporaryActionTests` exercise all policies across service recreation, ambiguous calls, bounded repeats and queued original receipt IDs | Reversible effects must still be observed on a real VTube Studio model |
+| Durable dedupe/restart and uncertain outcomes without blind retry | Execution-store recovery, planning idempotence, persisted timer tests and adapter outcome tests | Bot acknowledgment alone is not independent proof of model state or spoken audio |
+| Safe simulation and independent financial ingestion | Real HTTP preview/replay cases; Chromium compared financial ledger and execution lists before/after simulation | Owned live qualification may write only to its explicitly marked temporary database |
+| HTTP and authenticated LAN audio | Foundation HTTP contracts; sound tests verify scoped temporary asset leases, wrong-source isolation, timeout/cancellation and token revocation | HTTPS is not required |
+| Windows, backend OpenCover, frontend LCOV and Sonar gate | Run 36979682918 passed for `5ec62fba`; later run 36981696581 passed builds, coverage reports and full browser qualification, with 82.3% new-code coverage | The latter gate failed reliability rule `javascript:S2871` in the browser check's default sorting. An explicit ID comparator fixes the finding; exact-head rerun remains required |
+
+## Live checks still required
+
+1. **OBS sound:** open the prepared isolated source, enable Control audio via OBS, emit one explicitly owned test event, and verify the OBS meter and captured/audible tone. Inspect the durable receipt and disable the qualification rule afterward.
+2. **Ko-fi TTS:** obtain a configured voice alias, connect a temporary host to local Speaker.bot on port 7580, and route one owned Ko-fi donation event through the normal persisted automation path. Confirm audible sanitized text, not merely request acknowledgment.
+3. **VTube Studio:** identify a model and an existing reversible Streamer.bot action, allow only the owned test actions in the temporary host, and observe enable plus timed reversion. Qualify repeat-policy behavior and restart/reconnect recovery against actual model state; do not call an ambiguous toggle again automatically.
+4. **Final delivery:** publish the remaining scoped commits, require successful exact-head Windows/OpenCover/LCOV/Sonar checks, maintain this audit and the plan, then deliver through protected PR checks. G09 remains incomplete until every required check has evidence.
+
+The owned fixture helper requires an explicit `--execute-owned-live-test` flag, an existing database and a `g09-owned-qualification` marker under a directory named `tdsblive-g09-*`. It rejects unmarked or missing databases without creating a file. It is not part of editor simulation, replay or normal production operation. Original captures, credentials, user data and generated reports remain excluded from Git.
