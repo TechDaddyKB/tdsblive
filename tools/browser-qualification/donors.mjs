@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
 
-export async function qualifyDonors(page, origin, writeHeaders) {
+export async function qualifyDonors(page, origin, writeHeaders, root) {
   const write = async (path, method, value) => {
     const response = await fetch(`${origin}${path}`, { method, headers: writeHeaders, body: JSON.stringify(value) });
     assert.equal(response.status, method === 'POST' && path === '/api/overlays' ? 201 : path === '/api/financial/rules' ? 204 : 200, path);
@@ -34,12 +35,36 @@ export async function qualifyDonors(page, origin, writeHeaders) {
   await write('/api/financial/reconcile', 'POST', { selected: [{ id: bits.id, version: bits.version }] });
   await crown.getByText(/\$2\.00/).waitFor();
   await total.getByText('$14.50', { exact: true }).waitFor();
+  const editorPage = await page.context().newPage();
+  let editorErrors = 0;
+  editorPage.on('pageerror', () => { editorErrors++; });
+  try {
+    await editorPage.goto(`${origin}/editor`);
+    const editor = editorPage.getByRole('region', { name: 'Visual overlay editor' });
+    await editor.getByLabel('Overlay', { exact: true }).selectOption('donor-qualification');
+    await editor.getByRole('listitem').getByRole('button', { name: 'donor-crown', exact: true }).click();
+    const before = await (await fetch(`${origin}/api/overlays/donor-qualification`)).json();
+    await editor.getByLabel('Minimum USD cents').fill('500');
+    await editorPage.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
+    await crown.getByText('No matching support', { exact: true }).waitFor();
+    await editorPage.reload();
+    await editor.getByLabel('Overlay', { exact: true }).selectOption('donor-qualification');
+    await editor.getByRole('listitem').getByRole('button', { name: 'donor-crown', exact: true }).click();
+    assert.equal(await editor.getByLabel('Minimum USD cents').inputValue(), '500');
+    await editor.getByRole('button', { name: 'Revision history', exact: true }).click();
+    await editor.getByRole('button', { name: `Restore v${before.version}`, exact: true }).click();
+    await crown.getByText(/\$2\.00/).waitFor();
+    await editor.getByRole('listitem').getByRole('button', { name: 'donor-crown', exact: true }).click();
+    assert.equal(await editor.getByLabel('Minimum USD cents').inputValue(), '0');
+    assert.equal(editorErrors, 0, 'Donor editor raised JavaScript errors');
+  } finally { await editorPage.close(); }
   const socketsBefore = await page.evaluate(() => window.tdsbliveTestSockets.length);
   await page.evaluate(() => window.tdsbliveTestSockets.at(-1).close());
   await page.waitForFunction(before => window.tdsbliveTestSockets.length > before && window.tdsbliveTestSockets.at(-1).g05Subscribed, socketsBefore);
   await crown.getByText(/\$2\.00/).waitFor();
+  await page.screenshot({ path: path.join(root, 'artifacts/g08-donor-widgets.png') });
   await page.goto(`${origin}/overlay/donor-qualification?preview=1`);
   await page.getByText('Test preview · no production totals', { exact: true }).first().waitFor();
   assert.equal(await page.getByText(/\$12\.50|\$14\.50/).count(), 0);
-  console.log('G08 real-browser donor snapshots, identity link/unlink, filters, reconciliation, reconnect and preview isolation passed');
+  console.log('G08 real-browser donor snapshots, identity link/unlink, filters, reconciliation, editor persistence/revision restore, reconnect and preview isolation passed');
 }

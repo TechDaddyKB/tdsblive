@@ -11,6 +11,32 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class DonorDeliveryTests
 {
     [Fact]
+    public async Task LanOverlayTokenCanReadOnlyItsDonorAssetsAndCannotReadFinancialAdministration()
+    {
+        using var app = new FoundationHostFactory(true); using var http = app.CreateClient();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var assets = app.Services.GetRequiredService<AssetStore>();
+        var crown = (await assets.UploadAsync(new MemoryStream(System.Text.Encoding.ASCII.GetBytes("GIF89a0000")), "owned-crown.gif", "image/gif", null, timeout.Token))!;
+        var font = (await assets.UploadAsync(new MemoryStream(System.Text.Encoding.ASCII.GetBytes("wOF20000")), "owned-font.woff2", "font/woff2", "OFL-1.1", timeout.Token))!;
+        var overlays = app.Services.GetRequiredService<OverlayStore>();
+        await overlays.CreateAsync(new() { Id = "scoped-donors", CanvasEnabled = true, Widgets = [new() { Kind = "donor-crown", Donor = new() { CrownAssetId = crown.Id, FontAssetId = font.Id } }] }, timeout.Token);
+        var token = await overlays.CreateTokenAsync("scoped-donors", 1, timeout.Token);
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
+        http.DefaultRequestHeaders.Add("X-TDSBLive-Overlay", "scoped-donors");
+        Assert.Equal(System.Net.HttpStatusCode.OK, (await http.GetAsync("/assets/" + crown.Id, timeout.Token)).StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, (await http.GetAsync("/assets/" + font.Id, timeout.Token)).StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, (await http.GetAsync("/assets/" + new string('a', 64), timeout.Token)).StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, (await http.GetAsync("/api/financial/ledger", timeout.Token)).StatusCode);
+        var client = app.Server.CreateWebSocketClient();
+        client.SubProtocols.Add("tdsblive.overlay.v1"); client.SubProtocols.Add(token.Token);
+        client.ConfigureRequest = request => request.Headers.Origin = "http://localhost";
+        using var socket = await client.ConnectAsync(new("ws://localhost/ws/overlay/scoped-donors"), timeout.Token);
+        using var snapshot = await ReceiveDonors(socket, timeout.Token);
+        Assert.Equal("empty", snapshot.RootElement.GetProperty("widgets")[0].GetProperty("state").GetString());
+        socket.Abort();
+    }
+
+    [Fact]
     public async Task NewOverlayWithExistingRevisionIsRejectedAsBadRequest()
     {
         using var app = new FoundationHostFactory();
