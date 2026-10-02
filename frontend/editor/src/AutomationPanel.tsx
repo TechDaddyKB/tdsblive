@@ -6,18 +6,26 @@ import { AutomationSimulation } from './AutomationSimulation';
 import { AutomationReceiptReview } from './AutomationReceiptReview';
 import { AutomationCapabilities } from './AutomationCapabilities';
 import { AutomationTemporaryEffects } from './AutomationTemporaryEffects';
+import { AutomationSoundPicker } from './AutomationSoundPicker';
+
+const ruleNames: Record<string, string> = { speech: 'Ko-fi TTS', sound: 'Bits sound', streamerbot: 'Bits VTube Studio action' };
 
 export function newAutomationRule(kind: string): AutomationRule {
-  return { id: crypto.randomUUID(), name: kind === 'speech' ? 'Ko-fi TTS' : kind === 'sound' ? 'Bits sound' : 'Bits VTube Studio action', enabled: false, version: 0,
+  return { id: crypto.randomUUID(), name: ruleNames[kind] ?? ruleNames.streamerbot, enabled: false, version: 0,
     condition: { platform: kind === 'speech' ? 'kofi' : 'twitch', eventType: kind === 'speech' ? 'support.donation' : 'support.bits',
       unit: kind === 'speech' ? 'native-money' : 'quantity', operator: 'minimum', value: kind === 'speech' ? '1000' : '100',
       ...(kind === 'speech' ? { currency: 'USD', minorUnitDigits: 2 } : {}) },
-    actions: [newAction(kind)], queueGroup: kind === 'speech' ? 'tts' : kind === 'sound' ? 'sounds' : 'vts', queuePolicy: 'queue', maximumQueueLength: 20, cooldownSeconds: 0 };
+    actions: [newAction(kind)], queueGroup: ({ speech: 'tts', sound: 'sounds' } as Record<string, string>)[kind] ?? 'vts', queuePolicy: 'queue', maximumQueueLength: 20, cooldownSeconds: 0 };
 }
 function newAction(kind: string): AutomationAction {
-  return { id: crypto.randomUUID(), kind, ...(kind === 'speech' ? { speech: { voice: '', template: '{from} donated {amount} {currency}. {message}',
+  if (kind !== 'speech') return { id: crypto.randomUUID(), kind };
+  return { id: crypto.randomUUID(), kind, speech: { voice: '', template: '{from} donated {amount} {currency}. {message}',
     maximumCharacters: 300, stripUrls: true, maximumRepeatedCharacters: 3, maximumPunctuationRun: 3, ignoreAnonymousMessage: true,
-    speakerBadWordFilter: true, speakUsername: true, speakAmount: true, speakMessage: true, manualModeration: false } } : {}) };
+    speakerBadWordFilter: true, speakUsername: true, speakAmount: true, speakMessage: true, manualModeration: false } };
+}
+function upperBound(operator: string, value: string | number): string | null {
+  if (operator !== 'range') return null;
+  return /^\d{1,19}$/.test(String(value)) ? String(BigInt(value) + 1n) : '1';
 }
 
 export function AutomationPanel() {
@@ -56,7 +64,7 @@ export function AutomationPanel() {
         <label>Platform <input required value={rule.condition.platform} onChange={event => setRule({ ...rule, condition: { ...rule.condition, platform: event.target.value } })} /></label>
         <label>Normalized event type <input required value={rule.condition.eventType} onChange={event => setRule({ ...rule, condition: { ...rule.condition, eventType: event.target.value } })} /></label>
         <label>Condition <select value={rule.condition.operator} onChange={event => setRule({ ...rule, condition: { ...rule.condition, operator: event.target.value,
-          upperExclusive: event.target.value === 'range' ? (/^[0-9]{1,19}$/.test(String(rule.condition.value)) ? String(BigInt(rule.condition.value) + 1n) : '1') : null } })}>{['exact', 'minimum', 'range', 'multiple'].map(value => <option key={value}>{value}</option>)}</select></label>
+          upperExclusive: upperBound(event.target.value, rule.condition.value) } })}>{['exact', 'minimum', 'range', 'multiple'].map(value => <option key={value}>{value}</option>)}</select></label>
         <label>Condition units <select value={rule.condition.unit} onChange={event => setRule({ ...rule, condition: { ...rule.condition, unit: event.target.value,
           currency: event.target.value === 'native-money' ? 'USD' : null, minorUnitDigits: event.target.value === 'native-money' ? 2 : null } })}><option value="quantity">Quantity</option><option value="native-money">Native minor units</option></select></label>
         <label>{rule.condition.unit === 'native-money' ? 'Native amount in minor units' : 'Quantity'} <input required inputMode="numeric" pattern="[0-9]+" value={rule.condition.value} onChange={event => setRule({ ...rule, condition: { ...rule.condition, value: event.target.value } })} /></label>
@@ -70,8 +78,7 @@ export function AutomationPanel() {
         {rule.actions?.map((action, index) => <fieldset key={action.id}><legend>Action {index + 1}: {action.kind}</legend>
           {action.kind === 'speech' && <><label>Voice alias <input required value={action.speech?.voice ?? ''} onChange={event => actionChange(index, { speech: { ...action.speech, voice: event.target.value } })} /></label>
             <label>Speech template <textarea value={action.speech?.template ?? ''} onChange={event => actionChange(index, { speech: { ...action.speech, template: event.target.value } })} /></label></>}
-          {action.kind === 'sound' && <><label>Target overlay ID <input required value={action.overlayId ?? ''} onChange={event => actionChange(index, { overlayId: event.target.value })} /></label>
-            <label>Audio asset IDs (one per line) <textarea required value={action.soundAssetIds?.join('\n') ?? ''} onChange={event => actionChange(index, { soundAssetIds: event.target.value.split(/\s+/).filter(Boolean) })} /></label></>}
+          {action.kind === 'sound' && <AutomationSoundPicker action={action} change={patch => actionChange(index, patch)} />}
           {action.kind === 'streamerbot' && <label>Streamer.bot action <select required value={action.streamerBotActionId ?? ''} onChange={event => actionChange(index, { streamerBotActionId: event.target.value })}>
             <option value="">Select an action</option>{discovery?.actions.map(value => <option key={value.id} value={value.id} disabled={!value.enabled}>{value.name}</option>)}</select></label>}
           <AutomationActionSettings action={action} change={patch => actionChange(index, patch)} discovery={discovery} />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { automation, type AutomationRule } from './automationApi';
 
-export function AutomationSimulation({ rule }: { rule: AutomationRule }) {
+export function AutomationSimulation({ rule }: Readonly<{ rule: AutomationRule }>) {
   const [amount, setAmount] = useState(String(rule.condition.value)); const [message, setMessage] = useState('Owned test message');
   const [anonymous, setAnonymous] = useState(false); const [language, setLanguage] = useState('');
   const [messagePublic, setMessagePublic] = useState(true);

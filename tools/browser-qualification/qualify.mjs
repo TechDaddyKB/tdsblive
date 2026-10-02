@@ -11,6 +11,7 @@ import { chromium } from 'playwright';
 import { qualifyVisualEditor } from './visual-editor.mjs';
 import { qualifyFinancial } from './financial.mjs';
 import { qualifyDonors } from './donors.mjs';
+import { qualifyAutomation } from './automation.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
@@ -127,6 +128,7 @@ try {
   await page.waitForFunction(() => document.querySelector('.badge-image')?.naturalWidth > 0);
   await page.screenshot({ path: path.join(root, 'artifacts/g05-streamer-chat.png') });
   await qualifyVisualEditor(page, origin, writeHeaders, root);
+  await qualifyAutomation(page, origin, writeHeaders);
   execFileSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(root, 'tools/seed_financial_browser.py'), directory], { stdio: 'pipe' });
   await qualifyFinancial(page, origin);
   await qualifyDonors(page, origin, writeHeaders, root);

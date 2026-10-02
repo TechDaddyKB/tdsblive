@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { automation, type AutomationTemporaryEffect } from './automationApi';
 
-function UncertainEffect({ effect, resolved }: { effect: AutomationTemporaryEffect; resolved: () => void }) {
+function UncertainEffect({ effect, resolved }: Readonly<{ effect: AutomationTemporaryEffect; resolved: () => void }>) {
   const [restored, setRestored] = useState(false); const [busy, setBusy] = useState(false); const [status, setStatus] = useState('');
   async function resolve() {
     if (!restored) return;
@@ -15,7 +15,7 @@ function UncertainEffect({ effect, resolved }: { effect: AutomationTemporaryEffe
     <p>Inspect VTube Studio and manually restore the intended inactive state before resolving. Pending repetitions will be discarded. This button sends no toggle.</p>
     <label><input type="checkbox" checked={restored} onChange={event => setRestored(event.target.checked)} />I inspected and restored the external state for {effect.actionId}</label>
     <button type="button" disabled={!restored} onClick={() => void resolve()}>Resolve restored effect {effect.actionId}</button>
-    <p role="status">{status}</p>
+    <output aria-live="polite">{status}</output>
   </fieldset>;
 }
 

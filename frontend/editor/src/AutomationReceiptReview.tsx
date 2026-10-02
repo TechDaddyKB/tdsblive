@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { automation, type AutomationExecution } from './automationApi';
 
-export function AutomationReceiptReview({ receipt, busy, operation }: {
+export function AutomationReceiptReview({ receipt, busy, operation }: Readonly<{
   receipt: AutomationExecution; busy: boolean;
   operation: (task: () => Promise<void>, message: string) => Promise<void>;
-}) {
+}>) {
   const [language, setLanguage] = useState('');
   let speech = ''; let languages: string[] = [];
   try {

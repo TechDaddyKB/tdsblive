@@ -1,7 +1,7 @@
 import type { AutomationAction } from './automationApi';
 import type { Discovery } from './api';
 
-export function AutomationActionSettings({ action, change, discovery }: { action: AutomationAction; change: (patch: Partial<AutomationAction>) => void; discovery: Discovery | null }) {
+export function AutomationActionSettings({ action, change, discovery }: Readonly<{ action: AutomationAction; change: (patch: Partial<AutomationAction>) => void; discovery: Discovery | null }>) {
   const speech = action.speech;
   return <>
     {action.kind === 'speech' && <fieldset><legend>Speech safety and moderation</legend>

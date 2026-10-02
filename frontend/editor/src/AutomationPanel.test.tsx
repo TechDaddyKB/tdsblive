@@ -1,11 +1,31 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AutomationPanel } from './AutomationPanel';
-const mocks = vi.hoisted(() => ({ rules: vi.fn(), executions: vi.fn(), save: vi.fn(), remove: vi.fn(), moderate: vi.fn(), simulate: vi.fn(), language: vi.fn(), capabilities: vi.fn(), temporaryEffects: vi.fn(), resolveRestored: vi.fn() }));
+const mocks = vi.hoisted(() => ({ rules: vi.fn(), executions: vi.fn(), save: vi.fn(), remove: vi.fn(), moderate: vi.fn(), simulate: vi.fn(), language: vi.fn(), capabilities: vi.fn(), temporaryEffects: vi.fn(), resolveRestored: vi.fn(), soundAssets: vi.fn(), soundOverlays: vi.fn() }));
 vi.mock('./automationApi', () => ({ automation: mocks }));
 vi.mock('./api', () => ({ bots: { discovery: vi.fn().mockResolvedValue({ actions: [], events: {}, codeTriggers: [] }) } }));
-beforeEach(() => { vi.clearAllMocks(); mocks.rules.mockResolvedValue([]); mocks.executions.mockResolvedValue([]); mocks.temporaryEffects.mockResolvedValue([]); mocks.capabilities.mockResolvedValue({ streamerBotState: 'disabled', speakerBotState: 'disabled', issues: [] }); mocks.save.mockImplementation(async value => ({ ...value, version: 1 })); });
+beforeEach(() => { vi.clearAllMocks(); mocks.rules.mockResolvedValue([]); mocks.executions.mockResolvedValue([]); mocks.temporaryEffects.mockResolvedValue([]); mocks.soundAssets.mockResolvedValue([]); mocks.soundOverlays.mockResolvedValue([]); mocks.capabilities.mockResolvedValue({ streamerBotState: 'disabled', speakerBotState: 'disabled', issues: [] }); mocks.save.mockImplementation(async value => ({ ...value, version: 1 })); });
 afterEach(cleanup);
+
+it('selects named canvas/audio variants, edits playback settings and preserves their IDs on save', async () => {
+  const first = 'a'.repeat(64); const second = 'b'.repeat(64);
+  mocks.soundAssets.mockResolvedValue([{ id: first, filename: 'Owned first.wav', mime: 'audio/wav' }, { id: second, filename: 'Owned second.ogg', mime: 'audio/ogg' }, { id: 'image', filename: 'Image.png', mime: 'image/png' }]);
+  mocks.soundOverlays.mockResolvedValue([{ id: 'owned-canvas', name: 'Owned canvas', canvasEnabled: true }, { id: 'chat-only', name: 'Chat only', canvasEnabled: false }]);
+  render(<AutomationPanel />); fireEvent.click(screen.getByRole('button', { name: 'New sound rule' }));
+  await screen.findByRole('option', { name: 'Owned canvas' });
+  expect(screen.queryByRole('option', { name: 'Chat only' })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Use audio: Image.png')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Target canvas overlay'), { target: { value: 'owned-canvas' } });
+  fireEvent.click(screen.getByLabelText('Use audio: Owned first.wav')); fireEvent.click(screen.getByLabelText('Use audio: Owned second.ogg'));
+  fireEvent.change(screen.getByLabelText('Sound volume (0–1)'), { target: { value: '0.5' } });
+  fireEvent.change(screen.getByLabelText('Playback timeout seconds'), { target: { value: '10' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save automation rule' }));
+  await waitFor(() => expect(mocks.save).toHaveBeenCalled());
+  const saved = mocks.save.mock.calls[0][0];
+  expect(saved.enabled).toBe(false); expect(saved.actions[0].overlayId).toBe('owned-canvas');
+  expect(saved.actions[0].soundAssetIds).toEqual([first, second]); expect(saved.actions[0].volume).toBe('0.5');
+  expect(saved.actions[0].playbackTimeoutSeconds).toBe('10');
+});
 
 it('requires external restoration confirmation before resolving an uncertain temporary effect', async () => {
   const effect = { actionId: 'owned-effect', version: 3, state: 'uncertain' };
