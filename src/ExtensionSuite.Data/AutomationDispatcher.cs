@@ -14,16 +14,68 @@ public interface IAutomationActionDispatcher
 public sealed class AutomationDispatcher(AutomationExecutionStore store, IAutomationActionDispatcher adapter) : IDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
+    private readonly Dictionary<string, Task<int>> groups = new(StringComparer.Ordinal);
+    private const int MaximumConcurrentGroups = 16;
+
+    private sealed record ScheduledWork(Task<int>[] Running, int Started, int Completed);
+
+    public async Task<int> PumpAsync(CancellationToken ct = default)
+    {
+        var work = await ScheduleAsync(ct);
+        return work.Started + work.Completed;
+    }
 
     public async Task<int> DrainAsync(CancellationToken ct = default)
+    {
+        var work = await ScheduleAsync(ct);
+        try { return work.Completed + (await Task.WhenAll(work.Running)).Sum(); }
+        finally
+        {
+            await gate.WaitAsync(CancellationToken.None);
+            try
+            {
+                foreach (var name in groups.Where(item => item.Value.IsCompleted && work.Running.Contains(item.Value)).Select(item => item.Key).ToArray())
+                    groups.Remove(name);
+            }
+            finally { gate.Release(); }
+        }
+    }
+
+    public async Task WaitForIdleAsync(CancellationToken ct)
+    {
+        Task<int>[] running;
+        await gate.WaitAsync(CancellationToken.None);
+        try { running = groups.Values.ToArray(); }
+        finally { gate.Release(); }
+        try { await Task.WhenAll(running); }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
+    }
+
+    private async Task<ScheduledWork> ScheduleAsync(CancellationToken ct)
     {
         await gate.WaitAsync(ct);
         try
         {
-            var queued = await store.QueuedAsync(ct: ct);
-            var results = await Task.WhenAll(queued.GroupBy(item => item.QueueGroup)
-                .Select(group => DispatchGroupAsync(group, ct)));
-            return results.Sum();
+            var completed = 0;
+            foreach (var name in groups.Where(item => item.Value.IsCompleted).Select(item => item.Key).ToArray())
+            {
+                var finished = groups[name];
+                groups.Remove(name);
+                completed += await finished;
+            }
+            var started = 0;
+            if (groups.Count < MaximumConcurrentGroups)
+            {
+                // Exclude occupied groups before applying the database batch limit, so a large
+                // backlog behind one blocked operation cannot hide a newly available group.
+                var queued = await store.QueuedAsync(ct: ct, excludedGroups: groups.Keys.ToArray());
+                foreach (var group in queued.GroupBy(item => item.QueueGroup).Take(MaximumConcurrentGroups - groups.Count))
+                {
+                    groups.Add(group.Key, DispatchGroupAsync(group, ct));
+                    started += group.Count();
+                }
+            }
+            return new(groups.Values.ToArray(), started, completed);
         }
         finally { gate.Release(); }
     }

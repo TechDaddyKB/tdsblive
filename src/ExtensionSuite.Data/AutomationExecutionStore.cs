@@ -86,12 +86,14 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
         return await db.AutomationExecutions.AsNoTracking().OrderByDescending(item => item.CreatedAtTicks).ThenBy(item => item.Id).Take(limit).ToArrayAsync(ct);
     }
 
-    public async Task<AutomationExecution[]> QueuedAsync(int limit = 100, CancellationToken ct = default)
+    public async Task<AutomationExecution[]> QueuedAsync(int limit = 100, CancellationToken ct = default, string[]? excludedGroups = null)
     {
         if (limit is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(limit));
         await using var db = await factory.CreateDbContextAsync(ct);
         var now = clock.GetUtcNow().UtcTicks;
+        excludedGroups ??= [];
         return await db.AutomationExecutions.AsNoTracking().Where(item => item.State == "queued" && item.DueAtTicks <= now &&
+                !excludedGroups.Contains(item.QueueGroup) &&
                 !db.AutomationExecutions.Any(earlier => earlier.EventId == item.EventId && earlier.RuleId == item.RuleId &&
                     earlier.ActionOrder < item.ActionOrder && (earlier.State == "moderation-pending" || earlier.State == "language-review" || earlier.State == "dispatching")))
             .OrderBy(item => item.CreatedAtTicks).ThenBy(item => item.EventId).ThenBy(item => item.RuleId).ThenBy(item => item.ActionOrder).Take(limit).ToArrayAsync(ct);

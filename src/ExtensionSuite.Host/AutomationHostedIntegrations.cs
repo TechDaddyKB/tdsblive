@@ -17,8 +17,18 @@ public sealed class AutomationDispatchIntegration(AutomationDispatcher dispatche
     public string Name => "automation-dispatch";
     public async Task RunAsync(CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
-            if (await dispatcher.DrainAsync(ct) == 0) await Task.Delay(200, ct);
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                await dispatcher.PumpAsync(ct);
+                await Task.Delay(100, ct);
+            }
+        }
+        finally
+        {
+            if (ct.IsCancellationRequested) await dispatcher.WaitForIdleAsync(ct);
+        }
     }
 }
 

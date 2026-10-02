@@ -11,6 +11,66 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class AutomationTemporaryActionTests
 {
     [Theory]
+    [InlineData("extend", false, 120)]
+    [InlineData("extend", true, 120)]
+    [InlineData("restart", false, 80)]
+    [InlineData("restart", true, 80)]
+    [InlineData("ignore", false, 60)]
+    [InlineData("ignore", true, 60)]
+    [InlineData("queue", false, 60)]
+    [InlineData("queue", true, 60)]
+    public async Task StackingAndReversionSurviveServiceRecreation(string policy, bool separateRevert, int expirySeconds)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "tdsblive-stack-restart", Guid.NewGuid().ToString());
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var factory = new PooledDbContextFactory<FoundationDbContext>(new DbContextOptionsBuilder<FoundationDbContext>()
+                .UseSqlite($"Data Source={Path.Combine(directory, "toggle.db")};Pooling=False").Options);
+            await using (var db = factory.CreateDbContext()) await DatabaseLifecycle.InitializeAsync(db);
+            var clock = new OwnedClock(); var initial = clock.Now; var bot = new OwnedBot();
+            var store = new AutomationTemporaryStore(factory, clock);
+            var action = new AutomationAction { Kind = "streamerbot", StreamerBotActionId = Guid.NewGuid(),
+                RevertActionId = separateRevert ? Guid.NewGuid() : null, DurationSeconds = 60, StackPolicy = policy };
+            var plan = new AutomationPlannedAction(Guid.NewGuid(), 1, action, "queued", null, "main", "queue", 1, 0);
+            using (var service = new AutomationTemporaryActions(store, bot, clock))
+            {
+                Assert.Equal("dispatched", (await service.ApplyAsync(Guid.NewGuid(), plan, default)).State);
+                clock.Now = initial.AddSeconds(20);
+                Assert.Equal("completed", (await service.ApplyAsync(Guid.NewGuid(), plan, default)).State);
+                if (policy == "queue") Assert.Equal("rejected", (await service.ApplyAsync(Guid.NewGuid(), plan, default)).State);
+                Assert.Single(bot.Calls);
+            }
+            var reopened = new AutomationTemporaryStore(factory, clock);
+            Assert.Equal(0, await reopened.RecoverInterruptedAsync());
+            Assert.Equal(initial.AddSeconds(expirySeconds).UtcTicks, (await reopened.GetAsync(action.Id))!.ExpiresAtTicks);
+            using var recreated = new AutomationTemporaryActions(reopened, bot, clock);
+            clock.Now = initial.AddSeconds(expirySeconds - 1);
+            await recreated.TickAsync(default);
+            Assert.Single(bot.Calls);
+            clock.Now = initial.AddSeconds(expirySeconds);
+            await recreated.TickAsync(default);
+            Assert.True(bot.Calls[1].Revert);
+            Assert.Equal(action.RevertActionId ?? action.StreamerBotActionId, bot.Calls[1].ActionId);
+            if (policy == "queue")
+            {
+                Assert.Equal(3, bot.Calls.Count);
+                Assert.False(bot.Calls[2].Revert);
+                Assert.Equal("active", (await reopened.GetAsync(action.Id))!.State);
+                clock.Now = clock.Now.AddSeconds(60);
+                await recreated.TickAsync(default);
+                Assert.Equal(4, bot.Calls.Count);
+            }
+            else Assert.Equal(2, bot.Calls.Count);
+            Assert.Equal("idle", (await reopened.GetAsync(action.Id))!.State);
+            var count = bot.Calls.Count;
+            await recreated.TickAsync(default);
+            Assert.Equal(count, bot.Calls.Count);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task AmbiguousEnableOrRevertIsVisibleAndManualResolutionDoesNotRetry(bool failOnRevert)
