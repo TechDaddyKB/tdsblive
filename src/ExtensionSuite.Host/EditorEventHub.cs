@@ -17,6 +17,12 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
     {
         foreach (var subscriber in subscribers.Values) subscriber.TryStop();
     }
+    public async Task ShutdownAsync(CancellationToken cancellationToken)
+    {
+        var active = subscribers.Values.ToArray();
+        foreach (var subscriber in active) subscriber.TryStop();
+        await Task.WhenAll(active.Select(subscriber => subscriber.Drained.Task)).WaitAsync(cancellationToken);
+    }
 
     public void Publish(CanonicalEvent item)
     {
@@ -67,12 +73,13 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         catch (Exception error) when (error is OperationCanceledException or WebSocketException or JsonException) { }
         finally
         {
-            subscribers.TryRemove(id, out _);
+            try
+            {
             connectionSlots.Release();
             stop.Cancel();
             subscriber.Queue.Writer.TryComplete();
             try { await sending; }
-            catch (Exception error) when (error is OperationCanceledException or WebSocketException) { }
+            catch (Exception error) when (error is OperationCanceledException or WebSocketException or ObjectDisposedException) { }
             try { await authorization; } catch (OperationCanceledException) { }
             try { await donors; } catch (OperationCanceledException) { }
             if (socket.State is WebSocketState.Open or WebSocketState.CloseReceived)
@@ -80,6 +87,12 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                 try { await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Session closed", timeout.Token); }
                 catch (Exception error) when (error is OperationCanceledException or WebSocketException) { }
+            }
+            }
+            finally
+            {
+                subscribers.TryRemove(id, out _);
+                subscriber.Drained.TrySetResult();
             }
         }
     }
@@ -205,6 +218,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         public bool Preview { get; init; }
         public bool Limited { get; init; }
         public CancellationTokenSource Stop { get; } = stop;
+        public TaskCompletionSource Drained { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Channel<string> Queue { get; } = Channel.CreateBounded<string>(new BoundedChannelOptions(256)
             { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
         public bool Accepts(CanonicalEvent item) => (types.Contains(item.Type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal)) &&

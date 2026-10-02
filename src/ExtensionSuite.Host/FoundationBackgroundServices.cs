@@ -64,7 +64,7 @@ public sealed class DurableOutboxWorker(EventStore store, EditorEventHub hub, IL
 {
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        hub.Shutdown();
+        await hub.ShutdownAsync(cancellationToken);
         await base.StopAsync(cancellationToken);
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -37,7 +37,7 @@ export function createWidget(kind: Widget['kind']): Widget {
   return { id: widgetId(), name: kind === 'chat' ? 'Combined Chat' : kind === 'alert' ? 'AlertBox' : kind[0].toUpperCase() + kind.slice(1),
     kind, x: 40, y: 40, width: kind === 'chat' ? 600 : 400, height: kind === 'chat' ? 700 : 200, rotation: 0, locked: false, hidden: false,
     text: 'Hello, stream!', color: '#ffffff', fontSize: 32, assetId: null, volume: .75, loop: true, muted: true,
-    chat: structuredClone(defaultSettings), alert: structuredClone(defaultAlert), donor: structuredClone(defaultDonor) };
+    chat: structuredClone(defaultSettings), alert: structuredClone(defaultAlert), donor: { ...structuredClone(defaultDonor), template: kind === 'current-stream-total' ? '{amount}' : defaultDonor.template } };
 }
 export const alertPresets = [
   ['Follow', 'community.follow', 'twitch'], ['Subscription', 'support.subscription', 'twitch'], ['Gift Subscription', 'support.gift', 'twitch'], ['Bits', 'support.bits', 'twitch'],

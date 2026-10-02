@@ -24,6 +24,14 @@ it('latest unvalued support displays its name without inventing a zero valuation
   render(<DonorWidget widget={createWidget('latest-supporter')} snapshot={{ ...snapshot, rows: [{ ...snapshot.rows[0], usdAmountMinor: '0', hasKnownAmount: false }] }} />);
   expect(screen.getByText('<Alice> · Awaiting valuation')).toBeVisible(); expect(screen.queryByText(/\$0.00/)).toBeNull();
 });
+it('frequent valuation updates do not postpone a pending leader transition', () => {
+  vi.useFakeTimers();
+  const widget = createWidget('donor-crown'); const view = render(<DonorWidget widget={widget} snapshot={snapshot} />);
+  const update = (amount: string) => view.rerender(<DonorWidget widget={widget} snapshot={{ ...snapshot, rows: [{ ...snapshot.rows[0], supporterId: 'bob', name: 'Bob', usdAmountMinor: amount }] }} />);
+  update('100'); act(() => vi.advanceTimersByTime(100)); update('200');
+  act(() => vi.advanceTimersByTime(100)); update('300'); act(() => vi.advanceTimersByTime(100));
+  expect(screen.getByText('Bob · $3.00')).toBeVisible(); expect(screen.queryByText(/Alice/)).toBeNull();
+});
 it('respects visibility and shows current stream total', () => {
   const widget = { ...createWidget('donor-leaderboard'), donor: { ...defaultDonor, showName: false, showAmount: false, showCrown: false, showPlatformBadges: false } };
   const view = render(<DonorWidget widget={widget} snapshot={snapshot} />);

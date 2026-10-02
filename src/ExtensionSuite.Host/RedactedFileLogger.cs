@@ -10,9 +10,10 @@ public sealed class RedactedFileLoggerProvider(ApplicationPaths paths, Applicati
     private readonly LogLevel minimum = Enum.Parse<LogLevel>(configuration.MinimumLogLevel);
     private long writeFailures;
     private DateTime lastPrune;
+    private bool disposed;
     public long WriteFailures => Interlocked.Read(ref writeFailures);
     public ILogger CreateLogger(string categoryName) => new FileLogger(this, categoryName);
-    public void Dispose() { }
+    public void Dispose() { lock (sync) disposed = true; }
 
     private void Write(string category, LogLevel level, EventId id, string message, Exception? exception)
     {
@@ -20,10 +21,14 @@ public sealed class RedactedFileLoggerProvider(ApplicationPaths paths, Applicati
         var row = new { timestamp = DateTimeOffset.UtcNow, level = level.ToString(), category, eventId = id.Id,
             message = CredentialRedactor.Text(message, sensitive.Snapshot()), exceptionType = exception?.GetType().Name };
         var json = JsonSerializer.Serialize(row);
-        try { WriteFile(json); }
-        catch (IOException) { Interlocked.Increment(ref writeFailures); }
-        catch (UnauthorizedAccessException) { Interlocked.Increment(ref writeFailures); }
-        state?.AppendLog(json, row.timestamp, configuration.LogRetentionDays);
+        lock (sync)
+        {
+            if (disposed) return;
+            try { WriteFile(json); }
+            catch (IOException) { Interlocked.Increment(ref writeFailures); }
+            catch (UnauthorizedAccessException) { Interlocked.Increment(ref writeFailures); }
+            state?.AppendLog(json, row.timestamp, configuration.LogRetentionDays);
+        }
     }
 
     private void WriteFile(string json)

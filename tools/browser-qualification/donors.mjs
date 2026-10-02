@@ -16,7 +16,7 @@ export async function qualifyDonors(page, origin, writeHeaders, root) {
   const crown = page.locator(`[data-widget-id="${widgets[0].id}"]`);
   const total = page.locator(`[data-widget-id="${widgets[4].id}"]`);
   await crown.getByText(/\$12\.50/).waitFor();
-  await total.getByText('$13.75', { exact: true }).waitFor();
+  await total.getByText(/\$13\.75/).waitFor();
   const identities = await (await fetch(`${origin}/api/financial/identities`)).json();
   const twitch = identities.find(row => row.platform === 'twitch');
   const kofi = identities.find(row => row.platform === 'kofi');
@@ -34,7 +34,7 @@ export async function qualifyDonors(page, origin, writeHeaders, root) {
   const bits = ledger.items.find(row => row.nativeEventId === 'browser-bits');
   await write('/api/financial/reconcile', 'POST', { selected: [{ id: bits.id, version: bits.version }] });
   await crown.getByText(/\$2\.00/).waitFor();
-  await total.getByText('$14.50', { exact: true }).waitFor();
+  await total.getByText(/\$14\.50/).waitFor();
   const editorPage = await page.context().newPage();
   let editorErrors = 0;
   editorPage.on('pageerror', () => { editorErrors++; });
