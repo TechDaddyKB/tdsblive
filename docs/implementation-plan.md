@@ -385,7 +385,7 @@ None for G07. Authoritative Rumble gift accounting remains explicitly gated as r
 
 ## G08 — Build donor widgets
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G05, G07
 
 ### Deliverables
@@ -402,7 +402,7 @@ Prerequisites: G05, G07
 
 ### Validation evidence
 
-Implementation is under review in [draft PR #10](https://github.com/TechDaddyKB/tdsblive/pull/10), on `feat/g08-donor-widgets` from G07 delivery commit `87efc67`. Requirements were checked against SPEC sections 29–31, 84 and the Phase 9 widget list. Contracts, filtered exact SQL aggregation, shared-socket delivery, runtime rendering, assets, editor controls and leader transitions are implemented; acceptance and delivery remain incomplete.
+Implementation was delivered in [PR #10](https://github.com/TechDaddyKB/tdsblive/pull/10), on `feat/g08-donor-widgets` from G07 delivery commit `87efc67`. Requirements were checked against SPEC sections 29–31, 84 and the Phase 9 widget list. Contracts, filtered exact SQL aggregation, shared-socket delivery, runtime rendering, assets, editor controls and leader transitions are implemented; acceptance and protected delivery are verified below.
 
 Final local checks at `b6ea8f2` pass 51 core tests, 277 host tests (two Windows-only skips), and 121 frontend tests, plus typecheck, lint, builds and deterministic tracked/new-file secrets scans. A 20,031-contribution SQLite qualification verifies exact amounts beyond 64-bit range, at most 25 ranked rows, a ten-second query budget, and parameterized source-filter behavior. Scoped donor assets cannot grant access to financial administration. OpenAPI and generated frontend types are refreshed. These checks do not establish G08 completion.
 
@@ -412,9 +412,11 @@ The trusted [Windows run 36960170546](https://github.com/TechDaddyKB/tdsblive/ac
 
 The documentation evidence commit `0c8a7644b8ce6d5f60be547b31a577fd38f50f84` also passes [Windows run 36961251786](https://github.com/TechDaddyKB/tdsblive/actions/runs/36961251786) and its exact-head Sonar gate, with no unresolved vulnerabilities or PR review findings.
 
+Final corrected source `2d143c56525caa311c842eab23ebddbe8d4879d8` passes [Windows run 36964748598](https://github.com/TechDaddyKB/tdsblive/actions/runs/36964748598): 51 core and 281 host tests without skips, all 131 frontend tests, replay/recovery, full browser qualification and generated contracts. Scanned logs verify OpenCover and LCOV import, 96.2% backend/94.3% frontend production coverage and a passing Sonar gate with 88.7% new-code coverage, A ratings, zero duplication and all hotspots reviewed. CodeQL passes. The operator confirms actual OBS rendering, live refresh and corrected platform logos. Protected [PR #10](https://github.com/TechDaddyKB/tdsblive/pull/10) merged at 2026-10-02 04:42:31 UTC as `9deb7c2b7aebbe401c22cfdf9ffaea4427f73d02`, with exact-head checks passing and no bypass.
+
 ### Blockers
 
-The operator now confirms actual OBS rendering and live refresh. Their check exposed text platform labels instead of logos; the correction now renders bundled vector badges and passes 131 frontend tests and the full browser qualification, including inherited icon color/size and linked badges. Fresh Windows/Sonar and corrected OBS qualification remain. The operator’s formatting question is addressed: widget position, dimensions, templates, fonts, colors and visibility are editable; the owned qualification source deliberately uses simple labels. Final corrected-source validation and protected delivery remain. No missing credential or external platform payload blocks the logo correction.
+None. Actual OBS rendering, refresh and platform-logo confirmation are recorded above. Unverified Rumble gift behavior remains gated as required; it is not claimed supported by these widgets.
 
 <a id="g09"></a>
 
