@@ -92,7 +92,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
-| [G09](#g09) | Build automation rules | G03, G06, G07 | In progress |
+| [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
@@ -428,7 +428,7 @@ None. Actual OBS rendering, refresh and platform-logo confirmation are recorded 
 
 ## G09 — Build automation rules
 
-Status: **In progress**
+Status: **Complete under the approved scope; protected delivery of this record is gated by PR #12**
 Prerequisites: G03, G06, G07
 
 ### Deliverables
@@ -467,9 +467,11 @@ The correction passed [Windows run 36983149942](https://github.com/TechDaddyKB/t
 
 The scope/evidence documentation run 37005887684 failed an existing Rumble late-registration test under Windows coverage: its ten-second cancellation deadline expired while processing a 64-row parked backlog, and failure bypassed worker shutdown before SQLite cleanup. The test now uses a bounded 60-second deadline and always cancels/awaits its owned workers in `finally`, preserving all delivery/reopen assertions. The targeted local test passes. No production retry, timeout or delivery behavior was changed; the final Windows gate remains required.
 
+Final implementation head `b8dc63c6f1160cb422f6d2dd838865dcba5c0a06` passes [Windows run 37007511716](https://github.com/TechDaddyKB/tdsblive/actions/runs/37007511716): 75 core and 329 host tests with no skips, frontend tests, replay/recovery, browser qualification, generated contracts, OpenCover/LCOV import and the Sonar gate. Scanned logs report 95.7% backend/89.8% frontend production coverage; Sonar reports 82.3% new-code coverage, A ratings, zero duplication and 100% reviewed hotspots. The operator confirmed actual OBS sound and Speaker.bot speech with `local english`. All active acceptance criteria are verified. The completion-record commit is documentation only and [PR #12](https://github.com/TechDaddyKB/tdsblive/pull/12) must pass its normal exact-head protected checks before merging; no bypass is authorized or used.
+
 ### Blockers
 
-The operator added the OBS source, supplied voice alias `local english` and confirmed both owned audio tests with “Yes I heard it all.” The OBS sound returned completed playback; the persisted Ko-fi speech returned Speaker.bot acknowledgment, independently corroborated by audible-output confirmation. Protected final-head delivery checks remain pending. VTube Studio-specific requirements are on hold by explicit scope change and are not active blockers. Local and Windows automated qualification pass for the recorded implementation head; final documentation/source head must pass protected delivery checks.
+None for the active G09 scope. VTube Studio-specific requirements remain explicitly on hold, delegated to Streamer.bot's built-in integration and not claimed as verified. Normal protected checks govern delivery of the documentation-only completion record.
 
 <a id="g10"></a>
 

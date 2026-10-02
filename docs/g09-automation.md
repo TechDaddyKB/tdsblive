@@ -1,6 +1,6 @@
 # G09 automation rules
 
-Status: In progress; live audio verified, protected delivery pending. VTube Studio-specific work is on hold by operator direction. Owning requirements: SPEC 32–36, 38, 61–62 and G09 in the implementation plan.
+Status: Complete under the approved scope; delivery follows PR #12's normal protected checks. VTube Studio-specific work is on hold by operator direction. Owning requirements: SPEC 32–36, 38, 61–62 and G09 in the implementation plan.
 
 ## Execution boundaries
 
