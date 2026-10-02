@@ -22,7 +22,7 @@ function Invoke-Installer([string]$Executable, [string]$Arguments) {
 function Test-Application([string]$Directory) {
     $runtime = Get-Content (Join-Path $Directory 'TDSBLive.runtimeconfig.json') -Raw | ConvertFrom-Json
     if ($runtime.runtimeOptions.framework -or $runtime.runtimeOptions.frameworks) { throw 'Package requires a separately installed runtime.' }
-    foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe')) {
+    foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe', 'guide/Home.html', 'guide/images/guided-setup.png')) {
         if (-not (Test-Path (Join-Path $Directory $required))) { throw "Self-contained package is missing $required" }
     }
     New-Item -ItemType Directory -Path $data -Force | Out-Null
@@ -58,8 +58,12 @@ try {
     $portable = Join-Path $root 'portable'
     Expand-Archive (Join-Path $package "TDSBLive-$Version-win-x64.zip") $portable
     Test-Application $portable
+    & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') (Join-Path $portable 'TDSBLive.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Portable EXE restart/restore qualification failed.' }
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
     Test-Application $installed
+    & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') (Join-Path $installed 'TDSBLive.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Installed EXE restart/restore qualification failed.' }
     # A repeated install exercises replacement/upgrade mechanics without inventing a prior release.
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
     Test-Application $installed

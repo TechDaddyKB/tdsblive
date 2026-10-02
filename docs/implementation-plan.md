@@ -532,6 +532,8 @@ Public contract checkpoint: refreshed `docs/contracts/openapi.json` from an isol
 
 User-guide checkpoint: canonical installation/update/uninstall and backup/recovery chapters are linked from Home and published to the wiki at commit `f9934ea`. The synchronizer validated all four page links and three existing screenshots before copying; only the reviewed guide pages and sidebar were staged. Candidate/qualification warnings remain explicit. These chapters cover the current implementation; complete release documentation and packaged-instruction verification remain outstanding.
 
+Expanded guide checkpoint: the repository guide now has ten pages and five owned screenshots covering first setup, overlays/alerts, supporter totals, automation, LAN and troubleshooting. Wiki commit `efb3a9a` publishes all ten pages. A standalone offline HTML renderer builds the same guide; local link checks and a fresh-browser page/image/navigation check pass, with visual inspection. Packaging includes the offline guide and an installer Start menu shortcut. Package qualification now requires guide files and exercises restart/restore via portable and installed EXEs; these new Windows checks await a new Actions head and are not yet verified.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets

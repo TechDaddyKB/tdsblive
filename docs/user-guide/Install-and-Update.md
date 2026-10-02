@@ -55,6 +55,11 @@ whole extracted application folder together.
 
 ## First launch
 
+The installer adds **TDSBLive User Guide** to the Start menu. It opens the guide
+included with that version. For a ZIP installation, open **guide → Home.html**
+inside the extracted folder. Those pages and screenshots work offline; online
+project links still require internet access.
+
 The editor opens **Guided setup** until you finish its review. Work through one
 step at a time. Saved progress resumes after restart. Skip services you do not
 use, and review connection status before relying on them during a stream.

@@ -17,6 +17,8 @@ try {
     & dotnet publish src/ExtensionSuite.Host/ExtensionSuite.Host.csproj --configuration Release --no-restore `
         -p:PublishProfile=WindowsPortable "-p:Version=$Version" --output $publish
     if ($LASTEXITCODE -ne 0) { throw 'Windows publish failed.' }
+    & python tools/build_offline_guide.py (Join-Path $publish 'guide')
+    if ($LASTEXITCODE -ne 0) { throw 'Offline user guide generation failed.' }
     foreach ($required in @('TDSBLive.exe', 'TDSBLive.dll', 'TDSBLive.runtimeconfig.json', 'wwwroot/editor/index.html', 'wwwroot/runtime/index.html')) {
         if (-not (Test-Path (Join-Path $publish $required))) { throw "Published package is missing $required" }
     }

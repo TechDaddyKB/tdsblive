@@ -17,9 +17,14 @@ const port = await new Promise((resolve, reject) => {
 });
 await writeFile(path.join(data, 'configuration.json'), JSON.stringify({ server: { host: '127.0.0.1', port } }));
 const origin = `http://127.0.0.1:${port}`;
-const executable = path.join(process.env.DOTNET_ROOT, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
-const child = spawn(executable, [path.resolve('src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'),
-  '--TDSBLive:DataDirectory', data, '--TDSBLive:OpenEditor=false'], { stdio: 'ignore' });
+const packagedExecutable = process.argv[2];
+const executable = packagedExecutable ? path.resolve(packagedExecutable)
+  : path.join(process.env.DOTNET_ROOT, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+const argumentsList = ['--TDSBLive:DataDirectory', data, '--TDSBLive:OpenEditor=false'];
+if (!packagedExecutable) argumentsList.unshift(path.resolve('src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'));
+const child = spawn(executable, argumentsList, { stdio: 'ignore' });
+let launchError = false;
+child.on('error', () => { launchError = true; });
 let cookie = ''; let token = ''; let generation;
 async function get(route) {
   const response = await fetch(origin + route, { signal: AbortSignal.timeout(2000) });
@@ -28,6 +33,7 @@ async function get(route) {
 async function ready(previous) {
   const deadline = Date.now() + 30000;
   while (Date.now() < deadline) {
+    assert.ok(!launchError, 'Owned host executable could not launch');
     try { const state = await get('/api/application/status'); if (state.generation !== previous) return state.generation; }
     catch { /* The owned process is starting or restarting. */ }
     await delay(100);

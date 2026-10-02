@@ -44,6 +44,7 @@ Source: "{#PublishDirectory}\*"; DestDir: "{app}"; Flags: ignoreversion recurses
 
 [Icons]
 Name: "{autoprograms}\TDSBLive"; Filename: "{app}\TDSBLive.exe"; Parameters: "--TDSBLive:OpenEditor=true"
+Name: "{autoprograms}\TDSBLive User Guide"; Filename: "{app}\guide\Home.html"
 Name: "{autodesktop}\TDSBLive"; Filename: "{app}\TDSBLive.exe"; Parameters: "--TDSBLive:OpenEditor=true"; Tasks: desktopicon
 Name: "{userstartup}\TDSBLive"; Filename: "{app}\TDSBLive.exe"; Tasks: startup
 

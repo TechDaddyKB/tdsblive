@@ -21,6 +21,8 @@ Keep TDSBLive running while you use its overlays in OBS.
 - [Overlays and alerts](Overlays-and-Alerts.md): build a layout and test it before adding it to OBS.
 - [Supporter totals](Supporter-Totals.md): understand periods, valuations and linked identities.
 - [Automation](Automation.md): configure and review speech and sound rules.
+- [LAN access](LAN-Access.md): optionally use another computer on your network.
+- [Troubleshooting](Troubleshooting.md): everyday checks and help with common problems.
 
 The guide will walk through installation, first setup, everyday use, connections,
 overlays, alerts, supporter totals, automation, backup, updates and recovery.
