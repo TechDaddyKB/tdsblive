@@ -1,6 +1,6 @@
 # G09 automation rules
 
-Status: Blocked on live acceptance evidence. Owning requirements: SPEC 32–36, 38, 61–62 and G09 in the implementation plan.
+Status: In progress; live audio verified, protected delivery pending. VTube Studio-specific work is on hold by operator direction. Owning requirements: SPEC 32–36, 38, 61–62 and G09 in the implementation plan.
 
 ## Execution boundaries
 
@@ -13,16 +13,16 @@ Use stable rule/action IDs and event IDs for execution deduplication. Record dis
 - Exact, minimum, range and multiple-of conditions with explicit currency/quantity units; platform/event filters; multiple ordered actions; bounded named queues, cooldowns and execution history.
 - Ko-fi TTS template fields, native minimum donation, voice alias, maximum length, username/amount/message controls, anonymous handling, URL removal, punctuation/repetition limits, bad-word controls, allowed languages and optional moderation. Viewer input remains untrusted.
 - Bits overlay sounds use local asset-library audio, volume, queue/interrupt policy, cooldown, random variants and ducking metadata. OBS Browser Source performs playback; no system-default speaker dependency.
-- Bits VTube Studio mappings select existing Streamer.bot actions by name/ID. Temporary effects use a second toggle or separate enable/disable actions with Extend, Restart, Ignore and Queue semantics. Preserve action selection allowlists and report missing actions.
+- Generic Streamer.bot actions remain selectable by name/ID, with allowlists and visible missing actions. **On hold:** dedicated Bits-to-VTube Studio mappings, model-specific temporary effects and their live qualification. The operator will use Streamer.bot's built-in integration; existing generic dispatch/timer code is retained without claiming verified VTube Studio support.
 - Local editor exposes rule CRUD, validation, discovery/capability limitations, moderation, execution inspection and safe simulation defaults. HTTP and authenticated LAN remain supported without mandatory HTTPS.
 
 Speaker.bot owns speech after a `Speak` acknowledgment. TDSBLive's durable queue policies govern pending dispatch admission, not completed external speech playback. The editor states this boundary explicitly. The documented [Speaker.bot requests](https://speaker.bot/api/websocket/requests) include a global current-speech `Stop` and a global pending-queue `Clear`, with no documented execution-scoped cancellation or playback receipt. Consequently this integration does not issue those global operations when a single automation rule is disabled or interrupted, because they could affect unrelated speech.
 
 ## Acceptance evidence to collect
 
-Boundary and precision tests; persisted dedupe/restart behavior; queue overflow, cooldown, interruption and timer policy tests using controllable time; missing action/voice, disconnected and uncertain outcomes; moderation and simulation isolation; actual browser editing and overlay sound playback; real Speaker.bot speech through a synthetic owned Ko-fi event; real Streamer.bot-to-VTube Studio reversible action behavior; Windows CI, OpenCover/LCOV import and Sonar quality gate.
+Boundary and precision tests; persisted dedupe/restart behavior; queue overflow, cooldown, interruption and timer policy tests using controllable time; missing action/voice, disconnected and uncertain outcomes; moderation and simulation isolation; actual browser editing and overlay sound playback; real Speaker.bot speech through a synthetic owned Ko-fi event; generic Streamer.bot action behavior; Windows CI, OpenCover/LCOV import and Sonar quality gate.
 
-Live tests use temporary data and owned synthetic events. They require no paid donations or Bits purchase and do not alter production financial totals. VTube Studio availability has been requested from the operator. Live evidence remains outstanding.
+Live tests use temporary data and owned synthetic events. They require no paid donations or Bits purchase and do not alter production financial totals. VTube Studio-specific work throughout the plan is on hold under the approved 2026-10-02 scope change. Remaining live evidence concerns OBS audio and Speaker.bot speech.
 
 ## Current local evidence
 
@@ -106,3 +106,7 @@ python tools/seed_automation_qualification.py /absolute/path/to/tdsblive-g09-own
 The helper refuses an absent database, an unmarked directory, or mismatched platform/type arguments. A local negative check verified refusal leaves no database file behind. An owned event is deliberately live within this isolated database; it may create isolated financial facts and actual audio. Never copy the marker into production data. Check the execution receipt, OBS meter/captured tone and reconnect behavior; then disable the owned rule. The helper is not a production endpoint and is never called by editor simulation or replay.
 
 [Windows run 36983149942](https://github.com/TechDaddyKB/tdsblive/actions/runs/36983149942) passed for implementation head `796f75a8ee38bdf6cbda28da5035bb34b3d1d5b3`, including the new browser checks and the explicit ID-sort comparator. Scanned logs confirm OpenCover and LCOV import and 95.8% backend/89.8% frontend production coverage. Sonar reports a passing gate with 82.4% new-code coverage, A ratings, zero duplication and all hotspots reviewed. The owned fixture helper additionally passed a failure-path check: rejected inbox insertion rolls back all event/outbox writes, and mismatched platform/type input is refused. Real OBS audio, Speaker.bot speech and VTube Studio model effects remain acceptance blockers, as mapped in [the qualification audit](g09-qualification.md).
+
+## Resumed live audio qualification
+
+The operator supplied `local english` and confirmed the OBS source was added. One owned Bits event on the isolated host at port 17476 returned `completed` / `browser-playback-completed` from the prepared OBS source. One owned Ko-fi donation of 500 USD minor units on a separate temporary host at port 17477 connected to actual Speaker.bot 0.1.7 on 7580 and returned `dispatched` / `acknowledged-not-playback-confirmed`, using `local english`. Both owned rules were disabled afterward. The operator confirmed both audible tests with “Yes I heard it all” in response to the OBS tone and Speaker.bot speech check. This supplies live audible-output evidence alongside the distinct durable receipts; no standalone recording artifact is claimed. Production integrations/data were not modified. VTube Studio is deferred by scope, not a remaining acceptance blocker.

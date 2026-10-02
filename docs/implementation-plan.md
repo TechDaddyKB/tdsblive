@@ -20,6 +20,12 @@ Statuses: **Not started**, **In progress**, **Blocked**, **Complete**. A partial
 
 MVP completion requires G00–G10. Repository-wide completion requires G00–G13. Creating this document alone does not complete a goal.
 
+## Approved scope change — VTube Studio on hold
+
+On 2026-10-02 the operator placed all VTube Studio-specific work in this plan on hold and selected Streamer.bot's built-in VTube Studio integration. This applies across all goals: native VTube Studio clients, dedicated VTube Studio mappings/UI/templates, model/hotkey discovery, temporary clothing/effect policies and real-model qualification are deferred until explicitly resumed. These deferred requirements do not block G09, MVP or full-plan completion under the revised scope, and must never be reported as verified.
+
+Generic Streamer.bot action discovery, stable action IDs, allowlisted dispatch, durable execution tracking and safe simulation remain in scope. Existing generic dispatch/timer code and tests are retained; no migration or deletion is required. Users may configure VTube Studio actions directly in Streamer.bot. Preserve the original specification and goal IDs as historical references; this scope decision governs their VTube Studio-specific clauses.
+
 ## Locked architecture and defaults
 
 | Item | Decision |
@@ -86,7 +92,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
-| [G09](#g09) | Build automation rules | G03, G06, G07 | Blocked |
+| [G09](#g09) | Build automation rules | G03, G06, G07 | In progress |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
@@ -220,7 +226,7 @@ Prerequisites: G02
 - Implement correlated WebSocket requests, authentication, configurable reconnect and connection health. Discover GetEvents/GetActions/GetCodeTriggers; invoke ExecuteCodeTrigger and selected action GUIDs.
 - Provide importable C# Init bootstrap using CPH.RegisterCustomTrigger for Rumble chat/Rant/follow/sub/gift/online/offline/viewer/likes/health and finance/overlay categories. Include argument mapping and explicit forwarding examples for triggers not broadcast over WebSocket.
 - Normalize Twitch/YouTube/Kick/Ko-fi events conservatively; retain sanitized unknown diagnostics. Build searchable event inspector with pause/filter/copy/replay/save-fixture and sample payload inspection.
-- Implement Speaker.bot documented WebSocket queue protocol; use Streamer.bot actions for VTube Studio. Prevent bridge loops and expose missing actions/uncertain execution.
+- Implement Speaker.bot documented WebSocket queue protocol and generic Streamer.bot action dispatch. VTube Studio-specific work is on hold under the approved scope change. Prevent bridge loops and expose missing actions/uncertain execution.
 
 ### Acceptance criteria
 
@@ -422,7 +428,7 @@ None. Actual OBS rendering, refresh and platform-logo confirmation are recorded 
 
 ## G09 — Build automation rules
 
-Status: **Blocked**
+Status: **In progress**
 Prerequisites: G03, G06, G07
 
 ### Deliverables
@@ -430,13 +436,13 @@ Prerequisites: G03, G06, G07
 - Implement event filters and exact/minimum/range/multiple conditions, multiple actions, cooldowns, queues and execution tracking.
 - Implement Ko-fi TTS templates with minimum amount, voice, max length, URL/punctuation/repetition/bad-word controls and moderation options.
 - Play sound assets in OBS with volume/queue/interrupt/cooldown/random variants/ducking metadata.
-- Execute selected Streamer.bot VTS actions; support timed reversion via toggle or enable/disable actions and Extend/Restart/Ignore/Queue policies.
+- Execute selected generic Streamer.bot actions. **On hold:** VTube Studio-specific mappings and timed model-effect reversion via toggle or enable/disable actions and Extend/Restart/Ignore/Queue policies; Streamer.bot's built-in integration is the selected route.
 - Keep financial ingestion independent of alert/rule configuration; expose ambiguous external outcomes without blind retry.
 
 ### Acceptance criteria
 
 - Rule boundaries, queues, timer stacking/restart, failures and isolated simulation tested.
-- Real Ko-fi-path Speaker.bot speech, OBS sound capture and Streamer.bot-to-VTS behavior verified.
+- Real Ko-fi-path Speaker.bot speech and OBS sound capture verified. VTube Studio live-model qualification is on hold and excluded from the active acceptance gates.
 - Missing actions/voices, moderation and uncertain execution remain visible.
 
 ### Validation evidence
@@ -461,7 +467,7 @@ The correction passed [Windows run 36983149942](https://github.com/TechDaddyKB/t
 
 ### Blockers
 
-Real Ko-fi-path Speaker.bot speech, OBS sound capture and reversible Streamer.bot-to-VTube Studio behavior remain unverified. Operator replies are needed for OBS source readiness, a configured Speaker.bot voice alias, and an available VTube Studio model/reversible action. Local and Windows automated qualification pass for the recorded implementation head; they do not replace these live checks. G09 cannot be marked complete or delivered as qualified until the missing live evidence is supplied.
+The operator added the OBS source, supplied voice alias `local english` and confirmed both owned audio tests with “Yes I heard it all.” The OBS sound returned completed playback; the persisted Ko-fi speech returned Speaker.bot acknowledgment, independently corroborated by audible-output confirmation. Protected final-head delivery checks remain pending. VTube Studio-specific requirements are on hold by explicit scope change and are not active blockers. Local and Windows automated qualification pass for the recorded implementation head; final documentation/source head must pass protected delivery checks.
 
 <a id="g10"></a>
 
