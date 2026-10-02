@@ -143,9 +143,11 @@ public sealed class RequestSecurity(RequestDelegate next)
         if (parts.Length == 2 && parts[0] == "assets")
         {
             var definition = await store.GetAsync(id, context.RequestAborted);
-            if (definition is null || !(definition.Chat.FontAssetId == parts[1] || definition.Widgets.Any(w =>
+            if (definition is null) return false;
+            var referenced = definition.Chat.FontAssetId == parts[1] || definition.Widgets.Any(w =>
                 w.AssetId == parts[1] || w.Chat.FontAssetId == parts[1] || w.Alert.MediaAssetId == parts[1] || w.Alert.SoundAssetId == parts[1] ||
-                w.Donor.CrownAssetId == parts[1] || w.Donor.FontAssetId == parts[1]))) return false;
+                w.Donor.CrownAssetId == parts[1] || w.Donor.FontAssetId == parts[1]);
+            if (!referenced && context.RequestServices.GetService<AutomationOverlaySound>()?.Authorizes(id, parts[1]) != true) return false;
         }
         var authorization = context.Request.Headers.Authorization.ToString();
         var token = authorization.StartsWith("Bearer ", StringComparison.Ordinal) ? authorization[7..] : context.WebSockets.WebSocketRequestedProtocols.FirstOrDefault(p => AssetIdentity.IsValid(p));

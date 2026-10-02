@@ -12,6 +12,7 @@ public sealed record EventMessagePart(string Kind, string Text, string? ImageUrl
 public sealed record EventMoney(long? MinorUnits, string? Currency, string ValuationKind);
 public sealed record EventStream(string? Id, string? Title);
 public sealed record EventMetrics(long? Value = null, string? Health = null);
+public sealed record EventAutomationMetadata(bool? Anonymous = null, bool? MessagePublic = null, string? Language = null);
 
 public sealed record CanonicalEvent
 {
@@ -29,6 +30,7 @@ public sealed record CanonicalEvent
     public SupportDetails? Support { get; init; }
     public EventStream? Stream { get; init; }
     public EventMetrics? Metrics { get; init; }
+    public EventAutomationMetadata? Automation { get; init; }
     public required string DedupeKey { get; init; }
     public JsonObject? Raw { get; init; }
     public EventProvenance Provenance { get; init; }
@@ -43,5 +45,7 @@ public sealed record CanonicalEvent
             throw new ArgumentException("Event routing and dedupe fields are required.");
         if (!Enum.IsDefined(Provenance) || BridgePath is null || BridgePath.Length > 16)
             throw new ArgumentException("Invalid event provenance or bridge path.");
+        if (Automation?.Language is { } language && (string.IsNullOrWhiteSpace(language) || language.Length > 35))
+            throw new ArgumentException("Invalid automation language metadata.");
     }
 }

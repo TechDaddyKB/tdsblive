@@ -13,6 +13,31 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
     private readonly ConcurrentDictionary<Guid, Subscriber> subscribers = new();
     private readonly SemaphoreSlim connectionSlots = new(32, 32);
     public int SubscriberCount => subscribers.Count;
+    public async Task<AutomationDispatchOutcome> PlaySoundAsync(string overlayId, object command, Guid executionId,
+        int timeoutSeconds, CancellationToken ct)
+    {
+        var subscriber = subscribers.Values.FirstOrDefault(item => item.Overlay?.Id == overlayId &&
+            item.Overlay.CanvasEnabled && !item.Preview && item.Subscribed && !item.Stop.IsCancellationRequested);
+        if (subscriber is null) return new("failed", "overlay-not-connected");
+        var result = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!subscriber.SoundResults.TryAdd(executionId, result)) return new("rejected", "duplicate-sound-command");
+        try
+        {
+            if (!subscriber.Queue.Writer.TryWrite(JsonSerializer.Serialize(new { op = "sound", command }, EventStore.JsonOptions)))
+                return new("failed", "overlay-queue-full");
+            using var stop = CancellationTokenSource.CreateLinkedTokenSource(ct, subscriber.Stop.Token);
+            var state = await result.Task.WaitAsync(TimeSpan.FromSeconds(timeoutSeconds + 2), stop.Token);
+            return state == "completed" ? new("completed", "browser-playback-completed") :
+                state == "failed" ? new("failed", "browser-audio-failed") : new("uncertain", "browser-" + state);
+        }
+        catch (TimeoutException) { return new("uncertain", "browser-receipt-timeout"); }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return new("uncertain", "overlay-disconnected"); }
+        finally
+        {
+            if (ct.IsCancellationRequested) subscriber.Queue.Writer.TryWrite(JsonSerializer.Serialize(new { op = "sound-stop", executionId }, EventStore.JsonOptions));
+            subscriber.SoundResults.TryRemove(executionId, out _);
+        }
+    }
     public void Shutdown()
     {
         foreach (var subscriber in subscribers.Values) subscriber.TryStop();
@@ -195,6 +220,16 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             string response;
             switch (op.GetString())
             {
+                case "sound-result":
+                    if (subscriber.Preview || subscriber.Overlay is null ||
+                        !root.TryGetProperty("executionId", out var execution) || !Guid.TryParse(execution.GetString(), out var executionId) ||
+                        !root.TryGetProperty("state", out var soundState) || soundState.ValueKind != JsonValueKind.String)
+                        throw new JsonException();
+                    var state = soundState.GetString();
+                    if (state is not ("started" or "completed" or "failed" or "timeout" or "interrupted")) throw new JsonException();
+                    if (state != "started" && subscriber.SoundResults.TryGetValue(executionId, out var completion)) completion.TrySetResult(state);
+                    response = "{\"op\":\"sound-received\"}";
+                    break;
                 case "ping": response = "{\"op\":\"pong\"}"; break;
                 case "subscribe":
                     if (!root.TryGetProperty("types", out var selected) || selected.ValueKind != JsonValueKind.Array || selected.GetArrayLength() > 128)
@@ -213,6 +248,8 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
 
     private sealed class Subscriber(CancellationTokenSource stop)
     {
+        public bool Subscribed { get; private set; }
+        public ConcurrentDictionary<Guid, TaskCompletionSource<string>> SoundResults { get; } = new();
         private volatile string[] types = [];
         public volatile OverlayDefinition? Overlay;
         public bool Preview { get; init; }
@@ -225,7 +262,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             (Overlay is null || (item.Provenance == EventProvenance.Live || Preview && !Limited) &&
                 (Overlay.CanvasEnabled ? Overlay.Widgets.Any(w => !w.Hidden && (w.Kind == "chat" && w.Chat.Accepts(item) ||
                     w.Kind == "alert" && (w.Alert.EventTypes.Contains(item.Type) || w.Alert.EventTypes.Contains("*")) && w.Alert.Platforms.Contains(item.Platform))) : Overlay.Chat.Accepts(item)));
-        public void Subscribe(string[] selected) => types = selected;
+        public void Subscribe(string[] selected) { types = selected; Subscribed = true; }
         public void TryStop()
         {
             try { Stop.Cancel(); }

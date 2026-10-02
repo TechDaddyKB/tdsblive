@@ -2259,6 +2259,362 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/automation/temporary-effects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AutomationTemporaryEffect"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/temporary-effects/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AutomationRestoredRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AutomationCapabilityReport"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AutomationRule"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/rules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AutomationRule"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query: {
+                    version: number | string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AutomationPreviewRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AutomationPreviewResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/executions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AutomationExecution"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/executions/{id}/language": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AutomationLanguageRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/automation/executions/{id}/moderate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AutomationModerationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2317,6 +2673,172 @@ export interface components {
             uploadedAt: string;
             sanitized: boolean;
             license: null | string;
+        };
+        AutomationAction: {
+            /** Format: uuid */
+            id?: string;
+            kind?: string;
+            speech?: null | components["schemas"]["AutomationSpeechSettings"];
+            /** Format: uuid */
+            streamerBotActionId?: null | string;
+            /** Format: uuid */
+            revertActionId?: null | string;
+            /** Format: int32 */
+            durationSeconds?: number | string;
+            stackPolicy?: string;
+            overlayId?: null | string;
+            soundAssetIds?: string[];
+            /** Format: double */
+            volume?: number | string;
+            /** Format: double */
+            duckingVolume?: number | string;
+            /** Format: int32 */
+            playbackTimeoutSeconds?: number | string;
+        };
+        AutomationCapabilityIssue: {
+            /** Format: uuid */
+            ruleId: string;
+            /** Format: uuid */
+            actionId: string;
+            code: string;
+            message: string;
+        };
+        AutomationCapabilityReport: {
+            streamerBotState: string;
+            speakerBotState: string;
+            voiceDiscoverySupported: boolean;
+            issues: components["schemas"]["AutomationCapabilityIssue"][];
+        };
+        AutomationCondition: {
+            platform: string;
+            eventType: string;
+            /** @default quantity */
+            unit: string;
+            /** @default minimum */
+            operator: string;
+            /**
+             * Format: int64
+             * @default 1
+             */
+            value: number | string;
+            /** Format: int64 */
+            upperExclusive?: null | number | string;
+            currency?: null | string;
+            /** Format: int32 */
+            minorUnitDigits?: null | number | string;
+        };
+        AutomationExecution: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            eventId?: string;
+            /** Format: uuid */
+            ruleId?: string;
+            /** Format: uuid */
+            actionId?: string;
+            /** Format: int32 */
+            actionOrder?: number | string;
+            queueGroup?: string;
+            cancelRequested?: boolean;
+            /** Format: int32 */
+            version?: number | string;
+            /** Format: int64 */
+            createdAtTicks?: number | string;
+            /** Format: int64 */
+            dueAtTicks?: number | string;
+            state: string;
+            detail?: null | string;
+            json: string;
+        };
+        AutomationLanguageRequest: {
+            /** Format: int32 */
+            version: number | string;
+            language: string;
+        };
+        AutomationModerationRequest: {
+            /** Format: int32 */
+            version: number | string;
+            approve: boolean;
+            /** @default moderation-pending */
+            state: string;
+        };
+        AutomationPlannedAction: {
+            /** Format: uuid */
+            ruleId: string;
+            /** Format: int32 */
+            ruleVersion: number | string;
+            action: components["schemas"]["AutomationAction"];
+            state: string;
+            speechText: null | string;
+            queueGroup: string;
+            queuePolicy: string;
+            /** Format: int32 */
+            maximumQueueLength: number | string;
+            /** Format: int32 */
+            cooldownSeconds: number | string;
+        };
+        AutomationPreviewRequest: {
+            event: components["schemas"]["CanonicalEvent"];
+            anonymous?: null | boolean;
+            language?: null | string;
+            rule?: null | components["schemas"]["AutomationRule"];
+        };
+        AutomationPreviewResponse: {
+            actions: components["schemas"]["AutomationPlannedAction"][];
+            /** @default false */
+            persisted: boolean;
+            /** @default false */
+            liveActionsAllowed: boolean;
+        };
+        AutomationRestoredRequest: {
+            /** Format: int32 */
+            version: number | string;
+            externalStateRestored: boolean;
+        };
+        AutomationRule: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            version?: number | string;
+            condition: components["schemas"]["AutomationCondition"];
+            actions?: components["schemas"]["AutomationAction"][];
+            queueGroup?: string;
+            queuePolicy?: string;
+            /** Format: int32 */
+            maximumQueueLength?: number | string;
+            /** Format: int32 */
+            cooldownSeconds?: number | string;
+        };
+        AutomationSpeechSettings: {
+            template?: string;
+            voice?: string;
+            /** Format: int32 */
+            maximumCharacters?: number | string;
+            speakUsername?: boolean;
+            speakAmount?: boolean;
+            speakMessage?: boolean;
+            stripUrls?: boolean;
+            /** Format: int32 */
+            maximumRepeatedCharacters?: number | string;
+            /** Format: int32 */
+            maximumPunctuationRun?: number | string;
+            ignoreAnonymousMessage?: boolean;
+            speakerBadWordFilter?: boolean;
+            blockedWords?: string[];
+            allowedLanguages?: string[];
+            manualModeration?: boolean;
+        };
+        AutomationTemporaryEffect: {
+            /** Format: uuid */
+            actionId?: string;
+            /** Format: int32 */
+            version?: number | string;
+            /** Format: int64 */
+            expiresAtTicks?: number | string;
+            state: string;
+            json: string;
         };
         BotAction: {
             /** Format: uuid */
@@ -2385,6 +2907,7 @@ export interface components {
             support?: null | components["schemas"]["SupportDetails"];
             stream?: null | components["schemas"]["EventStream"];
             metrics?: null | components["schemas"]["EventMetrics"];
+            automation?: null | components["schemas"]["EventAutomationMetadata"];
             dedupeKey: string;
             raw?: null | components["schemas"]["JsonObject"];
             provenance?: components["schemas"]["EventProvenance"];
@@ -2465,6 +2988,11 @@ export interface components {
             transitionMs?: number | string;
             crownAssetId?: null | string;
             fontAssetId?: null | string;
+        };
+        EventAutomationMetadata: {
+            anonymous?: null | boolean;
+            messagePublic?: null | boolean;
+            language?: null | string;
         };
         EventBadge: {
             name: string;

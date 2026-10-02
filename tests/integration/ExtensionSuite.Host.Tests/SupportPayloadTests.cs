@@ -7,6 +7,40 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class SupportPayloadTests
 {
     [Fact]
+    public void KofiVisibilityAndAnonymityRemainIndependentAndSurviveSerialization()
+    {
+        var payload = new JsonObject
+        {
+            ["amount"] = "12.50", ["currency"] = "USD", ["messageId"] = "owned-metadata",
+            ["message"] = "Owned public message", ["from"] = "Owned viewer", ["isPublic"] = true
+        };
+        var envelope = new JsonObject
+        {
+            ["event"] = new JsonObject { ["source"] = "General", ["type"] = "Custom" },
+            ["data"] = new JsonObject { ["tdsbliveForwardedSource"] = "Kofi", ["tdsbliveForwardedType"] = "Donation", ["payload"] = payload }
+        };
+        var normalizer = new StreamerBotEventNormalizer(new ExtensionSuite.Core.SensitiveValues());
+        var unknown = normalizer.Normalize(envelope, DateTimeOffset.UtcNow).Event!;
+        Assert.True(unknown.Automation!.MessagePublic);
+        Assert.Null(unknown.Automation.Anonymous);
+        payload["anonymous"] = false;
+        payload["language"] = "en";
+        var item = normalizer.Normalize(envelope, DateTimeOffset.UtcNow).Event!;
+        var restored = System.Text.Json.JsonSerializer.Deserialize<ExtensionSuite.Core.CanonicalEvent>(
+            System.Text.Json.JsonSerializer.Serialize(item))!;
+        Assert.Equal(new ExtensionSuite.Core.EventAutomationMetadata(false, true, "en"), restored.Automation);
+        var rule = new ExtensionSuite.Core.AutomationRule
+        {
+            Enabled = true, Condition = new("kofi", "support.donation"),
+            Actions = [new() { Speech = new() { Voice = "owned", Template = "{message}", AllowedLanguages = ["en"] } }]
+        };
+        Assert.Equal("Owned public message", Assert.Single(ExtensionSuite.Core.AutomationPlanner.Evaluate([rule], restored)).SpeechText);
+        payload["isPublic"] = false;
+        var privateItem = normalizer.Normalize(envelope, DateTimeOffset.UtcNow).Event!;
+        Assert.Equal("empty", Assert.Single(ExtensionSuite.Core.AutomationPlanner.Evaluate([rule], privateItem)).State);
+    }
+
+    [Fact]
     public void GiftChannelRequiresExplicitIdentityAndConnectedDiscovery()
     {
         var payload = new JsonObject { ["total"] = 2, ["id"] = "batch" };

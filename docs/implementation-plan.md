@@ -86,7 +86,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
-| [G09](#g09) | Build automation rules | G03, G06, G07 | Not started |
+| [G09](#g09) | Build automation rules | G03, G06, G07 | In progress |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
@@ -441,11 +441,13 @@ Prerequisites: G03, G06, G07
 
 ### Validation evidence
 
-Requirements inspected against SPEC sections 32–36, 38, 61–62. G03/G06/G07 prerequisites are delivered on main; G08 delivery is also present. Existing integrations expose guarded Streamer.bot action execution and Speaker.bot speech/queue operations. Implementation design is recorded in [G09 automation](g09-automation.md). No implementation acceptance or live G09 behavior is claimed yet.
+Requirements inspected against SPEC sections 32–36, 38, 61–62. G03/G06/G07 prerequisites are delivered on main; G08 delivery is also present. Rule contracts, transactional inbox/planning, durable execution receipts, timers, browser sound commands and the editor are implemented on the G09 branch. Ko-fi privacy/language metadata and explicit review are covered by tests; integration diagnostics expose unavailable dependencies and unverified voice aliases. Detailed evidence and limitations are maintained in [G09 automation](g09-automation.md).
+
+The 2026-10-02 full local run passed 75 core, 293 integration and 138 frontend tests. Four integration tests require Windows (DPAPI and file-handle cleanup) and were skipped locally. The subsequent capability-endpoint checks passed two targeted HTTP tests. These results do not establish real speech, OBS sound capture, VTube Studio state, Windows CI or Sonar qualification.
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+Real Ko-fi-path Speaker.bot speech, OBS sound capture and reversible Streamer.bot-to-VTube Studio behavior remain unverified. VTube Studio availability is awaiting operator information. Queue/timer/reconnect and security audits, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
 
 <a id="g10"></a>
 

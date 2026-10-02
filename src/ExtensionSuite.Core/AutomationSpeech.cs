@@ -43,8 +43,8 @@ public static partial class AutomationSpeech
         bool anonymous, string? language = null)
     {
         settings.Validate();
-        if (settings.AllowedLanguages.Length > 0 &&
-            !settings.AllowedLanguages.Contains(language, StringComparer.OrdinalIgnoreCase)) return new("language-review", "");
+        var languageReview = settings.AllowedLanguages.Length > 0 &&
+            !settings.AllowedLanguages.Contains(language, StringComparer.OrdinalIgnoreCase);
         var native = item.Support?.NativeMoney;
         var amount = native is null ? "" : (native.AmountMinor / Scale(native.MinorUnitDigits)).ToString("F" + native.MinorUnitDigits, CultureInfo.InvariantCulture);
         var fields = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -52,7 +52,9 @@ public static partial class AutomationSpeech
             ["from"] = settings.SpeakUsername ? (anonymous ? "Anonymous" : item.User?.DisplayName ?? "Supporter") : "",
             ["amount"] = settings.SpeakAmount ? amount : "",
             ["currency"] = settings.SpeakAmount ? native?.Currency ?? "" : "",
-            ["message"] = settings.SpeakMessage && !(anonymous && settings.IgnoreAnonymousMessage) ? item.Message?.Text ?? "" : ""
+            ["message"] = settings.SpeakMessage && !(anonymous && settings.IgnoreAnonymousMessage) &&
+                (!item.Platform.Equals("kofi", StringComparison.OrdinalIgnoreCase) || item.Automation?.MessagePublic == true)
+                ? item.Message?.Text ?? "" : ""
         };
         // A single pass prevents viewer text containing template tokens from expanding again.
         var text = Tokens().Replace(settings.Template, match => fields.GetValueOrDefault(match.Groups[1].Value, ""));
@@ -76,7 +78,7 @@ public static partial class AutomationSpeech
             result.Append(element); count++;
         }
         text = Whitespace().Replace(result.ToString(), " ").Trim();
-        return new(text.Length == 0 ? "empty" : settings.ManualModeration ? "moderation-pending" : "ready", text);
+        return new(text.Length == 0 ? "empty" : languageReview ? "language-review" : settings.ManualModeration ? "moderation-pending" : "ready", text);
     }
 
     private static decimal Scale(int digits) => digits switch { 0 => 1, 1 => 10, 2 => 100, 3 => 1000, 4 => 10000, _ => throw new ArgumentException("Invalid native money scale.") };

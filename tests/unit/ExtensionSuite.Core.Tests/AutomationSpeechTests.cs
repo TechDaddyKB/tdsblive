@@ -10,8 +10,21 @@ public sealed class AutomationSpeechTests
         Source = "streamerbot", Platform = "kofi", Type = "donation", NativeType = "Donation",
         DedupeKey = "owned-speech", OccurredAt = DateTimeOffset.UtcNow,
         User = new(DisplayName: "Owned viewer"), Message = new(message),
+        Automation = new(Anonymous: false, MessagePublic: true),
         Support = new("donation", 1, new(1234, "USD", 2))
     };
+
+    [Fact]
+    public void PrivateOrUnknownVisibilityNeverSpeaksKofiMessageEvenWhenAnonymousMessagesAreAllowed()
+    {
+        var settings = new AutomationSpeechSettings { Template = "{message}", IgnoreAnonymousMessage = false };
+        foreach (bool? visibility in new bool?[] { null, false })
+        {
+            var item = Donation("private message") with { Automation = new(false, visibility) };
+            Assert.Equal(new AutomationSpeechResult("empty", ""), AutomationSpeech.Prepare(settings, item, false));
+        }
+        Assert.Equal("private message", AutomationSpeech.Prepare(settings, Donation("private message"), false).Text);
+    }
 
     [Fact]
     public void SanitizesExpandedFieldsWithoutRecursivelyExpandingViewerTokens()

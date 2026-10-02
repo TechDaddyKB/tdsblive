@@ -3,6 +3,7 @@ using System;
 using ExtensionSuite.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExtensionSuite.Data.Migrations
 {
     [DbContext(typeof(FoundationDbContext))]
-    partial class FoundationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261002060218_AutomationEventInbox")]
+    partial class AutomationEventInbox
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
@@ -48,12 +51,6 @@ namespace ExtensionSuite.Data.Migrations
                     b.Property<Guid>("ActionId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ActionOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("CancelRequested")
-                        .HasColumnType("INTEGER");
-
                     b.Property<long>("CreatedAtTicks")
                         .HasColumnType("INTEGER");
 
@@ -67,10 +64,6 @@ namespace ExtensionSuite.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Json")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("QueueGroup")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -88,8 +81,6 @@ namespace ExtensionSuite.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAtTicks");
-
-                    b.HasIndex("QueueGroup", "State");
 
                     b.HasIndex("State", "DueAtTicks");
 

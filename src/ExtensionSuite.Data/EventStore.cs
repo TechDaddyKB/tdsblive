@@ -38,6 +38,7 @@ public sealed class EventStore(IDbContextFactory<FoundationDbContext> factory, S
                 DedupeKey = item.DedupeKey, Type = item.Type, OccurredAtTicks = item.OccurredAt.UtcTicks,
                 Json = CredentialRedactor.Json(JsonSerializer.SerializeToNode(sanitized, JsonOptions), sensitive?.Snapshot())!.ToJsonString(JsonOptions) });
             db.Outbox.Add(new OutboxEntry { EventId = item.Id, CreatedAtTicks = item.ReceivedAt.UtcTicks });
+            if (item.Provenance == EventProvenance.Live) db.AutomationInbox.Add(new() { EventId = item.Id });
         }
         var position = await db.Checkpoints.FindAsync([item.Source, provenance], cancellationToken);
         if (position is null) db.Checkpoints.Add(new SourceCheckpoint { Source = item.Source, Provenance = provenance, Value = checkpoint });

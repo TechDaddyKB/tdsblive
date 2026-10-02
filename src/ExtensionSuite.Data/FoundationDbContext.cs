@@ -4,6 +4,10 @@ namespace ExtensionSuite.Data;
 
 public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> options) : DbContext(options)
 {
+    public DbSet<StoredAutomationRule> AutomationRules => Set<StoredAutomationRule>();
+    public DbSet<AutomationExecution> AutomationExecutions => Set<AutomationExecution>();
+    public DbSet<AutomationTemporaryEffect> AutomationTemporaryEffects => Set<AutomationTemporaryEffect>();
+    public DbSet<AutomationEventInbox> AutomationInbox => Set<AutomationEventInbox>();
     public DbSet<StoredEvent> Events => Set<StoredEvent>();
     public DbSet<SourceCheckpoint> Checkpoints => Set<SourceCheckpoint>();
     public DbSet<OutboxEntry> Outbox => Set<OutboxEntry>();
@@ -26,6 +30,33 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AutomationEventInbox>(entity =>
+        {
+            entity.HasKey(item => item.Sequence);
+            entity.HasIndex(item => item.EventId).IsUnique();
+            entity.HasIndex(item => new { item.Processed, item.Sequence });
+            entity.HasOne<StoredEvent>().WithMany().HasForeignKey(item => item.EventId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<AutomationTemporaryEffect>(entity =>
+        {
+            entity.HasKey(item => item.ActionId);
+            entity.Property(item => item.Version).IsConcurrencyToken();
+            entity.HasIndex(item => new { item.State, item.ExpiresAtTicks });
+        });
+        modelBuilder.Entity<StoredAutomationRule>(entity =>
+        {
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Version).IsConcurrencyToken();
+        });
+        modelBuilder.Entity<AutomationExecution>(entity =>
+        {
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.EventId, item.RuleId, item.ActionId }).IsUnique();
+            entity.HasIndex(item => new { item.State, item.DueAtTicks });
+            entity.HasIndex(item => new { item.QueueGroup, item.State });
+            entity.HasIndex(item => item.CreatedAtTicks);
+            entity.Property(item => item.Version).IsConcurrencyToken();
+        });
         modelBuilder.Entity<FinancialProjectionReceipt>(entity =>
         {
             entity.HasKey(item => item.EventId);
@@ -114,6 +145,46 @@ public sealed class FoundationDbContext(DbContextOptions<FoundationDbContext> op
             entity.HasIndex(item => new { item.DeliveredAtTicks, item.CreatedAtTicks });
         });
     }
+}
+
+public sealed class StoredAutomationRule
+{
+    public Guid Id { get; set; }
+    public int Version { get; set; }
+    public required string Json { get; set; }
+}
+
+public sealed class AutomationEventInbox
+{
+    public long Sequence { get; set; }
+    public Guid EventId { get; set; }
+    public bool Processed { get; set; }
+}
+
+public sealed class AutomationTemporaryEffect
+{
+    public Guid ActionId { get; set; }
+    public int Version { get; set; }
+    public long ExpiresAtTicks { get; set; }
+    public required string State { get; set; }
+    public required string Json { get; set; }
+}
+
+public sealed class AutomationExecution
+{
+    public Guid Id { get; set; }
+    public Guid EventId { get; set; }
+    public Guid RuleId { get; set; }
+    public Guid ActionId { get; set; }
+    public int ActionOrder { get; set; }
+    public string QueueGroup { get; set; } = "main";
+    public bool CancelRequested { get; set; }
+    public int Version { get; set; }
+    public long CreatedAtTicks { get; set; }
+    public long DueAtTicks { get; set; }
+    public required string State { get; set; }
+    public string? Detail { get; set; }
+    public required string Json { get; set; }
 }
 
 public sealed class StoredOverlay
