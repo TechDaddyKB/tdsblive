@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 
 export async function qualifyDonors(page, origin, writeHeaders, root) {
   const write = async (path, method, value) => {
@@ -62,9 +63,41 @@ export async function qualifyDonors(page, origin, writeHeaders, root) {
   await page.evaluate(() => window.tdsbliveTestSockets.at(-1).close());
   await page.waitForFunction(before => window.tdsbliveTestSockets.length > before && window.tdsbliveTestSockets.at(-1).g05Subscribed, socketsBefore);
   await crown.getByText(/\$2\.00/).waitFor();
-  await page.screenshot({ path: path.join(root, 'artifacts/g08-donor-widgets.png') });
+  const upload = async (body, name, mime) => {
+    const result = await fetch(`${origin}/api/assets`, { method: 'POST', headers: { ...writeHeaders, 'Content-Type': mime, 'X-Asset-Filename': name, 'X-Asset-License': 'MIT; original owned qualification fixture' }, body });
+    assert.equal(result.status, 200); return result.json();
+  };
+  const image = await upload(Buffer.from('47494638396101000100800000ff00000000ff21f904000a0000002c00000000010001000002024401003b', 'hex'), 'g08-owned-crown.gif', 'image/gif');
+  const font = await upload(await readFile(path.join(root, 'tests/fixtures/donors/owned-test.woff')), 'g08-owned-test.woff', 'font/woff');
+  overlay = await (await fetch(`${origin}/api/overlays/donor-qualification`)).json();
+  Object.assign(overlay.widgets[0], { color: '#123456', fontSize: 37 });
+  Object.assign(overlay.widgets[0].donor, { crownAssetId: image.id, template: 'Owned {name}: {amount}', animation: 'fade', transitionMs: 1500 });
+  overlay.widgets[1].donor.fontAssetId = font.id;
+  await write('/api/overlays/donor-qualification', 'PUT', overlay);
+  await crown.getByText(/Owned .*: \$2\.00/).waitFor();
+  await page.waitForFunction(id => {
+    const element = document.querySelector(`[data-widget-id="${id}"]`);
+    const image = element?.querySelector('.donor-crown');
+    return image?.complete && image.naturalWidth === 1;
+  }, widgets[0].id);
+  assert.equal(await crown.evaluate(element => getComputedStyle(element).color), 'rgb(18, 52, 86)');
+  assert.equal(await crown.evaluate(element => getComputedStyle(element).fontSize), '37px');
+  await page.waitForFunction(id => {
+    const name = `tdsblive-donor-${id.replace(/[^a-zA-Z0-9]/g, '')}`;
+    return [...document.fonts].some(face => face.family === name && face.status === 'loaded') &&
+      getComputedStyle(document.querySelector(`[data-widget-id="${id}"] .donor-widget`)).fontFamily.includes(name);
+  }, widgets[1].id);
+  const currentTwitch = (await (await fetch(`${origin}/api/financial/identities`)).json()).find(row => row.id === twitch.id);
+  await write(`/api/financial/identities/${twitch.id}/link`, 'POST', { expectedSupporterId: currentTwitch.supporterId, targetSupporterId: kofi.supporterId });
+  await crown.locator('.exit-fade').waitFor();
+  await crown.locator('.enter-fade').waitFor();
+  await write(`/api/financial/identities/${twitch.id}/unlink`, 'POST', { expectedSupporterId: kofi.supporterId });
+  await crown.locator('.exit-fade').waitFor();
+  await crown.locator('.enter-fade').waitFor();
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgba(0, 0, 0, 0)');
+  await page.screenshot({ path: path.join(root, 'artifacts/g08-donor-widgets.png'), omitBackground: true });
   await page.goto(`${origin}/overlay/donor-qualification?preview=1`);
   await page.getByText('Test preview · no production totals', { exact: true }).first().waitFor();
   assert.equal(await page.getByText(/\$12\.50|\$14\.50/).count(), 0);
-  console.log('G08 real-browser donor snapshots, identity link/unlink, filters, reconciliation, editor persistence/revision restore, reconnect and preview isolation passed');
+  console.log('G08 real-browser donor snapshots, identity link/unlink, filters, reconciliation, editor persistence/revision restore, reconnect, loaded image/font appearance, leader transitions and preview isolation passed');
 }

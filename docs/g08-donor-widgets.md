@@ -40,4 +40,4 @@ Crown images and font assets use authenticated asset requests with header creden
 
 ## Remaining qualification
 
-Complete browser checks for new ingestion, filters, all periods, identity linking/unlinking, explicit reconciliation, settings changes, revision restore, reconnect and preview isolation. Verify actual OBS donor rendering, Windows CI and SonarQube OpenCover/LCOV import and quality gate. Indexed aggregation/performance, latest-supporter semantics and update failure handling require final review before completion.
+Local qualification covers actual SQLite ingestion/projection, period boundaries, precision/performance, and populated-browser filters, identity changes, reconciliation, editor persistence/revision restore, reconnect, preview isolation, decoded images, loaded fonts and animated transitions. Actual OBS donor confirmation, Windows CI, SonarQube OpenCover/LCOV import and the quality gate remain required. The maintained [qualification audit](g08-qualification.md) records evidence and remaining delivery checks.
