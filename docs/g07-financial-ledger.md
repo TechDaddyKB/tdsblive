@@ -111,6 +111,6 @@ The rule-lifecycle downgrade deletes disabled tombstones before removing the Ena
 
 Frontend tests additionally verify exact fractional-minor rule edits, zero versus removed rules, rate/date/estimate disclosure, UTC settings normalization, manual identity selection, stale selected versions across live polling, gated selection denial and privacy-preserving errors. The complete frontend suite passes 102 tests; LCOV reports 93.60% lines and 81.18% branches.
 
-A deterministic ledger validation/valuation rejection now receives a quarantined receipt with the fixed reason ledger_rejected. Actual SQLite tests place oversized identities and overflowing valuations before 32 valid later contributions; both bounded batches continue and commit those valid contributions. Storage/receipt failures remain retryable and accepted history stays frozen.
+A deterministic ledger validation/valuation rejection now receives a quarantined receipt with the fixed reason ledger_rejected. Actual SQLite tests place oversized identities, overflowing valuations and a malformed explicit-null bridge path before 32 valid later contributions; both bounded batches continue and commit those valid contributions. Canonical validation rejects a null bridge path as invalid_typed_event, rather than allowing a null-reference failure to stall the reader. Storage/receipt failures remain retryable and accepted history stays frozen.
 
 Draft delivery is [PR #8](https://github.com/camarokris/tdsblive/pull/8). Final trusted Windows/coverage/SonarQube evidence and the completion audit remain pending.

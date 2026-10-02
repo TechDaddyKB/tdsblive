@@ -1,6 +1,6 @@
 # G07 completion audit
 
-Status: In progress. Source under audit: `6134ddd5fa0326e2153f401742f1291e0a83e79e`. This audit covers [G07](implementation-plan.md#g07), specification sections 23–29 and 83, and the inherited security/testing contracts. G08 widgets and G09 financial automation are outside this goal.
+Status: In progress. Source under audit: the current head of [PR #8](https://github.com/camarokris/tdsblive/pull/8). This audit covers [G07](implementation-plan.md#g07), specification sections 23–29 and 83, and the inherited security/testing contracts. G08 widgets and G09 financial automation are outside this goal.
 
 ## Requirement evidence
 
@@ -18,7 +18,7 @@ Status: In progress. Source under audit: `6134ddd5fa0326e2153f401742f1291e0a83e7
 | Persisted cache and dated manual overrides | Actual SQLite rate tests, concurrent manual precedence, audit rollback and real browser manual-rate controls | Verified |
 | Frozen history and explicit reconciliation | Versioned per-contribution transactions, unavailable lookup preservation, stale conflicts, browser selected reconciliation and real crash/restart qualification | Verified |
 | Durable uniqueness, reconnect/replay suppression | Ledger constraints, raw-disabled ingestion, financial projection receipts, actual restart/native-ID duplicate checks and source replay tests | Verified |
-| Independent ingestion and failure recovery | Acknowledged outbox catch-up; storage failures retry; malformed/invalid/overflowing events quarantine without starving later batches | Verified with SQLite and actual process checks |
+| Independent ingestion and failure recovery | Acknowledged outbox catch-up; storage failures retry; malformed/invalid/overflowing events, including an explicit null bridge path, quarantine without starving later batches | Verified with SQLite and actual process checks |
 | Gift batches and individual notifications count once | Twitch/Kick arrival-order, exact recipient period, conflict and partial-overlap tests; YouTube recipient exclusion | Verified with owned documented-contract fixtures |
 | Unverified gift ownership stays gated | Rumble gifts gated; unknown channel/recipient/period/sender facts remain gated; reconciliation cannot bypass accounting exclusions | Verified |
 | Broadcaster channel context | Per-native-gift `GetBroadcaster` resolution; numeric/string/disconnected parsing tests; installed bot read-only field/type probe | Verified request/schema behavior; no paid gift observation claimed |

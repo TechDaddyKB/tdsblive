@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ExtensionSuite.Core;
 using ExtensionSuite.Data;
 using ExtensionSuite.Finance;
@@ -24,16 +25,25 @@ public sealed class FinancialProjectionTests
             User = new(new string('x', 600)), Support = new("donation", 1, new(100, "USD", 2)) }, "1"));
         Assert.True(await events.AcceptAsync(Paid("overflow") with { OccurredAt = earlier,
             Support = new("donation", 1, new(long.MaxValue, "EUR", 2)) }, "2"));
+        await using (var source = await contexts.CreateDbContextAsync())
+        {
+            var malformed = Paid("null-bridge-path") with { OccurredAt = earlier, BridgePath = null! };
+            source.Events.Add(new StoredEvent { Id = malformed.Id, Source = malformed.Source, Provenance = "Live",
+                DedupeKey = malformed.DedupeKey, Type = malformed.Type, OccurredAtTicks = earlier.UtcTicks,
+                Json = JsonSerializer.Serialize(malformed, EventStore.JsonOptions) });
+            await source.SaveChangesAsync();
+        }
         for (var index = 0; index < 32; index++) Assert.True(await events.AcceptAsync(Paid("later-" + index), "3"));
         var projection = new FinancialProjection(contexts, new(contexts), new FixtureRates(), new(contexts));
         Assert.Equal(32, await projection.ProcessBatchAsync());
-        Assert.Equal(2, await projection.ProcessBatchAsync());
+        Assert.Equal(3, await projection.ProcessBatchAsync());
         Assert.Equal(0, await projection.ProcessBatchAsync());
         await using var db = await contexts.CreateDbContextAsync();
         Assert.Equal(32, await db.FinancialEvents.CountAsync());
         var quarantined = await db.FinancialProjectionReceipts.Where(row => row.State == "quarantined").ToArrayAsync();
-        Assert.Equal(2, quarantined.Length);
-        Assert.All(quarantined, receipt => Assert.Equal("ledger_rejected", receipt.Reason));
+        Assert.Equal(3, quarantined.Length);
+        Assert.Equal(2, quarantined.Count(receipt => receipt.Reason == "ledger_rejected"));
+        Assert.Single(quarantined, receipt => receipt.Reason == "invalid_typed_event");
     }
     private static CanonicalEvent Paid(string key, EventProvenance provenance = EventProvenance.Live) => new()
     {
