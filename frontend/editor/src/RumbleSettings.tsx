@@ -27,7 +27,7 @@ export function RumbleSettings() {
       <label>Request timeout (seconds) <input type="number" required min={1} max={60} value={settings?.requestTimeoutSeconds ?? 15} onChange={event => update({ requestTimeoutSeconds: Number(event.target.value) })} /></label>
       <label>Successful offline confirmations <input type="number" required min={2} max={10} value={settings?.offlineConfirmationPolls ?? 2} onChange={event => update({ offlineConfirmationPolls: Number(event.target.value) })} /></label>
       <label><input type="checkbox" checked={settings?.forwardTriggers ?? false} onChange={event => update({ forwardTriggers: event.target.checked })} /> Forward qualified Rumble events to Streamer.bot</label>
-      <p>Forwarding also requires Streamer.bot’s forwardLiveEvents setting. Subscription and gift automation remain gated.</p>
+      <p>Also enable qualified live event forwarding under Bot integrations → Streamer.bot action permissions. Subscription and gift automation remain gated.</p>
       <button type="submit">Save polling settings</button>
     </form>}
     {message && <p role="status">{message}</p>}

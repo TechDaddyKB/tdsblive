@@ -46,6 +46,37 @@ before Rumble trigger forwarding is enabled. Follow the extension import
 instructions supplied with your qualified release. The setup guide does not
 automatically prove that those triggers execute.
 
+### Import the supplied actions
+
+1. Open the TDSBLive application folder. Find
+   **integrations → tdsblive-streamerbot.sb**.
+2. In Streamer.bot, open its **Import** dialog and load that file.
+3. Review the three TDSBLive actions: **TDSBLive bootstrap**, **TDSBLive
+   qualification probe**, and **TDSBLive explicit forwarder**, then import them.
+4. Run **TDSBLive bootstrap** once so its C# initialization registers the custom
+   triggers. Check Streamer.bot's logs if compilation or registration fails.
+5. In TDSBLive, refresh bot discovery and check that the TDSBLive triggers appear.
+
+The bundle does not bind platform events or start production automation for you.
+The qualification probe is for an isolated test. The explicit forwarder is a
+template for events that require forwarding; do not attach it to every chat
+event when the WebSocket already supplies that event, or you may duplicate it.
+Real import and trigger execution were qualified with Streamer.bot 1.0.7;
+other versions still need their own compatibility checks.
+
+### Review action permissions
+
+Open **Bot integrations → Streamer.bot action permissions**, then choose **Load
+action permissions**. Select only the discovered actions you intend TDSBLive to
+run. Disabled actions cannot be newly selected. Remove old permissions for
+actions no longer available, then choose **Save action permissions** and restart.
+Saving permissions does not run an action or enable a rule.
+
+For Rumble custom triggers, check **Allow qualified live event forwarding to
+Streamer.bot** here and **Forward qualified Rumble events to Streamer.bot** in
+Rumble polling settings. Save both, restart and verify the trigger with an
+isolated probe before attaching production automation.
+
 ## 3. Connect Rumble
 
 1. Obtain your private Rumble Live API URL from your Rumble account.

@@ -19,6 +19,12 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Windows publish failed.' }
     & python tools/build_offline_guide.py (Join-Path $publish 'guide')
     if ($LASTEXITCODE -ne 0) { throw 'Offline user guide generation failed.' }
+    $importBundle = Join-Path $repository 'artifacts/tdsblive-streamerbot.sb'
+    & python tools/streamerbot/build_import.py $importBundle
+    if ($LASTEXITCODE -ne 0) { throw 'Streamer.bot import generation failed.' }
+    $integrations = Join-Path $publish 'integrations'
+    New-Item -ItemType Directory -Path $integrations | Out-Null
+    Copy-Item $importBundle (Join-Path $integrations 'tdsblive-streamerbot.sb')
     foreach ($required in @('TDSBLive.exe', 'TDSBLive.dll', 'TDSBLive.runtimeconfig.json', 'wwwroot/editor/index.html', 'wwwroot/runtime/index.html')) {
         if (-not (Test-Path (Join-Path $publish $required))) { throw "Published package is missing $required" }
     }

@@ -1,7 +1,7 @@
 // Owns only a fresh local host and temporary data; never runs live integrations.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, realpath, stat } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -18,8 +18,16 @@ const port = await new Promise((resolve, reject) => {
 await writeFile(path.join(data, 'configuration.json'), JSON.stringify({ server: { host: '127.0.0.1', port } }));
 const origin = `http://127.0.0.1:${port}`;
 const packagedExecutable = process.argv[2];
-const executable = packagedExecutable ? path.resolve(packagedExecutable)
-  : path.join(process.env.DOTNET_ROOT, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+let executable = path.join(process.env.DOTNET_ROOT, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+if (packagedExecutable) {
+  assert.equal(process.platform, 'win32', 'Packaged qualification requires Windows');
+  const candidate = await realpath(packagedExecutable);
+  const relative = path.relative(await realpath(process.env.RUNNER_TEMP), candidate);
+  assert.match(relative, /^tdsblive-package-check-[a-f0-9]{32}\\(?:portable|installed)\\TDSBLive\.exe$/,
+    'Only the owned Windows package qualification executable can run');
+  assert.ok((await stat(candidate)).isFile());
+  executable = candidate;
+}
 const argumentsList = ['--TDSBLive:DataDirectory', data, '--TDSBLive:OpenEditor=false'];
 if (!packagedExecutable) argumentsList.unshift(path.resolve('src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'));
 const child = spawn(executable, argumentsList, { stdio: 'ignore' });

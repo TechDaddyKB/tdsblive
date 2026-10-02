@@ -22,7 +22,7 @@ function Invoke-Installer([string]$Executable, [string]$Arguments) {
 function Test-Application([string]$Directory) {
     $runtime = Get-Content (Join-Path $Directory 'TDSBLive.runtimeconfig.json') -Raw | ConvertFrom-Json
     if ($runtime.runtimeOptions.framework -or $runtime.runtimeOptions.frameworks) { throw 'Package requires a separately installed runtime.' }
-    foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe', 'guide/Home.html', 'guide/images/guided-setup.png')) {
+    foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe', 'guide/Home.html', 'guide/images/guided-setup.png', 'integrations/tdsblive-streamerbot.sb')) {
         if (-not (Test-Path (Join-Path $Directory $required))) { throw "Self-contained package is missing $required" }
     }
     New-Item -ItemType Directory -Path $data -Force | Out-Null

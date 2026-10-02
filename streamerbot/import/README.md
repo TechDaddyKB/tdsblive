@@ -1,5 +1,7 @@
 # Import packages
 
-G03 places reviewed Streamer.bot import packages here. Do not export personal
-credentials or unrelated actions. Keep stable trigger names and action GUID
-references documented and validate actual import/trigger execution in Streamer.bot.
+Windows packages include the generated `integrations/tdsblive-streamerbot.sb`
+bundle. `tools/streamerbot/build_import.py` builds it from the three reviewed C#
+sources without exporting personal actions or credentials. Generated bundles
+remain outside Git. See the user guide's First setup chapter for import steps.
+G03 qualified actual import and trigger execution with Streamer.bot 1.0.7.

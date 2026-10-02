@@ -71,6 +71,10 @@ def render(text: str) -> str:
 
 
 def build(destination: Path):
+    destination = destination.resolve()
+    output_root = (ROOT / 'release').resolve()
+    if not destination.is_relative_to(output_root) or destination == output_root:
+        raise ValueError('Guide output must be a child of the repository release directory')
     if destination.exists():
         raise ValueError('Choose a fresh guide output directory')
     pages = sorted(GUIDE.glob('*.md'))

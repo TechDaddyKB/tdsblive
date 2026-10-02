@@ -540,6 +540,10 @@ Wine preflight correction: the first launch disabled Wine's `mscoree` loader thr
 
 Windows run `37026932245` failed one hosted Rumble test (373 host tests passed). Its fixture invented a new message on every HTTP poll, allowing the background worker to introduce chat between reset assertions. The fixture now advances its snapshot explicitly while still exercising the real hosted poller and reset. This requires a new exact-head Windows run; the failed run did not reach package qualification or Sonar completion.
 
+Setup/package gap closure: Windows packaging now generates `integrations/tdsblive-streamerbot.sb` from individually scanned C# sources and requires it in portable/installed package checks. Decompressed generated-import inspection confirms the three reviewed sources, stable distinct action IDs, no autorun action and no platform bindings. Wiki commit `3306fc9` publishes matching import/offline-guide instructions. Bot integrations now offers action allowlist and live-forwarding controls through the editor, with seven related UI tests passing; these controls require restart and do not execute actions. Five maintenance UI tests pass for confirmation, settings import and process-operation gating. Actual import and package checks of the final release candidate remain pending.
+
+Quality-gate repair checkpoint: Windows run `37027780281` passed the new-code coverage condition (80.9%) but failed its security rating on unrestricted qualification-tool paths. Offline guide output is now constrained beneath the repository's ignored `release` directory; packaged process qualification permits only `TDSBLive.exe` in the owned Windows runner's UUID-named portable/installed test directories. Local real-process restart/restore still passes, guide generation succeeds in the allowed directory and rejects an external destination, and the full frontend coverage run passes with 88.8% line coverage. The corrected head still requires Windows CI and Sonar analysis; these local results do not prove the security gate has cleared.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets
