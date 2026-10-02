@@ -93,7 +93,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
-| [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
+| [G10](#g10) | Deliver and validate the MVP | G01–G09 | In progress |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
@@ -477,7 +477,7 @@ None for the active G09 scope. VTube Studio-specific requirements remain explici
 
 ## G10 — Deliver and validate the MVP
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G01–G09
 
 ### Deliverables
@@ -485,18 +485,24 @@ Prerequisites: G01–G09
 - Build self-contained Windows x64 ZIP and Inno Setup installer in Actions; attach checksums after release validation.
 - Implement first-run connection/bootstrap/Rumble/Speaker/timezone/valuation/overlay wizard and optional login startup; ordinary runtime unelevated.
 - Provide SQLite-safe backup/validated restore with safety backup and paused consumers, secret-free config export/import, installation/recovery docs.
-- Validate integrated MVP, authenticated LAN HTTP, rendering/audio, restart and the specified performance workload on a documented Windows streaming PC.
+- Publish a complete, plain-language release guide in the repository and its GitHub wiki, with screenshots from isolated owned examples where available. Cover installation, first setup, everyday use, Streamer.bot/Speaker.bot/Rumble connections, OBS sources/docks, chat, overlays/alerts, supporter totals, automation, LAN HTTP, backup/restore, updates, troubleshooting and uninstall. Explain unfamiliar terms, use numbered steps and expected results, and avoid assuming command-line knowledge. Keep developer/API references separate and link them from the guide. Validate instructions against the actual packaged application; keep screenshot credentials and private content out of public artifacts.
+- Validate integrated MVP, authenticated LAN HTTP, rendering/audio and restart in the available Wine/Proton environment, with native Windows packaging and installer checks in GitHub Actions. Native Windows streaming-PC performance qualification is explicitly deferred by the operator; it is not a G10 completion blocker under this approved scope.
 
 ### Acceptance criteria
 
 - All G00–G09 acceptance gates satisfied; Windows CI and Sonar quality gate pass.
 - Installer/portable build verified on Windows; setup requires no normal-user command line or certificates.
+- Repository guide and wiki are published, with working navigation/images and matching instructions. An unfamiliar user can follow the documented setup path without using developer tools.
 - Real end-to-end Rumble trigger/chat/Rant ledger/crown and Ko-fi/Bits automation flows work together.
-- Measure idle <1% CPU, ordinary-chat <3% average CPU and backend <300MB against documented hardware/workload; record deviations honestly.
+- Measure idle <1% CPU, ordinary-chat <3% average CPU and backend <300MB against documented hardware/workload in the available environment; record deviations honestly. Distinguish Wine/Proton measurements from native Windows CI results. Native Windows streaming-PC performance remains deferred and must not be presented as verified.
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+Operator-approved qualification scope: only the current Wine/Proton environment is available. The operator selected “Qualify Wine/Proton plus Windows CI; explicitly defer streaming-PC performance.” This deferral applies solely to native Windows streaming-PC performance; packaging, installer, integrated behavior and available-environment performance checks remain required.
+
+Packaging foundation: a self-contained `win-x64` publish profile, separate locked Windows dependency graphs, per-user Inno Setup script, checksum generation and native Windows package qualification are implemented for CI evaluation. `dotnet restore src/ExtensionSuite.Host/ExtensionSuite.Host.csproj --runtime win-x64 --locked-mode -p:NuGetLockFilePath=packages.win-x64.lock.json` passed locally; this verifies dependency reproducibility, not a Windows build. Eight browser-launch unit cases passed locally. Native package qualification remains pending its Actions run. These are release candidates, not a completed MVP release.
+
+G01–G09 prerequisites are delivered on main, including protected G09 merge `26bb2eeea61ad5d4fbe6435f91778996de02d926`. G10 implementation is isolated on `feat/g10-mvp-release`. The operator's VTube Studio scope hold remains in force. Repository documentation and wiki publication are explicit deliverables. The wiki is enabled but its Git repository is not yet initialized; publication is not claimed. Windows packaging, setup, backup/restore and integrated/performance qualification remain to implement and verify.
 
 ### Blockers
 

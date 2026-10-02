@@ -171,6 +171,32 @@ jobs:
           dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Build self-contained Windows ZIP and per-user installer
+        shell: pwsh
+        run: |
+          $innoRoot = Join-Path $env:RUNNER_TEMP 'tdsblive-inno-6.7.3'
+          $download = Join-Path $env:RUNNER_TEMP 'innosetup-6.7.3.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe' -OutFile $download
+          if ((Get-FileHash $download -Algorithm SHA256).Hash.ToLowerInvariant() -ne '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732') { throw 'Inno Setup checksum mismatch' }
+          $installed = Start-Process $download -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$innoRoot`"" -Wait -PassThru
+          if ($installed.ExitCode -ne 0) { throw 'Inno Setup installation failed' }
+          ./tools/build_windows_package.ps1 -Version '0.1.0' -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
+
+      - name: Qualify native Windows packages
+        shell: pwsh
+        run: ./tools/qualify_windows_package.ps1 -Version '0.1.0'
+
+      - name: Upload candidate Windows packages
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-release-candidate
+          retention-days: 14
+          path: |
+            release/TDSBLive-*-win-x64.zip
+            release/TDSBLive-*-win-x64-setup.exe
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+
       - name: Upload test and coverage evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

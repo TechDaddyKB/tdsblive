@@ -1,0 +1,73 @@
+param(
+    [Parameter(Mandatory)][ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version,
+    [string]$PackageDirectory = (Join-Path $PSScriptRoot '../release')
+)
+$ErrorActionPreference = 'Stop'
+if (-not $IsWindows) { throw 'Native package qualification requires Windows.' }
+$package = [IO.Path]::GetFullPath($PackageDirectory)
+$root = Join-Path $env:RUNNER_TEMP ('tdsblive-package-check-' + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $root | Out-Null
+$installed = Join-Path $root 'installed'
+$data = Join-Path $root 'data'
+$installer = Join-Path $package "TDSBLive-$Version-win-x64-setup.exe"
+$process = $null
+$listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
+$listener.Start()
+$port = $listener.LocalEndpoint.Port
+$listener.Stop()
+function Invoke-Installer([string]$Executable, [string]$Arguments) {
+    $operation = Start-Process $Executable -ArgumentList $Arguments -Wait -PassThru
+    if ($operation.ExitCode -ne 0) { throw 'Installer operation failed.' }
+}
+function Test-Application([string]$Directory) {
+    $runtime = Get-Content (Join-Path $Directory 'TDSBLive.runtimeconfig.json') -Raw | ConvertFrom-Json
+    if ($runtime.runtimeOptions.framework -or $runtime.runtimeOptions.frameworks) { throw 'Package requires a separately installed runtime.' }
+    foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe')) {
+        if (-not (Test-Path (Join-Path $Directory $required))) { throw "Self-contained package is missing $required" }
+    }
+    New-Item -ItemType Directory -Path $data -Force | Out-Null
+    @{ server = @{ host = '127.0.0.1'; port = $port; enableLan = $false; allowedHosts = @() } } |
+        ConvertTo-Json -Depth 5 | Set-Content (Join-Path $data 'configuration.json')
+    # Start the shipped EXE directly, not dotnet. No live integrations or browser launch.
+    $script:process = Start-Process (Join-Path $Directory 'TDSBLive.exe') `
+        -ArgumentList "--TDSBLive:DataDirectory=`"$data`"" -PassThru `
+        -RedirectStandardOutput (Join-Path $root 'host.stdout') -RedirectStandardError (Join-Path $root 'host.stderr')
+    try {
+        $ready = $false
+        $deadline = [DateTime]::UtcNow.AddSeconds(45)
+        while ([DateTime]::UtcNow -lt $deadline) {
+            if ($script:process.HasExited) { throw 'Packaged executable exited before readiness.' }
+            try {
+                $status = Invoke-RestMethod "http://127.0.0.1:$port/api/status" -TimeoutSec 2 -NoProxy
+                if ($status.name -eq 'TDSBLive' -and $status.httpSupported) { $ready = $true; break }
+            } catch { }
+            Start-Sleep -Milliseconds 200
+        }
+        if (-not $ready) { throw 'Packaged application did not become ready.' }
+        foreach ($route in @('/editor', '/overlay/combined-chat', '/chat/combined-chat')) {
+            $response = Invoke-WebRequest "http://127.0.0.1:$port$route" -TimeoutSec 5 -NoProxy
+            if ($response.StatusCode -ne 200 -or $response.Content -notmatch '<html') { throw 'Packaged browser assets did not load.' }
+        }
+        if (-not (Test-Path (Join-Path $data 'tdsblive.db'))) { throw 'Packaged application did not initialize its database.' }
+    } finally {
+        if ($script:process -and -not $script:process.HasExited) { Stop-Process -Id $script:process.Id -Force; $script:process.WaitForExit() }
+        $script:process = $null
+    }
+}
+try {
+    $portable = Join-Path $root 'portable'
+    Expand-Archive (Join-Path $package "TDSBLive-$Version-win-x64.zip") $portable
+    Test-Application $portable
+    Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
+    Test-Application $installed
+    # A repeated install exercises replacement/upgrade mechanics without inventing a prior release.
+    Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
+    Test-Application $installed
+    Invoke-Installer (Join-Path $installed 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
+    if (Test-Path (Join-Path $installed 'TDSBLive.exe')) { throw 'Uninstall left the application executable behind.' }
+    if (-not (Test-Path (Join-Path $data 'tdsblive.db'))) { throw 'Uninstall removed separately stored user data.' }
+    Write-Output 'Native Windows portable/install/reinstall/uninstall checks passed. Streaming-PC performance and OBS rendering are separate checks.'
+} finally {
+    if ($process -and -not $process.HasExited) { Stop-Process -Id $process.Id -Force; $process.WaitForExit() }
+    Remove-Item $root -Recurse -Force
+}
