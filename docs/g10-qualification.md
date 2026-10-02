@@ -81,6 +81,9 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
 - Local Codex/VS Code MCP settings and standalone MCP configuration are excluded
   from public Git. The visual editor now offers manual URL copying when an HTTP
   browser omits or denies its clipboard API.
+- Run `37037428506` passed analysis and authenticated guide-source scans, then
+  failed reading UTF-8 Markdown with Windows' default legacy encoding. Guide
+  reads now explicitly use UTF-8; final native packaging is still pending.
 
 ## Completion rule
 

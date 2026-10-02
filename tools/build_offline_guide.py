@@ -84,7 +84,7 @@ def build(destination: Path):
             raise ValueError('Guide sources must be ordinary files')
         subprocess.run(['sonar', 'analyze', 'secrets', str(source)], check=True)
     navigation = ' · '.join(f'<a href="{page.stem}.html">{html.escape(page.stem.replace("-", " "))}</a>' for page in pages)
-    rendered = {page.stem: render(page.read_text()) for page in pages}
+    rendered = {page.stem: render(page.read_text(encoding='utf-8')) for page in pages}
     destination.mkdir(parents=True)
     shutil.copytree(GUIDE / 'images', destination / 'images')
     for name, body in rendered.items():

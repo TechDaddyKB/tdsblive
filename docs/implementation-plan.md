@@ -552,6 +552,8 @@ Windows run `37031475607` passed managed-process recovery and cleanup, but its S
 
 Windows run `37033816613` passed SonarQube with A ratings, 82.7% new coverage, 0.5% duplication and 100% hotspot review, then failed package guide generation because the child deterministic scanner lacked its authenticated CI environment. Packaging/native qualification now receive the same conditionally supplied scanner credentials as the existing trusted scan steps; fork builds do not receive those secrets. Decompressed/installed package contents are scanned before inspection. Local Codex/VS Code MCP configuration is now ignored, and the visual editor offers manual OBS-URL copying when HTTP browsers omit or deny clipboard access. Three clipboard-environment regression cases are added. Final exact-head Windows packaging and Wine qualification remain pending.
 
+Windows run `37037428506` passed analysis and authenticated guide-source scanning, then exposed a Windows-only UTF-8 decoding failure in offline guide generation. Markdown reads now specify UTF-8 explicitly, matching generated HTML. This is a packaging correction, not evidence that native package checks or final Wine acceptance have passed; a new exact-head run is required.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets
