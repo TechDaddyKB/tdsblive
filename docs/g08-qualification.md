@@ -29,3 +29,5 @@ Final local checks at `b6ea8f2` pass 51 core tests, 277 host tests (two Windows-
 The user previously confirmed OBS alert video/audio; that satisfies G06 and does not substitute for G08 donor rendering. No paid live support is invented or required for qualification. Unverified Rumble gifts remain gated.
 
 The S2077 finding `AaD6m93Q4KvHMX91J_XP` is addressed in source by removing query interpolation. Time bounds and JSON filter arrays are parameters in one fixed SQL statement. No rule exclusion or issue dismissal is used.
+
+Run `36959527247` failed only at final deletion of the FinancialStore period test’s database; its assertions passed. Host shutdown and scoped pool clearing precede deletion. The test fixture now retries only Windows temporary-directory `IOException`s for at most two seconds; persistent locks still fail. Two real Windows handle tests verify transient recovery and persistent-lock failure. They are not claimed verified on Linux. Current local backend checks pass 51 core/277 host tests with four Windows-only skips. A fresh Windows run must verify this cleanup behavior and the static-query Sonar fix.

@@ -56,7 +56,21 @@ public sealed class FoundationHostFactory : WebApplicationFactory<Program>
                 using var connection = new Microsoft.Data.Sqlite.SqliteConnection(options.ToString());
                 Microsoft.Data.Sqlite.SqliteConnection.ClearPool(connection);
             }
-            if (Directory.Exists(DirectoryPath)) Directory.Delete(DirectoryPath, recursive: true);
+            DeleteTemporaryDirectory(DirectoryPath);
+        }
+    }
+
+    internal static void DeleteTemporaryDirectory(string directory)
+    {
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        while (Directory.Exists(directory))
+        {
+            try { Directory.Delete(directory, recursive: true); return; }
+            catch (IOException) when (OperatingSystem.IsWindows() && elapsed.Elapsed < TimeSpan.FromSeconds(2))
+            {
+                // Windows may temporarily retain a file handle after shutdown. Persistent locks still fail.
+                Thread.Sleep(25);
+            }
         }
     }
 
