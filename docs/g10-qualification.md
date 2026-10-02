@@ -1,6 +1,6 @@
 # G10 release qualification
 
-G10 is **In progress** following resumed operator qualification. This checklist records what is actually verified;
+G10 is **Complete under the approved scope**, with the MVP release published. This checklist records what is actually verified;
 passing one row does not complete the other requirements. The owning contract is
 [G10 in the implementation plan](implementation-plan.md#g10).
 
@@ -23,16 +23,22 @@ passing one row does not complete the other requirements. The owning contract is
 
 | Requirement | Current evidence | Remaining evidence |
 | --- | --- | --- |
-| G00–G09 prerequisites | Maintained goal entries report completion; G09 protected merge is `26bb2eeea61ad5d4fbe6435f91778996de02d926` | Confirm final integrated behavior below; discovery alone is insufficient |
-| Self-contained ZIP and per-user installer | Run `37049814743` / `d3a01e9` passes native ZIP/installer, browser-connected recovery, startup off/opt-in, reinstall/uninstall and retained-data checks; downloaded ZIP/installer checksums match | Publish the qualified release after remaining checks |
-| Guided setup without normal-user commands | Browser review/resume and configuration persistence pass; session-only password entry and import/permissions documented. Both read-only bot tests pass against installed bots in the actual `e10b8fb` Windows package under Wine, without action/speech/queue executions | None for these checks |
-| SQLite-safe backup and restore | Actual `d3a01e9` Actions EXE under Wine passes restart, restore, paused integrations and the additional restart after restoring owned bot configuration; delayed-handshake regression passes | None for these checks |
-| Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; wiki `e017419` includes read-only setup tests and approved paid-event limits. Actual `e10b8fb` ZIP guide passes all ten pages/eight images, navigation, external-link preservation and UTF-8 with networking disabled; native package checks pass | Remove preparation warnings only when the qualified release is published |
-| Windows CI and SonarQube gate | Run `37056770891` / `e10b8fb` succeeds, including OpenCover/LCOV import, SonarQube, packaging and native package checks | Any later release-source commit must pass protected checks |
-| Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Actual `d3a01e9` Actions EXE passes real bot trigger/forwarder receipts and full browser suite. Production parser/engine/store deduplicates owned Rant/chat; packaged workers produce three contributions totaling 725 cents and two owned automation receipts | Final real API health and audible output now pass as recorded below; actual paid-platform delivery stays explicitly unverified by approved scope |
-| OBS rendering and audible output | Final `e10b8fb` package handoff reconnects the actual OBS source; screenshot confirms owned Rumble chat, three supporters and estimated $7.25 total. Earlier audible observations are recorded in G05/G06/G09 | Operator confirmed “Heard both” for the fresh Ko-fi speech and Bits tone; see resumed evidence below |
-| Authenticated LAN HTTP | Actual `d3a01e9` Actions EXE under Wine passes remote HTTP sign-in, credential rotation, DPAPI persistence, scoped token revocation and owner-only 403 restrictions; restored to loopback afterward | None for these checks |
-| Available-environment performance | Actual `e10b8fb` package with real Rumble polling: 4.616% idle/5.600% chat CPU with one core as 100%; peak backend RSS 321.35 MB. Both bots and OBS connected; owned rules disabled; recurring observer retired | Operator selected “Release with documented Wine limitations,” accepting CPU and memory deviations. Targets are not claimed as passed; native Windows streaming-PC performance remains deferred |
+| G00–G09 prerequisites | Maintained entries and protected merges prove completion; integrated runtime evidence below qualifies their combined MVP behavior | None for approved scope |
+| Self-contained ZIP and per-user installer | [Run 37073729890](https://github.com/TechDaddyKB/tdsblive/actions/runs/37073729890), source `649b2d1`, passes native ZIP/installer, startup off/opt-in, reinstall/uninstall and retained data; both package checksums and all uploaded asset digests/sizes match | None; [v0.1.0](https://github.com/TechDaddyKB/tdsblive/releases/tag/v0.1.0) is public |
+| Guided setup without normal-user commands | Configuration/review persistence and session-only entry pass; actual final Actions EXE under Wine passes both real-browser bot tests without action/speech/queue receipts | None |
+| SQLite-safe backup and restore | Actual Actions EXE under Wine passes restart, restore, paused consumers and extra restart; final Windows run passes browser-connected restart/restore and late-handshake regressions | None |
+| Repository, wiki and offline documentation | Ten chapters/eight owned screenshots published on main and wiki `3913754`; actual final ZIP guide passes pages/images, navigation, UTF-8 and main plan link with networking disabled; preparation warnings removed | None |
+| Windows CI and SonarQube gate | Final source `649b2d1`: 75 core/384 host/175 frontend tests, no backend skips, imported OpenCover/LCOV, SonarQube and all protected PR checks pass | Completion-record changes follow normal protected checks |
+| Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Actual shipped production libraries/workers deduplicate owned Rant/chat and project exact/nominal totals and widgets; real bot trigger/forwarder receipts pass. Current real Rumble API reports healthy/enabled/baseline established; operator confirms it | None for owned-example scope; actual paid-platform delivery remains unverified |
+| OBS rendering and audible output | Actual source reconnect/rendering screenshot proves owned chat, crown/ranking and estimated totals. Fresh saved-rule receipts record OBS sound completion and Speaker.bot dispatch; operator confirms “Heard both” | None |
+| Authenticated LAN HTTP | Actual Actions EXE under Wine passes remote HTTP sign-in, credential rotation, DPAPI persistence, scoped token revocation and owner-only 403 restrictions; restored to loopback | None; HTTPS is not required |
+| Available-environment performance | Actual Actions EXE with real Rumble polling, both bots and OBS: 4.616% idle/5.600% chat CPU (one core = 100%) and peak RSS 321.35 MB. Complete workload and separate normalization are recorded below | Operator accepts documented Wine CPU/memory deviations. Targets are not claimed as passed; native Windows streaming-PC performance stays deferred |
+
+## Final release evidence
+
+Protected [PR #13](https://github.com/TechDaddyKB/tdsblive/pull/13) merged on 2026-10-02 at 22:59:22 UTC as `be467726b251fa31bb80f4d1eef1711e693b0870`. Its Git tree exactly matches tested source `649b2d105bc3bda0bfd1012adcc40bbf190ddef6`. [Release v0.1.0](https://github.com/TechDaddyKB/tdsblive/releases/tag/v0.1.0) was published at 23:02:03 UTC with the verified ZIP, installer and checksum file; the tag points to that merge. GitHub-reported SHA-256 digests and sizes match all three local artifacts. The final downloaded EXE passes the real-browser read-only bot checks and graceful exit under Wine, and its offline guide passes with networking disabled. No production payments, broadcast or recording were used. Completion-record updates are documentation only and follow protected checks.
+
+Earlier checkpoints below retain their original failures/pending states as historical evidence. This current acceptance table and final release record supersede those pending statements.
 
 ## Current local environment
 
