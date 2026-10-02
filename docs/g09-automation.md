@@ -16,6 +16,8 @@ Use stable rule/action IDs and event IDs for execution deduplication. Record dis
 - Bits VTube Studio mappings select existing Streamer.bot actions by name/ID. Temporary effects use a second toggle or separate enable/disable actions with Extend, Restart, Ignore and Queue semantics. Preserve action selection allowlists and report missing actions.
 - Local editor exposes rule CRUD, validation, discovery/capability limitations, moderation, execution inspection and safe simulation defaults. HTTP and authenticated LAN remain supported without mandatory HTTPS.
 
+Speaker.bot owns speech after a `Speak` acknowledgment. TDSBLive's durable queue policies govern pending dispatch admission, not completed external speech playback. The editor states this boundary explicitly. The documented [Speaker.bot requests](https://speaker.bot/api/websocket/requests) include a global current-speech `Stop` and a global pending-queue `Clear`, with no documented execution-scoped cancellation or playback receipt. Consequently this integration does not issue those global operations when a single automation rule is disabled or interrupted, because they could affect unrelated speech.
+
 ## Acceptance evidence to collect
 
 Boundary and precision tests; persisted dedupe/restart behavior; queue overflow, cooldown, interruption and timer policy tests using controllable time; missing action/voice, disconnected and uncertain outcomes; moderation and simulation isolation; actual browser editing and overlay sound playback; real Speaker.bot speech through a synthetic owned Ko-fi event; real Streamer.bot-to-VTube Studio reversible action behavior; Windows CI, OpenCover/LCOV import and Sonar quality gate.

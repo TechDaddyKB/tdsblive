@@ -16,6 +16,7 @@ export function AutomationActionSettings({ action, change, discovery }: Readonly
       <label>Blocked words (one per line) <textarea value={speech?.blockedWords?.join('\n') ?? ''} onChange={event => change({ speech: { ...speech, blockedWords: event.target.value.split('\n').map(word => word.trim()).filter(Boolean) } })} /></label>
       <label>Allowed languages (one per line) <textarea value={speech?.allowedLanguages?.join('\n') ?? ''} onChange={event => change({ speech: { ...speech, allowedLanguages: event.target.value.split(/\s+/).filter(Boolean) } })} /></label>
       <p>Restricted languages require verified metadata or moderator review. Missing language information cannot authorize speech.</p>
+      <p>Speaker.bot owns its speech queue. These queue policies control pending TDSBLive dispatches; they do not stop speech already accepted by Speaker.bot.</p>
     </fieldset>}
     {action.kind === 'sound' && <fieldset><legend>Sound playback</legend>
       <label>Sound volume (0–1) <input type="number" min={0} max={1} step="0.05" value={action.volume ?? 1} onChange={event => change({ volume: event.target.value })} /></label>
