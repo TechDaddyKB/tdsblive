@@ -9,6 +9,34 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class DonorWidgetStoreTests
 {
     [Fact]
+    public async Task LargeHistoryAggregatesExactlyAndBoundsRankedOutput()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var ledger = new FinancialStore(factory);
+        await ledger.AcceptAsync(Paid("large-history", "twitch", 1));
+        await using var db = await factory.CreateDbContextAsync();
+        var identity = await db.SupporterIdentities.SingleAsync();
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            WITH RECURSIVE n(value) AS (SELECT 1 UNION ALL SELECT value + 1 FROM n WHERE value < 20000)
+            INSERT INTO FinancialEvents (Id, EventId, SupporterId, IdentityId, Source, Platform, Type, DedupeKey,
+              OccurredAtTicks, Quantity, UsdAmountMinor, ValuationMethod, Estimated, AccountingState, MetadataJson, Version, GiftTier)
+            SELECT printf('00000000-0000-7000-8000-%012d', value), printf('00000000-0000-7000-8000-%012d', value),
+              {identity.SupporterId}, {identity.Id}, 'owned-history-fixture', 'twitch', 'donation', 'owned-history-' || value,
+              {Now.UtcTicks}, 1, {long.MaxValue}, 'exact', 0, 'counted', {"{}"}, 1, '' FROM n
+            """);
+        for (var index = 0; index < 30; index++) await ledger.AcceptAsync(Paid("rank-" + index, "youtube", 100));
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var snapshot = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-leaderboard", Donor = new() { Count = 25 } }, new(Now.AddHours(-1), Now.AddHours(1)), Now);
+        Assert.Equal(25, snapshot.Rows.Length);
+        Assert.Equal("184467440737095516140001", snapshot.Rows[0].UsdAmountMinor);
+        Assert.Equal("184467440737095516143001", snapshot.TotalUsdMinor);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"20,031-contribution query took {watch.Elapsed}.");
+        var injected = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-crown", Donor = new() { Platforms = ["twitch') OR 1=1 --"] } }, new(null, null), Now);
+        Assert.Equal("empty", injected.State); Assert.Equal("0", injected.TotalUsdMinor);
+    }
+
+    [Fact]
     public async Task SourceAndMinimumFiltersApplyBeforeRankLimitAndStreamTotal()
     {
         using var app = new FoundationHostFactory(); using var client = app.CreateClient();
