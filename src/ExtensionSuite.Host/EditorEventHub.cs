@@ -12,6 +12,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
 {
     private readonly ConcurrentDictionary<Guid, Subscriber> subscribers = new();
     private readonly SemaphoreSlim connectionSlots = new(32, 32);
+    private int stopping;
     public int SubscriberCount => subscribers.Count;
     public async Task<AutomationDispatchOutcome> PlaySoundAsync(string overlayId, object command, Guid executionId,
         int timeoutSeconds, CancellationToken ct)
@@ -48,8 +49,14 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
     {
         foreach (var subscriber in subscribers.Values) subscriber.TryStop();
     }
+    public void BeginShutdown()
+    {
+        Interlocked.Exchange(ref stopping, 1);
+        Shutdown();
+    }
     public async Task ShutdownAsync(CancellationToken cancellationToken)
     {
+        BeginShutdown();
         var active = subscribers.Values.ToArray();
         foreach (var subscriber in active) subscriber.TryStop();
         await Task.WhenAll(active.Select(subscriber => subscriber.Drained.Task)).WaitAsync(cancellationToken);
@@ -86,6 +93,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
 
     public async Task ConnectAsync(HttpContext context, OverlayDefinition? overlay = null)
     {
+        if (Volatile.Read(ref stopping) != 0) { context.Response.StatusCode = 503; return; }
         if (!context.WebSockets.IsWebSocketRequest) { context.Response.StatusCode = 400; return; }
         using var socket = await context.WebSockets.AcceptWebSocketAsync(context.WebSockets.WebSocketRequestedProtocols.Contains("tdsblive.overlay.v1") ? "tdsblive.overlay.v1" : null);
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
@@ -97,6 +105,9 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             return;
         }
         subscribers[id] = subscriber;
+        // A browser can finish its handshake after the shutdown snapshot. It must
+        // join the same shutdown rather than keeping Kestrel alive for 30 seconds.
+        if (Volatile.Read(ref stopping) != 0) subscriber.TryStop();
         var sending = SendAsync(socket, subscriber);
         var authorization = CheckAuthorizationAsync(context, subscriber);
         var donors = SendDonorsAsync(context, subscriber);

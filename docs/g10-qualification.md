@@ -19,14 +19,14 @@ passing one row does not complete the other requirements. The owning contract is
 | Requirement | Current evidence | Remaining evidence |
 | --- | --- | --- |
 | G00–G09 prerequisites | Maintained goal entries report completion; G09 protected merge is `26bb2eeea61ad5d4fbe6435f91778996de02d926` | Confirm final integrated behavior below; discovery alone is insufficient |
-| Self-contained ZIP and per-user installer | Run `37041732834` / `da50bd5` passed native ZIP/installer, packaged restart/restore, startup off/opt-in, reinstall/uninstall and retained-data checks; downloaded package checksums match | Repeat exact-head checks after the Wine cryptography correction and publish the qualified release |
+| Self-contained ZIP and per-user installer | Run `37046606099` / `679f855` passes native ZIP/installer, browser-connected recovery, startup off/opt-in, reinstall/uninstall and retained-data checks; downloaded ZIP/installer checksums match | Repeat after the late-handshake shutdown correction and publish the qualified release |
 | Guided setup without normal-user commands | Local browser review/resume and configuration persistence pass; password entry defaults to session-only; import and action permissions are documented | Follow the guide against the final shipped package with local bots and OBS |
-| SQLite-safe backup and restore | Archive/backend checks and local real-process recovery pass; Windows run `37031475607` passes managed-process restart/restore and cleanup | Final portable/installed EXE and Wine recovery; review actual safety-paused configuration and retained data |
-| Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; public wiki commit `48900b9`; all chapters and screenshots render in both public wiki and offline browser checks | Verify the guide included in the final shipped package and its setup instructions |
-| Windows CI and SonarQube gate | Run `37041732834` / `da50bd5` completed successfully, including SonarQube, packaging and native package checks | Terminal success for the subsequent Wine compatibility correction |
+| SQLite-safe backup and restore | Current Actions EXE under Wine restarts, restores earlier progress and pauses restored integrations; a subsequent restart after restoring bot configuration crashes | Correct and requalify shutdown, including browser handshakes arriving during shutdown |
+| Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; public wiki commit `365da58`; the actual `679f855` Actions ZIP renders all ten offline pages/eight images with navigation and intact UTF-8 | Final released package and setup-instruction qualification |
+| Windows CI and SonarQube gate | Run `37046606099` / `679f855` completes successfully, including SonarQube, packaging and native package checks | Exact-head run after the late-handshake correction |
 | Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Existing goal-specific evidence and full rebuilt local browser suite pass; Streamer.bot MCP confirms 1.0.7, three TDSBLive actions and thirteen triggers | Final shipped-package integration qualification, distinguishing live API/platform observations from owned replay/probe events |
 | OBS rendering and audible output | Earlier operator observations are recorded in the owning G05/G06/G09 evidence | Final integrated OBS rendering/audio/reconnect checks; actual dispatch receipts alone are insufficient |
-| Authenticated LAN HTTP | Existing Windows-specific authentication tests and authenticated owner-only recovery checks; editor LAN settings preserve unrelated configuration in browser checks | Final package authenticated remote HTTP behavior, credential rotation and restricted operations |
+| Authenticated LAN HTTP | Actual `679f855` Actions EXE under Wine passes remote HTTP sign-in, credential rotation, DPAPI persistence, scoped token revocation and owner-only 403 restrictions; restored to loopback afterward | Repeat against the final corrected artifact |
 | Available-environment performance | Hardware identified below; no final candidate measurements yet | Idle below 1% CPU, ordinary-chat below 3% average CPU, backend below 300 MB, with workload, duration, CPU normalization and deviations recorded |
 
 ## Current local environment
@@ -124,6 +124,23 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
   locally published Windows EXE passes Wine recovery with the OBS source
   present; the captured console has no managed crash. A new exact-head CI run
   remains required.
+- Run `37046606099` / `679f855` completes successfully. Scanned downloaded
+  packages match both checksums; the actual ZIP's ten offline chapters and eight
+  images render with navigation and correct UTF-8. Actual Actions EXE LAN HTTP
+  qualification passes. The local corrected Windows publish also passes the
+  combined real-browser visual/media, automation simulation, financial precision,
+  identity linking, donor appearance/update and reconnect checks. OBS screenshots
+  show four-platform chat after recovery, and PNG alpha inspection confirms a
+  transparent background. These separate checks do not establish all remaining
+  integrated/live or final-release acceptance gates.
+- The Actions EXE restarts and restores with OBS open, then crashes on the next
+  restart after bot configuration is restored. The last overlay request remains
+  open for roughly 30 seconds. A connection can finish its handshake after the
+  original shutdown snapshot, escaping that snapshot's cancellation. The hub now
+  retains shutdown state, rejects new sockets with 503 and cancels handshakes
+  that complete late. Six local socket/shutdown tests pass, including a
+  deterministic delayed-handshake regression and existing concurrent-disconnect
+  behavior. Corrected Wine and exact-head Windows checks remain required.
 
 ## Completion rule
 
