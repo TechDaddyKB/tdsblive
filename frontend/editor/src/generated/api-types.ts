@@ -2776,6 +2776,8 @@ export interface components {
             maximumQueueLength: number | string;
             /** Format: int32 */
             cooldownSeconds: number | string;
+            /** Format: uuid */
+            executionId?: null | string;
         };
         AutomationPreviewRequest: {
             event: components["schemas"]["CanonicalEvent"];

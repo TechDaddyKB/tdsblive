@@ -19,6 +19,6 @@ public sealed class AutomationPlanningStore(IDbContextFactory<FoundationDbContex
         if (json is null) return 0;
         var item = JsonSerializer.Deserialize<CanonicalEvent>(json, EventStore.JsonOptions)!;
         var planned = await PreviewAsync(item, ct: ct);
-        return await executions.EnqueuePlanAsync(item.Id, planned, ct);
+        return await executions.EnqueuePlanAsync(item.Id, planned, ct, requireCurrentRules: true);
     }
 }

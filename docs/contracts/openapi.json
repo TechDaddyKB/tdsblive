@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:52641/"
+      "url": "http://127.0.0.1:32785/"
     }
   ],
   "paths": {
@@ -2575,6 +2575,13 @@
               "string"
             ],
             "format": "int32"
+          },
+          "executionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false

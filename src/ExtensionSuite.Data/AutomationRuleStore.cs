@@ -30,6 +30,7 @@ public sealed class AutomationRuleStore(IDbContextFactory<FoundationDbContext> f
             stored.Version = next.Version;
             stored.Json = JsonSerializer.Serialize(next, EventStore.JsonOptions);
         }
+        if (!rule.Enabled) await CancelPendingAsync(db, rule.Id, ct);
         try { await db.SaveChangesAsync(ct); return next; }
         catch (DbUpdateConcurrencyException) { return null; }
         catch (DbUpdateException error) when (error.InnerException is Microsoft.Data.Sqlite.SqliteException { SqliteErrorCode: 19 }) { return null; }
@@ -38,6 +39,22 @@ public sealed class AutomationRuleStore(IDbContextFactory<FoundationDbContext> f
     public async Task<bool> DeleteAsync(Guid id, int version, CancellationToken ct = default)
     {
         await using var db = await factory.CreateDbContextAsync(ct);
-        return await db.AutomationRules.Where(item => item.Id == id && item.Version == version).ExecuteDeleteAsync(ct) == 1;
+        var rule = await db.AutomationRules.SingleOrDefaultAsync(item => item.Id == id && item.Version == version, ct);
+        if (rule is null) return false;
+        db.AutomationRules.Remove(rule);
+        await CancelPendingAsync(db, id, ct);
+        try { await db.SaveChangesAsync(ct); return true; }
+        catch (DbUpdateConcurrencyException) { return false; }
+    }
+
+    private static async Task CancelPendingAsync(FoundationDbContext db, Guid ruleId, CancellationToken ct)
+    {
+        var receipts = await db.AutomationExecutions.Where(item => item.RuleId == ruleId &&
+            (item.State == "queued" || item.State == "moderation-pending" || item.State == "language-review" || item.State == "waiting-effect" || item.State == "dispatching")).ToArrayAsync(ct);
+        foreach (var receipt in receipts)
+        {
+            if (receipt.State == "dispatching") receipt.CancelRequested = true;
+            else { receipt.State = "cancelled"; receipt.Detail = "rule-disabled-or-deleted"; receipt.Version++; }
+        }
     }
 }

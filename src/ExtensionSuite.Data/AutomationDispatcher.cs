@@ -107,7 +107,7 @@ public sealed class AutomationDispatcher(AutomationExecutionStore store, IAutoma
             {
                 var result = await adapter.DispatchAsync(receipt.Id, action, dispatchStop.Token);
                 detail = result.Detail;
-                outcome = result.State is "dispatched" or "completed" or "rejected" or "failed" or "uncertain" ? result.State : "uncertain";
+                outcome = result.State is "dispatched" or "completed" or "rejected" or "failed" or "uncertain" or "waiting-effect" ? result.State : "uncertain";
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {

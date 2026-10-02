@@ -2,7 +2,10 @@ namespace ExtensionSuite.Core;
 
 public sealed record AutomationPlannedAction(Guid RuleId, int RuleVersion, AutomationAction Action,
     string State, string? SpeechText, string QueueGroup, string QueuePolicy, int MaximumQueueLength,
-    int CooldownSeconds);
+    int CooldownSeconds)
+{
+    public Guid? ExecutionId { get; init; }
+}
 
 public static class AutomationPlanner
 {

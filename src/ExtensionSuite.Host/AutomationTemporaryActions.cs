@@ -21,13 +21,14 @@ public sealed class AutomationTemporaryBot(StreamerBotConnection bot) : IAutomat
 }
 
 public sealed class AutomationTemporaryActions(AutomationTemporaryStore store, IAutomationTemporaryBot bot,
-    TimeProvider clock) : IAutomationTemporaryActions, IDisposable
+    TimeProvider clock, AutomationExecutionStore receipts) : IAutomationTemporaryActions, IDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
 
     public async Task<AutomationDispatchOutcome> ApplyAsync(Guid executionId, AutomationPlannedAction action, CancellationToken ct)
     {
         action.Action.Validate();
+        action = action with { ExecutionId = executionId };
         if (action.Action.Kind != "streamerbot" || action.Action.DurationSeconds <= 0) return new("rejected", "not-temporary");
         await gate.WaitAsync(ct);
         try
@@ -43,7 +44,7 @@ public sealed class AutomationTemporaryActions(AutomationTemporaryStore store, I
             if (effect is { State: "active" })
             {
                 var payload = Read(effect);
-                if (payload.Current.Action.StreamerBotActionId != action.Action.StreamerBotActionId ||
+                if (payload.Current.RuleId != action.RuleId || payload.Current.Action.StreamerBotActionId != action.Action.StreamerBotActionId ||
                     payload.Current.Action.RevertActionId != action.Action.RevertActionId)
                     return new("rejected", "active-effect-action-changed");
                 var decision = AutomationTemporaryPolicy.Apply(new(new(effect.ExpiresAtTicks, TimeSpan.Zero), payload.Queue.Length),
@@ -53,6 +54,9 @@ public sealed class AutomationTemporaryActions(AutomationTemporaryStore store, I
                 if (decision.Operation == "queued") payload = payload with { Queue = [.. payload.Queue, action] };
                 effect.ExpiresAtTicks = decision.State!.ExpiresAt.UtcTicks;
                 effect.Json = JsonSerializer.Serialize(payload, EventStore.JsonOptions);
+                if (decision.Operation == "queued")
+                    return await store.SaveQueuedAsync(effect, executionId, ct)
+                        ? new("waiting-effect", "temporary-queue-accepted") : new("failed", "temporary-queue-not-persisted");
                 return await store.SaveAsync(effect, ct) ? new("completed", "temporary-" + decision.Operation) : new("failed", "temporary-version-conflict");
             }
             return await EnableAsync(executionId, action, [], effect, ct);
@@ -63,7 +67,19 @@ public sealed class AutomationTemporaryActions(AutomationTemporaryStore store, I
     public async Task TickAsync(CancellationToken ct)
     {
         await gate.WaitAsync(ct);
-        try { foreach (var effect in await store.DueAsync(ct)) await RevertAsync(effect, ct); }
+        try
+        {
+            // No enable/revert operation can be in flight while this gate is held.
+            // Leftover intents therefore belong to an interrupted operation, not a live worker.
+            await store.RecoverInterruptedAsync(ct);
+            foreach (var uncertain in (await store.ListAsync(ct)).Where(item => item.State == "uncertain"))
+            {
+                var id = Read(uncertain).ExecutionId;
+                await receipts.TransitionCurrentAsync(id, "dispatching", "uncertain", "temporary-interrupted-intent", ct);
+                await receipts.TransitionCurrentAsync(id, "dispatched", "uncertain", "temporary-interrupted-intent", ct);
+            }
+            foreach (var effect in await store.DueAsync(ct)) await RevertAsync(effect, ct);
+        }
         finally { gate.Release(); }
     }
 
@@ -77,8 +93,10 @@ public sealed class AutomationTemporaryActions(AutomationTemporaryStore store, I
             if (effect is null || effect.Version != version || effect.State != "uncertain") return false;
             // Operator confirmation is an observation, never permission to repeat a toggle.
             // Discard pending repetitions after manually restoring the external state.
-            var payload = Read(effect) with { Queue = [] };
-            return await store.ResolveRestoredAsync(actionId, version, JsonSerializer.Serialize(payload, EventStore.JsonOptions), ct);
+            var original = Read(effect);
+            var payload = original with { Queue = [] };
+            return await store.ResolveRestoredAsync(actionId, version, JsonSerializer.Serialize(payload, EventStore.JsonOptions),
+                original.Current.RuleId, ct);
         }
         finally { gate.Release(); }
     }
@@ -110,8 +128,43 @@ public sealed class AutomationTemporaryActions(AutomationTemporaryStore store, I
         effect.State = result.State == "dispatched" ? "idle" : "uncertain";
         if (!await store.SaveAsync(effect, ct)) return;
         effect.Version++;
-        if (effect.State == "idle" && payload.Queue.Length > 0)
-            await EnableAsync(Guid.CreateVersion7(), payload.Queue[0], payload.Queue[1..], effect, ct);
+        await receipts.TransitionCurrentAsync(payload.ExecutionId, "dispatched", effect.State == "idle" ? "completed" : "uncertain",
+            effect.State == "idle" ? "temporary-revert-acknowledged" : "temporary-revert-outcome-unknown", ct);
+        if (effect.State == "idle") await StartQueuedAsync(effect, payload, ct);
+    }
+
+    private async Task StartQueuedAsync(AutomationTemporaryEffect effect, TemporaryEffectPayload payload, CancellationToken ct)
+    {
+        for (var index = 0; index < payload.Queue.Length; index++)
+        {
+            var action = payload.Queue[index];
+            if (action.ExecutionId is { } id)
+            {
+                var state = await receipts.StateAsync(id, ct);
+                if (state is "cancelled" or "rejected" or "failed") continue;
+                if (await receipts.TransitionCurrentAsync(id, "waiting-effect", "dispatching", "temporary-queued-enable-intent", ct))
+                {
+                    var result = await EnableAsync(id, action, payload.Queue[(index + 1)..], effect, ct);
+                    await receipts.TransitionCurrentAsync(id, "dispatching", result.State, result.Detail ?? "temporary-queued-enable", ct);
+                    if (result.State is "failed" or "rejected" && index + 1 < payload.Queue.Length)
+                    {
+                        var halted = await store.GetAsync(effect.ActionId, ct);
+                        if (halted is not null)
+                        {
+                            halted.State = "uncertain";
+                            await store.SaveAsync(halted, ct);
+                        }
+                    }
+                    return;
+                }
+            }
+            // Legacy/untracked queue entries cannot safely issue an action with invented identity.
+            effect.State = "uncertain";
+            await store.SaveAsync(effect, ct);
+            return;
+        }
+        effect.Json = JsonSerializer.Serialize(payload with { Queue = [] }, EventStore.JsonOptions);
+        await store.SaveAsync(effect, ct);
     }
 
     private async Task<BotExecution> ExecuteAsync(Guid actionId, Guid executionId, bool revert, CancellationToken ct)

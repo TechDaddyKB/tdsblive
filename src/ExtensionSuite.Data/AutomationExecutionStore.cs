@@ -7,7 +7,7 @@ namespace ExtensionSuite.Data;
 
 public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbContext> factory, TimeProvider clock)
 {
-    public async Task<int> EnqueuePlanAsync(Guid eventId, AutomationPlannedAction[] plan, CancellationToken ct = default)
+    public async Task<int> EnqueuePlanAsync(Guid eventId, AutomationPlannedAction[] plan, CancellationToken ct = default, bool requireCurrentRules = false)
     {
         await using var db = await factory.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -19,12 +19,13 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
             var key = "automation-cooldown-" + group.Key.ToString("N");
             var cooldown = await db.Configurations.SingleOrDefaultAsync(item => item.Name == key, ct);
             var until = cooldown is null ? 0 : long.Parse(cooldown.Json, CultureInfo.InvariantCulture);
-            var rejected = now < until;
             var settings = group.First();
+            var ruleRejection = requireCurrentRules ? await RuleRejectionAsync(db, settings, ct) : null;
+            var rejected = ruleRejection is not null || now < until;
             if (!rejected && settings.QueuePolicy == "interrupt")
             {
                 await db.AutomationExecutions.Where(item => item.QueueGroup == settings.QueueGroup &&
-                    (item.State == "queued" || item.State == "moderation-pending" || item.State == "language-review"))
+                    (item.State == "queued" || item.State == "moderation-pending" || item.State == "language-review" || item.State == "waiting-effect"))
                     .ExecuteUpdateAsync(update => update.SetProperty(item => item.State, "cancelled")
                         .SetProperty(item => item.Detail, "interrupted-before-dispatch")
                         .SetProperty(item => item.Version, item => item.Version + 1), ct);
@@ -32,20 +33,21 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
                     .ExecuteUpdateAsync(update => update.SetProperty(item => item.CancelRequested, true), ct);
             }
             var pendingRuns = await db.AutomationExecutions.Where(item => item.QueueGroup == settings.QueueGroup &&
-                (item.State == "queued" || item.State == "moderation-pending" || item.State == "language-review" || item.State == "dispatching"))
+                (item.State == "queued" || item.State == "moderation-pending" || item.State == "language-review" || item.State == "waiting-effect" || item.State == "dispatching"))
                 .Select(item => new { item.EventId, item.RuleId }).Distinct().CountAsync(ct);
-            var reason = rejected ? "rule-cooldown" : settings.QueuePolicy != "interrupt" && pendingRuns >= settings.MaximumQueueLength ? "queue-full" :
-                settings.QueuePolicy == "ignore" && pendingRuns > 0 ? "queue-busy" : null;
+            var reason = ruleRejection ?? (rejected ? "rule-cooldown" : settings.QueuePolicy != "interrupt" && pendingRuns >= settings.MaximumQueueLength ? "queue-full" :
+                settings.QueuePolicy == "ignore" && pendingRuns > 0 ? "queue-busy" : null);
             rejected = reason is not null;
             var order = 0;
             foreach (var action in group)
             {
+                var id = Guid.CreateVersion7();
                 db.AutomationExecutions.Add(new()
                 {
-                    Id = Guid.CreateVersion7(), EventId = eventId, RuleId = action.RuleId, ActionId = action.Action.Id,
+                    Id = id, EventId = eventId, RuleId = action.RuleId, ActionId = action.Action.Id,
                     ActionOrder = order++, QueueGroup = action.QueueGroup,
                     CreatedAtTicks = now, DueAtTicks = now, State = rejected ? "rejected" : action.State,
-                    Detail = reason, Json = JsonSerializer.Serialize(action, EventStore.JsonOptions)
+                    Detail = reason, Json = JsonSerializer.Serialize(action with { ExecutionId = id }, EventStore.JsonOptions)
                 });
                 count++;
             }
@@ -60,6 +62,13 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         return count;
+    }
+    private static async Task<string?> RuleRejectionAsync(FoundationDbContext db, AutomationPlannedAction action, CancellationToken ct)
+    {
+        var stored = await db.AutomationRules.SingleOrDefaultAsync(item => item.Id == action.RuleId, ct);
+        if (stored is null) return "rule-deleted";
+        var rule = JsonSerializer.Deserialize<AutomationRule>(stored.Json, EventStore.JsonOptions)!;
+        return !rule.Enabled || rule.Version != action.RuleVersion ? "rule-disabled-or-changed" : null;
     }
     public async Task<bool> EnqueueAsync(Guid eventId, Guid ruleId, Guid actionId, string json,
         bool moderationRequired = false, CancellationToken ct = default, string? initialState = null)
@@ -95,7 +104,7 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
         return await db.AutomationExecutions.AsNoTracking().Where(item => item.State == "queued" && item.DueAtTicks <= now &&
                 !excludedGroups.Contains(item.QueueGroup) &&
                 !db.AutomationExecutions.Any(earlier => earlier.EventId == item.EventId && earlier.RuleId == item.RuleId &&
-                    earlier.ActionOrder < item.ActionOrder && (earlier.State == "moderation-pending" || earlier.State == "language-review" || earlier.State == "dispatching")))
+                    earlier.ActionOrder < item.ActionOrder && (earlier.State == "moderation-pending" || earlier.State == "language-review" || earlier.State == "waiting-effect" || earlier.State == "dispatching")))
             .OrderBy(item => item.CreatedAtTicks).ThenBy(item => item.EventId).ThenBy(item => item.RuleId).ThenBy(item => item.ActionOrder).Take(limit).ToArrayAsync(ct);
     }
 
@@ -103,6 +112,20 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
     {
         await using var db = await factory.CreateDbContextAsync(ct);
         return await db.AutomationExecutions.Where(item => item.Id == id).Select(item => item.CancelRequested).SingleAsync(ct);
+    }
+
+    public async Task<string?> StateAsync(Guid id, CancellationToken ct)
+    {
+        await using var db = await factory.CreateDbContextAsync(ct);
+        return await db.AutomationExecutions.Where(item => item.Id == id).Select(item => item.State).SingleOrDefaultAsync(ct);
+    }
+
+    public async Task<bool> TransitionCurrentAsync(Guid id, string from, string to, string detail, CancellationToken ct)
+    {
+        await using var db = await factory.CreateDbContextAsync(ct);
+        var version = await db.AutomationExecutions.Where(item => item.Id == id && item.State == from)
+            .Select(item => (int?)item.Version).SingleOrDefaultAsync(ct);
+        return version is { } current && await TransitionAsync(id, current, from, to, ct, detail);
     }
 
     public async Task<bool> ResolveLanguageAsync(Guid id, int version, string language, CancellationToken ct = default)
@@ -134,6 +157,7 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
         if (!Allowed(from, to)) throw new ArgumentException("Invalid automation execution transition.");
         await using var db = await factory.CreateDbContextAsync(ct);
         return await db.AutomationExecutions.Where(item => item.Id == id && item.Version == version && item.State == from)
+            .Where(item => from != "waiting-effect" || to != "dispatching" || !item.CancelRequested)
             .ExecuteUpdateAsync(update => update.SetProperty(item => item.State, to).SetProperty(item => item.Detail, detail)
                 .SetProperty(item => item.Version, item => item.Version + 1), ct) == 1;
     }
@@ -152,8 +176,9 @@ public sealed class AutomationExecutionStore(IDbContextFactory<FoundationDbConte
     {
         ("moderation-pending", "queued" or "rejected") => true,
         ("language-review", "rejected") => true,
+        ("waiting-effect", "dispatching" or "cancelled" or "uncertain") => true,
         ("queued", "dispatching" or "cancelled" or "rejected" or "failed") => true,
-        ("dispatching", "dispatched" or "uncertain" or "failed" or "rejected") => true,
+        ("dispatching", "dispatched" or "uncertain" or "failed" or "rejected" or "waiting-effect") => true,
         ("dispatched", "completed" or "uncertain") => true,
         _ => false
     };

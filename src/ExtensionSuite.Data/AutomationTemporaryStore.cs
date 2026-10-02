@@ -4,19 +4,39 @@ namespace ExtensionSuite.Data;
 
 public sealed class AutomationTemporaryStore(IDbContextFactory<FoundationDbContext> factory, TimeProvider clock)
 {
+    public async Task<bool> SaveQueuedAsync(AutomationTemporaryEffect effect, Guid executionId, CancellationToken ct)
+    {
+        await using var db = await factory.CreateDbContextAsync(ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        var stored = await db.AutomationTemporaryEffects.SingleOrDefaultAsync(item => item.ActionId == effect.ActionId, ct);
+        var receipt = await db.AutomationExecutions.SingleOrDefaultAsync(item => item.Id == executionId, ct);
+        if (stored is null || stored.Version != effect.Version || stored.State != "active" || receipt?.State != "dispatching" || receipt.CancelRequested || receipt.ActionId != effect.ActionId) return false;
+        stored.Version++; stored.Json = effect.Json; stored.ExpiresAtTicks = effect.ExpiresAtTicks;
+        receipt.Version++; receipt.State = "waiting-effect"; receipt.Detail = "temporary-queue-accepted";
+        // One SaveChanges transaction couples queue membership to the original receipt.
+        try { await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct); return true; }
+        catch (DbUpdateConcurrencyException) { return false; }
+    }
+
     public async Task<AutomationTemporaryEffect[]> ListAsync(CancellationToken ct = default)
     {
         await using var db = await factory.CreateDbContextAsync(ct);
         return await db.AutomationTemporaryEffects.AsNoTracking().OrderBy(item => item.ActionId).Take(500).ToArrayAsync(ct);
     }
 
-    public async Task<bool> ResolveRestoredAsync(Guid actionId, int version, string json, CancellationToken ct = default)
+    public async Task<bool> ResolveRestoredAsync(Guid actionId, int version, string json, Guid ruleId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(json)) throw new ArgumentException("Resolution requires a retained effect payload.");
         await using var db = await factory.CreateDbContextAsync(ct);
-        return await db.AutomationTemporaryEffects.Where(item => item.ActionId == actionId && item.Version == version && item.State == "uncertain")
-            .ExecuteUpdateAsync(update => update.SetProperty(item => item.State, "idle").SetProperty(item => item.Json, json)
-                .SetProperty(item => item.Version, item => item.Version + 1), ct) == 1;
+        var effect = await db.AutomationTemporaryEffects.SingleOrDefaultAsync(item => item.ActionId == actionId && item.Version == version && item.State == "uncertain", ct);
+        if (effect is null) return false;
+        effect.State = "idle"; effect.Json = json; effect.Version++;
+        foreach (var receipt in await db.AutomationExecutions.Where(item => item.ActionId == actionId && item.RuleId == ruleId && item.State == "waiting-effect").ToArrayAsync(ct))
+        {
+            receipt.State = "cancelled"; receipt.Detail = "operator-restored-queue-discarded"; receipt.Version++;
+        }
+        try { await db.SaveChangesAsync(ct); return true; }
+        catch (DbUpdateConcurrencyException) { return false; }
     }
 
     public async Task<AutomationTemporaryEffect?> GetAsync(Guid actionId, CancellationToken ct = default)
