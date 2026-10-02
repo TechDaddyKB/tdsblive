@@ -86,7 +86,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
-| [G09](#g09) | Build automation rules | G03, G06, G07 | In progress |
+| [G09](#g09) | Build automation rules | G03, G06, G07 | Blocked |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
@@ -422,7 +422,7 @@ None. Actual OBS rendering, refresh and platform-logo confirmation are recorded 
 
 ## G09 — Build automation rules
 
-Status: **In progress**
+Status: **Blocked**
 Prerequisites: G03, G06, G07
 
 ### Deliverables

@@ -1,6 +1,6 @@
 # G09 automation rules
 
-Status: In progress. Owning requirements: SPEC 32–36, 38, 61–62 and G09 in the implementation plan.
+Status: Blocked on live acceptance evidence. Owning requirements: SPEC 32–36, 38, 61–62 and G09 in the implementation plan.
 
 ## Execution boundaries
 

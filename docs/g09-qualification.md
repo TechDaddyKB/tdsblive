@@ -1,6 +1,6 @@
 # G09 qualification audit
 
-Status: **In progress**. This audit preserves G09's full scope; passing automated checks do not replace the required live checks. Requirements were re-read from specification sections 32–36, 38, 59–62 and `implementation-plan.md` on 2026-10-02.
+Status: **Blocked on live acceptance evidence**. This audit preserves G09's full scope; passing automated checks do not replace the required live checks. Requirements were re-read from specification sections 32–36, 38, 59–62 and `implementation-plan.md` on 2026-10-02. OBS source readiness, a configured Speaker.bot voice alias and an available VTube Studio model/reversible action have been requested and remain unresolved across multiple goal turns. The isolated host and draft PR remain prepared; G09 is not complete.
 
 | Requirement | Inspected evidence | Remaining qualification |
 |---|---|---|
