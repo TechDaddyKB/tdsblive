@@ -20,6 +20,12 @@ Statuses: **Not started**, **In progress**, **Blocked**, **Complete**. A partial
 
 MVP completion requires G00–G10. Repository-wide completion requires G00–G13. Creating this document alone does not complete a goal.
 
+## Approved scope change — VTube Studio on hold
+
+On 2026-10-02 the operator placed all VTube Studio-specific work in this plan on hold and selected Streamer.bot's built-in VTube Studio integration. This applies across all goals: native VTube Studio clients, dedicated VTube Studio mappings/UI/templates, model/hotkey discovery, temporary clothing/effect policies and real-model qualification are deferred until explicitly resumed. These deferred requirements do not block G09, MVP or full-plan completion under the revised scope, and must never be reported as verified.
+
+Generic Streamer.bot action discovery, stable action IDs, allowlisted dispatch, durable execution tracking and safe simulation remain in scope. Existing generic dispatch/timer code and tests are retained; no migration or deletion is required. Users may configure VTube Studio actions directly in Streamer.bot. Preserve the original specification and goal IDs as historical references; this scope decision governs their VTube Studio-specific clauses.
+
 ## Locked architecture and defaults
 
 | Item | Decision |
@@ -86,7 +92,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
-| [G09](#g09) | Build automation rules | G03, G06, G07 | Not started |
+| [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
@@ -220,7 +226,7 @@ Prerequisites: G02
 - Implement correlated WebSocket requests, authentication, configurable reconnect and connection health. Discover GetEvents/GetActions/GetCodeTriggers; invoke ExecuteCodeTrigger and selected action GUIDs.
 - Provide importable C# Init bootstrap using CPH.RegisterCustomTrigger for Rumble chat/Rant/follow/sub/gift/online/offline/viewer/likes/health and finance/overlay categories. Include argument mapping and explicit forwarding examples for triggers not broadcast over WebSocket.
 - Normalize Twitch/YouTube/Kick/Ko-fi events conservatively; retain sanitized unknown diagnostics. Build searchable event inspector with pause/filter/copy/replay/save-fixture and sample payload inspection.
-- Implement Speaker.bot documented WebSocket queue protocol; use Streamer.bot actions for VTube Studio. Prevent bridge loops and expose missing actions/uncertain execution.
+- Implement Speaker.bot documented WebSocket queue protocol and generic Streamer.bot action dispatch. VTube Studio-specific work is on hold under the approved scope change. Prevent bridge loops and expose missing actions/uncertain execution.
 
 ### Acceptance criteria
 
@@ -422,7 +428,7 @@ None. Actual OBS rendering, refresh and platform-logo confirmation are recorded 
 
 ## G09 — Build automation rules
 
-Status: **Not started**
+Status: **Complete under the approved scope; protected delivery of this record is gated by PR #12**
 Prerequisites: G03, G06, G07
 
 ### Deliverables
@@ -430,22 +436,42 @@ Prerequisites: G03, G06, G07
 - Implement event filters and exact/minimum/range/multiple conditions, multiple actions, cooldowns, queues and execution tracking.
 - Implement Ko-fi TTS templates with minimum amount, voice, max length, URL/punctuation/repetition/bad-word controls and moderation options.
 - Play sound assets in OBS with volume/queue/interrupt/cooldown/random variants/ducking metadata.
-- Execute selected Streamer.bot VTS actions; support timed reversion via toggle or enable/disable actions and Extend/Restart/Ignore/Queue policies.
+- Execute selected generic Streamer.bot actions. **On hold:** VTube Studio-specific mappings and timed model-effect reversion via toggle or enable/disable actions and Extend/Restart/Ignore/Queue policies; Streamer.bot's built-in integration is the selected route.
 - Keep financial ingestion independent of alert/rule configuration; expose ambiguous external outcomes without blind retry.
 
 ### Acceptance criteria
 
 - Rule boundaries, queues, timer stacking/restart, failures and isolated simulation tested.
-- Real Ko-fi-path Speaker.bot speech, OBS sound capture and Streamer.bot-to-VTS behavior verified.
+- Real Ko-fi-path Speaker.bot speech and OBS sound capture verified. VTube Studio live-model qualification is on hold and excluded from the active acceptance gates.
 - Missing actions/voices, moderation and uncertain execution remain visible.
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+Requirements inspected against SPEC sections 32–36, 38, 61–62. G03/G06/G07 prerequisites are delivered on main; G08 delivery is also present. Rule contracts, transactional inbox/planning, durable execution receipts, timers, browser sound commands and the editor are implemented on the G09 branch. Ko-fi privacy/language metadata and explicit review are covered by tests; integration diagnostics expose unavailable dependencies and unverified voice aliases. Detailed evidence and limitations are maintained in [G09 automation](g09-automation.md).
+
+The 2026-10-02 full local run passed 75 core, 293 integration and 138 frontend tests. Four integration tests require Windows (DPAPI and file-handle cleanup) and were skipped locally. The subsequent capability-endpoint checks passed two targeted HTTP tests. These results do not establish real speech, OBS sound capture, VTube Studio state, Windows CI or Sonar qualification.
+
+Subsequent local validation passed 311 integration tests (four Windows-only skips), 139 frontend tests and 35 targeted automation cases covering persisted stacking/recreation, independent queues, interruption, queued-effect receipt identity, cancellation and disable/delete handling. Draft [PR #12](https://github.com/TechDaddyKB/tdsblive/pull/12) is open. Its initial [Windows run](https://github.com/TechDaddyKB/tdsblive/actions/runs/36975597976) passed build/tests/qualification but failed the Sonar gate at 75.5% new-code coverage versus the required 80%. Final-head coverage and quality qualification remain incomplete.
+
+The sound protocol/security additions pass 14 real WebSocket/HTTP cases; broader local runs pass 325 integration tests (four Windows-only skips) and 153 frontend tests. An isolated host confirmed actual Speaker.bot 0.1.7 connectivity on its configured port 7580 without speech/queue side effects. The second Windows run at `b8d1b87` failed only its Sonar coverage condition at 77.0%; new sound tests require another analysis. Captured audio, configured voice and VTube Studio effects are not claimed.
+
+Commit `5ec62fba322cfaaa2064089b5f08810dce860e8c` subsequently passed [Windows CI and its Sonar gate](https://github.com/TechDaddyKB/tdsblive/actions/runs/36979682918). Named canvas/audio selection and reusable browser qualification are published at `69589976b0caf6ad0a569b47a1b2f0a882825961`; 154 frontend tests, lint, type checking and the full isolated browser suite pass locally. Browser checks verify save/reload/edit/delete and simulation without execution receipts or financial writes. That newer head's [Windows run](https://github.com/TechDaddyKB/tdsblive/actions/runs/36981696581) is still running.
+
+An explicitly opted-in owned event in a marked temporary G09 database traversed the durable automation inbox, live rule dispatcher, overlay WebSocket and real Chromium audio player. One sound command was received and its durable execution completed. External integrations were disabled; the enabled qualification rule was then disabled. This proves browser playback of generated WAV audio, not OBS capture. A separate transparent OBS source is prepared at `http://127.0.0.1:17476/overlay/g09-sound-qualification` for operator verification.
+
+The maintained [G09 qualification audit](g09-qualification.md) maps the full requirement scope to inspected evidence and explicitly lists remaining live and exact-head delivery checks.
+
+Run 36981696581 subsequently finished: all builds/tests/qualification passed and new-code coverage reached 82.3%, but the Sonar gate failed reliability finding `javascript:S2871` in the newly added browser qualification's default `sort()`. An explicit ID comparator addresses that finding; final-head CI must pass before delivery.
+
+The correction passed [Windows run 36983149942](https://github.com/TechDaddyKB/tdsblive/actions/runs/36983149942) at `796f75a8ee38bdf6cbda28da5035bb34b3d1d5b3`: builds, tests, replay/recovery, full browser qualification, generated contracts, OpenCover/LCOV import and Sonar gate. Scanned logs report 95.8% backend/89.8% frontend production coverage; the gate reports 82.4% new-code coverage, A ratings, zero duplication and 100% reviewed hotspots. An additional owned-fixture failure check verifies that rejected inbox insertion rolls back event and outbox writes, and a mismatched platform/type is refused.
+
+The scope/evidence documentation run 37005887684 failed an existing Rumble late-registration test under Windows coverage: its ten-second cancellation deadline expired while processing a 64-row parked backlog, and failure bypassed worker shutdown before SQLite cleanup. The test now uses a bounded 60-second deadline and always cancels/awaits its owned workers in `finally`, preserving all delivery/reopen assertions. The targeted local test passes. No production retry, timeout or delivery behavior was changed; the final Windows gate remains required.
+
+Final implementation head `b8dc63c6f1160cb422f6d2dd838865dcba5c0a06` passes [Windows run 37007511716](https://github.com/TechDaddyKB/tdsblive/actions/runs/37007511716): 75 core and 329 host tests with no skips, frontend tests, replay/recovery, browser qualification, generated contracts, OpenCover/LCOV import and the Sonar gate. Scanned logs report 95.7% backend/89.8% frontend production coverage; Sonar reports 82.3% new-code coverage, A ratings, zero duplication and 100% reviewed hotspots. The operator confirmed actual OBS sound and Speaker.bot speech with `local english`. All active acceptance criteria are verified. The completion-record commit is documentation only and [PR #12](https://github.com/TechDaddyKB/tdsblive/pull/12) must pass its normal exact-head protected checks before merging; no bypass is authorized or used.
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+None for the active G09 scope. VTube Studio-specific requirements remain explicitly on hold, delegated to Streamer.bot's built-in integration and not claimed as verified. Normal protected checks govern delivery of the documentation-only completion record.
 
 <a id="g10"></a>
 

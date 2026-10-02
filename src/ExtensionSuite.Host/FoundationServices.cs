@@ -21,6 +21,21 @@ public static class FoundationServices
         builder.Services.AddSingleton<ApplicationPaths>();
         builder.Services.AddSingleton<OverlayStore>();
         builder.Services.AddSingleton<AssetStore>();
+        builder.Services.AddSingleton<AutomationRuleStore>();
+        builder.Services.AddSingleton<AutomationExecutionStore>();
+        builder.Services.AddSingleton<AutomationPlanningStore>();
+        builder.Services.AddSingleton<AutomationTemporaryStore>();
+        builder.Services.AddSingleton<AutomationOverlaySound>();
+        builder.Services.AddSingleton<IAutomationOverlaySound>(services => services.GetRequiredService<AutomationOverlaySound>());
+        builder.Services.AddSingleton<IAutomationTemporaryBot, AutomationTemporaryBot>();
+        builder.Services.AddSingleton<AutomationTemporaryActions>();
+        builder.Services.AddSingleton<IAutomationTemporaryActions>(services => services.GetRequiredService<AutomationTemporaryActions>());
+        builder.Services.AddSingleton<IAutomationActionDispatcher, AutomationBotAdapter>();
+        builder.Services.AddSingleton<AutomationDispatcher>();
+        builder.Services.AddSingleton<AutomationEventReader>();
+        builder.Services.AddSingleton<IIsolatedIntegration, AutomationReaderIntegration>();
+        builder.Services.AddSingleton<IIsolatedIntegration, AutomationDispatchIntegration>();
+        builder.Services.AddSingleton<IIsolatedIntegration, AutomationTimerIntegration>();
         builder.Services.AddSingleton(services => new FoundationStateStore(services.GetRequiredService<ApplicationPaths>().Database));
         builder.Services.AddSingleton<ConfigurationStore>();
         builder.Services.AddSingleton(services => services.GetRequiredService<ConfigurationStore>().Load());
@@ -105,6 +120,8 @@ public static class FoundationServices
         var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
         await using var db = await factory.CreateDbContextAsync();
         await DatabaseLifecycle.InitializeAsync(db);
+        await app.Services.GetRequiredService<AutomationExecutionStore>().RecoverInterruptedAsync();
+        await app.Services.GetRequiredService<AutomationTemporaryStore>().RecoverInterruptedAsync();
         await app.Services.GetRequiredService<OverlayStore>().InitializeAsync();
         app.Services.GetRequiredService<ConfigurationStore>().InitializePersistence(configuration);
         if (OperatingSystem.IsWindows())

@@ -7,6 +7,7 @@ import type { Scene, Widget } from './scene';
 import './canvas.css';
 import { DonorWidget, type DonorSnapshot } from './DonorWidget';
 import { donorKinds } from './scene';
+import { AutomationSoundPlayer } from './AutomationSound';
 export function MediaAsset({ id, overlay, token, volume, muted, loop, name }: { id: string | null; overlay: string; token: string; volume: number; muted: boolean; loop: boolean; name: string }) {
   const [asset, setAsset] = useState<{ url: string; mime: string } | null>(null); const [error, setError] = useState('');
   const media = useRef<HTMLMediaElement | null>(null);
@@ -54,16 +55,17 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
   const [donors, setDonors] = useState<DonorSnapshot[]>([]);
   useEffect(() => {
     const scheduler = queue.current; scheduler.clear();
+    const sound = new AutomationSoundPlayer(id, token, (executionId, state) => connection.reportSound(executionId, state));
     const connection = new ChatConnection(id, token, preview, definition => {
       const value = definition as Scene; settings.current = value; scheduler.reconcile(value.widgets); setScene(value); setActive(scheduler.tick(Date.now()));
     }, (incoming, delivery) => {
       const value = settings.current; if (!value) return;
       const now = Date.now(); if (delivery !== 'history') for (const event of incoming) for (const widget of value.widgets) scheduler.enqueue(widget, event, now);
       setActive(scheduler.tick(now)); setEvents(incoming);
-    }, setStatus, true, setDonors);
+    }, setStatus, true, setDonors, command => { void sound.play(command); }, executionId => sound.interrupt(executionId));
     void connection.start();
     const timer = setInterval(() => { const jobs = scheduler.tick(Date.now()); setActive(old => old.map(j => j.key).join(',') === jobs.map(j => j.key).join(',') ? old : jobs); }, 100);
-    return () => { clearInterval(timer); connection.stop(); scheduler.clear(); };
+    return () => { clearInterval(timer); sound.stop(); connection.stop(); scheduler.clear(); };
   }, [id, token, preview]);
   if (!scene) return <output>{status}</output>;
   return <div className="canvas-runtime" style={{ width: scene.width, height: scene.height }} aria-label="Overlay scene">

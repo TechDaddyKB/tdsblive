@@ -20,6 +20,29 @@ const response = (value: unknown, status = 200) => new Response(JSON.stringify(v
 let connection: ChatConnection;
 beforeEach(() => { vi.useFakeTimers(); Socket.instances = []; vi.stubGlobal('WebSocket', Socket); vi.stubGlobal('fetch', vi.fn(async (url: string) => response(url.endsWith('/chat') ? [] : definition))); });
 afterEach(() => { connection?.stop(); vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+it.each([[true, false, true], [true, true, false], [false, false, false]])('routes sound only for a live canvas (canvas=%s, preview=%s)', async (canvas, preview, permitted) => {
+  const sound = vi.fn(); const stopped = vi.fn(); const events = vi.fn();
+  vi.mocked(fetch).mockImplementation(async url => response(String(url).endsWith('/chat') ? [{ id: 'history-only' }] : { ...definition, canvasEnabled: canvas }));
+  connection = new ChatConnection('owned-canvas', '', preview, vi.fn(), events, vi.fn(), canvas, undefined, sound, stopped);
+  await connection.start(); const socket = Socket.instances[0]; socket.onopen?.();
+  socket.receive({ op: 'subscribed' }); await vi.advanceTimersByTimeAsync(1);
+  expect(events).toHaveBeenCalledWith([{ id: 'history-only' }], 'history');
+  expect(sound).not.toHaveBeenCalled();
+  const command = { executionId: 'owned-id', assetId: 'owned-asset', volume: .5, duckingVolume: 1, timeoutSeconds: 5 };
+  socket.receive({ op: 'sound', command }); socket.receive({ op: 'sound-stop', executionId: command.executionId });
+  connection.reportSound(command.executionId, 'completed');
+  if (permitted) {
+    expect(sound).toHaveBeenCalledExactlyOnceWith(command);
+    expect(stopped).toHaveBeenCalledExactlyOnceWith(command.executionId);
+    expect(socket.send).toHaveBeenCalledWith(JSON.stringify({ op: 'sound-result', executionId: command.executionId, state: 'completed' }));
+  } else {
+    expect(sound).not.toHaveBeenCalled(); expect(stopped).not.toHaveBeenCalled();
+    expect(socket.send.mock.calls.map(value => value[0]).join('\n')).not.toContain('sound-result');
+  }
+  socket.close(); const count = socket.send.mock.calls.length;
+  connection.reportSound(command.executionId, 'failed'); expect(socket.send).toHaveBeenCalledTimes(count);
+});
 it('shares one filtered socket, reloads history after subscribe, handles settings, heartbeat and reconnect', async () => {
   const settings = vi.fn(); const events = vi.fn(); const status = vi.fn();
   connection = new ChatConnection('combined-chat', 'private-session-token', true, settings, events, status); await connection.start();

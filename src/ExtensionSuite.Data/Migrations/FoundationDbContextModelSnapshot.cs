@@ -17,6 +17,116 @@ namespace ExtensionSuite.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("ExtensionSuite.Data.AutomationEventInbox", b =>
+                {
+                    b.Property<long>("Sequence")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Processed")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Sequence");
+
+                    b.HasIndex("EventId")
+                        .IsUnique();
+
+                    b.HasIndex("Processed", "Sequence");
+
+                    b.ToTable("AutomationInbox");
+                });
+
+            modelBuilder.Entity("ExtensionSuite.Data.AutomationExecution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ActionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ActionOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CancelRequested")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("CreatedAtTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Detail")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DueAtTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QueueGroup")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtTicks");
+
+                    b.HasIndex("QueueGroup", "State");
+
+                    b.HasIndex("State", "DueAtTicks");
+
+                    b.HasIndex("EventId", "RuleId", "ActionId")
+                        .IsUnique();
+
+                    b.ToTable("AutomationExecutions");
+                });
+
+            modelBuilder.Entity("ExtensionSuite.Data.AutomationTemporaryEffect", b =>
+                {
+                    b.Property<Guid>("ActionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ExpiresAtTicks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ActionId");
+
+                    b.HasIndex("State", "ExpiresAtTicks");
+
+                    b.ToTable("AutomationTemporaryEffects");
+                });
+
             modelBuilder.Entity("ExtensionSuite.Data.FinancialAudit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -320,6 +430,25 @@ namespace ExtensionSuite.Data.Migrations
                     b.ToTable("Assets");
                 });
 
+            modelBuilder.Entity("ExtensionSuite.Data.StoredAutomationRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AutomationRules");
+                });
+
             modelBuilder.Entity("ExtensionSuite.Data.StoredConfiguration", b =>
                 {
                     b.Property<string>("Name")
@@ -564,6 +693,15 @@ namespace ExtensionSuite.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("SupporterIdentities");
+                });
+
+            modelBuilder.Entity("ExtensionSuite.Data.AutomationEventInbox", b =>
+                {
+                    b.HasOne("ExtensionSuite.Data.StoredEvent", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ExtensionSuite.Data.FinancialContribution", b =>

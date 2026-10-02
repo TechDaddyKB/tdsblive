@@ -83,6 +83,9 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
             OccurredAt = occurredAt, ReceivedAt = receivedAt.ToUniversalTime(), Source = "streamerbot", Platform = platform,
             Type = type, NativeType = category + "." + nativeType, NativeId = nativeId, DedupeKey = dedupe,
             User = eventUser, Message = ChatMediaNormalizer.Normalize(text, data, platform), Monetary = money, Support = support, Raw = raw, Provenance = provenance,
+            Automation = support is null ? null : new EventAutomationMetadata(
+                NullableBoolean(data["anonymous"]) ?? NullableBoolean(data["isAnonymous"]),
+                NullableBoolean(data["isPublic"]), String(data["language"]) is { Length: > 0 and <= 35 } language ? language : null),
             CorrelationId = Guid.TryParse(String(bridgeData["tdsbliveCorrelationId"]), out var correlation) ? correlation : null,
             BridgePath = [.. path, "tdsblive"]
         };
@@ -107,6 +110,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
 
     private static string? String(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out var text) && text.Length <= 16384 ? text : null;
     private static bool Boolean(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out var flag) && flag;
+    private static bool? NullableBoolean(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : null;
     private static long? Integer(JsonNode? node)
     {
         if (node is not JsonValue value) return null;

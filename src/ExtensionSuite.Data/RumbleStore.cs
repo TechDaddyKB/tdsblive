@@ -31,6 +31,7 @@ public sealed class RumbleStore(IDbContextFactory<FoundationDbContext> factory, 
             db.Events.Add(new() { Id = item.Id, Source = "rumble", Provenance = sourceScope, DedupeKey = item.DedupeKey,
                 Type = item.Type, OccurredAtTicks = item.OccurredAt.UtcTicks, Json = json });
             db.Outbox.Add(new() { EventId = item.Id, CreatedAtTicks = item.ReceivedAt.UtcTicks });
+            if (item.Provenance == EventProvenance.Live) db.AutomationInbox.Add(new() { EventId = item.Id });
             if (forwardTriggers && provenance == EventProvenance.Live && item.Type != "rumble.subscription.candidate")
                 db.RumbleDeliveries.Add(new() { EventId = item.Id, CreatedAtTicks = item.ReceivedAt.UtcTicks, State = "pending" });
             accepted.Add(JsonSerializer.Deserialize<CanonicalEvent>(json, EventStore.JsonOptions)!);
