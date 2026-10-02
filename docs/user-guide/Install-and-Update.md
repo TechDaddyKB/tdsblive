@@ -1,9 +1,5 @@
 # Install, update and uninstall
 
-> G10 release preparation: the installer and portable ZIP are release candidates.
-> Final integrated qualification is still in progress. Use this guide with the
-> candidate you are testing; this page does not announce a finished release.
-
 TDSBLive runs on your streaming computer. Keep it open while OBS uses its chat
 or overlays. You also need Streamer.bot for platform connections and actions.
 Speaker.bot is needed only if you want speech.
@@ -17,10 +13,9 @@ Use the **Windows x64 ZIP** if you prefer to put the application in a folder
 yourself. The ZIP includes the application runtime; you do not need to install
 .NET separately.
 
-Get files only from this project's approved candidate or
-[GitHub Releases](https://github.com/TechDaddyKB/tdsblive/releases). A completed
-MVP release has not yet been announced. Do not download a file from a chat link
-claiming to be a release without checking its source.
+Get files only from this project's
+[GitHub Releases](https://github.com/TechDaddyKB/tdsblive/releases). Check that
+you are downloading from this project before running a file shared in chat.
 
 ## Install with the setup program
 

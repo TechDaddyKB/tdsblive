@@ -1,8 +1,5 @@
 # Backup and recovery
 
-> Release preparation: these controls are being qualified for G10. The complete
-> browser and packaged restart/restore checks are still pending.
-
 A backup is a saved copy of your TDSBLive data. Keep one before updating the
 application or making a large change.
 

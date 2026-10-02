@@ -477,7 +477,7 @@ None for the active G09 scope. VTube Studio-specific requirements remain explici
 
 ## G10 — Deliver and validate the MVP
 
-Status: **Blocked**
+Status: **In progress**
 Prerequisites: G01–G09
 
 Current acceptance audit: [release qualification checklist](g10-qualification.md).
@@ -497,7 +497,7 @@ Current acceptance audit: [release qualification checklist](g10-qualification.md
 - Installer/portable build verified on Windows; setup requires no normal-user command line or certificates.
 - Repository guide and wiki are published, with working navigation/images and matching instructions. An unfamiliar user can follow the documented setup path without using developer tools.
 - Rumble trigger/chat/Rant ledger/crown and Ko-fi/Bits automation flows work together in the available environment. Under the operator-approved paid-event scope below, owned examples qualify paid-event ingestion, totals and local automation; actual paid-platform delivery remains explicitly unverified.
-- Measure idle <1% CPU, ordinary-chat <3% average CPU and backend <300MB against documented hardware/workload in the available environment; record deviations honestly. Distinguish Wine/Proton measurements from native Windows CI results. Native Windows streaming-PC performance remains deferred and must not be presented as verified.
+- Measure against idle <1% CPU, ordinary-chat <3% average CPU and backend <300MB targets using documented hardware/workload; record deviations honestly. Operator-approved Wine exception (2026-10-02): release with documented CPU and memory deviations from these targets, without claiming a performance pass. Distinguish Wine/Proton measurements from native Windows CI results. Native Windows streaming-PC performance remains deferred and must not be presented as verified.
 
 ### Validation evidence
 
@@ -509,9 +509,11 @@ Operator-approved paid-event scope (2026-10-02): “Use owned examples and expli
 
 - Protected G08 delivery is merged in PRs #10/#11; G09 delivery is merged in PR #12 as `26bb2eeea61ad5d4fbe6435f91778996de02d926`. G00–G09 prerequisites remain complete under their approved scope.
 - Windows run `37049814743` / `d3a01e9` passes SonarQube, native ZIP/installer and browser-connected recovery. Its actual downloaded package passes Wine LAN, recovery, installed-bot receipts and the full browser suite. This candidate corrects the observed shutdown crash.
-- Explicitly opted-in owned examples qualify paid-event ingestion, persistent Rumble dedupe, exact/nominal totals, crown/leaderboard updates and local automation receipts in disposable data. Actual paid-platform delivery remains unverified by operator choice. Final audible output requires separate confirmation.
+- Explicitly opted-in owned examples qualify paid-event ingestion, persistent Rumble dedupe, exact/nominal totals, crown/leaderboard updates and local automation receipts in disposable data. Actual paid-platform delivery remains unverified by operator choice. The operator confirmed both fresh audio tests; real Rumble status is independently healthy with its baseline established.
 - Ten plain-language chapters and eight owned screenshots are in the repository, wiki and offline guide. Wiki commits `0b98615`/`e017419` publish approved paid-event limits and read-only test instructions. Windows run [37056770891](https://github.com/TechDaddyKB/tdsblive/actions/runs/37056770891) for `e10b8fb` passes 75 core and 384 host tests without skips, frontend checks, OpenCover/LCOV import, SonarQube quality gate and native ZIP/installer qualification. Both downloaded artifact checksums match. The actual downloaded EXE passes both read-only bot tests in a real browser under Wine, produces no action/speech/queue executions, and quits cleanly. Its bundled guide passes all ten chapters and eight images with networking disabled. That exact package now serves port 17474 with preserved disposable data. The earlier reserved-variable failure is retained below as historical evidence.
-- Actual `e10b8fb` package Wine measurements cover connected bots and two owned OBS sources with Rumble disabled, Info logging and disabled test rules: backend peak RSS 298.04 MB; idle CPU 4.000% over 60.00 seconds and ordinary-chat CPU 5.144% over 180.01 seconds (360 synthetic preview messages, two/second), with one logical core as 100%. Memory passes; CPU targets are not met. Native Windows streaming-PC performance remains deferred. The earlier observer polling status twice per second was retired before this measurement; its removal does not resolve the CPU deviation. Complete methodology and separate 32-processor normalization are in the release checklist.
+- Actual `e10b8fb` package with real Rumble polling, both bots and two OBS sources measures 4.616% idle CPU over 60.01 seconds, 5.600% ordinary-chat CPU over 180.01 seconds (360 synthetic preview messages, two/second) and peak backend RSS 321.35 MB. One logical core is 100%; CPU and memory targets are exceeded. The operator selected “Release with documented Wine limitations,” accepting these deviations. Native Windows streaming-PC performance stays deferred. Complete methodology and separate 32-processor normalization are in the release checklist.
+
+Final documentation checkpoint: wiki `3913754` publishes ten user-guide chapters and eight owned screenshots with accepted Wine limitations, read-only setup tests and paid-event scope. The final offline guide passes all chapters/images, navigation and UTF-8 with networking disabled. Preparation warnings are removed and the plan link points to main for delivery. Windows run `37061856073` for `c3f8cb2` passes all protected checks; the final guide/evidence commit still requires normal exact-head packaging and protected delivery.
 
 ### Historical implementation checkpoints
 
@@ -590,14 +592,13 @@ Source-spec completion audit: section 86's explicit bot connection-test buttons 
 
 ### Blockers
 
-- Final audible confirmation of the owned Ko-fi speech and OBS Bits tone is pending.
-- Final real Rumble API health is pending operator entry of the session-only URL; credential files are not read. Available measurements do not include enabled Rumble polling.
-- One-core Wine CPU targets were exceeded. The operator was asked whether to carry this as a documented Wine limitation or require tuning before release; no disposition is inferred from elapsed time.
-- Protected delivery and release/checksum publication remain to finish. Corrected offline-guide native packaging and downloaded-artifact verification pass for `e10b8fb`; exact package evidence remains separate from earlier candidates.
+- Final release-guide packaging, protected delivery and release/checksum publication remain to finish. The operator accepts documented Wine CPU and memory deviations; these are scoped limitations, not passing performance targets.
 
-Blocked audit (2026-10-02): final audible confirmation, local Rumble credential entry/baseline and CPU-target disposition remain unresolved across at least three consecutive goal turns. Independent implementation, documentation, wiki publication and package checks are recorded above. Latest documentation commit `c3f8cb2` has active Windows run [37061856073](https://github.com/TechDaddyKB/tdsblive/actions/runs/37061856073); its SonarQube/packaging result is not yet verified. Leave the owned test host running and do not infer confirmation or acceptance from elapsed time. On resume, inspect that run and the live host, resolve these gates, then finish protected delivery and release publication.
+Historical blocked audit (2026-10-02): final audible confirmation, local Rumble credential entry/baseline and CPU-target disposition remain unresolved across at least three consecutive goal turns. Independent implementation, documentation, wiki publication and package checks are recorded above. Latest documentation commit `c3f8cb2` has active Windows run [37061856073](https://github.com/TechDaddyKB/tdsblive/actions/runs/37061856073); its SonarQube/packaging result is not yet verified. Leave the owned test host running and do not infer confirmation or acceptance from elapsed time. On resume, inspect that run and the live host, resolve these gates, then finish protected delivery and release publication.
 
-G10 is Blocked, not complete. Actual paid-platform delivery and native Windows
+Resumed qualification (2026-10-02): operator reports the Rumble baseline established. Windows run `37061856073` for `c3f8cb2` has completed successfully. Independent host verification currently finds no listener on port 17474; the operator was asked to refresh the editor before further audio tests. No credential file was read. Subsequent owned-host recovery restores editor HTTP 200, both bot connections and real Rumble healthy/baseline state. Two fresh owned support examples produce Speaker.bot dispatched/acknowledged and OBS sound completed/browser-playback-completed receipts; both rules are disabled afterward. The operator confirms “Heard both.” These additional examples affect only disposable totals; actual paid-platform delivery remains unverified. The enabled-Rumble measurement is complete: 60.01-second idle averages 4.616% CPU; 180.01-second ordinary chat averages 5.600% CPU with 360 synthetic preview messages (two/second); peak backend RSS is 321.35 MB (306.46 MiB). One logical core is 100%; separate all-32 normalization is 0.1443%/0.1750%, not used to replace that comparison. Both bots and two owned OBS browser sources are connected, Info logging is enabled, rules are disabled and there is no recurring qualification observer. The operator selected “Release with documented Wine limitations,” explicitly accepting CPU and memory deviations.
+
+G10 is In progress, not complete. Actual paid-platform delivery and native Windows
 streaming-PC performance are explicit scope limitations, not claims of success.
 
 <a id="g11"></a>

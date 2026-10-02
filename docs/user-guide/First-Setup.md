@@ -1,8 +1,5 @@
 # First setup
 
-> G10 release preparation: guided setup is available in the current development
-> build. Final packaged setup and live integration qualification remain pending.
-
 Open TDSBLive, then open
 [the editor](http://127.0.0.1:17474/editor). **Guided setup** appears until you
 finish its review. The guide remembers your step when you restart.

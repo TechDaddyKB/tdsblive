@@ -1,6 +1,6 @@
 # G10 release qualification
 
-G10 is **Blocked** pending operator qualification evidence and CPU disposition. This checklist records what is actually verified;
+G10 is **In progress** following resumed operator qualification. This checklist records what is actually verified;
 passing one row does not complete the other requirements. The owning contract is
 [G10 in the implementation plan](implementation-plan.md#g10).
 
@@ -29,10 +29,10 @@ passing one row does not complete the other requirements. The owning contract is
 | SQLite-safe backup and restore | Actual `d3a01e9` Actions EXE under Wine passes restart, restore, paused integrations and the additional restart after restoring owned bot configuration; delayed-handshake regression passes | None for these checks |
 | Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; wiki `e017419` includes read-only setup tests and approved paid-event limits. Actual `e10b8fb` ZIP guide passes all ten pages/eight images, navigation, external-link preservation and UTF-8 with networking disabled; native package checks pass | Remove preparation warnings only when the qualified release is published |
 | Windows CI and SonarQube gate | Run `37056770891` / `e10b8fb` succeeds, including OpenCover/LCOV import, SonarQube, packaging and native package checks | Any later release-source commit must pass protected checks |
-| Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Actual `d3a01e9` Actions EXE passes real bot trigger/forwarder receipts and full browser suite. Production parser/engine/store deduplicates owned Rant/chat; packaged workers produce three contributions totaling 725 cents and two owned automation receipts | Final real API health and audible output; actual paid-platform delivery stays explicitly unverified by approved scope |
-| OBS rendering and audible output | Final `e10b8fb` package handoff reconnects the actual OBS source; screenshot confirms owned Rumble chat, three supporters and estimated $7.25 total. Earlier audible observations are recorded in G05/G06/G09 | Final owned Ko-fi speech and Bits tone audible confirmation; actual dispatch receipts alone are insufficient |
+| Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Actual `d3a01e9` Actions EXE passes real bot trigger/forwarder receipts and full browser suite. Production parser/engine/store deduplicates owned Rant/chat; packaged workers produce three contributions totaling 725 cents and two owned automation receipts | Final real API health and audible output now pass as recorded below; actual paid-platform delivery stays explicitly unverified by approved scope |
+| OBS rendering and audible output | Final `e10b8fb` package handoff reconnects the actual OBS source; screenshot confirms owned Rumble chat, three supporters and estimated $7.25 total. Earlier audible observations are recorded in G05/G06/G09 | Operator confirmed “Heard both” for the fresh Ko-fi speech and Bits tone; see resumed evidence below |
 | Authenticated LAN HTTP | Actual `d3a01e9` Actions EXE under Wine passes remote HTTP sign-in, credential rotation, DPAPI persistence, scoped token revocation and owner-only 403 restrictions; restored to loopback afterward | None for these checks |
-| Available-environment performance | Actual `e10b8fb` package: 4.000% idle/5.144% chat CPU using one core as 100%; peak backend RSS 298.04 MB. Connected bots and OBS, Rumble disabled; previous polling observer retired | CPU targets are not met. Operator disposition remains pending; this does not qualify enabled Rumble polling or native Windows streaming-PC performance |
+| Available-environment performance | Actual `e10b8fb` package with real Rumble polling: 4.616% idle/5.600% chat CPU with one core as 100%; peak backend RSS 321.35 MB. Both bots and OBS connected; owned rules disabled; recurring observer retired | Operator selected “Release with documented Wine limitations,” accepting CPU and memory deviations. Targets are not claimed as passed; native Windows streaming-PC performance remains deferred |
 
 ## Current local environment
 
@@ -245,6 +245,14 @@ remains visible, and native Windows streaming-PC performance remains deferred.
 ## Resume checkpoint — 2026-10-02
 
 Final audio confirmation, real Rumble baseline and Wine CPU disposition remain unresolved across at least three consecutive goal turns. The owned host is running with both bots connected; Rumble has no session credential and remains disabled. Windows run [37061856073](https://github.com/TechDaddyKB/tdsblive/actions/runs/37061856073), commit `c3f8cb2`, is still active at the SonarQube step. Recheck its terminal result on resume. No merge, tag or release is published. Resolve the operator-dependent gates before protected delivery; do not substitute earlier audio evidence or dispatch receipts for the final audible check.
+
+## Resumed operator checks — 2026-10-02
+
+The operator reports “baseline established showing.” Preserve this as operator-observed evidence. A subsequent independent HTTP check found connection refused and no TDSBLive process on this machine; an editor refresh check is pending before audio qualification. Windows run `37061856073` for `c3f8cb2` completed successfully. This supersedes its historical active-run status above. Subsequent detached restart of the owned host restores editor HTTP 200. Independent status verifies both bots connected and Rumble healthy/enabled/baseline established, with its session credential present and forwarding disabled. The fresh audio qualification uses the actual e10b8fb production libraries and saved owned rules: one additional $5 Ko-fi example and 100 nominal one-cent Bits produce distinct receipts (speech dispatched/acknowledged-not-playback-confirmed; sound completed/browser-playback-completed). The operator confirms “Heard both,” supplying audible evidence alongside the receipts. Both owned rules are disabled afterward. These extra examples affect disposable test totals only. OBS streaming and recording were inactive. The operator selected “Release with documented Wine limitations,” accepting the measured CPU and memory deviations. Final enabled-Rumble measurement: 60.01-second idle at 4.616% CPU, 180.01-second chat at 5.600% CPU with 360 synthetic preview messages (two/second), peak backend RSS 321.35 MB (306.46 MiB). One logical core is 100%; separate all-32 normalization is 0.1443%/0.1750%. Both bots and two owned OBS sources are connected, Info logging is enabled, rules are disabled and no recurring qualification observer is active. Native Windows streaming-PC performance remains deferred. Final release-guide packaging and protected release delivery remain open.
+
+## Final guide preparation
+
+Wiki commit `3913754` publishes the final ten chapters/eight owned screenshots with the accepted Wine limitations. The generated offline guide passes all pages/images, navigation, UTF-8 and the main plan link with networking disabled. Final-source native packaging and protected release delivery still remain; no goal-completion claim is made from these documentation checks.
 
 ## Completion rule
 
