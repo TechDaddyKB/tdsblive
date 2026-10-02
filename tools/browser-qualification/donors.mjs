@@ -17,12 +17,15 @@ export async function qualifyDonors(page, origin, writeHeaders, root) {
   const crown = page.locator(`[data-widget-id="${widgets[0].id}"]`);
   const total = page.locator(`[data-widget-id="${widgets[4].id}"]`);
   await crown.getByText(/\$12\.50/).waitFor();
+  await crown.getByRole('img', { name: 'Ko-fi platform' }).waitFor();
   await total.getByText(/\$13\.75/).waitFor();
   const identities = await (await fetch(`${origin}/api/financial/identities`)).json();
   const twitch = identities.find(row => row.platform === 'twitch');
   const kofi = identities.find(row => row.platform === 'kofi');
   await write(`/api/financial/identities/${twitch.id}/link`, 'POST', { expectedSupporterId: twitch.supporterId, targetSupporterId: kofi.supporterId });
   await crown.getByText(/\$13\.75/).waitFor();
+  await crown.getByRole('img', { name: 'Twitch platform' }).waitFor();
+  await crown.getByRole('img', { name: 'Ko-fi platform' }).waitFor();
   await write(`/api/financial/identities/${twitch.id}/unlink`, 'POST', { expectedSupporterId: kofi.supporterId });
   await crown.getByText(/\$12\.50/).waitFor();
   let overlay = await (await fetch(`${origin}/api/overlays/donor-qualification`)).json();
@@ -82,6 +85,11 @@ export async function qualifyDonors(page, origin, writeHeaders, root) {
   }, widgets[0].id);
   assert.equal(await crown.evaluate(element => getComputedStyle(element).color), 'rgb(18, 52, 86)');
   assert.equal(await crown.evaluate(element => getComputedStyle(element).fontSize), '37px');
+  const platformLogo = crown.getByRole('img', { name: 'Twitch platform' });
+  const bounds = await platformLogo.boundingBox();
+  assert.ok(bounds && bounds.width === 37 && bounds.height === 37, 'Platform logo must scale to the donor font size');
+  assert.equal(await platformLogo.evaluate(element => getComputedStyle(element).fill), 'rgb(18, 52, 86)');
+  assert.equal(await crown.locator('.donor-platform').innerText(), '', 'Platform logos must not append duplicate text');
   await page.waitForFunction(id => {
     const name = `tdsblive-donor-${id.replace(/[^a-zA-Z0-9]/g, '')}`;
     return [...document.fonts].some(face => face.family === name && face.status === 'loaded') &&

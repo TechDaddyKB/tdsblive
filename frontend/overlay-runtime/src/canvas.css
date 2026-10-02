@@ -11,7 +11,8 @@
 .runtime-widget .donor-avatar { width: 1.5em; height: 1.5em; object-fit: cover; border-radius: 50%; }
 .donor-avatar-placeholder { width: 1.5em; text-align: center; opacity: .5; }
 .donor-widget small { display: block; font-size: .5em; }
-.donor-platform { font-size: .5em; border: 1px solid currentColor; border-radius: .25em; padding: .1em .3em; }
+.donor-platform { display: inline-flex; flex: 0 0 auto; width: 1em; height: 1em; align-items: center; justify-content: center; }
+.donor-platform svg { display: block; width: 100%; height: 100%; }
 .donor-row.enter-fade { animation-name: donor-enter-fade; }
 .donor-row.exit-fade { animation-name: donor-exit-fade; animation-fill-mode: forwards; }
 .donor-row.enter-slide { animation-name: donor-enter-slide; }

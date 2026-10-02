@@ -2,6 +2,7 @@ import { defaultDonor, type DonorSettings, type Widget } from './scene';
 import { useDonorAsset, useDonorFont } from './DonorAssets';
 import { useEffect, useRef, useState } from 'react';
 import { safeAvatar } from './chat';
+import { PlatformBadge } from './PlatformBadge';
 export interface DonorRow { supporterId: string; name: string; usdAmountMinor: string; platforms: string[]; unknownCount: number; estimatedCount: number; latestAt: string; hasKnownAmount?: boolean; avatarUrl?: string | null }
 export interface DonorSnapshot { widgetId: string; state: string; generatedAt: string; rows: DonorRow[]; totalUsdMinor: string; unknownCount: number; gatedCount: number; estimatedCount: number }
 export function donorMoney(minor: string): string {
@@ -47,7 +48,7 @@ export function DonorWidget({ widget, snapshot, overlay = '', token = '' }: { wi
       {settings.showAvatar && (safeAvatar(row.avatarUrl) ? <img className="donor-avatar" src={safeAvatar(row.avatarUrl)} alt={`${row.name} avatar`} referrerPolicy="no-referrer" /> : <span className="donor-avatar-placeholder" aria-label="Avatar unavailable">●</span>)}
       {settings.showCrown && index === 0 && <span aria-label="Crown">{crown ? <img className="donor-crown" src={crown} alt="" /> : '👑 '}</span>}
       <span>{donorText(settings, row.name, row.hasKnownAmount === false ? 'Awaiting valuation' : donorMoney(row.usdAmountMinor), String(index + 1))}</span>
-      {settings.showPlatformBadges && row.platforms.map(platform => <span className="donor-platform" key={platform}>{platform}</span>)}
+      {settings.showPlatformBadges && row.platforms.map(platform => <PlatformBadge key={platform} platform={platform} />)}
       {row.estimatedCount > 0 && <small>Estimated</small>}
       {row.unknownCount > 0 && <small>Additional support awaiting valuation</small>}
     </div>)}

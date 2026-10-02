@@ -35,11 +35,17 @@ it('frequent valuation updates do not postpone a pending leader transition', () 
 it('respects visibility and shows current stream total', () => {
   const widget = { ...createWidget('donor-leaderboard'), donor: { ...defaultDonor, showName: false, showAmount: false, showCrown: false, showPlatformBadges: false } };
   const view = render(<DonorWidget widget={widget} snapshot={snapshot} />);
-  expect(screen.queryByText(/Alice/)).toBeNull(); expect(screen.queryByLabelText('Crown')).toBeNull(); expect(screen.queryByText('twitch')).toBeNull();
+  expect(screen.queryByText(/Alice/)).toBeNull(); expect(screen.queryByLabelText('Crown')).toBeNull(); expect(screen.queryByRole('img', { name: 'Twitch platform' })).toBeNull();
   view.rerender(<DonorWidget widget={createWidget('current-stream-total')} snapshot={snapshot} />);
   expect(screen.getByText('$92,233,720,368,547,758.08')).toBeVisible(); expect(screen.getByText('Includes estimates')).toBeVisible();
 });
 it.each(['preview', 'pending', 'gated', 'empty', 'period-unavailable'])('renders %s without inventing a supporter', state => {
   render(<DonorWidget widget={createWidget('donor-crown')} snapshot={{ ...snapshot, state }} />);
   expect(screen.getByRole('status')).toBeVisible(); expect(screen.queryByText(/Alice/)).toBeNull();
+});
+
+it('renders linked platforms as accessible logos without duplicate visible labels', () => {
+  render(<DonorWidget widget={createWidget('donor-crown')} snapshot={{ ...snapshot, rows: [{ ...snapshot.rows[0], platforms: ['twitch', 'kofi'] }] }} />);
+  for (const name of ['Twitch platform', 'Ko-fi platform']) expect(screen.getByRole('img', { name }).querySelector('path')).not.toBeNull();
+  for (const badge of document.querySelectorAll('.donor-platform')) expect(badge.textContent).toBe('');
 });
