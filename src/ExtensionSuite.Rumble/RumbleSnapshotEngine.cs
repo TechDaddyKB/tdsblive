@@ -118,6 +118,8 @@ public sealed class RumbleSnapshotEngine(SensitiveValues sensitive, int offlineC
                     User = new(null, item.User, item.User, item.Avatar, selected.Badges), Message = item.Text is null ? null : new(item.Text),
                     Stream = item.StreamId is null ? null : new(item.StreamId, null), Provenance = provenance,
                     Monetary = item.Kind == "support.rant" ? new(item.Cents, "USD", "exact") : null,
+                    Support = item.Kind == "support.rant" ? new("rant", 1, item.Cents is { } cents ? new(cents, "USD", 2) : null,
+                        GatedReason: item.Cents is null ? "rant_amount_unavailable" : null) : null,
                     Raw = selected.Raw.DeepClone().AsObject() });
                 if (candidate) diagnostics.Add(new("subscriptionLiveUnverified", new() { ["authoritativeAutomationEnabled"] = false }));
             }

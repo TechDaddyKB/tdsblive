@@ -3,6 +3,7 @@ using System;
 using ExtensionSuite.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExtensionSuite.Data.Migrations
 {
     [DbContext(typeof(FoundationDbContext))]
-    partial class FoundationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001222106_FinancialProjectionReceipts")]
+    partial class FinancialProjectionReceipts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
@@ -80,22 +83,6 @@ namespace ExtensionSuite.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("GiftCorrelationKey")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GiftRole")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValue("none");
-
-                    b.Property<string>("GiftScopeKey")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GiftSenderKey")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GiftTier")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("IdentityId")
@@ -176,8 +163,6 @@ namespace ExtensionSuite.Data.Migrations
 
                     b.HasIndex("StreamId", "OccurredAtTicks");
 
-                    b.HasIndex("Platform", "GiftScopeKey", "GiftCorrelationKey", "GiftRole");
-
                     b.ToTable("FinancialEvents");
                 });
 
@@ -201,38 +186,6 @@ namespace ExtensionSuite.Data.Migrations
                     b.HasIndex("State");
 
                     b.ToTable("FinancialProjectionReceipts");
-                });
-
-            modelBuilder.Entity("ExtensionSuite.Data.GiftAccountingClaim", b =>
-                {
-                    b.Property<string>("Platform")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("KeyHash")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("OwnerContributionId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("Quantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SenderKey")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Tier")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Platform", "KeyHash");
-
-                    b.HasIndex("OwnerContributionId");
-
-                    b.ToTable("GiftAccountingClaims");
                 });
 
             modelBuilder.Entity("ExtensionSuite.Data.OutboxEntry", b =>
@@ -503,11 +456,6 @@ namespace ExtensionSuite.Data.Migrations
                     b.Property<string>("Tier")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("Enabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
-
                     b.Property<string>("UsdMinorPerUnit")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -587,15 +535,6 @@ namespace ExtensionSuite.Data.Migrations
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ExtensionSuite.Data.GiftAccountingClaim", b =>
-                {
-                    b.HasOne("ExtensionSuite.Data.FinancialContribution", null)
-                        .WithMany()
-                        .HasForeignKey("OwnerContributionId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

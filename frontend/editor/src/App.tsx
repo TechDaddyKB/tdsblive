@@ -6,6 +6,7 @@ import { BotPanel } from './BotPanel';
 import { RumblePanel } from './RumblePanel';
 import { ChatPanel } from './ChatPanel';
 import { VisualEditor } from './VisualEditor';
+import { FinancialPanel } from './FinancialPanel';
 
 export function App() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -32,5 +33,6 @@ export function App() {
     {status && <RumblePanel />}
     {status && <VisualEditor />}
     {status && <ChatPanel />}
+    {status && <FinancialPanel />}
   </main>;
 }

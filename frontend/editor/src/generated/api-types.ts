@@ -1677,6 +1677,588 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/financial/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinancialSettings"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FinancialSettings"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinancialSettings"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    offset?: number | string;
+                    limit?: number | string;
+                    state?: string;
+                    platform?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinancialLedgerPage"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/totals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    period?: string;
+                    start?: string;
+                    endExclusive?: string;
+                    limit?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinancialTotalsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    limit?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinancialIdentity"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/identities/{id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["IdentityLinkRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IdentityTransferResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/identities/{id}/unlink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["IdentityUnlinkRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IdentityTransferResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NominalValuationRule"][];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NominalRuleUpdate"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NominalRuleRemoval"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CachedRateEntry"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/rates/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RateLookupResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/rates/override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ManualRateUpdate"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/rates/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RateRefreshResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FinancialReconcileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinancialReconcileResult"][];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/financial/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FinancialProjectionDiagnostics"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1774,6 +2356,17 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        CachedRateEntry: {
+            currency: string;
+            /** Format: date */
+            requestedDate: string;
+            /** Format: date */
+            rateDate: string;
+            origin: string;
+            usdPerNativeUnit: string;
+            provider: string;
+            estimated: boolean;
+        };
         CanonicalEvent: {
             /** Format: uuid */
             id?: string;
@@ -1789,6 +2382,7 @@ export interface components {
             user?: null | components["schemas"]["EventUser"];
             message?: null | components["schemas"]["EventMessage"];
             monetary?: null | components["schemas"]["EventMoney"];
+            support?: null | components["schemas"]["SupportDetails"];
             stream?: null | components["schemas"]["EventStream"];
             metrics?: null | components["schemas"]["EventMetrics"];
             dedupeKey: string;
@@ -1892,6 +2486,139 @@ export interface components {
             isBot: boolean;
             badgeDetails?: null | components["schemas"]["EventBadge"][];
         };
+        FinancialEntry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            eventId: string;
+            /** Format: uuid */
+            supporterId: string;
+            /** Format: uuid */
+            identityId: string;
+            supporterName: string;
+            platform: string;
+            type: string;
+            source: string;
+            nativeEventId: null | string;
+            /** Format: date-time */
+            occurredAt: string;
+            quantity: string;
+            nativeAmountMinor: null | string;
+            nativeCurrency: null | string;
+            /** Format: int32 */
+            nativeMinorUnitDigits: null | number | string;
+            usdAmountMinor: null | string;
+            valuationMethod: string;
+            estimated: boolean;
+            fxRate: null | string;
+            /** Format: date */
+            fxRateDate: null | string;
+            fxProvider: null | string;
+            accountingState: string;
+            pendingReason: null | string;
+            tier: string;
+            giftRole: string;
+            metadataJson: string;
+            /** Format: int32 */
+            version: number | string;
+        };
+        FinancialIdentity: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            supporterId: string;
+            supporterName: string;
+            platform: string;
+            identityKey: string;
+            displayName: string;
+        };
+        FinancialLedgerPage: {
+            items: components["schemas"]["FinancialEntry"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            offset: number | string;
+            /** Format: int32 */
+            limit: number | string;
+        };
+        FinancialProjectionDiagnostics: {
+            /** Format: int32 */
+            processed: number | string;
+            /** Format: int32 */
+            unsupported: number | string;
+            /** Format: int32 */
+            quarantined: number | string;
+            /** Format: int32 */
+            pending: number | string;
+            /** Format: int32 */
+            pendingConversions: number | string;
+            /** Format: int32 */
+            gatedContributions: number | string;
+        };
+        FinancialReconcileRequest: {
+            selected: components["schemas"]["FinancialVersionRef"][];
+        };
+        FinancialReconcileResult: {
+            /** Format: uuid */
+            id: string;
+            outcome: string;
+            /** Format: int32 */
+            version?: null | number | string;
+        };
+        FinancialSettings: {
+            /** @default UTC */
+            timeZone: string;
+            /** Format: date-time */
+            currentStreamStartUtc?: null | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            version: number | string;
+        };
+        FinancialTotals: {
+            /** Format: uuid */
+            supporterId: string;
+            name: string;
+            usdAmountMinor: string;
+            exactAmountMinor: string;
+            fxAmountMinor: string;
+            nominalAmountMinor: string;
+            /** Format: int64 */
+            contributionCount: number | string;
+            /** Format: int64 */
+            unknownCount: number | string;
+            /** Format: int64 */
+            estimatedCount: number | string;
+            /** Format: int64 */
+            gatedCount: number | string;
+        };
+        FinancialTotalsResponse: {
+            period: string;
+            timeZone: string;
+            range: components["schemas"]["LedgerPeriodRange"];
+            supporters: components["schemas"]["FinancialTotals"][];
+        };
+        FinancialVersionRef: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            version: number | string;
+        };
+        IdentityLinkRequest: {
+            /** Format: uuid */
+            expectedSupporterId: string;
+            /** Format: uuid */
+            targetSupporterId: string;
+        };
+        IdentityTransferResponse: {
+            /** Format: uuid */
+            supporterId: string;
+        };
+        IdentityUnlinkRequest: {
+            /** Format: uuid */
+            expectedSupporterId: string;
+        };
         InspectorEntry: {
             /** Format: uuid */
             id: string;
@@ -1931,6 +2658,50 @@ export interface components {
             rumble: string;
         };
         JsonObject: Record<string, never>;
+        LedgerPeriodRange: {
+            /** Format: date-time */
+            startInclusive: null | string;
+            /** Format: date-time */
+            endExclusive: null | string;
+        };
+        ManualRateUpdate: {
+            currency: string;
+            /** Format: date */
+            date: string;
+            usdPerNativeUnit: string;
+        };
+        NativeMoney: {
+            /** Format: int64 */
+            amountMinor: number | string;
+            currency: string;
+            /** Format: int32 */
+            minorUnitDigits: number | string;
+        };
+        NominalRuleRemoval: {
+            platform: string;
+            type: string;
+            tier: string;
+            /** Format: int32 */
+            expectedVersion: number | string;
+        };
+        NominalRuleUpdate: {
+            platform: string;
+            type: string;
+            tier: string;
+            usdMinorPerUnit: string;
+            /** Format: int32 */
+            expectedVersion: number | string;
+        };
+        NominalValuationRule: {
+            platform: string;
+            type: string;
+            tier: string;
+            usdMinorPerUnit: string;
+            /** Format: int32 */
+            version: number | string;
+            /** @default true */
+            enabled: boolean;
+        };
         OverlayDefinition: {
             id?: string;
             name?: string;
@@ -2002,6 +2773,18 @@ export interface components {
             /** @default synthetic */
             mode: string;
         };
+        RateLookupResponse: {
+            available: boolean;
+            rate: null | components["schemas"]["CachedRateEntry"];
+        };
+        RateRefreshResponse: {
+            refreshed: boolean;
+        };
+        RateRequest: {
+            currency: string;
+            /** Format: date */
+            date: string;
+        };
         RestoreOverlayRevision: {
             /** Format: int32 */
             expectedVersion: number | string;
@@ -2071,6 +2854,26 @@ export interface components {
             httpSupported: boolean;
             lanEnabled: boolean;
             integrations: components["schemas"]["IntegrationStates"];
+        };
+        SupportDetails: {
+            kind: string;
+            /** Format: int64 */
+            quantity: number | string;
+            nativeMoney?: null | components["schemas"]["NativeMoney"];
+            /** @default  */
+            tier: string;
+            giftCorrelationKey?: null | string;
+            /** @default none */
+            giftRole: string;
+            gatedReason?: null | string;
+            reportedAmountMajor?: null | string;
+            reportedCurrency?: null | string;
+            giftRecipientKeys?: null | string[];
+            giftScopeKey?: null | string;
+            /** Format: date-time */
+            giftPeriodStart?: null | string;
+            /** Format: date-time */
+            giftPeriodEnd?: null | string;
         };
         TestEventRequest: {
             event: components["schemas"]["CanonicalEvent"];

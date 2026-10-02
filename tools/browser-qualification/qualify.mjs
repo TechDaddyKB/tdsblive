@@ -1,6 +1,6 @@
 // CI-only fresh-browser qualification; never controls the user's personal browser.
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -9,6 +9,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { qualifyVisualEditor } from './visual-editor.mjs';
+import { qualifyFinancial } from './financial.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
@@ -124,6 +125,8 @@ try {
   await page.waitForFunction(() => document.querySelector('.badge-image')?.naturalWidth > 0);
   await page.screenshot({ path: path.join(root, 'artifacts/g05-streamer-chat.png') });
   await qualifyVisualEditor(page, origin, writeHeaders, root);
+  execFileSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(root, 'tools/seed_financial_browser.py'), directory], { stdio: 'pipe' });
+  await qualifyFinancial(page, origin);
   assert.equal(pageErrors, 0, 'Rendered pages raised JavaScript errors');
   console.log('G02/G05/G06 fresh-browser qualification passed: HTTP editor/login, transparent escaped four-platform chat, bounded DOM, one socket, reconnect, saved settings and persistent light/dark streamer view');
 } finally {

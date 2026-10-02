@@ -82,7 +82,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G04](#g04) | Implement reliable Rumble ingestion | G00, G02, G03 | Complete |
 | [G05](#g05) | Build overlay runtime and combined chat | G03, G04 | Complete |
 | [G06](#g06) | Build basic visual editor and alerts | G05 | Complete |
-| [G07](#g07) | Build financial ledger and supporter identities | G04 | Not started |
+| [G07](#g07) | Build financial ledger and supporter identities | G04 | In progress |
 | [G08](#g08) | Build donor widgets | G05, G07 | Not started |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Not started |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Not started |
@@ -344,13 +344,13 @@ The operator confirmed on 2026-10-01: “OBS Playback of alert video and audio w
 
 ### Blockers
 
-None for G06 functionality. Protected merge still requires passing Windows/SonarQube checks on the final documentation commit; the active goal remains open until delivery is merged.
+None. The operator's successful OBS video/audio confirmation is recorded above. G06 was delivered through protected [PR #7](https://github.com/camarokris/tdsblive/pull/7), merged on 2026-10-01 at 20:13:38 UTC as `232c59e23e28a63e8d1f349f16c5114bacbd28e8`. No further OBS confirmation is pending for G06.
 
 <a id="g07"></a>
 
 ## G07 — Build financial ledger and supporter identities
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G04
 
 ### Deliverables
@@ -369,11 +369,17 @@ Prerequisites: G04
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+G04 prerequisite revalidated against merged PR #5 (`47c122005b74c1a0ce957a9a80d8049f6dd4a26a`) and its maintained capture/replay/live receipt evidence. G07 starts from protected G06 main commit `232c59e23e28a63e8d1f349f16c5114bacbd28e8` on `g07-financial-ledger`.
+
+Implemented: typed raw-independent support facts; integer/decimal valuation with explicit currency scales; indexed SQLite ledger/supporter identities, transactional linking and exact totals beyond signed 64-bit sum range; timezone-aware periods including 23/25-hour DST days; historical Frankfurter and persisted cache/audited manual overrides; unconfigured nominal rules and explicit version-checked reconciliation that preserves history on failed lookup; independent durable support projection with quarantine/unsupported receipts and retry-safe ledger acceptance; transactional gift claims, batch/individual correlation and retained audit history.
+
+The complete host suite passes **259 tests**, with two Windows-only skips, including source aggregation, downgrade safety and deterministic projection rejection checks. Core period/precision checks pass all **40 tests**. Owned-fixture checks cover both gift arrival orders, exact Kick recipient periods, source conflicts/partial overlaps, Twitch community IDs, recipient exclusions, unverified Rumble gift gating, raw-disabled normalized ingestion, reconnect dedupe and forced SQLite audit/receipt rollback. Existing Rumble replay tests also pass in the complete host suite. The actual isolated host now passes live Frankfurter lookup, crash/restart integrity, acknowledged-event catch-up, persisted settings, native-ID duplicate suppression, frozen historical values, selected reconciliation and simulation isolation via `python tools/qualify_financial.py --configuration Debug --live-fx`. Only currency/date were sent externally; all supporter data was owned fixture data. No live paid-event observation or Windows/SonarQube success is claimed for G07 yet.
+
+Admin financial APIs, versioned UTC current-stream/timezone settings, exact-string ledger pages, identity link/unlink, audited cache refresh/rule removal and selected bulk reconciliation are implemented. API and SQLite checks verify precision, rollback, scoped-token denial and antiforgery. Actual OpenAPI/generated frontend types are refreshed, and type checking passes. The deterministic manual-rate process qualifier and populated browser qualifier are included in Windows CI. Draft [PR #8](https://github.com/camarokris/tdsblive/pull/8) is running the trusted build/coverage/SonarQube gate; final-head success is still required. Current contracts, migrations, currency provenance, correlation rules, test isolation and pending qualification are maintained in [G07 ledger](g07-financial-ledger.md). The requirement-by-requirement [G07 completion audit](g07-qualification.md) records local proofs and pending external checks. Windows run `36943667261` passed backend checks but failed a frontend text selector; the corrected assertion targets the gated contribution cell. G07 remains In progress pending corrected-head CI/SonarQube and delivery.
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+None preventing implementation. Editor ledger/identity/settings controls are implemented with local typecheck, lint, production build and 102 frontend tests passing; LCOV reports 93.60% lines and 81.18% branches. Isolated browser settings/rules/manual-FX precision, reload, custom periods, populated ledger reconciliation and identity link/unlink checks pass. Source-channel lookup uses verified connected broadcaster IDs and passed a read-only installed Streamer.bot schema probe. Concrete documented Ko-fi forwarding passed real installed CPH execution with synthetic provenance and ledger exclusion. Windows CI, SonarQube and final requirement audit/delivery remain unfinished. Backend APIs, settings, maintenance, selected reconciliation and real process restart/FX checks are implemented and verified locally. Unverified Rumble gift accounting remains gated. No live paid event verification is claimed.
 
 <a id="g08"></a>
 

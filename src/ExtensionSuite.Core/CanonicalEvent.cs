@@ -26,6 +26,7 @@ public sealed record CanonicalEvent
     public EventUser? User { get; init; }
     public EventMessage? Message { get; init; }
     public EventMoney? Monetary { get; init; }
+    public SupportDetails? Support { get; init; }
     public EventStream? Stream { get; init; }
     public EventMetrics? Metrics { get; init; }
     public required string DedupeKey { get; init; }
@@ -40,7 +41,7 @@ public sealed record CanonicalEvent
             throw new ArgumentException("Events require UUIDv7 identifiers and UTC timestamps.");
         if (new[] { Source, Platform, Type, NativeType, DedupeKey }.Any(string.IsNullOrWhiteSpace))
             throw new ArgumentException("Event routing and dedupe fields are required.");
-        if (!Enum.IsDefined(Provenance) || BridgePath.Length > 16)
+        if (!Enum.IsDefined(Provenance) || BridgePath is null || BridgePath.Length > 16)
             throw new ArgumentException("Invalid event provenance or bridge path.");
     }
 }

@@ -2,6 +2,7 @@ using ExtensionSuite.Core;
 using ExtensionSuite.Data;
 using ExtensionSuite.StreamerBot;
 using ExtensionSuite.Rumble;
+using ExtensionSuite.Finance;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
@@ -38,6 +39,17 @@ public static class FoundationServices
                 { DataSource = path, ForeignKeys = true }.ToString());
         });
         builder.Services.AddSingleton<EventStore>();
+        builder.Services.AddSingleton<FinancialStore>();
+        builder.Services.AddSingleton<FinancialSettingsStore>();
+        builder.Services.AddSingleton<FinancialReadStore>();
+        builder.Services.AddSingleton<FinancialReconciliation>();
+        builder.Services.AddSingleton<ValuationRuleStore>();
+        builder.Services.AddSingleton<FrankfurterRateProvider>();
+        builder.Services.AddSingleton(services => new CachedCurrencyRates(services.GetRequiredService<FrankfurterRateProvider>(),
+            services.GetRequiredService<IDbContextFactory<FoundationDbContext>>()));
+        builder.Services.AddSingleton<ICurrencyRateProvider>(services => services.GetRequiredService<CachedCurrencyRates>());
+        builder.Services.AddSingleton<FinancialProjection>();
+        builder.Services.AddSingleton<IIsolatedIntegration, FinancialHostedIntegration>();
         builder.Services.AddOpenApi();
         builder.Services.AddSingleton<EditorEventHub>();
         builder.Services.AddSingleton<IntegrationHealthRegistry>();

@@ -146,9 +146,38 @@ public sealed class StreamerBotConnection(IntegrationConfiguration configuration
     {
         await foreach (var item in current.Events.ReadAllAsync(cancellationToken))
         {
-            try { await onEvent(item, cancellationToken); }
+            try
+            {
+                await ResolveGiftChannelAsync(current, item, cancellationToken);
+                await onEvent(item, cancellationToken);
+            }
             catch (Exception error) when (error is not OperationCanceledException) { Record("event", "processingFailed", false); }
         }
+    }
+
+    private async Task ResolveGiftChannelAsync(BotProtocolSession current, JsonObject item, CancellationToken cancellationToken)
+    {
+        var platform = item["event"]?["source"]?.GetValue<string>()?.ToLowerInvariant();
+        var type = item["event"]?["type"]?.GetValue<string>();
+        if (platform is not ("twitch" or "youtube" or "kick") || type is not
+            ("GiftSub" or "GiftBomb" or "MembershipGift" or "GiftMembershipReceived" or "GiftSubscription" or "MassGiftSubscription")) return;
+        if (item["data"] is not JsonObject data || SupportPayloadNormalizer.Identifier(data["broadcaster"]?["id"] ?? data["broadcast"]?["id"]) is not null) return;
+        try
+        {
+            // Resolve per gift, rather than reuse discovery from an earlier broadcaster profile.
+            var response = await OptionalRequestAsync(current, "GetBroadcaster", cancellationToken);
+            var id = BroadcasterIdentifier(response, platform);
+            if (id is not null) data["broadcaster"] = new JsonObject { ["id"] = id };
+        }
+        catch (BotRequestException) { /* Preserve the notification; unknown channel remains explicitly gated. */ }
+    }
+
+    public static string? BroadcasterIdentifier(JsonObject? response, string platform)
+    {
+        if (response?["connected"] is not JsonArray connected || !connected.Any(node => node is JsonValue value &&
+            value.TryGetValue<string>(out var name) && name.Equals(platform, StringComparison.OrdinalIgnoreCase))) return null;
+        if (response["platforms"]?[platform] is not JsonObject account) return null;
+        return SupportPayloadNormalizer.Identifier(account[platform == "kick" ? "broadcasterUserId" : "broadcastUserId"]);
     }
 
     public async Task<BotExecution> ExecuteActionAsync(Guid actionId, JsonObject arguments, bool executeLive, CancellationToken cancellationToken)

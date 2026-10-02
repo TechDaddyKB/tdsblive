@@ -133,6 +133,9 @@ jobs:
           SONARQUBE_CLI_ORG: camarokris
         run: python tools/qualify_foundation.py
 
+      - name: Qualify financial ingestion and crash recovery in an isolated host
+        run: python tools/qualify_financial.py
+
       - name: Qualify rendered editor in an isolated CI browser
         shell: pwsh
         run: |
