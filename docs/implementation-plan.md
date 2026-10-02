@@ -457,9 +457,11 @@ The maintained [G09 qualification audit](g09-qualification.md) maps the full req
 
 Run 36981696581 subsequently finished: all builds/tests/qualification passed and new-code coverage reached 82.3%, but the Sonar gate failed reliability finding `javascript:S2871` in the newly added browser qualification's default `sort()`. An explicit ID comparator addresses that finding; final-head CI must pass before delivery.
 
+The correction passed [Windows run 36983149942](https://github.com/TechDaddyKB/tdsblive/actions/runs/36983149942) at `796f75a8ee38bdf6cbda28da5035bb34b3d1d5b3`: builds, tests, replay/recovery, full browser qualification, generated contracts, OpenCover/LCOV import and Sonar gate. Scanned logs report 95.8% backend/89.8% frontend production coverage; the gate reports 82.4% new-code coverage, A ratings, zero duplication and 100% reviewed hotspots. An additional owned-fixture failure check verifies that rejected inbox insertion rolls back event and outbox writes, and a mismatched platform/type is refused.
+
 ### Blockers
 
-Real Ko-fi-path Speaker.bot speech, OBS sound capture and reversible Streamer.bot-to-VTube Studio behavior remain unverified. VTube Studio availability is awaiting operator information. Queue/timer/reconnect and security audits, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+Real Ko-fi-path Speaker.bot speech, OBS sound capture and reversible Streamer.bot-to-VTube Studio behavior remain unverified. Operator replies are needed for OBS source readiness, a configured Speaker.bot voice alias, and an available VTube Studio model/reversible action. Local and Windows automated qualification pass for the recorded implementation head; they do not replace these live checks. G09 cannot be marked complete or delivered as qualified until the missing live evidence is supplied.
 
 <a id="g10"></a>
 
