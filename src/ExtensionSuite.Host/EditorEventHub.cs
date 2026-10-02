@@ -75,7 +75,6 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         {
             try
             {
-            connectionSlots.Release();
             stop.Cancel();
             subscriber.Queue.Writer.TryComplete();
             try { await sending; }
@@ -92,6 +91,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             finally
             {
                 subscribers.TryRemove(id, out _);
+                connectionSlots.Release();
                 subscriber.Drained.TrySetResult();
             }
         }

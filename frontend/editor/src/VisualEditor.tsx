@@ -21,18 +21,21 @@ export function VisualEditor() {
   const session = useRef<EditorSession | null>(null); const unsubscribe = useRef<(() => void) | undefined>(undefined);
   const gesture = useRef<{ widget: Widget; mode: 'move' | 'resize'; x: number; y: number; latest: Widget } | null>(null);
   const mounted = useRef(true);
+  const operation = useRef(0);
+  const current = (id: number) => mounted.current && operation.current === id;
   const install = (value: Scene) => {
     session.current?.dispose(); unsubscribe.current?.(); const next = new EditorSession(value, visualApi.save); session.current = next;
     unsubscribe.current = next.subscribe(setState); setState(next.snapshot); setSelected(''); setRevisions([]); setPreview(false); setNotice('');
   };
   useEffect(() => {
     mounted.current = true;
+    const id = ++operation.current;
     void Promise.all([visualApi.list(), request<EditorAsset[]>('/api/assets')]).then(([values, media]) => {
-      if (!mounted.current) return; setOverlays(values); setAssets(media); const first = values.find(o => o.canvasEnabled); if (first) install(first);
-    }).catch(() => { if (mounted.current) setNotice('Unable to load overlays.'); });
+      if (!current(id)) return; setOverlays(values); setAssets(media); const first = values.find(o => o.canvasEnabled); if (first) install(first);
+    }).catch(() => { if (current(id)) setNotice('Unable to load overlays.'); });
     const leave = (event: BeforeUnloadEvent) => { if (session.current?.snapshot.status !== 'saved' && session.current) event.preventDefault(); };
     window.addEventListener('beforeunload', leave);
-    return () => { mounted.current = false; session.current?.dispose(); unsubscribe.current?.(); window.removeEventListener('beforeunload', leave); };
+    return () => { mounted.current = false; ++operation.current; session.current?.dispose(); unsubscribe.current?.(); window.removeEventListener('beforeunload', leave); };
   }, []);
   const doc = state?.document; const chosen = doc?.widgets.find(w => w.id === selected);
   const edit = (value: Scene) => session.current?.edit(value);
@@ -42,18 +45,28 @@ export function VisualEditor() {
     edit({ ...doc, widgets: doc.widgets.map(old => old.id === w.id ? w : old.kind === 'alert' && w.kind === 'alert' && old.alert.group === w.alert.group ?
       { ...old, alert: { ...old.alert, concurrency: w.alert.concurrency, maximumQueueLength: w.alert.maximumQueueLength, overflowPolicy: w.alert.overflowPolicy } } : old) });
   };
-  const load = async (id: string) => {
-    try { if (session.current && !await session.current.flush()) { setNotice('Resolve the unsaved changes before switching overlays.'); return; } install(await visualApi.load(id)); }
-    catch { setNotice('Unable to load overlay.'); }
+  const load = async (id: string, reload = false) => {
+    const operationId = ++operation.current;
+    try {
+      const saved = !session.current || await session.current.flush();
+      if (!current(operationId)) return;
+      if (!saved && !reload) { setNotice('Resolve the unsaved changes before switching overlays.'); return; }
+      const value = await visualApi.load(id);
+      if (current(operationId)) install(value);
+    } catch { if (current(operationId)) setNotice('Unable to load overlay.'); }
   };
   const create = async () => {
+    const operationId = ++operation.current;
     try {
-      if (session.current && !await session.current.flush()) { setNotice('Resolve the unsaved changes first.'); return; }
+      const saved = !session.current || await session.current.flush();
+      if (!current(operationId)) return;
+      if (!saved) { setNotice('Resolve the unsaved changes first.'); return; }
       const dimensions = preset === 'custom' ? [width, height] : preset.split('x').map(Number);
       const value = await visualApi.create({ id: createId, name: createName, width: dimensions[0], height: dimensions[1], background: 'transparent', version: 1,
         canvasEnabled: true, revisionLimit: 50, chat: structuredClone(defaultSettings), widgets: [] });
-      setOverlays(await visualApi.list()); install(value);
-    } catch { setNotice('Unable to create overlay. Use a unique lowercase slug, a name, and dimensions between 1 and 7680.'); }
+      const values = await visualApi.list();
+      if (current(operationId)) { setOverlays(values); install(value); }
+    } catch { if (current(operationId)) setNotice('Unable to create overlay. Use a unique lowercase slug, a name, and dimensions between 1 and 7680.'); }
   };
   const add = (kind: Widget['kind']) => { if (!doc || doc.widgets.length >= 100) return; const w = inheritGroupSettings(createWidget(kind), doc.widgets); edit({ ...doc, widgets: [...doc.widgets, w] }); setSelected(w.id); };
   const remove = () => { if (doc && chosen && !chosen.locked) { edit({ ...doc, widgets: doc.widgets.filter(w => w.id !== chosen.id) }); setSelected(''); } };
@@ -89,7 +102,7 @@ export function VisualEditor() {
       <label>Canvas width<input aria-label="Canvas width" type="number" min={1} max={7680} value={doc.width} onChange={e => { const value = e.target.valueAsNumber; if (Number.isInteger(value) && value >= 1 && value <= 7680) edit({ ...doc, width: value }); }} /></label>
       <label>Canvas height<input aria-label="Canvas height" type="number" min={1} max={7680} value={doc.height} onChange={e => { const value = e.target.valueAsNumber; if (Number.isInteger(value) && value >= 1 && value <= 7680) edit({ ...doc, height: value }); }} /></label>
       <button onClick={() => { void session.current?.flush(); }}>Save now</button><button disabled={!state.undo} onClick={() => session.current?.undo()}>Undo</button><button disabled={!state.redo} onClick={() => session.current?.redo()}>Redo</button>
-      <button onClick={async () => { await session.current?.flush(); void visualApi.load(doc.id).then(install).catch(() => setNotice('Reload failed.')); }}>Reload saved version</button>
+      <button onClick={() => { void load(doc.id, true); }}>Reload saved version</button>
       <label>Zoom<input aria-label="Canvas zoom" type="range" min={.1} max={2} step={.05} value={zoom} onChange={e => setZoom(Number(e.target.value))} /></label>
       <label><input type="checkbox" checked={snap} onChange={e => setSnap(e.target.checked)} />Snap to 10px grid</label>
       <button onClick={() => { void navigator.clipboard.writeText(new URL(`/overlay/${doc.id}`, location.href).href).then(() => setNotice('OBS URL copied.')).catch(() => setNotice(`OBS URL: ${new URL(`/overlay/${doc.id}`, location.href).href}`)); }}>Copy OBS URL</button>
@@ -122,7 +135,7 @@ export function VisualEditor() {
           </div>; })}</div></div></div>
         <aside>{chosen ? <WidgetProperties widget={chosen} assets={assets} change={change} /> : <p>Select a layer to edit its properties.</p>}</aside>
       </div>
-      {revisions.length > 0 && <section aria-label="Revision history"><h3>Saved revisions</h3>{revisions.map(r => <p key={r.version}>v{r.version} · {r.name} · {new Date(r.savedAt).toLocaleString()} <button onClick={async () => { try { if (!await session.current?.flush()) return; const v = session.current!.snapshot.document.version; install(await visualApi.restore(doc.id, r.version, v)); setNotice(`Restored revision ${r.version} as a new revision.`); } catch { setNotice('Restore failed. Refresh history; a revision may have expired or another editor saved.'); } }}>Restore v{r.version}</button></p>)}</section>}
+      {revisions.length > 0 && <section aria-label="Revision history"><h3>Saved revisions</h3>{revisions.map(r => <p key={r.version}>v{r.version} · {r.name} · {new Date(r.savedAt).toLocaleString()} <button onClick={async () => { const operationId = ++operation.current; try { if (!await session.current?.flush() || !current(operationId)) return; const v = session.current!.snapshot.document.version; const value = await visualApi.restore(doc.id, r.version, v); if (!current(operationId)) return; install(value); setNotice(`Restored revision ${r.version} as a new revision.`); } catch { if (current(operationId)) setNotice('Restore failed. Refresh history; a revision may have expired or another editor saved.'); } }}>Restore v{r.version}</button></p>)}</section>}
       <section aria-label="Isolated overlay tests"><h3>Test events</h3><p>Tests reach only this overlay’s preview viewers. No persistence, financial changes, or external automation.</p><label>Test event type<input value={testType} onChange={e => setTestType(e.target.value)} /></label><label>Test platform<input value={testPlatform} onChange={e => setTestPlatform(e.target.value)} /></label>
         <details><summary>Developer raw injection</summary><label><input type="checkbox" checked={nativeInjection} onChange={e => setNativeInjection(e.target.checked)} />Use native Streamer.bot payload</label><p>Native mode normalizes an event/data envelope, then forces simulation. Example: {'{"event":{"source":"Twitch","type":"Follow"},"data":{"userName":"Test viewer"}}'}</p><label>Raw JSON<textarea aria-label="Raw JSON" value={raw} onChange={e => setRaw(e.target.value)} /></label><p>Raw fields are diagnostic input; the renderer never executes HTML or scripts.</p></details><button onClick={() => { void test(); }}>Send isolated test event</button></section>
       {preview && <section aria-label="Overlay preview"><label><input type="checkbox" checked={previewAudio} onChange={e => setPreviewAudio(e.target.checked)} />Enable preview audio</label><iframe title="Overlay test preview" allow="autoplay" src={`/overlay/${doc.id}?preview=1${previewAudio ? '&audio=1' : ''}`} style={{ width: '100%', height: 500, border: '1px solid #666' }} /></section>}

@@ -1,4 +1,6 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
+import { visualApi } from './visualApi';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { VisualEditor } from './VisualEditor';
 import { createWidget, type Scene } from '../../overlay-runtime/src/scene';
@@ -67,4 +69,40 @@ it('inherits group queue policies when adding or copying alert boxes after setti
   fireEvent.click(screen.getByText('Add AlertBox', { exact: true })); fireEvent.click(screen.getByText('Duplicate', { exact: true })); fireEvent.click(screen.getByText('Save now'));
   await waitFor(() => expect(api.get().widgets.filter(w => w.kind === 'alert')).toHaveLength(3));
   for (const alert of api.get().widgets.filter(w => w.kind === 'alert')) expect(alert.alert).toMatchObject({ concurrency: 2, maximumQueueLength: 3, overflowPolicy: 'drop-newest' });
+});
+
+it('ignores a stale StrictMode initialization after the user selects and edits another overlay', async () => {
+  const api = host();
+  const first = structuredClone(api.get());
+  const donor: Scene = { ...structuredClone(first), id: 'donor', name: 'Donor', widgets: [createWidget('donor-crown')] };
+  let resolveInitial!: (scenes: Scene[]) => void;
+  vi.spyOn(visualApi, 'list').mockImplementationOnce(() => new Promise(resolve => { resolveInitial = resolve; })).mockResolvedValue([first, donor]);
+  vi.spyOn(visualApi, 'load').mockResolvedValue(donor);
+  render(<StrictMode><VisualEditor /></StrictMode>);
+  await screen.findByLabelText('Overlay canvas');
+  fireEvent.change(screen.getByLabelText('Overlay', { exact: true }), { target: { value: 'donor' } });
+  await waitFor(() => expect(screen.getByLabelText('Overlay name')).toHaveValue('Donor'));
+  fireEvent.click(screen.getByRole('listitem').querySelector('button')!);
+  expect(screen.getByLabelText('Minimum USD cents')).toHaveValue('0');
+  await act(async () => { resolveInitial([first, donor]); });
+  expect(screen.getByLabelText('Overlay name')).toHaveValue('Donor');
+  expect(screen.getByLabelText('Minimum USD cents')).toHaveValue('0');
+});
+
+it('keeps the latest overlay selection when load responses arrive out of order', async () => {
+  const api = host();
+  const first = structuredClone(api.get());
+  const second = { ...structuredClone(first), id: 'second', name: 'Second' };
+  const third = { ...structuredClone(first), id: 'third', name: 'Third' };
+  vi.spyOn(visualApi, 'list').mockResolvedValue([first, second, third]);
+  let resolveSecond!: (scene: Scene) => void;
+  const loader = vi.spyOn(visualApi, 'load').mockImplementation(id => id === 'second' ? new Promise(resolve => { resolveSecond = resolve; }) : Promise.resolve(third));
+  render(<VisualEditor />);
+  await screen.findByLabelText('Overlay canvas');
+  fireEvent.change(screen.getByLabelText('Overlay', { exact: true }), { target: { value: 'second' } });
+  await waitFor(() => expect(loader).toHaveBeenCalledWith('second'));
+  fireEvent.change(screen.getByLabelText('Overlay', { exact: true }), { target: { value: 'third' } });
+  await waitFor(() => expect(screen.getByLabelText('Overlay name')).toHaveValue('Third'));
+  await act(async () => { resolveSecond(second); });
+  expect(screen.getByLabelText('Overlay name')).toHaveValue('Third');
 });
