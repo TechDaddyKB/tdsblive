@@ -11,6 +11,24 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class DonorDeliveryTests
 {
     [Fact]
+    public async Task SavedStreamStartChangesAnOpenWidgetFromUnavailableToEmpty()
+    {
+        using var app = new FoundationHostFactory(); using var http = app.CreateClient();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await app.Services.GetRequiredService<OverlayStore>().CreateAsync(new() { Id = "stream-period-check", CanvasEnabled = true,
+            Widgets = [new() { Kind = "current-stream-leader" }] }, timeout.Token);
+        var client = app.Server.CreateWebSocketClient(); client.ConfigureRequest = request => request.Headers.Origin = "http://localhost";
+        using var socket = await client.ConnectAsync(new("ws://localhost/ws/overlay/stream-period-check"), timeout.Token);
+        using var initial = await ReceiveDonors(socket, timeout.Token);
+        Assert.Equal("period-unavailable", initial.RootElement.GetProperty("widgets")[0].GetProperty("state").GetString());
+        var settings = app.Services.GetRequiredService<FinancialSettingsStore>();
+        Assert.NotNull(await settings.SaveAsync(new("America/Chicago", DateTimeOffset.UtcNow.AddHours(-1)), timeout.Token));
+        using var updated = await ReceiveDonors(socket, timeout.Token);
+        Assert.Equal("empty", updated.RootElement.GetProperty("widgets")[0].GetProperty("state").GetString());
+        socket.Abort();
+    }
+
+    [Fact]
     public async Task LanOverlayTokenCanReadOnlyItsDonorAssetsAndCannotReadFinancialAdministration()
     {
         using var app = new FoundationHostFactory(true); using var http = app.CreateClient();

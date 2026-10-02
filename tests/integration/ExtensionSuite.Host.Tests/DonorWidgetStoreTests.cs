@@ -9,6 +9,36 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class DonorWidgetStoreTests
 {
     [Fact]
+    public async Task GatedOnlyHistoryReportsEvidenceGapWithoutClaimingFinancialSupport()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        await new FinancialStore(factory).AcceptAsync(Paid("gated-only", "rumble", 0) with { Type = "support.gift", Support = new("gift", 1) });
+        var snapshot = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-crown" }, new(null, null), Now);
+        Assert.Equal("gated", snapshot.State); Assert.Equal(1, snapshot.GatedCount); Assert.Empty(snapshot.Rows); Assert.Equal("0", snapshot.TotalUsdMinor);
+    }
+
+    [Theory]
+    [InlineData("today")]
+    [InlineData("week")]
+    [InlineData("month")]
+    [InlineData("year")]
+    [InlineData("custom")]
+    public async Task TimezonePeriodsExcludeTheUtcInstantAtTheirExclusiveEnd(string period)
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var ledger = new FinancialStore(factory);
+        var now = new DateTimeOffset(2026, 3, 8, 18, 0, 0, TimeSpan.Zero);
+        var range = LedgerPeriods.Resolve(period, "America/Chicago", now, new(2026, 3, 8), new(2026, 3, 9));
+        await ledger.AcceptAsync(Paid("start", "twitch", 100) with { OccurredAt = range.StartInclusive!.Value });
+        await ledger.AcceptAsync(Paid("end", "twitch", 200) with { OccurredAt = range.EndExclusive!.Value });
+        var snapshot = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-crown" }, range, now);
+        Assert.Equal("100", snapshot.TotalUsdMinor); Assert.Equal("start", Assert.Single(snapshot.Rows).Name);
+        if (period is "today" or "custom") Assert.Equal(TimeSpan.FromHours(23), range.EndExclusive - range.StartInclusive);
+    }
+
+    [Fact]
     public async Task LargeHistoryAggregatesExactlyAndBoundsRankedOutput()
     {
         using var app = new FoundationHostFactory(); using var client = app.CreateClient();
