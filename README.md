@@ -1,6 +1,6 @@
 # TDSBLive
 
-[![Windows CI](https://github.com/camarokris/tdsblive/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/camarokris/tdsblive/actions/workflows/windows-ci.yml)
+[![Windows CI](https://github.com/techdaddykb/tdsblive/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/techdaddykb/tdsblive/actions/workflows/windows-ci.yml)
 
 A local-first Streamer.bot companion for Rumble events, combined chat, visual
 overlays, supporter tracking and automation. MIT licensed.

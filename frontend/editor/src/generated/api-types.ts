@@ -2442,6 +2442,30 @@ export interface components {
         CsrfResponse: {
             requestToken: null | string;
         };
+        DonorWidgetSettings: {
+            period?: string;
+            platforms?: string[];
+            eventTypes?: string[];
+            minimumUsdMinor?: string;
+            /** Format: int32 */
+            count?: number | string;
+            /** Format: date */
+            customStart?: null | string;
+            /** Format: date */
+            customEndExclusive?: null | string;
+            showName?: boolean;
+            showAvatar?: boolean;
+            showPlatformBadges?: boolean;
+            showAmount?: boolean;
+            showCrown?: boolean;
+            template?: string;
+            fontFamily?: string;
+            animation?: string;
+            /** Format: int32 */
+            transitionMs?: number | string;
+            crownAssetId?: null | string;
+            fontAssetId?: null | string;
+        };
         EventBadge: {
             name: string;
             imageUrl?: null | string;
@@ -2760,6 +2784,7 @@ export interface components {
             muted?: boolean;
             chat?: components["schemas"]["ChatSettings"];
             alert?: components["schemas"]["AlertSettings"];
+            donor?: components["schemas"]["DonorWidgetSettings"];
         };
         PreviewEventRequest: {
             type: string;

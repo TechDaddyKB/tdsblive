@@ -6,3 +6,19 @@
 .active-alert img, .active-alert video { max-height: 75%; }
 .active-alert p { margin: .3em 0; }
 .canvas-preview-label { position: absolute; z-index: 1000; top: 0; left: 0; background: #223; color: white; font: 14px Arial, sans-serif; padding: .3em; }
+.donor-row { display: flex; align-items: center; gap: .25em; flex-wrap: wrap; }
+.runtime-widget .donor-crown { width: 1.5em; height: 1.5em; object-fit: contain; }
+.runtime-widget .donor-avatar { width: 1.5em; height: 1.5em; object-fit: cover; border-radius: 50%; }
+.donor-avatar-placeholder { width: 1.5em; text-align: center; opacity: .5; }
+.donor-widget small { display: block; font-size: .5em; }
+.donor-platform { display: inline-flex; flex: 0 0 auto; width: 1em; height: 1em; align-items: center; justify-content: center; }
+.donor-platform svg { display: block; width: 100%; height: 100%; }
+.donor-row.enter-fade { animation-name: donor-enter-fade; }
+.donor-row.exit-fade { animation-name: donor-exit-fade; animation-fill-mode: forwards; }
+.donor-row.enter-slide { animation-name: donor-enter-slide; }
+.donor-row.exit-slide { animation-name: donor-exit-slide; animation-fill-mode: forwards; }
+@keyframes donor-enter-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes donor-exit-fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes donor-enter-slide { from { opacity: 0; transform: translateX(20%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes donor-exit-slide { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-20%); } }
+@media (prefers-reduced-motion: reduce) { .donor-row { animation: none !important; } }

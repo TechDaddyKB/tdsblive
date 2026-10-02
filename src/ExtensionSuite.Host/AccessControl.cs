@@ -144,7 +144,8 @@ public sealed class RequestSecurity(RequestDelegate next)
         {
             var definition = await store.GetAsync(id, context.RequestAborted);
             if (definition is null || !(definition.Chat.FontAssetId == parts[1] || definition.Widgets.Any(w =>
-                w.AssetId == parts[1] || w.Chat.FontAssetId == parts[1] || w.Alert.MediaAssetId == parts[1] || w.Alert.SoundAssetId == parts[1]))) return false;
+                w.AssetId == parts[1] || w.Chat.FontAssetId == parts[1] || w.Alert.MediaAssetId == parts[1] || w.Alert.SoundAssetId == parts[1] ||
+                w.Donor.CrownAssetId == parts[1] || w.Donor.FontAssetId == parts[1]))) return false;
         }
         var authorization = context.Request.Headers.Authorization.ToString();
         var token = authorization.StartsWith("Bearer ", StringComparison.Ordinal) ? authorization[7..] : context.WebSockets.WebSocketRequestedProtocols.FirstOrDefault(p => AssetIdentity.IsValid(p));

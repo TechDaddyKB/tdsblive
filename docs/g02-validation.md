@@ -23,7 +23,7 @@ G01 prerequisite is complete; G03–G13 remain separate goals.
 
 ## Recorded evidence
 
-- Final qualification: [Windows run 36847673559](https://github.com/camarokris/tdsblive/actions/runs/36847673559)
+- Final qualification: [Windows run 36847673559](https://github.com/techdaddykb/tdsblive/actions/runs/36847673559)
   on `0da0b34` passed all 44 backend tests (zero skips), 14 frontend tests, replay
   checks, real crash/restart/OpenAPI validation, Windows DPAPI/non-loopback HTTP,
   rendered browser shells, generated type drift checks and report import.
@@ -35,11 +35,11 @@ G01 prerequisite is complete; G03–G13 remain separate goals.
   configured gate, including complexity findings. No open vulnerability finding
   remains. Specific HTTP acceptances and CodeQL false-positive reviews are recorded
   in docs/security.md and the external findings; security rules remain enabled.
-- Public draft PR: https://github.com/camarokris/tdsblive/pull/3.
+- Public draft PR: https://github.com/techdaddykb/tdsblive/pull/3.
 - Windows run 36845468111 passed runtime/browser/contract/report checks but failed
   Sonar due to PATH-based executable lookup. The qualifier now uses the absolute
   setup-dotnet installation directory.
-- Windows run [36846286222](https://github.com/camarokris/tdsblive/actions/runs/36846286222)
+- Windows run [36846286222](https://github.com/techdaddykb/tdsblive/actions/runs/36846286222)
   on `65d944c` passed runtime qualification; its Sonar gate failed on intentional
   HTTP/cookie transport findings. Two findings were accepted on 2026-10-01 with
   requirement-specific rationale. No broad security-rule exclusion was applied.

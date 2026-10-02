@@ -12,6 +12,7 @@ namespace ExtensionSuite.Host.Tests;
 
 public sealed class FoundationHostFactory : WebApplicationFactory<Program>
 {
+    private int cleanupStarted;
     public string DirectoryPath { get; } = Path.Combine(Path.GetTempPath(), "tdsblive-host-tests", Guid.NewGuid().ToString());
     public string AdminCredential { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     public bool RemotePeer { get; }
@@ -40,8 +41,11 @@ public sealed class FoundationHostFactory : WebApplicationFactory<Program>
 
     protected override void Dispose(bool disposing)
     {
+        // WebApplicationFactory.Dispose can dispatch through DisposeAsync back into this override.
+        // Only the outer call may remove the database, after the complete host shutdown.
+        var cleanDirectory = disposing && Interlocked.CompareExchange(ref cleanupStarted, 1, 0) == 0;
         base.Dispose(disposing);
-        if (disposing)
+        if (cleanDirectory)
         {
             // Other test hosts run concurrently. Global pool clearing can invalidate their live log connections.
             var database = Path.Combine(DirectoryPath, "tdsblive.db");
@@ -52,7 +56,21 @@ public sealed class FoundationHostFactory : WebApplicationFactory<Program>
                 using var connection = new Microsoft.Data.Sqlite.SqliteConnection(options.ToString());
                 Microsoft.Data.Sqlite.SqliteConnection.ClearPool(connection);
             }
-            if (Directory.Exists(DirectoryPath)) Directory.Delete(DirectoryPath, recursive: true);
+            DeleteTemporaryDirectory(DirectoryPath);
+        }
+    }
+
+    internal static void DeleteTemporaryDirectory(string directory)
+    {
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        while (Directory.Exists(directory))
+        {
+            try { Directory.Delete(directory, recursive: true); return; }
+            catch (IOException) when (OperatingSystem.IsWindows() && elapsed.Elapsed < TimeSpan.FromSeconds(2))
+            {
+                // Windows may temporarily retain a file handle after shutdown. Persistent locks still fail.
+                Thread.Sleep(25);
+            }
         }
     }
 

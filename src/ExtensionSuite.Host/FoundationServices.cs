@@ -40,6 +40,7 @@ public static class FoundationServices
         });
         builder.Services.AddSingleton<EventStore>();
         builder.Services.AddSingleton<FinancialStore>();
+        builder.Services.AddSingleton<DonorWidgetStore>();
         builder.Services.AddSingleton<FinancialSettingsStore>();
         builder.Services.AddSingleton<FinancialReadStore>();
         builder.Services.AddSingleton<FinancialReconciliation>();

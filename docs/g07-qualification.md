@@ -1,12 +1,12 @@
 # G07 completion audit
 
-Status: Complete. Qualified source: `29fce9658b44917ae9d6207c9507021b388fa70c`, merged through protected [PR #8](https://github.com/camarokris/tdsblive/pull/8) as `734cf7c8e972b7411f0b7a235081b348f3ad26fa`. This audit covers [G07](implementation-plan.md#g07), specification sections 23–29 and 83, and the inherited security/testing contracts. G08 widgets and G09 financial automation are outside this goal.
+Status: Complete. Qualified source: `29fce9658b44917ae9d6207c9507021b388fa70c`, merged through protected [PR #8](https://github.com/techdaddykb/tdsblive/pull/8) as `734cf7c8e972b7411f0b7a235081b348f3ad26fa`. This audit covers [G07](implementation-plan.md#g07), specification sections 23–29 and 83, and the inherited security/testing contracts. G08 widgets and G09 financial automation are outside this goal.
 
 ## Requirement evidence
 
 | Requirement | Evidence inspected | Result |
 | --- | --- | --- |
-| G04 prerequisite | [Merged PR #5](https://github.com/camarokris/tdsblive/pull/5), merge `47c122005b74c1a0ce957a9a80d8049f6dd4a26a`; verified ancestor of this branch | Verified |
+| G04 prerequisite | [Merged PR #5](https://github.com/techdaddykb/tdsblive/pull/5), merge `47c122005b74c1a0ce957a9a80d8049f6dd4a26a`; verified ancestor of this branch | Verified |
 | Bits, subscriptions, gifts, paid YouTube messages, memberships, Kick, Ko-fi and Rants | `SupportPayloadNormalizer`, observed Rant USD mapping in `RumbleSnapshotEngine`, `FinancialSourceAggregationTests`; all 11 required families combine after explicit linking | Verified with owned/documented contracts; paid live observation is not claimed |
 | Additional donation adapter support | Typed `CanonicalEvent.Support` and the independent ledger projection accept platform-qualified support without needing raw captures; platform normalization strategies are isolated | Implemented extension contract; future providers require their own schema qualification |
 | Quantity, username, occurrence time and Bits message | Typed support fields and immutable source facts in `FinancialStore`; combined-source test verifies retained message metadata | Verified |
@@ -29,9 +29,9 @@ Status: Complete. Qualified source: `29fce9658b44917ae9d6207c9507021b388fa70c`, 
 | Public APIs and migrations | [G07 ledger contract](g07-financial-ledger.md), actual OpenAPI/generated types, versioned/CSRF endpoint tests, metadata preservation and real migration downgrade/re-upgrade | Verified locally and in trusted Windows CI |
 | HTTP and authenticated LAN admin boundary | Existing host middleware, scoped OBS token denial, antiforgery tests; financial UI uses HTTP and requires no HTTPS | Verified locally and in the Windows runtime suite |
 | Test safety and public repository hygiene | Disposable qualifier directories, disabled automation/pre-acknowledged outbox, synthetic Ko-fi provenance, public tracked-file deterministic secrets scan and existing exclusions | Verified; no operator credentials or raw archive published |
-| Windows build and runtime/browser qualification | [Windows run](https://github.com/camarokris/tdsblive/actions/runs/36944795513); 40 core/261 host/102 frontend tests, runtime/browser/replay and generated-type checks pass | Verified |
-| Backend OpenCover, frontend LCOV and SonarQube quality gate | [Trusted run](https://github.com/camarokris/tdsblive/actions/runs/36944795513) explicitly imports OpenCover and LCOV; [Sonar gate](https://sonarcloud.io/dashboard?id=camarokris_tdsblive&pullRequest=8) passes with 89.5% new-code coverage | Verified |
-| Final protected delivery | [Merged PR #8](https://github.com/camarokris/tdsblive/pull/8), protected merge `734cf7c8e972b7411f0b7a235081b348f3ad26fa`; all required checks pass and the review finding is fixed | Verified |
+| Windows build and runtime/browser qualification | [Windows run](https://github.com/techdaddykb/tdsblive/actions/runs/36944795513); 40 core/261 host/102 frontend tests, runtime/browser/replay and generated-type checks pass | Verified |
+| Backend OpenCover, frontend LCOV and SonarQube quality gate | [Trusted run](https://github.com/techdaddykb/tdsblive/actions/runs/36944795513) explicitly imports OpenCover and LCOV; [Sonar gate](https://sonarcloud.io/dashboard?id=camarokris_tdsblive&pullRequest=8) passes with 89.5% new-code coverage | Verified |
+| Final protected delivery | [Merged PR #8](https://github.com/techdaddykb/tdsblive/pull/8), protected merge `734cf7c8e972b7411f0b7a235081b348f3ad26fa`; all required checks pass and the review finding is fixed | Verified |
 
 ## Fresh Release runtime checks
 

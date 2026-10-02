@@ -17,6 +17,12 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
     {
         foreach (var subscriber in subscribers.Values) subscriber.TryStop();
     }
+    public async Task ShutdownAsync(CancellationToken cancellationToken)
+    {
+        var active = subscribers.Values.ToArray();
+        foreach (var subscriber in active) subscriber.TryStop();
+        await Task.WhenAll(active.Select(subscriber => subscriber.Drained.Task)).WaitAsync(cancellationToken);
+    }
 
     public void Publish(CanonicalEvent item)
     {
@@ -62,24 +68,83 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         subscribers[id] = subscriber;
         var sending = SendAsync(socket, subscriber);
         var authorization = CheckAuthorizationAsync(context, subscriber);
+        var donors = SendDonorsAsync(context, subscriber);
         try { await ReceiveAsync(socket, subscriber); }
         catch (Exception error) when (error is OperationCanceledException or WebSocketException or JsonException) { }
         finally
         {
-            subscribers.TryRemove(id, out _);
-            connectionSlots.Release();
+            try
+            {
             stop.Cancel();
             subscriber.Queue.Writer.TryComplete();
             try { await sending; }
-            catch (Exception error) when (error is OperationCanceledException or WebSocketException) { }
+            catch (Exception error) when (error is OperationCanceledException or WebSocketException or ObjectDisposedException) { }
             try { await authorization; } catch (OperationCanceledException) { }
+            try { await donors; } catch (OperationCanceledException) { }
             if (socket.State is WebSocketState.Open or WebSocketState.CloseReceived)
             {
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                 try { await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Session closed", timeout.Token); }
                 catch (Exception error) when (error is OperationCanceledException or WebSocketException) { }
             }
+            }
+            finally
+            {
+                subscribers.TryRemove(id, out _);
+                connectionSlots.Release();
+                subscriber.Drained.TrySetResult();
+            }
         }
+    }
+
+    private static async Task SendDonorsAsync(HttpContext context, Subscriber subscriber)
+    {
+        if (subscriber.Overlay is null) return;
+        var store = context.RequestServices.GetRequiredService<DonorWidgetStore>();
+        var settingsStore = context.RequestServices.GetRequiredService<FinancialSettingsStore>();
+        var clock = context.RequestServices.GetRequiredService<TimeProvider>();
+        string? previous = null;
+        try
+        {
+            while (!subscriber.Stop.IsCancellationRequested)
+            {
+                var definition = subscriber.Overlay;
+                var snapshots = new List<DonorWidgetSnapshot>();
+                var now = clock.GetUtcNow();
+                var settings = await settingsStore.GetAsync(subscriber.Stop.Token);
+                foreach (var widget in definition!.Widgets.Where(w => !w.Hidden && w.Kind is
+                    "donor-crown" or "donor-leaderboard" or "latest-supporter" or "current-stream-leader" or "current-stream-total"))
+                {
+                    // Preview never reads production financial totals.
+                    if (subscriber.Preview)
+                    {
+                        snapshots.Add(new(widget.Id, "preview", now, [], "0", 0, 0, 0));
+                        continue;
+                    }
+                    try
+                    {
+                        var period = widget.Kind.StartsWith("current-stream-", StringComparison.Ordinal) ? "current-stream" : widget.Donor.Period;
+                        var range = LedgerPeriods.Resolve(period, settings.TimeZone, now, widget.Donor.CustomStart,
+                            widget.Donor.CustomEndExclusive, settings.CurrentStreamStartUtc);
+                        snapshots.Add(await store.SnapshotAsync(widget, range, now, subscriber.Stop.Token));
+                    }
+                    catch (ArgumentException)
+                    {
+                        snapshots.Add(new(widget.Id, "period-unavailable", now, [], "0", 0, 0, 0));
+                    }
+                }
+                var fingerprint = JsonSerializer.Serialize(snapshots.Select(s => s with { GeneratedAt = default }), EventStore.JsonOptions);
+                if (fingerprint != previous && (snapshots.Count > 0 || previous is not null))
+                {
+                    var payload = JsonSerializer.Serialize(new { op = "donors", widgets = snapshots }, EventStore.JsonOptions);
+                    if (!subscriber.Queue.Writer.TryWrite(payload)) { subscriber.TryStop(); return; }
+                    previous = fingerprint;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(1), subscriber.Stop.Token);
+            }
+        }
+        catch (OperationCanceledException) when (subscriber.Stop.IsCancellationRequested) { }
+        catch (Exception) { subscriber.TryStop(); } // Reconnect obtains a fresh snapshot after a transient database failure.
     }
 
     private static async Task CheckAuthorizationAsync(HttpContext context, Subscriber subscriber)
@@ -153,6 +218,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         public bool Preview { get; init; }
         public bool Limited { get; init; }
         public CancellationTokenSource Stop { get; } = stop;
+        public TaskCompletionSource Drained { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Channel<string> Queue { get; } = Channel.CreateBounded<string>(new BoundedChannelOptions(256)
             { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
         public bool Accepts(CanonicalEvent item) => (types.Contains(item.Type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal)) &&

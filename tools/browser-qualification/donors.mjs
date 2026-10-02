@@ -1,0 +1,111 @@
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import path from 'node:path';
+import { readFile } from 'node:fs/promises';
+
+export async function qualifyDonors(page, origin, writeHeaders, root) {
+  const write = async (path, method, value) => {
+    const response = await fetch(`${origin}${path}`, { method, headers: writeHeaders, body: JSON.stringify(value) });
+    assert.equal(response.status, method === 'POST' && path === '/api/overlays' ? 201 : path === '/api/financial/rules' ? 204 : 200, path);
+    return response.status === 204 ? undefined : response.json();
+  };
+  const kinds = ['donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total'];
+  const widgets = kinds.map((kind, i) => ({ id: randomUUID(), kind, name: kind, x: 10, y: i * 180, width: 900, height: 170 }));
+  const original = await (await fetch(`${origin}/api/overlays/combined-chat`)).json();
+  await write('/api/overlays', 'POST', { ...original, id: 'donor-qualification', name: 'Owned donor qualification', version: 1, canvasEnabled: true, widgets });
+  await page.goto(`${origin}/overlay/donor-qualification`);
+  const crown = page.locator(`[data-widget-id="${widgets[0].id}"]`);
+  const total = page.locator(`[data-widget-id="${widgets[4].id}"]`);
+  await crown.getByText(/\$12\.50/).waitFor();
+  await crown.getByRole('img', { name: 'Ko-fi platform' }).waitFor();
+  await total.getByText(/\$13\.75/).waitFor();
+  const identities = await (await fetch(`${origin}/api/financial/identities`)).json();
+  const twitch = identities.find(row => row.platform === 'twitch');
+  const kofi = identities.find(row => row.platform === 'kofi');
+  await write(`/api/financial/identities/${twitch.id}/link`, 'POST', { expectedSupporterId: twitch.supporterId, targetSupporterId: kofi.supporterId });
+  await crown.getByText(/\$13\.75/).waitFor();
+  await crown.getByRole('img', { name: 'Twitch platform' }).waitFor();
+  await crown.getByRole('img', { name: 'Ko-fi platform' }).waitFor();
+  await write(`/api/financial/identities/${twitch.id}/unlink`, 'POST', { expectedSupporterId: kofi.supporterId });
+  await crown.getByText(/\$12\.50/).waitFor();
+  let overlay = await (await fetch(`${origin}/api/overlays/donor-qualification`)).json();
+  overlay.widgets[0].donor.platforms = ['twitch'];
+  await write('/api/overlays/donor-qualification', 'PUT', overlay);
+  await crown.getByText(/\$1\.25/).waitFor();
+  const rule = (await (await fetch(`${origin}/api/financial/rules`)).json()).find(row => row.platform === 'twitch' && row.type === 'bits');
+  await write('/api/financial/rules', 'PUT', { platform: 'twitch', type: 'bits', tier: '', usdMinorPerUnit: '2', expectedVersion: rule.version });
+  const ledger = await (await fetch(`${origin}/api/financial/ledger`)).json();
+  const bits = ledger.items.find(row => row.nativeEventId === 'browser-bits');
+  await write('/api/financial/reconcile', 'POST', { selected: [{ id: bits.id, version: bits.version }] });
+  await crown.getByText(/\$2\.00/).waitFor();
+  await total.getByText(/\$14\.50/).waitFor();
+  const editorPage = await page.context().newPage();
+  let editorErrors = 0;
+  editorPage.on('pageerror', () => { editorErrors++; });
+  try {
+    await editorPage.goto(`${origin}/editor`);
+    const editor = editorPage.getByRole('region', { name: 'Visual overlay editor' });
+    await editor.getByLabel('Overlay', { exact: true }).selectOption('donor-qualification');
+    await editor.getByRole('listitem').getByRole('button', { name: 'donor-crown', exact: true }).click();
+    const before = await (await fetch(`${origin}/api/overlays/donor-qualification`)).json();
+    await editor.getByLabel('Minimum USD cents').fill('500');
+    await editorPage.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
+    await crown.getByText('No matching support', { exact: true }).waitFor();
+    await editorPage.reload();
+    await editor.getByLabel('Overlay', { exact: true }).selectOption('donor-qualification');
+    await editor.getByRole('listitem').getByRole('button', { name: 'donor-crown', exact: true }).click();
+    assert.equal(await editor.getByLabel('Minimum USD cents').inputValue(), '500');
+    await editor.getByRole('button', { name: 'Revision history', exact: true }).click();
+    await editor.getByRole('button', { name: `Restore v${before.version}`, exact: true }).click();
+    await crown.getByText(/\$2\.00/).waitFor();
+    await editor.getByRole('listitem').getByRole('button', { name: 'donor-crown', exact: true }).click();
+    assert.equal(await editor.getByLabel('Minimum USD cents').inputValue(), '0');
+    assert.equal(editorErrors, 0, 'Donor editor raised JavaScript errors');
+  } finally { await editorPage.close(); }
+  const socketsBefore = await page.evaluate(() => window.tdsbliveTestSockets.length);
+  await page.evaluate(() => window.tdsbliveTestSockets.at(-1).close());
+  await page.waitForFunction(before => window.tdsbliveTestSockets.length > before && window.tdsbliveTestSockets.at(-1).g05Subscribed, socketsBefore);
+  await crown.getByText(/\$2\.00/).waitFor();
+  const upload = async (body, name, mime) => {
+    const result = await fetch(`${origin}/api/assets`, { method: 'POST', headers: { ...writeHeaders, 'Content-Type': mime, 'X-Asset-Filename': name, 'X-Asset-License': 'MIT; original owned qualification fixture' }, body });
+    assert.equal(result.status, 200); return result.json();
+  };
+  const image = await upload(Buffer.from('47494638396101000100800000ff00000000ff21f904000a0000002c00000000010001000002024401003b', 'hex'), 'g08-owned-crown.gif', 'image/gif');
+  const font = await upload(await readFile(path.join(root, 'tests/fixtures/donors/owned-test.woff')), 'g08-owned-test.woff', 'font/woff');
+  overlay = await (await fetch(`${origin}/api/overlays/donor-qualification`)).json();
+  Object.assign(overlay.widgets[0], { color: '#123456', fontSize: 37 });
+  Object.assign(overlay.widgets[0].donor, { crownAssetId: image.id, template: 'Owned {name}: {amount}', animation: 'fade', transitionMs: 1500 });
+  overlay.widgets[1].donor.fontAssetId = font.id;
+  await write('/api/overlays/donor-qualification', 'PUT', overlay);
+  await crown.getByText(/Owned .*: \$2\.00/).waitFor();
+  await page.waitForFunction(id => {
+    const element = document.querySelector(`[data-widget-id="${id}"]`);
+    const image = element?.querySelector('.donor-crown');
+    return image?.complete && image.naturalWidth === 1;
+  }, widgets[0].id);
+  assert.equal(await crown.evaluate(element => getComputedStyle(element).color), 'rgb(18, 52, 86)');
+  assert.equal(await crown.evaluate(element => getComputedStyle(element).fontSize), '37px');
+  const platformLogo = crown.getByRole('img', { name: 'Twitch platform' });
+  const bounds = await platformLogo.boundingBox();
+  assert.ok(bounds && bounds.width === 37 && bounds.height === 37, 'Platform logo must scale to the donor font size');
+  assert.equal(await platformLogo.evaluate(element => getComputedStyle(element).fill), 'rgb(18, 52, 86)');
+  assert.equal(await crown.locator('.donor-platform').innerText(), '', 'Platform logos must not append duplicate text');
+  await page.waitForFunction(id => {
+    const name = `tdsblive-donor-${id.replace(/[^a-zA-Z0-9]/g, '')}`;
+    return [...document.fonts].some(face => face.family === name && face.status === 'loaded') &&
+      getComputedStyle(document.querySelector(`[data-widget-id="${id}"] .donor-widget`)).fontFamily.includes(name);
+  }, widgets[1].id);
+  const currentTwitch = (await (await fetch(`${origin}/api/financial/identities`)).json()).find(row => row.id === twitch.id);
+  await write(`/api/financial/identities/${twitch.id}/link`, 'POST', { expectedSupporterId: currentTwitch.supporterId, targetSupporterId: kofi.supporterId });
+  await crown.locator('.exit-fade').waitFor();
+  await crown.locator('.enter-fade').waitFor();
+  await write(`/api/financial/identities/${twitch.id}/unlink`, 'POST', { expectedSupporterId: kofi.supporterId });
+  await crown.locator('.exit-fade').waitFor();
+  await crown.locator('.enter-fade').waitFor();
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgba(0, 0, 0, 0)');
+  await page.screenshot({ path: path.join(root, 'artifacts/g08-donor-widgets.png'), omitBackground: true });
+  await page.goto(`${origin}/overlay/donor-qualification?preview=1`);
+  await page.getByText('Test preview · no production totals', { exact: true }).first().waitFor();
+  assert.equal(await page.getByText(/\$12\.50|\$14\.50/).count(), 0);
+  console.log('G08 real-browser donor snapshots, identity link/unlink, filters, reconciliation, editor persistence/revision restore, reconnect, loaded image/font appearance, leader transitions and preview isolation passed');
+}

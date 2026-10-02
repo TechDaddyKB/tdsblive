@@ -1,0 +1,148 @@
+using ExtensionSuite.Core;
+using ExtensionSuite.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+
+namespace ExtensionSuite.Host.Tests;
+
+public sealed class DonorWidgetStoreTests
+{
+    [Fact]
+    public async Task GatedOnlyHistoryReportsEvidenceGapWithoutClaimingFinancialSupport()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        await new FinancialStore(factory).AcceptAsync(Paid("gated-only", "rumble", 0) with { Type = "support.gift", Support = new("gift", 1) });
+        var snapshot = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-crown" }, new(null, null), Now);
+        Assert.Equal("gated", snapshot.State); Assert.Equal(1, snapshot.GatedCount); Assert.Empty(snapshot.Rows); Assert.Equal("0", snapshot.TotalUsdMinor);
+    }
+
+    [Theory]
+    [InlineData("today")]
+    [InlineData("week")]
+    [InlineData("month")]
+    [InlineData("year")]
+    [InlineData("custom")]
+    public async Task TimezonePeriodsExcludeTheUtcInstantAtTheirExclusiveEnd(string period)
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var ledger = new FinancialStore(factory);
+        var now = new DateTimeOffset(2026, 3, 8, 18, 0, 0, TimeSpan.Zero);
+        var range = LedgerPeriods.Resolve(period, "America/Chicago", now, new(2026, 3, 8), new(2026, 3, 9));
+        await ledger.AcceptAsync(Paid("start", "twitch", 100) with { OccurredAt = range.StartInclusive!.Value });
+        await ledger.AcceptAsync(Paid("end", "twitch", 200) with { OccurredAt = range.EndExclusive!.Value });
+        var snapshot = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-crown" }, range, now);
+        Assert.Equal("100", snapshot.TotalUsdMinor); Assert.Equal("start", Assert.Single(snapshot.Rows).Name);
+        if (period is "today" or "custom") Assert.Equal(TimeSpan.FromHours(23), range.EndExclusive - range.StartInclusive);
+    }
+
+    [Fact]
+    public async Task LargeHistoryAggregatesExactlyAndBoundsRankedOutput()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var ledger = new FinancialStore(factory);
+        await ledger.AcceptAsync(Paid("large-history", "twitch", 1));
+        await using var db = await factory.CreateDbContextAsync();
+        var identity = await db.SupporterIdentities.SingleAsync();
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            WITH RECURSIVE n(value) AS (SELECT 1 UNION ALL SELECT value + 1 FROM n WHERE value < 20000)
+            INSERT INTO FinancialEvents (Id, EventId, SupporterId, IdentityId, Source, Platform, Type, DedupeKey,
+              OccurredAtTicks, Quantity, UsdAmountMinor, ValuationMethod, Estimated, AccountingState, MetadataJson, Version, GiftTier)
+            SELECT printf('00000000-0000-7000-8000-%012d', value), printf('00000000-0000-7000-8000-%012d', value),
+              {identity.SupporterId}, {identity.Id}, 'owned-history-fixture', 'twitch', 'donation', 'owned-history-' || value,
+              {Now.UtcTicks}, 1, {long.MaxValue}, 'exact', 0, 'counted', {"{}"}, 1, '' FROM n
+            """);
+        for (var index = 0; index < 30; index++) await ledger.AcceptAsync(Paid("rank-" + index, "youtube", 100));
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var snapshot = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-leaderboard", Donor = new() { Count = 25 } }, new(Now.AddHours(-1), Now.AddHours(1)), Now);
+        Assert.Equal(25, snapshot.Rows.Length);
+        Assert.Equal("184467440737095516140001", snapshot.Rows[0].UsdAmountMinor);
+        Assert.Equal("184467440737095516143001", snapshot.TotalUsdMinor);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"20,031-contribution query took {watch.Elapsed}.");
+        var injected = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-crown", Donor = new() { Platforms = ["twitch') OR 1=1 --"] } }, new(null, null), Now);
+        Assert.Equal("empty", injected.State); Assert.Equal("0", injected.TotalUsdMinor);
+    }
+
+    [Fact]
+    public async Task SourceAndMinimumFiltersApplyBeforeRankLimitAndStreamTotal()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var ledger = new FinancialStore(factory); var widgets = new DonorWidgetStore(factory);
+        await ledger.AcceptAsync(Paid("large", "twitch", 1000));
+        await ledger.AcceptAsync(Paid("small", "youtube", 100));
+        await ledger.AcceptAsync(Paid("nominal", "twitch", 0) with { Support = new("bits", 100), Type = "support.bits" }, nominalUsdMinorPerUnit: 1);
+        var filtered = new OverlayWidget { Kind = "current-stream-total", Donor = new() { MinimumUsdMinor = "500" } };
+        var snapshot = await widgets.SnapshotAsync(filtered, new(Now.AddHours(-1), Now.AddHours(1)), Now);
+        Assert.Equal("1000", snapshot.TotalUsdMinor); Assert.Single(snapshot.Rows);
+        var bits = await widgets.SnapshotAsync(filtered with { Donor = new() { EventTypes = ["bits"] } }, new(null, null), Now);
+        Assert.Equal("100", bits.TotalUsdMinor); Assert.Equal(1, bits.EstimatedCount);
+        var unvalued = Paid("unvalued", "kick", 0) with { OccurredAt = Now.AddSeconds(1), Support = new("subscription", 1), Type = "support.subscription" };
+        await ledger.AcceptAsync(unvalued);
+        var latest = await widgets.SnapshotAsync(new() { Kind = "latest-supporter" }, new(null, null), Now);
+        var row = Assert.Single(latest.Rows); Assert.Equal("unvalued", row.Name); Assert.False(row.HasKnownAmount);
+    }
+
+    [Theory]
+    [InlineData("https://example.invalid/avatar.png", true)]
+    [InlineData("https://example.invalid/avatar.png?token=owned-sensitive-fixture", false)]
+    [InlineData("https://user:password@example.invalid/avatar.png", false)]
+    [InlineData("javascript:alert(1)", false)]
+    public async Task AvatarProjectionDoesNotExposeCredentialBearingUrls(string url, bool accepted)
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var item = Paid("avatar", "twitch", 100) with { User = new("owned-avatar", DisplayName: "Avatar donor", AvatarUrl: url) };
+        await new FinancialStore(factory).AcceptAsync(item);
+        var snapshot = await new DonorWidgetStore(factory).SnapshotAsync(new() { Kind = "donor-crown" }, new(null, null), Now);
+        Assert.Equal(accepted ? url : null, Assert.Single(snapshot.Rows).AvatarUrl);
+    }
+
+    private static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
+    private static CanonicalEvent Paid(string id, string platform, long amount) => new()
+    {
+        Source = "owned-donor-fixture", Platform = platform, Type = "support.donation", NativeType = "Fixture.Donation",
+        NativeId = id, DedupeKey = id, OccurredAt = Now, User = new(id, DisplayName: id),
+        Support = new("donation", 1, new(amount, "USD", 2))
+    };
+
+    [Fact]
+    public async Task LinkedRankingsUpdateAndFilteredTotalsKeepIntegerPrecision()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var ledger = new FinancialStore(factory); var widgets = new DonorWidgetStore(factory);
+        await ledger.AcceptAsync(Paid("alice", "twitch", long.MaxValue));
+        await ledger.AcceptAsync(Paid("bob", "youtube", 1));
+        var widget = new OverlayWidget { Kind = "donor-leaderboard" };
+        var before = await widgets.SnapshotAsync(widget, new(null, null), Now);
+        Assert.Equal("9223372036854775808", before.TotalUsdMinor); Assert.Equal(2, before.Rows.Length);
+        await using var db = await factory.CreateDbContextAsync();
+        var identities = await db.SupporterIdentities.OrderBy(row => row.Platform).ToArrayAsync();
+        await ledger.LinkIdentityAsync(identities[1].Id, identities[0].SupporterId);
+        var after = await widgets.SnapshotAsync(widget, new(null, null), Now);
+        var linked = Assert.Single(after.Rows);
+        Assert.Equal("9223372036854775808", linked.UsdAmountMinor);
+        Assert.Equal(new[] { "twitch", "youtube" }, linked.Platforms);
+        var filtered = await widgets.SnapshotAsync(widget with { Donor = new() { Platforms = ["youtube"] } }, new(null, null), Now);
+        Assert.Equal("1", filtered.TotalUsdMinor);
+        Assert.Empty((await widgets.SnapshotAsync(widget, new(Now.AddTicks(1), Now.AddDays(1)), Now)).Rows);
+    }
+
+    [Fact]
+    public async Task UnknownAndGatedSupportCannotWinAndReplayCannotAlterSnapshot()
+    {
+        using var app = new FoundationHostFactory(); using var client = app.CreateClient();
+        var factory = app.Services.GetRequiredService<IDbContextFactory<FoundationDbContext>>();
+        var ledger = new FinancialStore(factory); var widgets = new DonorWidgetStore(factory);
+        await ledger.AcceptAsync(Paid("unknown", "twitch", 0) with { Support = new("subscription", 1) });
+        await ledger.AcceptAsync(Paid("gift", "rumble", 0) with { Support = new("gift", 100), Type = "support.gift" });
+        Assert.False(await ledger.AcceptAsync(Paid("replay", "twitch", 99999) with { Provenance = EventProvenance.Replay }));
+        var snapshot = await widgets.SnapshotAsync(new() { Kind = "donor-crown" }, new(null, null), Now);
+        Assert.Equal("pending", snapshot.State); Assert.Empty(snapshot.Rows);
+        Assert.Equal("0", snapshot.TotalUsdMinor); Assert.Equal(1, snapshot.UnknownCount); Assert.Equal(1, snapshot.GatedCount);
+    }
+}

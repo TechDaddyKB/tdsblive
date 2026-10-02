@@ -84,12 +84,16 @@ public sealed class FinancialStore(IDbContextFactory<FoundationDbContext> factor
             MetadataJson = JsonSerializer.Serialize(new { support.Tier, support.GiftRole, support.ReportedAmountMajor, support.ReportedCurrency,
                 support.GiftRecipientKeys, support.GiftScopeKey, support.GiftPeriodStart, support.GiftPeriodEnd,
                 userPlatformId = item.User?.PlatformUserId, userDisplayName = item.User?.DisplayName,
-                userLogin = item.User?.Login, message = item.Message?.Text }), Version = 1
+                userLogin = item.User?.Login, userAvatarUrl = SafeProfileImage(item.User?.AvatarUrl), message = item.Message?.Text }), Version = 1
         });
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return true;
     }
+
+    internal static string? SafeProfileImage(string? value) => value is { Length: <= 2048 } &&
+        Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https" &&
+        string.IsNullOrEmpty(uri.UserInfo) && string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment) ? value : null;
 
     public async Task LinkIdentityAsync(Guid identityId, Guid supporterId, CancellationToken cancellationToken = default)
     {

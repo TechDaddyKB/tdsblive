@@ -25,7 +25,7 @@ def actions():
     return result
 
 def build():
-    return {'meta': {'name': 'TDSBLive G03 integrations', 'author': 'camarokris', 'version': '0.3.0',
+    return {'meta': {'name': 'TDSBLive G03 integrations', 'author': 'techdaddykb', 'version': '0.3.0',
         'description': 'Explicit bootstrap, isolated qualification probe, and forwarding template. No platform automation is bound by default.',
         'autoRunAction': None, 'minimumVersion': None}, 'data': {'actions': actions(),
         'queues': [{'id': identifier('queue'), 'name': 'TDSBLive', 'blocking': False}], 'commands': [], 'websocketServers': [], 'websocketClients': [], 'timers': []},
