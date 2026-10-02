@@ -14,7 +14,7 @@ def inline(text: str) -> str:
     text = html.escape(text)
     def link(match):
         image, label, target = match.groups()
-        if target.endswith('.md'):
+        if not target.startswith(('http://', 'https://')) and target.endswith('.md'):
             target = target[:-3] + '.html'
         if not target.startswith(('http://', 'https://', 'images/')) and not re.fullmatch(r'[A-Za-z0-9-]+\.html', target):
             raise ValueError('Unsupported guide link')

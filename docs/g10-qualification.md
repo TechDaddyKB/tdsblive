@@ -13,21 +13,26 @@ passing one row does not complete the other requirements. The owning contract is
 - The tested Speaker.bot voice alias is `local english`.
 - Use temporary application data and owned examples. Never broadcast, record,
   spend money or send public chat merely to manufacture qualification evidence.
+- The operator selected “Use owned examples and explicitly leave actual
+  paid-platform delivery unverified.” Reviewed Rant and owned Ko-fi/Bits examples
+  qualify ingestion, totals and local automation in disposable data. They do not
+  prove actual paid Rumble, Ko-fi or Twitch delivery, subscription/gift behavior,
+  or effects on production totals. No test payment is required.
 
 ## Acceptance checklist
 
 | Requirement | Current evidence | Remaining evidence |
 | --- | --- | --- |
 | G00–G09 prerequisites | Maintained goal entries report completion; G09 protected merge is `26bb2eeea61ad5d4fbe6435f91778996de02d926` | Confirm final integrated behavior below; discovery alone is insufficient |
-| Self-contained ZIP and per-user installer | Run `37046606099` / `679f855` passes native ZIP/installer, browser-connected recovery, startup off/opt-in, reinstall/uninstall and retained-data checks; downloaded ZIP/installer checksums match | Repeat after the late-handshake shutdown correction and publish the qualified release |
+| Self-contained ZIP and per-user installer | Run `37049814743` / `d3a01e9` passes native ZIP/installer, browser-connected recovery, startup off/opt-in, reinstall/uninstall and retained-data checks; downloaded ZIP/installer checksums match | Publish the qualified release after remaining checks |
 | Guided setup without normal-user commands | Local browser review/resume and configuration persistence pass; password entry defaults to session-only; import and action permissions are documented | Follow the guide against the final shipped package with local bots and OBS |
-| SQLite-safe backup and restore | Current Actions EXE under Wine restarts, restores earlier progress and pauses restored integrations; a subsequent restart after restoring bot configuration crashes | Correct and requalify shutdown, including browser handshakes arriving during shutdown |
-| Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; public wiki commit `365da58`; the actual `679f855` Actions ZIP renders all ten offline pages/eight images with navigation and intact UTF-8 | Final released package and setup-instruction qualification |
-| Windows CI and SonarQube gate | Run `37046606099` / `679f855` completes successfully, including SonarQube, packaging and native package checks | Exact-head run after the late-handshake correction |
-| Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Existing goal-specific evidence and full rebuilt local browser suite pass; Streamer.bot MCP confirms 1.0.7, three TDSBLive actions and thirteen triggers | Final shipped-package integration qualification, distinguishing live API/platform observations from owned replay/probe events |
+| SQLite-safe backup and restore | Actual `d3a01e9` Actions EXE under Wine passes restart, restore, paused integrations and the additional restart after restoring owned bot configuration; delayed-handshake regression passes | None for these checks |
+| Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; public wiki commit `0b98615` includes approved paid-event limits. Final-package inspection found external Markdown links being rewritten; the corrected generated guide passes all ten pages/eight images, navigation, external-link preservation and UTF-8 | Package the guide correction and verify protected Windows checks before release |
+| Windows CI and SonarQube gate | Run `37049814743` / `d3a01e9` completes successfully, including SonarQube, packaging and native package checks | Any later release-source commit must pass protected checks |
+| Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Actual `d3a01e9` Actions EXE passes real bot trigger/forwarder receipts and full browser suite. Production parser/engine/store deduplicates owned Rant/chat; packaged workers produce three contributions totaling 725 cents and two owned automation receipts | Final real API health and audible output; actual paid-platform delivery stays explicitly unverified by approved scope |
 | OBS rendering and audible output | Earlier operator observations are recorded in the owning G05/G06/G09 evidence | Final integrated OBS rendering/audio/reconnect checks; actual dispatch receipts alone are insufficient |
-| Authenticated LAN HTTP | Actual `679f855` Actions EXE under Wine passes remote HTTP sign-in, credential rotation, DPAPI persistence, scoped token revocation and owner-only 403 restrictions; restored to loopback afterward | Repeat against the final corrected artifact |
-| Available-environment performance | Hardware identified below; no final candidate measurements yet | Idle below 1% CPU, ordinary-chat below 3% average CPU, backend below 300 MB, with workload, duration, CPU normalization and deviations recorded |
+| Authenticated LAN HTTP | Actual `d3a01e9` Actions EXE under Wine passes remote HTTP sign-in, credential rotation, DPAPI persistence, scoped token revocation and owner-only 403 restrictions; restored to loopback afterward | None for these checks |
+| Available-environment performance | Actual `d3a01e9` package: 4.449% idle/5.383% chat CPU using one core as 100%; peak backend RSS 297.14 MB. Connected bots and OBS, Rumble disabled pending local credential entry | CPU targets are not met under this normalization. Record/resolve the deviation explicitly; this does not qualify enabled Rumble polling or native Windows streaming-PC performance |
 
 ## Current local environment
 
@@ -141,6 +146,62 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
   that complete late. Six local socket/shutdown tests pass, including a
   deterministic delayed-handshake regression and existing concurrent-disconnect
   behavior. Corrected Wine and exact-head Windows checks remain required.
+
+- Run `37049814743` / `d3a01e9541d35da5f78e0b5294b11f16a45191cc`
+  completes successfully, including Windows tests, SonarQube, ZIP/installer and
+  native recovery with a browser connected. Both downloaded package checksums
+  match. The actual Actions EXE under Wine passes authenticated LAN checks,
+  restart/restore and the previously failing additional restart with owned bot
+  configuration. The exact package also passes the full real-browser visual/media,
+  safe automation, financial precision, identity linking, donor appearance and
+  reconnect suite. The late-handshake crash is corrected in this candidate.
+- The operator approved owned paid-event examples with actual paid-platform
+  delivery left unverified. A guarded private producer uses the actual shipped
+  Core/Data/Rumble libraries against disposable application data. The reviewed
+  synthetic Rant fixture yields one authoritative 125-cent Rant and one owned
+  Rumble chat after baseline; reopening the store and repeating its snapshot
+  accepts neither again. Packaged financial workers project exactly one $1.25
+  Rant, one $5.00 Ko-fi example and 100 Bits at an explicitly configured nominal
+  one cent per Bit: 725 USD cents total. Actual OBS screenshots show the Rumble
+  chat once, a $1.25 crown before the Ko-fi example, then a $5.00 Ko-fi crown,
+  three ranked supporters and $7.25 total with estimates identified.
+- The two explicitly enabled owned rules produce exactly two execution receipts:
+  Speaker.bot dispatch acknowledged using `local english`, and actual OBS browser
+  sound playback completed. The rules were disabled afterward. Audible output
+  still requires the operator's separate confirmation; these receipts alone are
+  insufficient. These are owned examples, not actual paid-platform delivery.
+- Inspecting the actual candidate's offline Home page exposed a guide-builder
+  bug: external GitHub Markdown links were changed to `.html` as though they
+  were local chapters. Only local chapter links are now rewritten. A real
+  browser verifies ten corrected pages, eight images, local navigation, UTF-8
+  and preservation of the remote implementation-plan URL. Native package checks
+  now validate packaged local links and that external URL. Updated Actions
+  packaging must still pass; the earlier candidate does not contain this fix.
+
+## Final-candidate available-environment measurements
+
+The actual `d3a01e9` Actions EXE was sampled with connected Streamer.bot and
+Speaker.bot, two owned OBS browser sources, Info logging and three owned ledger
+contributions. Both owned automation rules were disabled after their bounded
+audio test. Rumble was disabled pending session-only credential entry; these
+results do not measure enabled Rumble polling. Streaming and recording stayed
+off. Chat traffic was 360 nonpersistent, side-effect-free synthetic text messages
+over 180 seconds, two per second across four platforms, rendered in OBS preview.
+
+| Process | Idle CPU, 60.02 s | Chat CPU, 180 s | Peak RSS |
+| --- | --- | --- | --- |
+| Windows backend under Wine | 4.449% | 5.383% | 297.14 MB / 283.38 MiB |
+| Linux OBS, separately observed | 3.749% | 5.061% | 1483.78 MB |
+| Owned Wine-prefix wineserver, separately observed | 1.083% | 1.389% | 16.88 MB |
+
+All CPU values above use **one logical core as 100%**. Dividing backend CPU by
+the machine's 32 logical processors gives 0.1390% idle and 0.1682% chat; those
+are explicitly different normalizations and are not substituted for the failed
+one-core targets. Backend RSS satisfies the 300 MB target in this workload.
+Idle/chat CPU does not satisfy the respective 1%/3% targets using one-core
+normalization. OBS and the wineserver are excluded from backend RSS; the table
+does not sum every Wine helper or OBS child process. This measured deviation
+remains visible, and native Windows streaming-PC performance remains deferred.
 
 ## Completion rule
 

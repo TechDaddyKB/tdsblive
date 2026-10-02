@@ -31,6 +31,19 @@ function Test-Application([string]$Directory) {
     foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe', 'guide/Home.html', 'guide/images/guided-setup.png', 'integrations/tdsblive-streamerbot.sb')) {
         if (-not (Test-Path (Join-Path $Directory $required))) { throw "Self-contained package is missing $required" }
     }
+    $guide = Join-Path $Directory 'guide'
+    foreach ($page in Get-ChildItem $guide -Filter '*.html') {
+        $document = Get-Content $page.FullName -Raw -Encoding utf8
+        foreach ($link in [regex]::Matches($document, '(?:href|src)="([^"]+)"')) {
+            $target = $link.Groups[1].Value
+            if ($target.StartsWith('http://') -or $target.StartsWith('https://')) { continue }
+            if (-not (Test-Path (Join-Path $guide $target))) { throw 'Offline guide contains a broken local link.' }
+        }
+    }
+    $home = Get-Content (Join-Path $guide 'Home.html') -Raw -Encoding utf8
+    if ($home -notmatch 'href="https://github.com/TechDaddyKB/tdsblive/blob/[^" ]+/docs/implementation-plan\.md"') {
+        throw 'Offline guide must preserve the external implementation-plan Markdown link.'
+    }
     New-Item -ItemType Directory -Path $data -Force | Out-Null
     @{ server = @{ host = '127.0.0.1'; port = $port; enableLan = $false; allowedHosts = @() } } |
         ConvertTo-Json -Depth 5 | Set-Content (Join-Path $data 'configuration.json')

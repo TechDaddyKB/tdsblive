@@ -42,6 +42,10 @@ Native Windows streaming-PC performance testing is explicitly deferred by the
 operator. The guide and release evidence will keep that limitation visible.
 VTube Studio work is also on hold; use Streamer.bot's built-in integration.
 
+Paid-event checks use made-up, owned examples in separate test data. They check
+supporter totals and local speech/sounds without spending money. Actual paid
+Rumble Rant, Ko-fi donation and Twitch Bits delivery has not been verified.
+
 ## Project and developer information
 
 - [Project repository](https://github.com/TechDaddyKB/tdsblive)

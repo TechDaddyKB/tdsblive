@@ -42,6 +42,10 @@ Then perform a bounded real audio/action test through the actual applications.
 Check OBS rendering and listen to audio. A receipt saying dispatch succeeded
 does not prove the audience can hear it.
 
+Release qualification uses owned examples for Ko-fi speech and Bits sounds in
+separate test data. Actual paid-platform delivery remains unverified. You do
+not need to make a test payment to follow this guide.
+
 ## Enable live operation
 
 Once filters, assets, permissions and audio routing are reviewed, check
