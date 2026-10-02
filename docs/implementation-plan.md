@@ -422,7 +422,7 @@ None. Actual OBS rendering, refresh and platform-logo confirmation are recorded 
 
 ## G09 — Build automation rules
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G03, G06, G07
 
 ### Deliverables
@@ -441,7 +441,7 @@ Prerequisites: G03, G06, G07
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+Requirements inspected against SPEC sections 32–36, 38, 61–62. G03/G06/G07 prerequisites are delivered on main; G08 delivery is also present. Existing integrations expose guarded Streamer.bot action execution and Speaker.bot speech/queue operations. Implementation design is recorded in [G09 automation](g09-automation.md). No implementation acceptance or live G09 behavior is claimed yet.
 
 ### Blockers
 
