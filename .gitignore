@@ -29,6 +29,8 @@ configuration.json
 *.sqlite3
 *.sqlite3-*
 *.log
+/backtrace*.txt
+*.dmp
 actions.tdsblive-backup-*.json
 
 # Build, dependency and verification output

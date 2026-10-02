@@ -560,6 +560,10 @@ Windows run `37041732834` / `da50bd5` completed successfully, including SonarQub
 
 Corrected local Windows publish under Wine passes real LAN HTTP sign-in, scoped viewing-link authorization/revocation, remote owner-only restrictions, credential rotation and DPAPI persistence across restart. Actual EXE restart/restore recovers earlier setup progress, records a retained safety directory and pauses restored integrations. Installed Streamer.bot/Speaker.bot connections, dedicated trigger receipt, isolated replay and CPH chat/Ko-fi forwarding pass; simulated support is excluded from the ledger. This is locally published Windows/Wine evidence, distinct from final Actions artifacts, OBS/audible output and performance checks still pending.
 
+Windows run `37044495358` / `ff330f2` completed successfully with managed protection. Local Wine profiling with connected bots and OBS preview measures 4.216% idle CPU (60 seconds), 5.183% ordinary synthetic chat CPU (180 seconds, two messages/second), and peak RSS 288.32 MB, using one logical core as 100%. CPU targets are not met; a short Warning-logging comparison did not improve CPU, so suppressing diagnostics is not a demonstrated remedy. Available-environment performance remains open.
+
+An actual restart with the OBS browser source open exposed a shutdown deadline failure: the final database checkpoint received a cancelled token and raised `TaskCanceledException`. The operator's scanned, ignored Wine backtrace is consistent with the captured managed crash. Browser subscriptions now cancel on `ApplicationStopping` before Kestrel's graceful wait. The real-process qualifier holds an overlay browser open and checks reconnection after restart and restore; it passes locally. The corrected local Windows EXE also passes Wine recovery with OBS present and no managed crash in its captured console. The new exact-head Windows pipeline and remaining final-package/performance/integrated evidence are still required.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets

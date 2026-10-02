@@ -6,6 +6,9 @@ builder.AddFoundation();
 builder.Services.AddSingleton<IEditorBrowserLauncher, EditorBrowserLauncher>();
 var app = builder.Build();
 await app.InitializeFoundationAsync();
+// Close long-lived browser subscriptions before Kestrel's graceful-shutdown
+// wait consumes the deadline needed by consumers and the final DB checkpoint.
+app.Lifetime.ApplicationStopping.Register(app.Services.GetRequiredService<EditorEventHub>().Shutdown);
 app.UseWebSockets();
 app.UseMiddleware<RequestSecurity>();
 app.UseRateLimiter();

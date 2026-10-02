@@ -107,6 +107,23 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
   dedicated trigger receipt, isolated replay and CPH chat/Ko-fi forwarding pass;
   the owned simulated support remains excluded from the ledger. Final Actions
   artifacts and OBS/audio/performance qualification remain pending.
+- Run `37044495358` / `ff330f2` completed successfully with the managed protector.
+  Available-environment profiling of the local corrected EXE with connected bots
+  and an OBS preview source measured 4.216% idle CPU over 60 seconds and 5.183%
+  chat CPU over 180 seconds at two synthetic messages/second (one-core
+  normalization); peak RSS was 288.32 MB. CPU targets were not met. A short
+  Warning-logging comparison did not show a CPU improvement and does not justify
+  suppressing diagnostics as a fix. Performance qualification remains open.
+- An OBS-connected Wine restart exhausted the shutdown deadline, then crashed
+  with `TaskCanceledException` in `DatabaseShutdown.StopAsync`. The operator's
+  scanned `references/backtrace.txt` is consistent with that managed exception;
+  it remains private/ignored. Shutdown now cancels browser subscriptions on
+  `ApplicationStopping`, before Kestrel waits for connections. The expanded
+  real-process qualifier keeps an overlay browser open and proves reconnect
+  after restart and restore. Local managed qualification passes, and an actual
+  locally published Windows EXE passes Wine recovery with the OBS source
+  present; the captured console has no managed crash. A new exact-head CI run
+  remains required.
 
 ## Completion rule
 

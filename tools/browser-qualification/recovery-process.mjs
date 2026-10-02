@@ -6,6 +6,7 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { chromium } from 'playwright';
 
 const mode = process.argv[2] ?? 'managed';
 assert.ok(['managed', 'portable', 'installed'].includes(mode), 'Choose managed, portable or installed qualification');
@@ -36,6 +37,15 @@ const child = spawn(executable, argumentsList, { stdio: 'ignore' });
 let launchError = false;
 child.on('error', () => { launchError = true; });
 let cookie = ''; let token = ''; let generation;
+let browser; let subscriptions = 0;
+async function subscribedAfter(previous) {
+  const deadline = Date.now() + 30000;
+  while (Date.now() < deadline) {
+    if (subscriptions > previous) return;
+    await delay(100);
+  }
+  throw new Error('Owned overlay browser did not connect or reconnect');
+}
 async function get(route) {
   const response = await fetch(origin + route, { signal: AbortSignal.timeout(2000) });
   assert.ok(response.ok); return response.json();
@@ -64,15 +74,27 @@ async function write(route, body, method = 'POST', raw = false) {
 }
 try {
   generation = await ready(); await protect();
+  browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  page.on('websocket', socket => socket.on('framereceived', frame => {
+    try { if (JSON.parse(String(frame.payload)).op === 'subscribed') subscriptions++; }
+    catch { /* Other browser traffic is not a subscription acknowledgment. */ }
+  }));
+  await page.goto(origin + '/overlay/combined-chat');
+  await subscribedAfter(0);
   await write('/api/setup', { step: 2, reviewed: false, version: 0 }, 'PUT');
   const backup = Buffer.from(await (await write('/api/recovery/backup')).arrayBuffer());
   await write('/api/setup', { step: 4, reviewed: false, version: 1 }, 'PUT');
+  let previousSubscriptions = subscriptions;
   await write('/api/application/restart');
   generation = await ready(generation); await protect();
+  await subscribedAfter(previousSubscriptions);
   assert.equal((await get('/api/setup')).step, 4);
   const preview = await (await write('/api/recovery/validate', backup, 'POST', true)).json();
+  previousSubscriptions = subscriptions;
   await write('/api/recovery/restore', { id: preview.id, confirm: true });
   generation = await ready(generation); await protect();
+  await subscribedAfter(previousSubscriptions);
   assert.equal((await get('/api/setup')).step, 2);
   const configuration = await get('/api/configuration');
   assert.equal(configuration.streamerBot.enabled, false);
@@ -87,10 +109,11 @@ try {
     await delay(100);
   }
   assert.ok(stopped, 'Owned host did not quit');
-  console.log('G10 real-process restart/restore passed: new generations, saved data, safety-paused integrations and quit');
+  console.log('G10 real-process restart/restore passed: open overlay browser reconnects, new generations, saved data, safety-paused integrations and quit');
 } finally {
   // Stop only the host at the random port belonging to this temporary data root.
   try { await protect(); await write('/api/application/quit'); await delay(500); } catch { /* Already stopped. */ }
+  await browser?.close();
   if (child.exitCode === null) child.kill();
   // HTTP stops accepting requests before the final SQLite handles close on Windows.
   // Retry only the owned directory; persistent locks still fail qualification.
