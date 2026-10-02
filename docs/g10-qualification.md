@@ -234,6 +234,14 @@ remains visible, and native Windows streaming-PC performance remains deferred.
   The failed run is not counted as successful package qualification. The corrected
   verifier and new setup probes require a fresh successful Windows run.
 
+## Verified final Windows package — 2026-10-02
+
+- Windows Actions [run 37056770891](https://github.com/TechDaddyKB/tdsblive/actions/runs/37056770891), source `e10b8fb`, succeeds: 75 core tests, 384 host tests without skips, frontend checks, native ZIP/installer, restart/restore with an overlay open, startup opt-in/off, reinstall/uninstall and retained data. OpenCover and LCOV are imported; the SonarQube quality gate passes. All PR checks succeed.
+- Downloaded ZIP and installer both match `SHA256SUMS.txt`. The scanned/extracted Actions EXE passes real-browser read-only connection tests against the installed bots under Wine with empty execution histories, followed by graceful exit and a closed listener. Its bundled guide passes ten chapters, eight images and navigation with browser networking disabled.
+- The exact Actions EXE now serves port 17474 using preserved owned qualification data. An OBS screenshot after handoff confirms one owned Rumble message, three supporters and the $7.25 total with estimates marked. Previous d3 measurements included an owned helper polling status twice per second; that helper was retired before the new measurement.
+- Actual `e10b8fb` Actions EXE, connected bots, two owned OBS sources, Info logging, disabled test rules and disabled Rumble: idle 60.00 seconds averages 4.000% CPU; ordinary chat 180.01 seconds with 360 synthetic preview messages (two/second) averages 5.144%, with one logical core as 100%. Peak backend RSS across both phases is 298.04 MB (284.23 MiB). Memory meets the 300 MB target; CPU exceeds the 1%/3% targets. Separate all-32-logical-processor normalization is 0.1250%/0.1608%, not a replacement for the one-core comparison. No related-process samples were taken in this run. Enabled Rumble polling and native Windows streaming-PC performance are not qualified.
+- These successful checks supersede the fresh-Windows-package requirement following the historical `86814ff` reserved-variable failure. Audible confirmation, real API health, performance disposition and release publication remain open.
+
 ## Completion rule
 
 Keep pending rows pending until their required evidence exists. Record any
