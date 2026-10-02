@@ -449,6 +449,10 @@ Subsequent local validation passed 311 integration tests (four Windows-only skip
 
 The sound protocol/security additions pass 14 real WebSocket/HTTP cases; broader local runs pass 325 integration tests (four Windows-only skips) and 153 frontend tests. An isolated host confirmed actual Speaker.bot 0.1.7 connectivity on its configured port 7580 without speech/queue side effects. The second Windows run at `b8d1b87` failed only its Sonar coverage condition at 77.0%; new sound tests require another analysis. Captured audio, configured voice and VTube Studio effects are not claimed.
 
+Commit `5ec62fba322cfaaa2064089b5f08810dce860e8c` subsequently passed [Windows CI and its Sonar gate](https://github.com/TechDaddyKB/tdsblive/actions/runs/36979682918). Named canvas/audio selection and reusable browser qualification are published at `69589976b0caf6ad0a569b47a1b2f0a882825961`; 154 frontend tests, lint, type checking and the full isolated browser suite pass locally. Browser checks verify save/reload/edit/delete and simulation without execution receipts or financial writes. That newer head's [Windows run](https://github.com/TechDaddyKB/tdsblive/actions/runs/36981696581) is still running.
+
+An explicitly opted-in owned event in a marked temporary G09 database traversed the durable automation inbox, live rule dispatcher, overlay WebSocket and real Chromium audio player. One sound command was received and its durable execution completed. External integrations were disabled; the enabled qualification rule was then disabled. This proves browser playback of generated WAV audio, not OBS capture. A separate transparent OBS source is prepared at `http://127.0.0.1:17476/overlay/g09-sound-qualification` for operator verification.
+
 ### Blockers
 
 Real Ko-fi-path Speaker.bot speech, OBS sound capture and reversible Streamer.bot-to-VTube Studio behavior remain unverified. VTube Studio availability is awaiting operator information. Queue/timer/reconnect and security audits, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
