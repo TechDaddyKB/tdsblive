@@ -20,12 +20,11 @@ public sealed class DonorWidgetStore(IDbContextFactory<FoundationDbContext> fact
         connection.CreateAggregate("donor_exact_sum", BigInteger.Zero,
             (BigInteger sum, long? amount) => sum + (amount ?? 0), sum => sum.ToString(CultureInfo.InvariantCulture), isDeterministic: true);
         await using var command = connection.CreateCommand();
-        var conditions = new List<string> { "f.AccountingState <> 'excluded'" };
-        if (period.StartInclusive is { } start) { conditions.Add("f.OccurredAtTicks >= $start"); command.Parameters.AddWithValue("$start", start.UtcTicks); }
-        if (period.EndExclusive is { } end) { conditions.Add("f.OccurredAtTicks < $end"); command.Parameters.AddWithValue("$end", end.UtcTicks); }
-        AddFilter("f.Platform", "$platform", settings.Platforms);
-        AddFilter("f.Type", "$type", settings.EventTypes);
-        command.CommandText = $"""
+        command.Parameters.AddWithValue("$start", period.StartInclusive?.UtcTicks ?? long.MinValue);
+        command.Parameters.AddWithValue("$end", period.EndExclusive?.UtcTicks ?? long.MaxValue);
+        command.Parameters.AddWithValue("$platforms", JsonSerializer.Serialize(settings.Platforms));
+        command.Parameters.AddWithValue("$types", JsonSerializer.Serialize(settings.EventTypes));
+        command.CommandText = """
             SELECT f.SupporterId, s.Name, f.Platform,
               donor_exact_sum(CASE WHEN f.AccountingState = 'counted' THEN f.UsdAmountMinor END),
               SUM(CASE WHEN f.AccountingState = 'counted' AND f.UsdAmountMinor IS NULL THEN 1 ELSE 0 END),
@@ -34,7 +33,9 @@ public sealed class DonorWidgetStore(IDbContextFactory<FoundationDbContext> fact
               SUM(CASE WHEN f.AccountingState = 'counted' AND f.UsdAmountMinor IS NOT NULL THEN 1 ELSE 0 END),
               MAX(CASE WHEN f.AccountingState = 'counted' THEN f.OccurredAtTicks END)
             FROM FinancialEvents f JOIN Supporters s ON s.Id = f.SupporterId
-            WHERE {string.Join(" AND ", conditions)}
+            WHERE f.AccountingState <> 'excluded' AND f.OccurredAtTicks >= $start AND f.OccurredAtTicks < $end
+              AND (json_array_length($platforms) = 0 OR f.Platform IN (SELECT value FROM json_each($platforms)))
+              AND (json_array_length($types) = 0 OR f.Type IN (SELECT value FROM json_each($types)))
             GROUP BY f.SupporterId, s.Name, f.Platform
             """;
         var totals = new Dictionary<Guid, Accumulator>();
@@ -81,16 +82,6 @@ public sealed class DonorWidgetStore(IDbContextFactory<FoundationDbContext> fact
         var state = rows.Length > 0 ? "ready" : unknown > 0 ? "pending" : gated > 0 ? "gated" : "empty";
         return new(widget.Id, state, now, rows, total.ToString(CultureInfo.InvariantCulture), unknown, gated, estimated);
 
-        void AddFilter(string column, string prefix, string[] values)
-        {
-            if (values.Length == 0) return;
-            var names = values.Select((value, index) =>
-            {
-                var name = prefix + index.ToString(CultureInfo.InvariantCulture);
-                command.Parameters.AddWithValue(name, value); return name;
-            });
-            conditions.Add($"{column} IN ({string.Join(",", names)})");
-        }
     }
 
     private sealed class Accumulator(Guid id, string name)
