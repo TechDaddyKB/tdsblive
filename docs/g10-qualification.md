@@ -19,11 +19,11 @@ passing one row does not complete the other requirements. The owning contract is
 | Requirement | Current evidence | Remaining evidence |
 | --- | --- | --- |
 | G00–G09 prerequisites | Maintained goal entries report completion; G09 protected merge is `26bb2eeea61ad5d4fbe6435f91778996de02d926` | Confirm final integrated behavior below; discovery alone is insufficient |
-| Self-contained ZIP and per-user installer | Earlier candidate `590a73d` passed native Windows packaging/start/install/reinstall/uninstall checks | Final-head Windows packaging, shipped-EXE recovery, optional-startup checks, checksums and release publication |
+| Self-contained ZIP and per-user installer | Run `37041732834` / `da50bd5` passed native ZIP/installer, packaged restart/restore, startup off/opt-in, reinstall/uninstall and retained-data checks; downloaded package checksums match | Repeat exact-head checks after the Wine cryptography correction and publish the qualified release |
 | Guided setup without normal-user commands | Local browser review/resume and configuration persistence pass; password entry defaults to session-only; import and action permissions are documented | Follow the guide against the final shipped package with local bots and OBS |
 | SQLite-safe backup and restore | Archive/backend checks and local real-process recovery pass; Windows run `37031475607` passes managed-process restart/restore and cleanup | Final portable/installed EXE and Wine recovery; review actual safety-paused configuration and retained data |
 | Repository, wiki and offline documentation | Ten chapters/eight owned screenshots; public wiki commit `48900b9`; all chapters and screenshots render in both public wiki and offline browser checks | Verify the guide included in the final shipped package and its setup instructions |
-| Windows CI and SonarQube gate | Run `37033816613` passed SonarQube: A ratings, 82.7% new coverage, 0.5% duplication and 100% hotspot review; package guide generation then failed because its scanner lacked CI authentication | Terminal success for the corrected final implementation head, including packaging and native package checks |
+| Windows CI and SonarQube gate | Run `37041732834` / `da50bd5` completed successfully, including SonarQube, packaging and native package checks | Terminal success for the subsequent Wine compatibility correction |
 | Rumble/chat/Rant/ledger/crown and Ko-fi/Bits together | Existing goal-specific evidence and full rebuilt local browser suite pass; Streamer.bot MCP confirms 1.0.7, three TDSBLive actions and thirteen triggers | Final shipped-package integration qualification, distinguishing live API/platform observations from owned replay/probe events |
 | OBS rendering and audible output | Earlier operator observations are recorded in the owning G05/G06/G09 evidence | Final integrated OBS rendering/audio/reconnect checks; actual dispatch receipts alone are insufficient |
 | Authenticated LAN HTTP | Existing Windows-specific authentication tests and authenticated owner-only recovery checks; editor LAN settings preserve unrelated configuration in browser checks | Final package authenticated remote HTTP behavior, credential rotation and restricted operations |
@@ -90,6 +90,23 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
   The test now waits for the actual volume/mute/loop settings, including updated
   settings, while retaining its error and unmount cleanup assertions. A new
   exact-head Windows run is required; this failure did not reach packaging.
+- Run `37041732834` completed successfully. Its scanned, checksum-verified
+  Windows package starts under Wine, but CSRF token creation fails because the
+  default ASP.NET protector opens a CNG SP800-108 provider unavailable here.
+  A standalone owned Windows probe confirms DPAPI round-trip succeeds, default
+  protection fails at that provider, and managed authenticated protection
+  succeeds. The application now selects supported managed AES-256-CBC/HMAC-SHA256
+  protection; five local host security tests pass, including payload tamper and
+  purpose-isolation rejection. Actual corrected Wine and Windows CI checks are
+  still required; no CSRF or credential protection is disabled.
+- A locally published corrected Windows EXE passes actual Wine LAN HTTP
+  authentication, credential rotation and DPAPI persistence across restart,
+  scoped viewing-token authorization/revocation and owner-only remote 403 checks.
+  Real restart/restore recovers earlier setup progress, pauses restored
+  connections and retains the recorded safety directory. Actual bot connections,
+  dedicated trigger receipt, isolated replay and CPH chat/Ko-fi forwarding pass;
+  the owned simulated support remains excluded from the ledger. Final Actions
+  artifacts and OBS/audio/performance qualification remain pending.
 
 ## Completion rule
 

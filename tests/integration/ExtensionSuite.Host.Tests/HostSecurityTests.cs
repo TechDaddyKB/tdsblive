@@ -4,12 +4,29 @@ using System.Text.Json;
 using ExtensionSuite.Core;
 using ExtensionSuite.Host;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
+using System.Security.Cryptography;
 using Xunit;
 
 namespace ExtensionSuite.Host.Tests;
 
 public sealed class HostSecurityTests
 {
+    [Fact]
+    public void ProtectedPayloadRejectsTamperingAndDifferentPurpose()
+    {
+        using var factory = new FoundationHostFactory();
+        var provider = factory.Services.GetRequiredService<IDataProtectionProvider>();
+        var protector = provider.CreateProtector("owned-security-qualification");
+        var original = RandomNumberGenerator.GetBytes(64);
+        var protectedPayload = protector.Protect(original);
+        Assert.Equal(original, protector.Unprotect(protectedPayload));
+        Assert.Throws<CryptographicException>(() => provider.CreateProtector("different-purpose").Unprotect(protectedPayload));
+        protectedPayload[^1] ^= 1;
+        Assert.Throws<CryptographicException>(() => protector.Unprotect(protectedPayload));
+    }
+
     private static HttpClient Client(FoundationHostFactory factory) => factory.CreateClient(new WebApplicationFactoryClientOptions
         { BaseAddress = new Uri("http://127.0.0.1"), AllowAutoRedirect = false });
 

@@ -556,6 +556,10 @@ Windows run `37037428506` passed analysis and authenticated guide-source scannin
 
 Windows run `37040945969` passed backend tests, then failed one frontend video-volume assertion because DOM creation preceded the playback effect. The media test now waits for the required volume/mute/loop state rather than merely the element's presence, also verifying updated loop settings. The corrected local coverage run passes all 170 tests with 88.93% line coverage and LCOV output; a new exact-head Windows pipeline remains required. This failed run did not reach final package qualification.
 
+Windows run `37041732834` / `da50bd5` completed successfully, including SonarQube, ZIP/installer production, native packaged restart/restore, opt-in startup, reinstall/uninstall and retained user data. Downloaded artifacts pass deterministic scanning and checksum verification. The shipped EXE starts under Wine, but its CSRF endpoint fails at ASP.NET's default CNG SP800-108 provider. An owned Windows diagnostic proves DPAPI round-trip succeeds and the supported managed protector succeeds while the default protector fails at that provider. The host now selects managed AES-256-CBC/HMAC-SHA256 without disabling CSRF or credential protection. Five local host security tests pass, including tamper and purpose-isolation rejection. Corrected Wine runtime checks and a new exact-head Windows run remain required.
+
+Corrected local Windows publish under Wine passes real LAN HTTP sign-in, scoped viewing-link authorization/revocation, remote owner-only restrictions, credential rotation and DPAPI persistence across restart. Actual EXE restart/restore recovers earlier setup progress, records a retained safety directory and pauses restored integrations. Installed Streamer.bot/Speaker.bot connections, dedicated trigger receipt, isolated replay and CPH chat/Ko-fi forwarding pass; simulated support is excluded from the ledger. This is locally published Windows/Wine evidence, distinct from final Actions artifacts, OBS/audible output and performance checks still pending.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets
