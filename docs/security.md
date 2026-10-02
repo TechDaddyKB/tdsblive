@@ -8,6 +8,13 @@ HTTP on LAN does not encrypt traffic; optional HTTPS may be used without becomin
 a core requirement. Never expose a privileged editor through an unauthenticated
 LAN binding.
 
+Antiforgery uses ASP.NET Data Protection's supported managed AES-256-CBC and
+HMAC-SHA256 implementation. This retains authenticated encryption while avoiding
+the default Windows CNG SP800-108 provider, which fails in the qualified Wine
+environment. Key storage and Windows DPAPI credential protection remain enabled;
+CSRF checks are not disabled. Changing the encryptor affects newly generated
+keys, not existing keys. See [Microsoft's managed algorithm configuration](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0#specifying-custom-managed-algorithms).
+
 Sonar rules S5332 (HTTP listener) and S2092 (non-Secure session cookie) are accepted
 for these specific foundation locations with documented rationale: HTTPS cannot
 be mandatory under the approved requirement, and Secure cookies cannot support

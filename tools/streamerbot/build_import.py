@@ -3,6 +3,7 @@ import argparse
 import base64
 import gzip
 import json
+import subprocess
 from pathlib import Path
 from uuid import UUID, uuid5
 
@@ -16,7 +17,9 @@ def actions():
     queue = identifier('queue')
     result = []
     for name, source in [('TDSBLive bootstrap', 'TDSBLiveBootstrap.cs'), ('TDSBLive qualification probe', 'TDSBLiveQualificationProbe.cs'), ('TDSBLive explicit forwarder', 'TDSBLiveForwardEvent.cs')]:
-        code = (ROOT / 'integrations/streamerbot' / source).read_bytes()
+        path = ROOT / 'integrations/streamerbot' / source
+        subprocess.run(['sonar', 'analyze', 'secrets', str(path)], check=True)
+        code = path.read_bytes()
         result.append({'id': identifier(name), 'queue': queue, 'enabled': True, 'excludeFromHistory': False, 'excludeFromPending': False,
             'name': name, 'group': 'TDSBLive', 'alwaysRun': False, 'randomAction': False, 'concurrent': False,
             'triggers': [], 'actions': [{'id': identifier(source), 'type': 99999, 'enabled': True, 'parentId': None, 'weight': 0, 'index': 0,

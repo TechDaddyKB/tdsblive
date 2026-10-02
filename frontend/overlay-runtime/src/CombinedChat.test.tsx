@@ -30,10 +30,13 @@ it('renders badge artwork and falls back safely when missing, unsafe or unavaila
 const message: ChatEvent = { id: 'synthetic-chat', type: 'chat.message', platform: 'rumble', receivedAt: new Date().toISOString(), occurredAt: new Date().toISOString(), provenance: 'live', user: { displayName: 'Viewer', badges: ['moderator'], avatarUrl: 'https://example.invalid/avatar.png' }, message: { text: '<img onerror=alert(1)>hello' } };
 it('renders duplicate snapshots once, escapes text, shows metadata and obeys display settings', () => {
   render(<CombinedChat id="combined-chat" />);
-  act(() => callbacks.events([message, message])); expect(screen.getAllByText(message.message!.text!)).toHaveLength(1); expect(screen.getByText('moderator')).toBeVisible(); expect(screen.getByLabelText('rumble')).toBeVisible();
+  act(() => callbacks.events([message, message])); expect(screen.getAllByText(message.message!.text!)).toHaveLength(1); expect(screen.getByText('moderator')).toBeVisible();
+  const logo = screen.getByRole('img', { name: 'Rumble platform' });
+  expect(logo).toBeVisible(); expect(logo.querySelector('path')).not.toBeNull(); expect(logo.textContent).toBe('');
   expect(document.querySelectorAll('img')).toHaveLength(1); fireEvent.error(document.querySelector('img')!); expect(document.querySelector('img')).not.toBeVisible();
   act(() => callbacks.settings({ id: 'combined-chat', chat: { ...defaultSettings, showPlatformIcon: false, showAvatar: false, showBadges: false, showUsername: false, showMessage: false, showTimestamp: true } } as OverlayDefinition));
   expect(screen.queryByText('moderator')).toBeNull(); expect(screen.queryByText(message.message!.text!)).toBeNull(); expect(document.querySelector('time')).not.toBeNull();
+  expect(screen.queryByRole('img', { name: 'Rumble platform' })).toBeNull();
 });
 it('provides a responsive streamer view with a stored light/dark toggle and persistent messages', () => {
   const view = render(<CombinedChat id="combined-chat" streamer />); expect(screen.getByRole('heading', { name: 'Streamer Chat' })).toBeVisible();

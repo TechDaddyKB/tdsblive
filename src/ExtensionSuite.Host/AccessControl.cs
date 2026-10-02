@@ -68,7 +68,8 @@ public sealed class RequestSecurity(RequestDelegate next)
     public async Task InvokeAsync(HttpContext context, ApplicationConfiguration configuration, AccessControl access, IAntiforgery antiforgery, OverlayStore overlays)
     {
         var request = context.Request;
-        var bodyLimit = request.Path == "/api/assets" && HttpMethods.IsPost(request.Method) ? ExtensionSuite.Overlays.AssetValidation.MaximumBytes :
+        var bodyLimit = request.Path == "/api/recovery/validate" && HttpMethods.IsPost(request.Method) ? RecoveryArchive.MaximumArchiveBytes :
+            request.Path == "/api/assets" && HttpMethods.IsPost(request.Method) ? ExtensionSuite.Overlays.AssetValidation.MaximumBytes :
             request.Path.StartsWithSegments("/api/overlays") && !request.Path.Value!.EndsWith("/preview-events", StringComparison.Ordinal) ? 2 * 1024 * 1024 : 65536;
         var sizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
         if (sizeFeature is { IsReadOnly: false }) sizeFeature.MaxRequestBodySize = bodyLimit;

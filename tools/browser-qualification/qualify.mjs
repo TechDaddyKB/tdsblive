@@ -56,6 +56,49 @@ try {
   await page.getByRole('heading', { name: 'TDSBLive', exact: true }).waitFor();
   await page.getByText('Host ready. Loopback access only.', { exact: true }).waitFor();
   assert.match(await page.getByLabel('Streamer.bot connection status').innerText(), /Disconnected/);
+  // First-run guide saves progress without enabling integrations merely by navigation.
+  await page.getByRole('button', { name: 'Close guided setup' }).waitFor();
+  for (let step = 2; step <= 6; step++) {
+    await page.getByRole('button', { name: 'Next setup step' }).click();
+    await page.getByText(new RegExp(`^Step ${step} of 6:`)).waitFor();
+  }
+  await page.getByRole('button', { name: 'Finish setup review' }).click();
+  await page.getByRole('button', { name: 'Open guided setup' }).waitFor();
+  await page.reload();
+  await page.getByRole('button', { name: 'Open guided setup' }).waitFor();
+  const setupConfiguration = await (await fetch(`${origin}/api/configuration`)).json();
+  assert.equal(setupConfiguration.streamerBot.enabled, false);
+  assert.equal(setupConfiguration.speakerBot.enabled, false);
+  // Exercise the ordinary release UI against real configuration persistence.
+  await page.getByText('Streamer.bot action permissions', { exact: true }).click();
+  await page.getByRole('button', { name: 'Load action permissions', exact: true }).click();
+  await page.getByRole('button', { name: 'Save action permissions', exact: true }).waitFor();
+  assert.equal(await page.getByLabel('Allow qualified live event forwarding to Streamer.bot', { exact: true }).isChecked(), false);
+  await page.getByRole('button', { name: 'Save action permissions', exact: true }).click();
+  await page.getByText('Permissions saved. Restart TDSBLive to apply them, then review live rules and trigger bindings.', { exact: true }).waitFor();
+  assert.equal(await page.getByLabel('Enable authenticated LAN access', { exact: true }).isChecked(), false);
+  assert.equal(Number(await page.getByLabel('HTTP port', { exact: true }).inputValue()), port);
+  await page.getByRole('button', { name: 'Save access settings', exact: true }).click();
+  await page.getByText('Access settings saved. Restart TDSBLive to apply them. Update OBS URLs if you changed the port.', { exact: true }).waitFor();
+  const permissionsConfiguration = await (await fetch(`${origin}/api/configuration`)).json();
+  assert.equal(permissionsConfiguration.server.port, port);
+  assert.equal(permissionsConfiguration.server.enableLan, false);
+  assert.equal(permissionsConfiguration.streamerBot.forwardLiveEvents, false);
+  assert.deepEqual(permissionsConfiguration.streamerBot.allowedActionIds, []);
+  assert.equal(permissionsConfiguration.streamerBot.enabled, false);
+  assert.equal(permissionsConfiguration.speakerBot.enabled, false);
+  const backupDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download backup', exact: true }).click();
+  const backup = await backupDownload;
+  const backupPath = await backup.path();
+  assert.ok(backupPath);
+  await page.getByLabel('Backup ZIP', { exact: true }).setInputFiles(backupPath);
+  await page.getByRole('button', { name: 'Check backup', exact: true }).click();
+  await page.getByText('Backup checked. Nothing has been replaced yet.', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Restore checked backup' }).isEnabled(), false);
+  await page.getByLabel('I want to replace my current saved data with this backup.').check();
+  assert.equal(await page.getByRole('button', { name: 'Restore checked backup' }).isEnabled(), true);
+  // No shutdown/restore request here: the remaining qualifiers own this running host.
   await mkdir(path.join(root, 'artifacts'), { recursive: true });
   await page.screenshot({ path: path.join(root, 'artifacts/g02-editor.png') });
   assert.equal((await page.goto(`${origin}/login`)).status(), 200);

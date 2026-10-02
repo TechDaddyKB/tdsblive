@@ -21,6 +21,21 @@ function host() {
   return { fetcher, get: () => document, conflict: (value: boolean) => { conflict = value; } };
 }
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+it.each(['missing', 'denied', 'available'] as const)('copies the OBS URL or offers manual copying with a %s clipboard', async mode => {
+  host();
+  const descriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: mode === 'missing' ? undefined : {
+    writeText: mode === 'denied' ? vi.fn().mockRejectedValue(new Error('Clipboard denied')) : vi.fn().mockResolvedValue(undefined),
+  } });
+  try {
+    render(<VisualEditor />); await screen.findByLabelText('Overlay canvas');
+    fireEvent.click(screen.getByRole('button', { name: 'Copy OBS URL' }));
+    await screen.findByText(mode === 'available' ? 'OBS URL copied.' : `OBS URL: ${new URL('/overlay/main', location.href).href}`);
+  } finally {
+    if (descriptor) Object.defineProperty(navigator, 'clipboard', descriptor);
+    else Reflect.deleteProperty(navigator, 'clipboard');
+  }
+});
 it('preserves keyboard history and layers, saves geometry and switches to a newly created custom canvas', async () => {
   const api = host(); render(<VisualEditor />); await screen.findByLabelText('Overlay canvas');
   fireEvent.click(screen.getByRole('listitem').querySelector('button')!); const widget = document.querySelector('.canvas-widget')!;

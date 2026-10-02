@@ -3,6 +3,7 @@ import { ChatBuffer, defaultSettings, safeAvatar, type ChatEvent, type ChatSetti
 import { ChatConnection } from './ChatConnection';
 import './chat.css';
 import { ChatMessage } from './ChatMessage';
+import { PlatformBadge } from './PlatformBadge';
 
 function initialTheme(): string {
   try { return localStorage.getItem('tdsblive.chat.theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
@@ -73,7 +74,7 @@ export function CombinedChat({ id, streamer = false, preview = false, token = ''
         const leaving = !s.persistent && now >= Date.parse(event.receivedAt) + s.messageDurationSeconds * 1000;
         return <article key={event.id} data-event-id={event.id} data-platform={event.platform} className={`chat-row enter-${s.animationIn} ${leaving ? `exit-${s.animationOut}` : ''}`}
           style={{ backgroundColor: `rgba(0,0,0,${s.backgroundOpacity})`, borderColor: s.platformColors[event.platform] }} dir="auto">
-          {s.showPlatformIcon && <span className="platform-icon" title={event.platform} aria-label={event.platform} style={{ backgroundColor: s.platformColors[event.platform] }}>{event.platform[0].toUpperCase()}</span>}
+          {s.showPlatformIcon && <span className="platform-icon" style={{ backgroundColor: s.platformColors[event.platform] }}><PlatformBadge platform={event.platform} /></span>}
           {s.showAvatar && avatar && <img className="avatar" src={avatar} alt="" referrerPolicy="no-referrer" onError={e => { e.currentTarget.hidden = true; }} />}
           <div className="chat-content">
             {s.showTimestamp && <time dateTime={event.occurredAt}>{new Date(event.occurredAt).toLocaleTimeString()}</time>}

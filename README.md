@@ -9,12 +9,21 @@ overlays, supporter tracking and automation. MIT licensed.
 defaults to `http://127.0.0.1:17474`. Optional authenticated LAN operation is a
 foundation capability; it is disabled by default and requires Windows DPAPI admin setup.
 
-This repository currently contains the qualified Rumble evidence and the G01
-application foundation: HTTP editor/login shells, SQLite event persistence and
-outbox, configuration, redacted logging, authenticated LAN, documented APIs,
-unit/integration tests and Windows CI. It is **not yet a usable streaming companion
-release**. Live integrations, visual editing, widgets and installation are tracked by stable goals in the
-[implementation plan](docs/implementation-plan.md).
+Goals G00–G09 are delivered: Streamer.bot/Speaker.bot connections, reliable Rumble
+ingestion, combined chat, visual editing and alerts, supporter accounting, donor
+widgets and automation. G10 is preparing the Windows ZIP/installer, first-run
+setup, recovery and illustrated documentation. **A completed MVP release has not
+yet been qualified.** Current evidence and limitations are recorded in the
+[implementation plan](docs/implementation-plan.md). VTube Studio work is on hold;
+use Streamer.bot's built-in integration.
+
+## User guide
+
+The plain-language [repository guide](docs/user-guide/Home.md) and
+[GitHub wiki](https://github.com/TechDaddyKB/tdsblive/wiki) are being completed with
+G10. Start with [Chat and OBS](docs/user-guide/Chat-and-OBS.md) if you already have
+the app running. The developer commands below are not the intended release
+installation path.
 
 ## Development
 
@@ -51,7 +60,11 @@ credential setup, authenticated LAN and generated contracts.
 - [Rumble evidence analysis](docs/rumble-analysis.md), including unknown schemas,
   snapshot limits and sanitization boundaries.
 - [Architecture](docs/architecture.md), [security](docs/security.md),
-  [testing](docs/testing.md) and [contributing](CONTRIBUTING.md).
+  [development](docs/development.md), [testing](docs/testing.md) and
+  [contributing](CONTRIBUTING.md).
+- [Installation](docs/installation.md), [Rumble](docs/rumble.md),
+  [events](docs/events.md), [overlays](docs/overlays.md), [widgets](docs/widgets.md),
+  [automation](docs/automation.md) and [database/recovery](docs/database.md).
 - [SonarQube Cloud project](https://sonarcloud.io/summary/new_code?id=camarokris_tdsblive).
 
 Original archives, credentials, private captures, user data, generated reports

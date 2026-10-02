@@ -23,6 +23,11 @@ export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
   await editor.getByLabel('Canvas preset').selectOption('1080x1920');
   await editor.getByRole('button', { name: 'Create overlay', exact: true }).click();
   await editor.getByLabel('Overlay canvas').waitFor();
+  // HTTP LAN browsers may omit Clipboard; URL copying must stay usable without HTTPS.
+  await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined }));
+  await editor.getByRole('button', { name: 'Copy OBS URL', exact: true }).click();
+  await editor.getByText(`OBS URL: ${origin}/overlay/g06-browser`, { exact: true }).waitFor();
+  await page.evaluate(() => Reflect.deleteProperty(navigator, 'clipboard'));
   const saved = () => page.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
   await editor.getByRole('button', { name: 'Add text', exact: true }).click();
   await editor.getByLabel('Widget text').fill('G06 <script>escaped text</script>'); await saved();

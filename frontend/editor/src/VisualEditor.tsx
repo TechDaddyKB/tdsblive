@@ -105,7 +105,15 @@ export function VisualEditor() {
       <button onClick={() => { void load(doc.id, true); }}>Reload saved version</button>
       <label>Zoom<input aria-label="Canvas zoom" type="range" min={.1} max={2} step={.05} value={zoom} onChange={e => setZoom(Number(e.target.value))} /></label>
       <label><input type="checkbox" checked={snap} onChange={e => setSnap(e.target.checked)} />Snap to 10px grid</label>
-      <button onClick={() => { void navigator.clipboard.writeText(new URL(`/overlay/${doc.id}`, location.href).href).then(() => setNotice('OBS URL copied.')).catch(() => setNotice(`OBS URL: ${new URL(`/overlay/${doc.id}`, location.href).href}`)); }}>Copy OBS URL</button>
+      <button onClick={() => {
+        const url = new URL(`/overlay/${doc.id}`, location.href).href;
+        void (async () => {
+          try {
+            if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+            await navigator.clipboard.writeText(url); setNotice('OBS URL copied.');
+          } catch { setNotice(`OBS URL: ${url}`); }
+        })();
+      }}>Copy OBS URL</button>
       <a href={`/overlay/${doc.id}`} target="_blank" rel="noreferrer">Open OBS overlay</a><button onClick={async () => { if (await session.current?.flush()) setPreview(!preview); }}>Preview</button>
       <button onClick={() => { void visualApi.revisions(doc.id).then(setRevisions).catch(() => setNotice('Unable to load revisions.')); }}>Revision history</button>
       <label>Retained revisions<input aria-label="Retained revisions" type="number" min={1} max={200} value={doc.revisionLimit} onChange={e => { const value = e.target.valueAsNumber; if (Number.isInteger(value) && value >= 1 && value <= 200) edit({ ...doc, revisionLimit: value }); }} /></label></div>

@@ -4,12 +4,195 @@
     "title": "ExtensionSuite.Host | v1",
     "version": "1.0.0"
   },
-  "servers": [
-    {
-      "url": "http://127.0.0.1:32785/"
-    }
-  ],
   "paths": {
+    "/api/application/status": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousTypeOfGuidAndstring"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/application/restart": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/application/quit": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recovery/backup": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recovery/validate": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryPreview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recovery/restore": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/configuration/export": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/configuration/import": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/setup": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupProgress"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupProgress"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupProgress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/streamerbot/credential": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamerCredentialUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/rumble/status": {
       "get": {
         "tags": [
@@ -597,6 +780,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IntegrationOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/streamerbot/test": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotConnectionState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/speakerbot/test": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotConnectionState"
                 }
               }
             }
@@ -2108,6 +2329,26 @@
             ]
           },
           "soundAssetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AnonymousTypeOfGuidAndstring": {
+        "required": [
+          "generation",
+          "operation"
+        ],
+        "type": "object",
+        "properties": {
+          "generation": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operation": {
             "type": [
               "null",
               "string"
@@ -4824,6 +5065,24 @@
         },
         "additionalProperties": false
       },
+      "RecoveryPreview": {
+        "required": [
+          "id",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "RestoreOverlayRevision": {
         "required": [
           "expectedVersion"
@@ -4837,6 +5096,23 @@
               "string"
             ],
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RestoreRequest": {
+        "required": [
+          "id",
+          "confirm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "confirm": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -5011,6 +5287,34 @@
         },
         "additionalProperties": false
       },
+      "SetupProgress": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "reviewed": {
+            "type": "boolean",
+            "default": false
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "SpeakerQueueRequest": {
         "required": [
           "operation"
@@ -5077,6 +5381,22 @@
           },
           "integrations": {
             "$ref": "#/components/schemas/IntegrationStates"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StreamerCredentialUpdate": {
+        "required": [
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "sessionOnly": {
+            "type": "boolean",
+            "default": true
           }
         },
         "additionalProperties": false

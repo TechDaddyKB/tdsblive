@@ -37,9 +37,13 @@ it('loads local GIF assets by HEAD and surfaces failures without running scripts
 it.each(['audio/wav', 'video/webm'])('plays %s with volume/mute/loop controls and pauses on removal', async mime => {
   const fetcher = vi.fn().mockResolvedValue(new Response(null, { headers: { 'Content-Type': mime } })); vi.stubGlobal('fetch', fetcher);
   const view = render(<MediaAsset id={'b'.repeat(64)} overlay="test" token="" volume={.25} muted={false} loop name="Media" />);
-  await waitFor(() => expect(document.querySelector('audio,video')).not.toBeNull());
-  const element = document.querySelector('audio,video') as HTMLMediaElement; expect(element.volume).toBe(.25); expect(element.muted).toBe(false); expect(element.loop).toBe(true);
-  view.rerender(<MediaAsset id={'b'.repeat(64)} overlay="test" token="" volume={.5} muted loop={false} name="Media" />); expect(element.volume).toBe(.5); expect(element.muted).toBe(true);
+  await waitFor(() => {
+    const media = document.querySelector('audio,video') as HTMLMediaElement | null;
+    expect(media).not.toBeNull(); expect(media?.volume).toBe(.25); expect(media?.muted).toBe(false); expect(media?.loop).toBe(true);
+  });
+  const element = document.querySelector('audio,video') as HTMLMediaElement;
+  view.rerender(<MediaAsset id={'b'.repeat(64)} overlay="test" token="" volume={.5} muted loop={false} name="Media" />);
+  await waitFor(() => { expect(element.volume).toBe(.5); expect(element.muted).toBe(true); expect(element.loop).toBe(false); });
   fireEvent.error(element); expect(screen.getByText(mime.startsWith('audio') ? 'Audio unavailable' : 'Video unavailable')).toBeVisible(); view.unmount(); expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
 });
 it('keeps scoped credentials in headers, revokes blob URLs and reports autoplay rejection', async () => {

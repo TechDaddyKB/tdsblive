@@ -12,6 +12,9 @@ public sealed class SpeakerBotConnection(IntegrationConfiguration configuration)
     private readonly object executionsSync = new();
     private readonly Queue<BotExecution> executions = new();
     public BotConnectionState State => Volatile.Read(ref state);
+    public Task<BotConnectionState> TestConnectionAsync(CancellationToken cancellationToken) =>
+        BotConnectionProbe.TestAsync(Volatile.Read(ref session), State,
+            TimeSpan.FromSeconds(configuration.RequestTimeoutSeconds), cancellationToken);
     public BotExecution[] Executions { get { lock (executionsSync) return executions.ToArray(); } }
     private static readonly string[] QueueOperations = ["Pause", "Resume", "Clear", "Stop", "Enable", "Disable", "Events", "Mode"];
 

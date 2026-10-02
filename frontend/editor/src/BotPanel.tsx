@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, bots, type BotOverview, type Discovery, type InspectorItem } from './api';
 import { ConnectionIndicator } from './ConnectionIndicator';
+import { BotPermissions } from './BotPermissions';
 
 export function BotPanel() {
   const [overview, setOverview] = useState<BotOverview | null>(null);
@@ -68,7 +69,8 @@ export function BotPanel() {
       <p>{bot === 'streamerBot' ? 'Streamer.bot' : 'Speaker.bot'}: {overview?.[bot].state ?? 'loading'} {overview?.[bot].version ?? ''} {overview?.[bot].failureKind ?? ''}</p>
       <button onClick={() => { void configure(bot); }}>Toggle {bot === 'streamerBot' ? 'Streamer.bot' : 'Speaker.bot'} connection</button>
     </div>)}
-    <p>Host, port, endpoint, reconnect bounds, and selected action GUIDs are configured through the configuration API. Live execution is opt-in.</p>
+    <p>Use guided setup to change connection addresses. Live execution is opt-in.</p>
+    <BotPermissions actions={discovery?.actions ?? []} />
     <details><summary>Discovered actions and triggers</summary>
       <button onClick={() => { void refreshDiscovery(); }}>Refresh discovery</button>
       <ul>{discovery?.actions.map(action => <li key={action.id}>{action.name} — {action.id} {action.enabled ? '' : '(disabled)'}</li>)}</ul>

@@ -29,6 +29,8 @@ configuration.json
 *.sqlite3
 *.sqlite3-*
 *.log
+/backtrace*.txt
+*.dmp
 actions.tdsblive-backup-*.json
 
 # Build, dependency and verification output
@@ -54,6 +56,9 @@ __pycache__/
 .cache/
 
 # Editor/OS and scratch files
+.codex/
+.vscode/
+.mcp.json
 .vs/
 .idea/
 *.user

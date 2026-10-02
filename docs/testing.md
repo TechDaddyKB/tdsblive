@@ -45,7 +45,24 @@ logs. Windows-only tests use actual DPAPI and authenticated non-loopback HTTP.
 Separate CI child-process and fresh-browser qualifiers verify crash/restart,
 OpenAPI drift and rendered editor/login shells without user or production data.
 
-The current test corpus does not validate real Rumble purchases, platform
-dedupe, Streamer.bot actions, visual-editor interaction, OBS audio,
-financial precision or installer behavior. Their owning goals add those tests and
-record physical/live validation. Keep any unavailable evidence visibly blocked.
+G03–G09 add bot protocol and trigger checks, Rumble replay/failure tests, rendered
+chat/editor/alert qualification, financial precision and restart tests, donor
+widgets and automation. Their goal evidence distinguishes simulated tests from
+operator-confirmed OBS and audio output. Real Rumble subscription/gift behavior
+remains gated where live schema evidence is missing.
+
+G10 adds native Windows package qualification in
+`tools/qualify_windows_package.ps1`: start the shipped self-contained EXE, load
+browser pages, install, reinstall, uninstall and preserve separately stored data.
+These checks must actually pass in Actions before packaging is called verified.
+Native Windows streaming-PC performance is explicitly deferred by the operator;
+Wine/Proton live/performance qualification and native Windows CI remain separate.
+
+To regenerate the public chat guide screenshots, build frontend assets and the
+Release host, then run `node tools/browser-qualification/guide-screenshots.mjs`
+with the pinned `DOTNET_ROOT`. It creates an isolated temporary host and uses
+made-up simulation messages only. Scan and visually review generated images
+before staging. To prepare the wiki copy, run
+`python tools/sync_user_guide.py /path/to/wiki-checkout`, review its diff, then
+commit/push the wiki separately. The script scans source files and validates
+local page/image links before copying; it does not publish automatically.

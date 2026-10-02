@@ -18,6 +18,10 @@ public static class BotEndpoints
     {
         app.MapGet("/api/integrations", (StreamerBotConnection streamer, SpeakerBotConnection speaker) =>
             TypedResults.Ok(new IntegrationOverview(streamer.State, speaker.State)));
+        app.MapPost("/api/integrations/streamerbot/test", async (StreamerBotConnection streamer, CancellationToken ct) =>
+            TypedResults.Ok(await streamer.TestConnectionAsync(ct)));
+        app.MapPost("/api/integrations/speakerbot/test", async (SpeakerBotConnection speaker, CancellationToken ct) =>
+            TypedResults.Ok(await speaker.TestConnectionAsync(ct)));
         app.MapGet("/api/integrations/streamerbot/discovery", (StreamerBotConnection streamer) => TypedResults.Ok(streamer.Discovery));
         app.MapPost("/api/integrations/streamerbot/discovery/refresh", async (StreamerBotConnection streamer, CancellationToken cancellationToken) =>
         {

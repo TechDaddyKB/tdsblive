@@ -4,6 +4,9 @@ using ExtensionSuite.StreamerBot;
 using ExtensionSuite.Rumble;
 using ExtensionSuite.Finance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
 using System.Text.Json;
@@ -19,6 +22,9 @@ public static class FoundationServices
         builder.Logging.SetMinimumLevel(LogLevel.Trace);
         builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = ExtensionSuite.Overlays.AssetValidation.MaximumBytes);
         builder.Services.AddSingleton<ApplicationPaths>();
+        builder.Services.AddSingleton<RecoveryArchive>();
+        builder.Services.AddSingleton<RecoveryRestore>();
+        builder.Services.AddSingleton<ApplicationLifecycle>();
         builder.Services.AddSingleton<OverlayStore>();
         builder.Services.AddSingleton<AssetStore>();
         builder.Services.AddSingleton<AutomationRuleStore>();
@@ -98,6 +104,15 @@ public static class FoundationServices
             options.AddPolicy("admin-login", context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "local", _ => new FixedWindowRateLimiterOptions
                     { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        });
+        // Use the supported managed AES/HMAC implementation: Wine lacks the CNG
+        // SP800-108 provider used by the default Windows encryptor. Key storage
+        // and Windows DPAPI protection are still handled by Data Protection.
+        builder.Services.AddDataProtection().UseCustomCryptographicAlgorithms(new ManagedAuthenticatedEncryptorConfiguration
+        {
+            EncryptionAlgorithmType = typeof(Aes),
+            EncryptionAlgorithmKeySize = 256,
+            ValidationAlgorithmType = typeof(HMACSHA256)
         });
         builder.Services.AddAntiforgery(options =>
         {

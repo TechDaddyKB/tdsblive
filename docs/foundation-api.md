@@ -40,6 +40,56 @@ secret-store fallback; Windows qualification remains required.
 | GET `/api/openapi/v1.json` | Generated HTTP contract |
 | WS `/ws/editor` | Privileged bounded editor event stream |
 
+## Setup and recovery
+
+`GET /api/setup` returns `{step, reviewed, version}`. Steps range from 0 to 5.
+`PUT /api/setup` saves progress using the current version; stale updates return
+409. `reviewed:true` is valid only at step 5 and records the operator's review,
+not integration verification. Setup writes require the usual authentication and
+request protection. Progress is stored in SQLite and included in backups.
+
+`POST /api/integrations/streamerbot/test` and
+`POST /api/integrations/speakerbot/test` issue a correlated read-only `GetInfo`
+request on the existing connection. They return a `BotConnectionState`, with
+`connected` only after a successful response. Disabled/disconnected states are
+reported without enabling a connection or changing saved settings. Failed probes
+return `probeFailed` with a bounded failure kind; response bodies are not exposed.
+They never speak, change queues, run actions or change the live connection state.
+Writes require ordinary request protection. Save/restart connection settings
+before testing; this does not probe unsaved form values. Streamer.bot documents
+[`GetInfo`](https://docs.streamer.bot/api/websocket/requests#getinfo); Speaker.bot
+0.1.7 supports it in the observed runtime, but older versions may reject optional
+metadata while their documented speech/queue connection remains usable. Rejection
+is a test limitation, not proof that those older runtimes cannot speak.
+
+`POST /api/integrations/streamerbot/credential` accepts `{value, sessionOnly:true}`.
+Session-only values stay in host memory and are cleared on restart. Setting
+`sessionOnly:false` requires Windows DPAPI; other platforms return 501. Responses
+never include the value. This operation does not execute actions or force a
+reconnect; subsequent authentication uses the updated credential.
+
+Recovery and process-control writes below additionally require a loopback peer,
+even for an authenticated LAN operator:
+
+| Route | Contract |
+|---|---|
+| GET `/api/application/status` | Host generation and queued operation |
+| POST `/api/application/restart`, `/api/application/quit` | Queue one operation; stop after sending the response |
+| POST `/api/recovery/backup` | Download a SQLite-consistent ZIP with assets and integrity manifest; excludes credential files |
+| POST `/api/recovery/validate` | Upload raw ZIP bytes, at most 1 GiB; return `{id, expiresAt}` without replacing live data |
+| POST `/api/recovery/restore` | `{id, confirm:true}`; requires the current checked archive, expires after 15 minutes |
+| POST `/api/configuration/export` | Download non-secret connection settings; excludes overlays, financial records and assets |
+| POST `/api/configuration/import` | Strict version-1 connection-settings document; disable imported integrations/LAN; restart required |
+
+Backup archives are private: their database includes application history and
+supporter records. Validation rejects unknown paths, incompatible schemas,
+integrity failures and mismatched asset metadata. Restore drains and disposes the
+host before replacing data, retains the old directory as a safety copy, disables
+connections/rules, suppresses pending deliveries and revokes overlay tokens.
+Existing local encrypted credentials remain local; they are not imported from
+the archive. Restore failures stop without automatic relaunch. Successful
+restart/restore preserves the original editor-launch preference.
+
 Build the frontend with `npm run build` before starting the host. Assets are
 generated into ignored `src/ExtensionSuite.Host/wwwroot/editor`. The HTTP contract
 snapshot is `docs/contracts/openapi.json`; TypeScript definitions are generated
