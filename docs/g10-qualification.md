@@ -1,6 +1,6 @@
 # G10 release qualification
 
-G10 remains **In progress**. This checklist records what is actually verified;
+G10 is **Blocked** pending operator qualification evidence and CPU disposition. This checklist records what is actually verified;
 passing one row does not complete the other requirements. The owning contract is
 [G10 in the implementation plan](implementation-plan.md#g10).
 
@@ -241,6 +241,10 @@ remains visible, and native Windows streaming-PC performance remains deferred.
 - The exact Actions EXE now serves port 17474 using preserved owned qualification data. An OBS screenshot after handoff confirms one owned Rumble message, three supporters and the $7.25 total with estimates marked. Previous d3 measurements included an owned helper polling status twice per second; that helper was retired before the new measurement.
 - Actual `e10b8fb` Actions EXE, connected bots, two owned OBS sources, Info logging, disabled test rules and disabled Rumble: idle 60.00 seconds averages 4.000% CPU; ordinary chat 180.01 seconds with 360 synthetic preview messages (two/second) averages 5.144%, with one logical core as 100%. Peak backend RSS across both phases is 298.04 MB (284.23 MiB). Memory meets the 300 MB target; CPU exceeds the 1%/3% targets. Separate all-32-logical-processor normalization is 0.1250%/0.1608%, not a replacement for the one-core comparison. No related-process samples were taken in this run. Enabled Rumble polling and native Windows streaming-PC performance are not qualified.
 - These successful checks supersede the fresh-Windows-package requirement following the historical `86814ff` reserved-variable failure. Audible confirmation, real API health, performance disposition and release publication remain open.
+
+## Resume checkpoint — 2026-10-02
+
+Final audio confirmation, real Rumble baseline and Wine CPU disposition remain unresolved across at least three consecutive goal turns. The owned host is running with both bots connected; Rumble has no session credential and remains disabled. Windows run [37061856073](https://github.com/TechDaddyKB/tdsblive/actions/runs/37061856073), commit `c3f8cb2`, is still active at the SonarQube step. Recheck its terminal result on resume. No merge, tag or release is published. Resolve the operator-dependent gates before protected delivery; do not substitute earlier audio evidence or dispatch receipts for the final audible check.
 
 ## Completion rule
 

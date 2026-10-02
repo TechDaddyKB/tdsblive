@@ -477,7 +477,7 @@ None for the active G09 scope. VTube Studio-specific requirements remain explici
 
 ## G10 — Deliver and validate the MVP
 
-Status: **In progress**
+Status: **Blocked**
 Prerequisites: G01–G09
 
 Current acceptance audit: [release qualification checklist](g10-qualification.md).
@@ -595,7 +595,9 @@ Source-spec completion audit: section 86's explicit bot connection-test buttons 
 - One-core Wine CPU targets were exceeded. The operator was asked whether to carry this as a documented Wine limitation or require tuning before release; no disposition is inferred from elapsed time.
 - Protected delivery and release/checksum publication remain to finish. Corrected offline-guide native packaging and downloaded-artifact verification pass for `e10b8fb`; exact package evidence remains separate from earlier candidates.
 
-G10 remains In progress. Actual paid-platform delivery and native Windows
+Blocked audit (2026-10-02): final audible confirmation, local Rumble credential entry/baseline and CPU-target disposition remain unresolved across at least three consecutive goal turns. Independent implementation, documentation, wiki publication and package checks are recorded above. Latest documentation commit `c3f8cb2` has active Windows run [37061856073](https://github.com/TechDaddyKB/tdsblive/actions/runs/37061856073); its SonarQube/packaging result is not yet verified. Leave the owned test host running and do not infer confirmation or acceptance from elapsed time. On resume, inspect that run and the live host, resolve these gates, then finish protected delivery and release publication.
+
+G10 is Blocked, not complete. Actual paid-platform delivery and native Windows
 streaming-PC performance are explicit scope limitations, not claims of success.
 
 <a id="g11"></a>
