@@ -1,6 +1,6 @@
 # G07 completion audit
 
-Status: In progress. Source under audit: the current head of [PR #8](https://github.com/camarokris/tdsblive/pull/8). This audit covers [G07](implementation-plan.md#g07), specification sections 23–29 and 83, and the inherited security/testing contracts. G08 widgets and G09 financial automation are outside this goal.
+Status: Complete. Qualified source: `29fce9658b44917ae9d6207c9507021b388fa70c`, merged through protected [PR #8](https://github.com/camarokris/tdsblive/pull/8) as `734cf7c8e972b7411f0b7a235081b348f3ad26fa`. This audit covers [G07](implementation-plan.md#g07), specification sections 23–29 and 83, and the inherited security/testing contracts. G08 widgets and G09 financial automation are outside this goal.
 
 ## Requirement evidence
 
@@ -26,12 +26,12 @@ Status: In progress. Source under audit: the current head of [PR #8](https://git
 | Manual identities and no display-name merging | Transactional identity transfers/rollback; five separate platform identities in combined-source test; actual browser link/unlink and combined totals | Verified |
 | Today, Monday week, month, year, all-time, custom and current stream | `LedgerPeriodTests`, indexed exact totals, timezone/API tests, persisted UTC stream start and real browser custom-period selection | Verified |
 | DST and period precision | 23/25-hour days, separate local boundary conversion, half-open custom/stream filters and `BigInteger` aggregate tests | Verified |
-| Public APIs and migrations | [G07 ledger contract](g07-financial-ledger.md), actual OpenAPI/generated types, versioned/CSRF endpoint tests, metadata preservation and real migration downgrade/re-upgrade | Verified locally; Windows generated-type check pending |
-| HTTP and authenticated LAN admin boundary | Existing host middleware, scoped OBS token denial, antiforgery tests; financial UI uses HTTP and requires no HTTPS | Verified locally; Windows LAN runtime check pending |
+| Public APIs and migrations | [G07 ledger contract](g07-financial-ledger.md), actual OpenAPI/generated types, versioned/CSRF endpoint tests, metadata preservation and real migration downgrade/re-upgrade | Verified locally and in trusted Windows CI |
+| HTTP and authenticated LAN admin boundary | Existing host middleware, scoped OBS token denial, antiforgery tests; financial UI uses HTTP and requires no HTTPS | Verified locally and in the Windows runtime suite |
 | Test safety and public repository hygiene | Disposable qualifier directories, disabled automation/pre-acknowledged outbox, synthetic Ko-fi provenance, public tracked-file deterministic secrets scan and existing exclusions | Verified; no operator credentials or raw archive published |
-| Windows build and runtime/browser qualification | [PR #8 checks](https://github.com/camarokris/tdsblive/pull/8/checks); previous run `36943667261` passed backend tests but failed an overbroad frontend text selector, now corrected to inspect the gated contribution's own cell | Pending corrected-head result |
-| Backend OpenCover, frontend LCOV and SonarQube quality gate | Same trusted Windows workflow explicitly imports both and validates production coverage; local frontend LCOV is 93.60% lines/81.18% branches | Pending final-source analysis/coverage import and gate |
-| Final protected delivery | [Draft PR #8](https://github.com/camarokris/tdsblive/pull/8); review ingestion rejection fixed in `6134ddd`, local backend suite 259 pass/2 Windows-only skips, frontend 102 pass | Pending final checks and merge |
+| Windows build and runtime/browser qualification | [Windows run](https://github.com/camarokris/tdsblive/actions/runs/36944795513); 40 core/261 host/102 frontend tests, runtime/browser/replay and generated-type checks pass | Verified |
+| Backend OpenCover, frontend LCOV and SonarQube quality gate | [Trusted run](https://github.com/camarokris/tdsblive/actions/runs/36944795513) explicitly imports OpenCover and LCOV; [Sonar gate](https://sonarcloud.io/dashboard?id=camarokris_tdsblive&pullRequest=8) passes with 89.5% new-code coverage | Verified |
+| Final protected delivery | [Merged PR #8](https://github.com/camarokris/tdsblive/pull/8), protected merge `734cf7c8e972b7411f0b7a235081b348f3ad26fa`; all required checks pass and the review finding is fixed | Verified |
 
 ## Fresh Release runtime checks
 
@@ -45,6 +45,6 @@ python tools/qualify_kofi.py --execute-synthetic-forwarding-action
 
 The browser qualifier uses fresh Chromium and disposable data; it does not control the operator's browser. The process qualifier crashes only its own child and sends only currency/date to Frankfurter. Ko-fi qualification executes only the imported allowlisted forwarding action with `isTest=true`; it makes no payment, changes no Speaker.bot queue and writes no production financial totals.
 
-## Remaining work
+## Completion result
 
-Inspect final-source Windows results, actual OpenCover/LCOV import and SonarQube gate; resolve any findings; complete protected delivery and update the maintained G07 status. Unverified Rumble gift accounting stays gated by the acceptance contract. A green unit suite alone is insufficient to mark the goal complete.
+All G07 acceptance requirements are verified at the scopes identified above. The trusted Windows logs explicitly report LCOV analysis, four OpenCover report imports covering 68 production files, and QUALITY GATE STATUS: PASSED. Backend and frontend production coverage are 96.1% and 93.7% in the workflow verifier. The source is merged on main. No G07 blocker remains; unverified Rumble gift accounting stays gated by the acceptance contract, and paid live observations are not claimed.
