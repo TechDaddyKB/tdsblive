@@ -554,6 +554,8 @@ Windows run `37033816613` passed SonarQube with A ratings, 82.7% new coverage, 0
 
 Windows run `37037428506` passed analysis and authenticated guide-source scanning, then exposed a Windows-only UTF-8 decoding failure in offline guide generation. Markdown reads now specify UTF-8 explicitly, matching generated HTML. This is a packaging correction, not evidence that native package checks or final Wine acceptance have passed; a new exact-head run is required.
 
+Windows run `37040945969` passed backend tests, then failed one frontend video-volume assertion because DOM creation preceded the playback effect. The media test now waits for the required volume/mute/loop state rather than merely the element's presence, also verifying updated loop settings. The corrected local coverage run passes all 170 tests with 88.93% line coverage and LCOV output; a new exact-head Windows pipeline remains required. This failed run did not reach final package qualification.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets

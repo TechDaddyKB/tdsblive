@@ -47,7 +47,8 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
 
 ## Latest checks
 
-- All 167 frontend tests pass, with 88.8% line coverage.
+- All 170 frontend tests pass locally after media-test synchronization, with
+  88.93% line coverage (LCOV generated).
 - The rebuilt local Release host has zero warnings and errors.
 - The full isolated browser suite passes chat, visual editor, financial ledger,
   donor widgets, automation simulation, setup persistence, real backup download
@@ -84,6 +85,11 @@ Report process CPU and memory separately from OBS/browser and Wine helper overhe
 - Run `37037428506` passed analysis and authenticated guide-source scans, then
   failed reading UTF-8 Markdown with Windows' default legacy encoding. Guide
   reads now explicitly use UTF-8; final native packaging is still pending.
+- Run `37040945969` passed backend tests but failed one frontend media assertion:
+  the video element existed before React's playback effect applied its volume.
+  The test now waits for the actual volume/mute/loop settings, including updated
+  settings, while retaining its error and unmount cleanup assertions. A new
+  exact-head Windows run is required; this failure did not reach packaging.
 
 ## Completion rule
 
