@@ -385,7 +385,7 @@ None for G07. Authoritative Rumble gift accounting remains explicitly gated as r
 
 ## G08 — Build donor widgets
 
-Status: **In progress**
+Status: **Blocked**
 Prerequisites: G05, G07
 
 ### Deliverables
@@ -410,9 +410,11 @@ The disposable Release-host browser qualification passes donor rendering for all
 
 The trusted [Windows run 36960170546](https://github.com/TechDaddyKB/tdsblive/actions/runs/36960170546), source `a38ce7faefb39607359e0ae630a7082a552fcc58`, passes **51 core tests, 281 host tests without skips, and 121 frontend tests**, plus replay/recovery, actual browser qualification and generated contract checks. Logs verify OpenCover and LCOV import and 96.2% backend/94.3% frontend production coverage. The [SonarQube PR gate](https://sonarcloud.io/dashboard?id=camarokris_tdsblive&pullRequest=10) passes with **88.5% new-code coverage**, A reliability/security/maintainability, zero duplication and all hotspots reviewed. The fixed SQL finding is closed automatically; no exclusion or dismissal is used. CodeQL passes and no unresolved PR review findings are reported. See the maintained [qualification audit](g08-qualification.md).
 
+The documentation evidence commit `0c8a7644b8ce6d5f60be547b31a577fd38f50f84` also passes [Windows run 36961251786](https://github.com/TechDaddyKB/tdsblive/actions/runs/36961251786) and its exact-head Sonar gate, with no unresolved vulnerabilities or PR review findings.
+
 ### Blockers
 
-Actual OBS donor-widget confirmation remains pending. The prepared temporary source is `http://127.0.0.1:17475/overlay/donor-obs-check` at 1000 × 1000, with all five widgets and owned Alice/Bob support updates; integrations are disabled and production data is untouched. The operator must verify transparent rendering and leader/total changes without refresh. Earlier OBS alert video/audio evidence satisfies G06. Protected PR delivery remains after this required G08 check; the goal is not complete.
+Actual OBS donor-widget confirmation remains pending across repeated goal turns. Native desktop automation is unavailable; browser qualification does not establish actual OBS rendering. No further independent implementation work can satisfy this acceptance check. The prepared temporary source is `http://127.0.0.1:17475/overlay/donor-obs-check` at 1000 × 1000, with all five widgets and owned Alice/Bob support updates; integrations are disabled and production data is untouched. The operator must verify transparent rendering and leader/total changes without refresh. Earlier OBS alert video/audio evidence satisfies G06. Protected PR delivery remains after this required G08 check; the goal is not complete.
 
 <a id="g09"></a>
 

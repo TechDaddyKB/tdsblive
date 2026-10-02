@@ -1,6 +1,6 @@
 # G08 qualification audit
 
-Status: In progress. Implementation: [PR #10](https://github.com/TechDaddyKB/tdsblive/pull/10). This audit follows SPEC sections 29–31, 84 and the Phase 9 widget list, plus the owning [G08 plan](implementation-plan.md#g08). It is not a completion claim.
+Status: Blocked on actual OBS donor confirmation. Implementation: [PR #10](https://github.com/TechDaddyKB/tdsblive/pull/10). This audit follows SPEC sections 29–31, 84 and the Phase 9 widget list, plus the owning [G08 plan](implementation-plan.md#g08). It is not a completion claim.
 
 | Requirement | Current evidence | State |
 | --- | --- | --- |
@@ -31,3 +31,5 @@ The user previously confirmed OBS alert video/audio; that satisfies G06 and does
 The S2077 finding `AaD6m93Q4KvHMX91J_XP` is addressed in source by removing query interpolation. Time bounds and JSON filter arrays are parameters in one fixed SQL statement. No rule exclusion or issue dismissal is used.
 
 Run `36959527247` failed only at final deletion of the FinancialStore period test’s database; its assertions passed. Host shutdown and scoped pool clearing precede deletion. The test fixture now retries only Windows temporary-directory `IOException`s for at most two seconds; persistent locks still fail. Two real Windows handle tests verify transient recovery and persistent-lock failure. They are not claimed verified on Linux. Current local backend checks pass 51 core/277 host tests with four Windows-only skips. Run `36960170546` now verifies both native Windows cleanup cases and the static-query Sonar fix; no unresolved vulnerability remains.
+
+Documentation commit `0c8a7644b8ce6d5f60be547b31a577fd38f50f84` also passes [Windows run 36961251786](https://github.com/TechDaddyKB/tdsblive/actions/runs/36961251786) and its exact-head Sonar gate. Native desktop automation is unavailable, and the required operator OBS confirmation remains unresolved across repeated goal turns. Implementation qualification is complete except for this actual OBS check; protected delivery follows it. The isolated fixture host remains available at `http://127.0.0.1:17475/overlay/donor-obs-check`, 1000 × 1000, with owned Alice/Bob updates and external integrations disabled.
