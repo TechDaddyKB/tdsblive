@@ -173,15 +173,28 @@ public sealed class RumbleReplayTests : IAsyncLifetime
         });
         var config = new ApplicationConfiguration { StreamerBot = server.Configuration with { ForwardLiveEvents = true }, Rumble = new() { ForwardTriggers = true } };
         var adapter = new StreamerBotConnection(config.StreamerBot, () => null, new());
-        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        // This exercises 64 individual SQLite park transactions before delivery.
+        // Windows coverage instrumentation can exceed ten seconds without a protocol failure.
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(60));
         var run = adapter.RunAsync((_, _) => Task.CompletedTask, lifetime.Token);
-        while (adapter.State.State != "connected") await Task.Delay(20, lifetime.Token);
-        var dispatch = new RumbleTriggerDispatcher(store, adapter, config, new EventInspectorStore(config), TimeProvider.System).RunAsync(lifetime.Token);
-        while (!(await store.DeliveryStatusAsync(lifetime.Token)).ContainsKey("acknowledged")) await Task.Delay(20, lifetime.Token);
-        Assert.Equal(1, executions); Assert.True(triggerDiscovery >= 2); Assert.Empty(await store.PendingTriggersAsync(default));
-        Assert.Equal(64, (await store.DeliveryStatusAsync(default))["waitingForTrigger"]);
-        await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => dispatch.WaitAsync(TimeSpan.FromSeconds(3)));
+        var dispatch = Task.CompletedTask;
+        try
+        {
+            while (adapter.State.State != "connected") await Task.Delay(20, lifetime.Token);
+            dispatch = new RumbleTriggerDispatcher(store, adapter, config, new EventInspectorStore(config), TimeProvider.System).RunAsync(lifetime.Token);
+            while (!(await store.DeliveryStatusAsync(lifetime.Token)).ContainsKey("acknowledged")) await Task.Delay(20, lifetime.Token);
+            Assert.Equal(1, executions); Assert.True(triggerDiscovery >= 2); Assert.Empty(await store.PendingTriggersAsync(default));
+            Assert.Equal(64, (await store.DeliveryStatusAsync(default))["waitingForTrigger"]);
+            await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => dispatch.WaitAsync(TimeSpan.FromSeconds(3)));
+        }
+        finally
+        {
+            // Assertions/timeouts must also stop database users before fixture deletion on Windows.
+            await lifetime.CancelAsync();
+            try { await Task.WhenAll(run, dispatch); }
+            catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { /* Expected shutdown. */ }
+        }
         // A later registration resumes only its parked rows, including after reopening SQLite.
         var reopened = new RumbleStore(NewFactory(), new());
         await reopened.ResumeRegisteredAsync(["integration.health"], default);
