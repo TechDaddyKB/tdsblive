@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { SetupWizard } from './SetupWizard';
-import { api } from './api';
+import { api, write } from './api';
 
 vi.mock('./BotPanel', () => ({ BotPanel: () => <div>Bot status panel</div> }));
 vi.mock('./RumblePanel', () => ({ RumblePanel: () => <div>Rumble settings panel</div> }));
@@ -26,6 +26,23 @@ it('walks through all six steps without changing settings automatically', async 
   fireEvent.click(screen.getByRole('button', { name: 'Finish setup review' }));
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Finish setup review' })).not.toBeInTheDocument());
   expect(api.saveConfiguration).not.toHaveBeenCalled();
+});
+
+it('defaults authentication to session-only and clears the password after saving', async () => {
+  vi.mocked(api.configuration).mockResolvedValue({ streamerBot: { host: 'localhost', port: 8080 }, speakerBot: { host: 'localhost', port: 7680 } });
+  render(<SetupWizard />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Open guided setup' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Open guided setup' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next setup step' }));
+  const field = await screen.findByLabelText('Streamer.bot password');
+  const value = crypto.randomUUID();
+  expect(field).toHaveAttribute('type', 'password');
+  expect(screen.getByLabelText('Keep Streamer.bot password only for this session')).toBeChecked();
+  fireEvent.change(field, { target: { value } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save Streamer.bot password' }));
+  await waitFor(() => expect(write).toHaveBeenCalledWith('/api/integrations/streamerbot/credential', 'POST', { value, sessionOnly: true }));
+  await waitFor(() => expect(field).toHaveValue(''));
+  expect(screen.getByText(/Password saved for this host session/)).toBeVisible();
 });
 
 it('loads saved addresses and preserves unrelated settings when saving one connection', async () => {

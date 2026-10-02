@@ -42,10 +42,12 @@ public sealed class RumbleHostTests
     [Fact]
     public async Task HostedPollingPersistsNewEventsRedactsSnapshotsAndResetsWithoutAutomation()
     {
-        var requests = 0;
+        var snapshotCount = 1;
         using var transport = new HttpClient(new Handler(() =>
         {
-            var index = Interlocked.Increment(ref requests);
+            // Polling does not itself create new chat. Advance the owned snapshot explicitly,
+            // so a concurrent background poll cannot invent an event during reset assertions.
+            var index = Volatile.Read(ref snapshotCount);
             var messages = new JsonArray();
             for (var count = 1; count <= index; count++) messages.Add(new JsonObject { ["username"] = "synthetic-user", ["created_on"] = $"2026-01-01T00:00:{count:00}Z", ["text"] = "synthetic", ["stream_key"] = "synthetic-private" });
             return new JsonObject { ["type"] = "user", ["user_id"] = "synthetic-account", ["livestreams"] = new JsonArray(new JsonObject {
@@ -58,6 +60,7 @@ public sealed class RumbleHostTests
         var rumble = configured.Services.GetRequiredService<RumbleIntegration>();
         var events = configured.Services.GetRequiredService<EventStore>();
         await rumble.PollOnceAsync(default); // Background worker may have completed the baseline already.
+        Volatile.Write(ref snapshotCount, 2);
         await rumble.PollOnceAsync(default);
         Assert.True(rumble.Status.BaselineEstablished); Assert.Equal("healthy", rumble.Status.State);
         Assert.Contains(await events.ReadAsync(), item => item.Type == "chat.message");

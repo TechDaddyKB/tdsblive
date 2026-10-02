@@ -534,6 +534,12 @@ User-guide checkpoint: canonical installation/update/uninstall and backup/recove
 
 Expanded guide checkpoint: the repository guide now has ten pages and five owned screenshots covering first setup, overlays/alerts, supporter totals, automation, LAN and troubleshooting. Wiki commit `efb3a9a` publishes all ten pages. A standalone offline HTML renderer builds the same guide; local link checks and a fresh-browser page/image/navigation check pass, with visual inspection. Packaging includes the offline guide and an installer Start menu shortcut. Package qualification now requires guide files and exercises restart/restore via portable and installed EXEs; these new Windows checks await a new Actions head and are not yet verified.
 
+Wine preflight (2026-10-02): Wine 11.17 Staging is available; no bot Wine processes were running during inspection. The earlier Windows candidate from `590a73d` was decompressed into an isolated directory and scanned before execution. In a fresh owned Wine prefix, its host did not reach HTTP readiness; the scanned log reported `System.IO.FileNotFoundException` loading `System.Runtime.dll`. Only owned prefix processes were stopped. This is a failed compatibility preflight of the earlier candidate, not a final current-build or native Windows result. Wine qualification remains unresolved; Windows Actions run `37026932245` targets `d0baeac` separately.
+
+Wine preflight correction: the first launch disabled Wine's `mscoree` loader through a test-only override. Retesting the earlier candidate with the standard `mscoree` loader reached HTTP readiness with its unique owned application name and created its own SQLite database. The first failure was caused by that test configuration; it is not evidence of application incompatibility. Owned prefix processes were stopped afterward. Final-current-candidate Wine integration/performance qualification remains outstanding.
+
+Windows run `37026932245` failed one hosted Rumble test (373 host tests passed). Its fixture invented a new message on every HTTP poll, allowing the background worker to introduce chat between reset assertions. The fixture now advances its snapshot explicitly while still exercising the real hosted poller and reset. This requires a new exact-head Windows run; the failed run did not reach package qualification or Sonar completion.
+
 <a id="g11"></a>
 
 ## G11 — Complete advanced editor and built-in widgets
