@@ -93,7 +93,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G07](#g07) | Build financial ledger and supporter identities | G04 | Complete |
 | [G08](#g08) | Build donor widgets | G05, G07 | Complete |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
-| [G10](#g10) | Deliver and validate the MVP | G01–G09 | In progress |
+| [G10](#g10) | Deliver and validate the MVP | G01–G09 | Complete |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
@@ -477,7 +477,7 @@ None for the active G09 scope. VTube Studio-specific requirements remain explici
 
 ## G10 — Deliver and validate the MVP
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G01–G09
 
 Current acceptance audit: [release qualification checklist](g10-qualification.md).
@@ -507,13 +507,13 @@ Operator-approved paid-event scope (2026-10-02): “Use owned examples and expli
 
 ### Current acceptance evidence
 
-- Protected G08 delivery is merged in PRs #10/#11; G09 delivery is merged in PR #12 as `26bb2eeea61ad5d4fbe6435f91778996de02d926`. G00–G09 prerequisites remain complete under their approved scope.
-- Windows run `37049814743` / `d3a01e9` passes SonarQube, native ZIP/installer and browser-connected recovery. Its actual downloaded package passes Wine LAN, recovery, installed-bot receipts and the full browser suite. This candidate corrects the observed shutdown crash.
-- Explicitly opted-in owned examples qualify paid-event ingestion, persistent Rumble dedupe, exact/nominal totals, crown/leaderboard updates and local automation receipts in disposable data. Actual paid-platform delivery remains unverified by operator choice. The operator confirmed both fresh audio tests; real Rumble status is independently healthy with its baseline established.
-- Ten plain-language chapters and eight owned screenshots are in the repository, wiki and offline guide. Wiki commits `0b98615`/`e017419` publish approved paid-event limits and read-only test instructions. Windows run [37056770891](https://github.com/TechDaddyKB/tdsblive/actions/runs/37056770891) for `e10b8fb` passes 75 core and 384 host tests without skips, frontend checks, OpenCover/LCOV import, SonarQube quality gate and native ZIP/installer qualification. Both downloaded artifact checksums match. The actual downloaded EXE passes both read-only bot tests in a real browser under Wine, produces no action/speech/queue executions, and quits cleanly. Its bundled guide passes all ten chapters and eight images with networking disabled. That exact package now serves port 17474 with preserved disposable data. The earlier reserved-variable failure is retained below as historical evidence.
-- Actual `e10b8fb` package with real Rumble polling, both bots and two OBS sources measures 4.616% idle CPU over 60.01 seconds, 5.600% ordinary-chat CPU over 180.01 seconds (360 synthetic preview messages, two/second) and peak backend RSS 321.35 MB. One logical core is 100%; CPU and memory targets are exceeded. The operator selected “Release with documented Wine limitations,” accepting these deviations. Native Windows streaming-PC performance stays deferred. Complete methodology and separate 32-processor normalization are in the release checklist.
-
-Final documentation checkpoint: wiki `3913754` publishes ten user-guide chapters and eight owned screenshots with accepted Wine limitations, read-only setup tests and paid-event scope. The final offline guide passes all chapters/images, navigation and UTF-8 with networking disabled. Preparation warnings are removed and the plan link points to main for delivery. Windows run `37061856073` for `c3f8cb2` passes all protected checks; the final guide/evidence commit still requires normal exact-head packaging and protected delivery.
+- MVP [v0.1.0](https://github.com/TechDaddyKB/tdsblive/releases/tag/v0.1.0) is public; G00–G09 prerequisites and protected G10 delivery are complete under the approved scope.
+- Final Windows run `37073729890` / `649b2d1` passes tests, OpenCover/LCOV import, SonarQube and native packaging. The actual downloaded EXE passes real-browser bot probes under Wine and graceful quit; all uploaded digests and sizes match verified artifacts.
+- Real Rumble polling reports healthy with its baseline established. Actual OBS rendering/reconnect and the operator's “Heard both” confirm fresh Ko-fi speech and Bits audio through the saved owned rules.
+- Reviewed owned examples qualify persistent Rumble dedupe, exact/nominal totals, crown/ranking and local automation. Actual paid-platform delivery remains unverified by explicit scope.
+- Ten plain-language guide chapters/eight owned screenshots are published on main and wiki `3913754`; the final ZIP's complete offline guide passes with networking disabled.
+- With real Rumble polling, both bots and OBS connected, Wine measures 4.616% idle/5.600% chat CPU (one core = 100%) and peak backend RSS 321.35 MB. The operator accepts these documented CPU/memory deviations; targets are not claimed as passed. Native Windows streaming-PC performance remains deferred.
+- Authenticated LAN HTTP, recovery, optional startup and installed-bot behavior have the distinct real-Wine/native-CI evidence recorded in the qualification checklist. HTTPS is not required.
 
 ### Historical implementation checkpoints
 
@@ -590,16 +590,19 @@ Final-candidate performance checkpoint: actual `d3a01e9` Actions EXE with connec
 
 Source-spec completion audit: section 86's explicit bot connection-test buttons were missing. They now issue correlated read-only metadata requests and truthfully report disabled/rejected/timeout states without speech, queue changes, actions or configuration writes. Seven backend cases and eight setup UI cases pass; actual installed Streamer.bot/Speaker.bot answer both buttons in a real isolated browser with empty execution histories. Full local tests pass 175 frontend (88.97% line coverage) and 380 host cases, with four Windows-only skips. Refreshed OpenAPI/generated types pass actual-process contract/recovery checks. Section 91's ten required documentation entry points are present, with seven new canonical-guide/contract indexes; public Markdown links resolve. Stale G08/G09 index/delivery statements and architecture placeholders are corrected using merged PR evidence. Wiki commit `e017419` publishes new test instructions; ten offline chapters/eight images pass browser checks. Run `37054493247` passes analysis/SonarQube but fails native verification because `$home` collides with reserved `$HOME`; renamed `$guideHomeDocument` and the new probes still require successful Windows qualification.
 
-### Blockers
-
-- Final release-guide packaging, protected delivery and release/checksum publication remain to finish. The operator accepts documented Wine CPU and memory deviations; these are scoped limitations, not passing performance targets.
-
 Historical blocked audit (2026-10-02): final audible confirmation, local Rumble credential entry/baseline and CPU-target disposition remain unresolved across at least three consecutive goal turns. Independent implementation, documentation, wiki publication and package checks are recorded above. Latest documentation commit `c3f8cb2` has active Windows run [37061856073](https://github.com/TechDaddyKB/tdsblive/actions/runs/37061856073); its SonarQube/packaging result is not yet verified. Leave the owned test host running and do not infer confirmation or acceptance from elapsed time. On resume, inspect that run and the live host, resolve these gates, then finish protected delivery and release publication.
 
 Resumed qualification (2026-10-02): operator reports the Rumble baseline established. Windows run `37061856073` for `c3f8cb2` has completed successfully. Independent host verification currently finds no listener on port 17474; the operator was asked to refresh the editor before further audio tests. No credential file was read. Subsequent owned-host recovery restores editor HTTP 200, both bot connections and real Rumble healthy/baseline state. Two fresh owned support examples produce Speaker.bot dispatched/acknowledged and OBS sound completed/browser-playback-completed receipts; both rules are disabled afterward. The operator confirms “Heard both.” These additional examples affect only disposable totals; actual paid-platform delivery remains unverified. The enabled-Rumble measurement is complete: 60.01-second idle averages 4.616% CPU; 180.01-second ordinary chat averages 5.600% CPU with 360 synthetic preview messages (two/second); peak backend RSS is 321.35 MB (306.46 MiB). One logical core is 100%; separate all-32 normalization is 0.1443%/0.1750%, not used to replace that comparison. Both bots and two owned OBS browser sources are connected, Info logging is enabled, rules are disabled and there is no recurring qualification observer. The operator selected “Release with documented Wine limitations,” explicitly accepting CPU and memory deviations.
 
-G10 is In progress, not complete. Actual paid-platform delivery and native Windows
-streaming-PC performance are explicit scope limitations, not claims of success.
+### Final delivery
+
+Final delivery (2026-10-02): [Windows run 37073729890](https://github.com/TechDaddyKB/tdsblive/actions/runs/37073729890), source `649b2d105bc3bda0bfd1012adcc40bbf190ddef6`, passes 75 core and 384 host tests without skips, 175 frontend tests, OpenCover/LCOV imports, SonarQube quality gate and native ZIP/installer qualification. All protected PR checks pass. Both downloaded package checksums match, and the actual downloaded EXE passes both real-browser read-only bot tests under Wine with empty execution histories and graceful exit. Its bundled guide passes ten chapters/eight images, navigation and UTF-8 with networking disabled. Protected [PR #13](https://github.com/TechDaddyKB/tdsblive/pull/13) merged as `be467726b251fa31bb80f4d1eef1711e693b0870`; its tree exactly matches tested source `649b2d1`. [MVP release v0.1.0](https://github.com/TechDaddyKB/tdsblive/releases/tag/v0.1.0) is public, tagged at that merge and includes the verified Windows x64 ZIP, installer and `SHA256SUMS.txt`; uploaded digests and sizes match all three local artifacts. Wiki `3913754` publishes the matching complete guide and passes fresh-browser checks. The completion-record change is documentation only and follows normal protected delivery.
+
+G00–G10 satisfy MVP completion under the explicit approved scope. G11–G13 remain Not started. Wine performance deviations are accepted and documented, not passing targets. Actual paid-platform delivery and native Windows streaming-PC performance remain unverified; VTube Studio remains on hold.
+
+### Blockers
+
+None for the approved G10 scope. The operator accepts documented Wine CPU and memory deviations; native Windows streaming-PC performance and actual paid-platform delivery remain explicitly unverified by scope.
 
 <a id="g11"></a>
 
