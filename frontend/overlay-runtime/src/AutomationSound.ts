@@ -9,7 +9,7 @@ export class AutomationSoundPlayer {
     private readonly createAudio: (url: string) => HTMLAudioElement = url => new Audio(url)) {}
 
   async play(command: AutomationSoundCommand): Promise<void> {
-    if (!/^[0-9a-f-]{36}$/i.test(command.executionId) || !/^[0-9a-f]{64}$/.test(command.assetId) ||
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(command.executionId) || !/^[0-9a-f]{64}$/.test(command.assetId) ||
       !Number.isFinite(command.volume) || command.volume < 0 || command.volume > 1 ||
       !Number.isFinite(command.duckingVolume) || command.duckingVolume < 0 || command.duckingVolume > 1 ||
       !Number.isInteger(command.timeoutSeconds) || command.timeoutSeconds < 1 || command.timeoutSeconds > 3600) return;
@@ -44,5 +44,5 @@ export class AutomationSoundPlayer {
   }
 
   interrupt(id: string): void { this.running.get(id)?.(); }
-  stop(): void { for (const cancel of [...this.running.values()]) cancel(); }
+  stop(): void { for (const cancel of this.running.values()) cancel(); }
 }

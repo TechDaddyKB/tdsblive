@@ -447,6 +447,8 @@ The 2026-10-02 full local run passed 75 core, 293 integration and 138 frontend t
 
 Subsequent local validation passed 311 integration tests (four Windows-only skips), 139 frontend tests and 35 targeted automation cases covering persisted stacking/recreation, independent queues, interruption, queued-effect receipt identity, cancellation and disable/delete handling. Draft [PR #12](https://github.com/TechDaddyKB/tdsblive/pull/12) is open. Its initial [Windows run](https://github.com/TechDaddyKB/tdsblive/actions/runs/36975597976) passed build/tests/qualification but failed the Sonar gate at 75.5% new-code coverage versus the required 80%. Final-head coverage and quality qualification remain incomplete.
 
+The sound protocol/security additions pass 14 real WebSocket/HTTP cases; broader local runs pass 325 integration tests (four Windows-only skips) and 153 frontend tests. An isolated host confirmed actual Speaker.bot 0.1.7 connectivity on its configured port 7580 without speech/queue side effects. The second Windows run at `b8d1b87` failed only its Sonar coverage condition at 77.0%; new sound tests require another analysis. Captured audio, configured voice and VTube Studio effects are not claimed.
+
 ### Blockers
 
 Real Ko-fi-path Speaker.bot speech, OBS sound capture and reversible Streamer.bot-to-VTube Studio behavior remain unverified. VTube Studio availability is awaiting operator information. Queue/timer/reconnect and security audits, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.

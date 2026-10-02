@@ -71,3 +71,20 @@ Draft [PR #12](https://github.com/TechDaddyKB/tdsblive/pull/12) publishes checkp
 Disabling or deleting a rule atomically cancels its queued/review/waiting work and requests interruption of active dispatch. Existing dispatched temporary effects retain their reversion schedule. Production accepted-event planning checks current enabled state/version inside queue admission, so a stale planner snapshot cannot authorize a disabled/deleted rule. Low-level store fixtures can explicitly omit that check; production `PlanAcceptedAsync` always requires it.
 
 The latest full local suites passed 311 integration tests (four Windows-specific skips) and 139 frontend tests. Thirty-five targeted automation cases pass after the final transaction/cancellation checks, including stable queued enable/revert identity, ambiguous queued enable, cancelled/legacy work, restoration cleanup, disable/delete and stale planning rejection. Frontend type checking and regenerated API contracts pass. The initial Windows run ultimately failed its Sonar gate: new-code coverage was 75.5%, below 80%; reliability/security/maintainability ratings and duplication/hotspot conditions passed. Coverage and maintainability findings remain to address; no threshold/exclusion change is proposed.
+
+## Sound WebSocket protocol and asset authorization
+
+The backend selects one subscribed, live canvas socket for each sound. Preview sockets cannot receive automation sound commands or report completion. Another socket, even for the same authorized overlay, cannot complete the selected socket's pending command.
+
+| Operation | Fields | Meaning |
+|---|---|---|
+| Server `sound` | `command.executionId` UUID, `assetId` SHA-256 ID, numeric `volume`/`duckingVolume` in 0–1, integer `timeoutSeconds` in 1–3600 | Play one local audio asset; ducking is metadata. |
+| Client `sound-result` | `executionId`, `state`: started/completed/failed/timeout/interrupted | Started is not completion. Only the selected socket's terminal receipt settles the pending command. |
+| Server `sound-received` | None | Receipt frame accepted; it does not prove playback. |
+| Server `sound-stop` | `executionId` | Stop a cancelled or timed-out command without replaying it. |
+
+Sound playback temporarily authorizes the chosen asset for the target overlay. Authenticated LAN fetches still require a valid scoped overlay token and `X-TDSBLive-Overlay`; the lease grants no automation/admin access or cross-overlay access. Completion, failure, timeout, cancellation or disconnect removes the lease. Token revocation interrupts the source. The browser fetches audio through that authorization, handles autoplay/media errors, releases object URLs/elements, bounds stalled fetches and suppresses duplicate command IDs. Chat-only and preview runtimes do not dispatch sounds or submit sound receipts. Reconnection/history is not permission to replay a sound.
+
+Fourteen real backend WebSocket/HTTP cases pass, covering source ownership, preview isolation, scoped temporary assets, terminal states, timeout stop, cancellation stop, HTTP token revocation, malformed receipts and missing dependencies. Full local validation passed 325 integration tests (four Windows-only skips), 153 frontend tests, lint and type checking. Browser sound tests cover autoplay rejection, media errors, interruption, late fetch completion and invalid fields; socket tests cover preview/chat exclusion and closed-socket receipt suppression. These are protocol and browser-component checks, not captured OBS audio.
+
+The Speaker.bot readiness check was corrected: this installation uses port **7580**, recorded in G03, rather than default 7680. An isolated temporary host connected to the actual Speaker.bot **0.1.7** on 7580 without speech or queue commands. A configured voice alias and real audible output remain unverified. The second [Windows run](https://github.com/TechDaddyKB/tdsblive/actions/runs/36977884740), at `b8d1b87`, passed build/tests/qualification but failed the Sonar gate at **77.0%** new-code coverage. The sound protocol cases above address the largest observed uncovered behavior; they need a new head-specific analysis.

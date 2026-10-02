@@ -21,23 +21,29 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         if (subscriber is null) return new("failed", "overlay-not-connected");
         var result = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         if (!subscriber.SoundResults.TryAdd(executionId, result)) return new("rejected", "duplicate-sound-command");
+        var stopPlayback = false;
         try
         {
             if (!subscriber.Queue.Writer.TryWrite(JsonSerializer.Serialize(new { op = "sound", command }, EventStore.JsonOptions)))
                 return new("failed", "overlay-queue-full");
             using var stop = CancellationTokenSource.CreateLinkedTokenSource(ct, subscriber.Stop.Token);
             var state = await result.Task.WaitAsync(TimeSpan.FromSeconds(timeoutSeconds + 2), stop.Token);
-            return state == "completed" ? new("completed", "browser-playback-completed") :
-                state == "failed" ? new("failed", "browser-audio-failed") : new("uncertain", "browser-" + state);
+            return SoundOutcome(state);
         }
-        catch (TimeoutException) { return new("uncertain", "browser-receipt-timeout"); }
+        catch (TimeoutException) { stopPlayback = true; return new("uncertain", "browser-receipt-timeout"); }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return new("uncertain", "overlay-disconnected"); }
         finally
         {
-            if (ct.IsCancellationRequested) subscriber.Queue.Writer.TryWrite(JsonSerializer.Serialize(new { op = "sound-stop", executionId }, EventStore.JsonOptions));
+            if (stopPlayback || ct.IsCancellationRequested) subscriber.Queue.Writer.TryWrite(JsonSerializer.Serialize(new { op = "sound-stop", executionId }, EventStore.JsonOptions));
             subscriber.SoundResults.TryRemove(executionId, out _);
         }
     }
+    private static AutomationDispatchOutcome SoundOutcome(string state) => state switch
+    {
+        "completed" => new("completed", "browser-playback-completed"),
+        "failed" => new("failed", "browser-audio-failed"),
+        _ => new("uncertain", "browser-" + state)
+    };
     public void Shutdown()
     {
         foreach (var subscriber in subscribers.Values) subscriber.TryStop();
@@ -221,14 +227,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             switch (op.GetString())
             {
                 case "sound-result":
-                    if (subscriber.Preview || subscriber.Overlay is null ||
-                        !root.TryGetProperty("executionId", out var execution) || !Guid.TryParse(execution.GetString(), out var executionId) ||
-                        !root.TryGetProperty("state", out var soundState) || soundState.ValueKind != JsonValueKind.String)
-                        throw new JsonException();
-                    var state = soundState.GetString();
-                    if (state is not ("started" or "completed" or "failed" or "timeout" or "interrupted")) throw new JsonException();
-                    if (state != "started" && subscriber.SoundResults.TryGetValue(executionId, out var completion)) completion.TrySetResult(state);
-                    response = "{\"op\":\"sound-received\"}";
+                    response = ReceiveSoundResult(root, subscriber);
                     break;
                 case "ping": response = "{\"op\":\"pong\"}"; break;
                 case "subscribe":
@@ -244,6 +243,19 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
             }
             if (!subscriber.Queue.Writer.TryWrite(response)) return;
         }
+    }
+
+    private static string ReceiveSoundResult(JsonElement root, Subscriber subscriber)
+    {
+        if (subscriber.Preview || subscriber.Overlay is null ||
+            !root.TryGetProperty("executionId", out var execution) || execution.ValueKind != JsonValueKind.String ||
+            !Guid.TryParse(execution.GetString(), out var executionId) ||
+            !root.TryGetProperty("state", out var soundState) || soundState.ValueKind != JsonValueKind.String)
+            throw new JsonException("Invalid sound receipt.");
+        var state = soundState.GetString();
+        if (state is not ("started" or "completed" or "failed" or "timeout" or "interrupted")) throw new JsonException("Invalid sound state.");
+        if (state != "started" && subscriber.SoundResults.TryGetValue(executionId, out var completion)) completion.TrySetResult(state);
+        return "{\"op\":\"sound-received\"}";
     }
 
     private sealed class Subscriber(CancellationTokenSource stop)

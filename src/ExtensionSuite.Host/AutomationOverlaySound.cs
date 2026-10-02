@@ -7,7 +7,7 @@ using ExtensionSuite.Overlays;
 namespace ExtensionSuite.Host;
 
 public sealed class AutomationOverlaySound(AssetStore assets, OverlayStore overlays, EditorEventHub hub,
-    TimeProvider clock) : IAutomationOverlaySound
+    TimeProvider clock) : IAutomationOverlaySound, IDisposable
 {
     private sealed record Lease(string OverlayId, string AssetId, DateTimeOffset ExpiresAt);
     private readonly ConcurrentDictionary<Guid, Lease> leases = new();
@@ -15,6 +15,8 @@ public sealed class AutomationOverlaySound(AssetStore assets, OverlayStore overl
 
     public bool Authorizes(string overlayId, string assetId) => leases.Values.Any(lease =>
         lease.OverlayId == overlayId && lease.AssetId == assetId && lease.ExpiresAt > clock.GetUtcNow());
+
+    public void Dispose() => slots.Dispose();
 
     public async Task<AutomationDispatchOutcome> PlayAsync(Guid executionId, AutomationPlannedAction action, CancellationToken ct)
     {

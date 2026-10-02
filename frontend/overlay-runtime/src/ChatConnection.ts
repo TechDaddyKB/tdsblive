@@ -47,7 +47,7 @@ export class ChatConnection {
     } catch { if (!this.abort.signal.aborted) { this.status('Reconnecting'); this.schedule(); } }
   }
   reportSound(executionId: string, state: AutomationSoundState): void {
-    if (!this.preview && this.socket?.readyState === WebSocket.OPEN)
+    if (this.canvas && !this.preview && this.socket?.readyState === WebSocket.OPEN)
       this.socket.send(JSON.stringify({ op: 'sound-result', executionId, state }));
   }
   private async history(): Promise<void> {
