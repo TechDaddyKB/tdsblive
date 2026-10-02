@@ -6,6 +6,8 @@ $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Native package qualification requires Windows.' }
 $package = [IO.Path]::GetFullPath($PackageDirectory)
 $root = Join-Path $env:RUNNER_TEMP ('tdsblive-package-check-' + [Guid]::NewGuid().ToString('N'))
+$previousPackageCheckRoot = $env:TDSBLIVE_PACKAGE_CHECK_ROOT
+$env:TDSBLIVE_PACKAGE_CHECK_ROOT = $root
 New-Item -ItemType Directory -Path $root | Out-Null
 $installed = Join-Path $root 'installed'
 $data = Join-Path $root 'data'
@@ -60,12 +62,12 @@ try {
     $portable = Join-Path $root 'portable'
     Expand-Archive (Join-Path $package "TDSBLive-$Version-win-x64.zip") $portable
     Test-Application $portable
-    & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') (Join-Path $portable 'TDSBLive.exe')
+    & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') portable
     if ($LASTEXITCODE -ne 0) { throw 'Portable EXE restart/restore qualification failed.' }
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
     if (Test-Path $startupShortcut) { throw 'Login startup must be disabled by default.' }
     Test-Application $installed
-    & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') (Join-Path $installed 'TDSBLive.exe')
+    & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') installed
     if ($LASTEXITCODE -ne 0) { throw 'Installed EXE restart/restore qualification failed.' }
     # A repeated install exercises replacement/upgrade mechanics without inventing a prior release.
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"startup`""
@@ -81,6 +83,7 @@ try {
     if (-not (Test-Path (Join-Path $data 'tdsblive.db'))) { throw 'Uninstall removed separately stored user data.' }
     Write-Output 'Native Windows portable/install/reinstall/uninstall checks passed. Streaming-PC performance and OBS rendering are separate checks.'
 } finally {
+    $env:TDSBLIVE_PACKAGE_CHECK_ROOT = $previousPackageCheckRoot
     if ($process -and -not $process.HasExited) { Stop-Process -Id $process.Id -Force; $process.WaitForExit() }
     # Failed qualification must not leave an enabled startup entry on the runner.
     if (Test-Path (Join-Path $installed 'unins000.exe')) {

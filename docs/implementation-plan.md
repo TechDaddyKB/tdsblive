@@ -480,6 +480,8 @@ None for the active G09 scope. VTube Studio-specific requirements remain explici
 Status: **In progress**
 Prerequisites: G01–G09
 
+Current acceptance audit: [release qualification checklist](g10-qualification.md).
+
 ### Deliverables
 
 - Build self-contained Windows x64 ZIP and Inno Setup installer in Actions; attach checksums after release validation.
@@ -545,6 +547,8 @@ Setup/package gap closure: Windows packaging now generates `integrations/tdsbliv
 Quality-gate repair checkpoint: Windows run `37027780281` passed the new-code coverage condition (80.9%) but failed its security rating on unrestricted qualification-tool paths. Offline guide output is now constrained beneath the repository's ignored `release` directory; packaged process qualification permits only `TDSBLive.exe` in the owned Windows runner's UUID-named portable/installed test directories. Local real-process restart/restore still passes, guide generation succeeds in the allowed directory and rejects an external destination, and the full frontend coverage run passes with 88.8% line coverage. The corrected head still requires Windows CI and Sonar analysis; these local results do not prove the security gate has cleared.
 
 Release qualification checkpoint: Windows run `37030077956` completed real-process restart/restore assertions, then failed while deleting an owned SQLite WAL file before Windows released its handle. Cleanup now retries bounded transient file locks and still fails on persistent locks; the updated local process check passes. Native package checks now also verify startup is off by default, the opt-in shortcut targets the installed EXE without opening the editor, and uninstall removes that shortcut; Windows execution remains pending. Fresh-browser qualification passes real permission/LAN settings persistence without enabling integrations and the full existing editor/chat/finance/donor/automation suite. The public wiki's ten chapters loaded and all five existing screenshots decoded in a fresh browser. Three additional owned screenshots illustrate the visual editor, empty supporter ledger and disabled Ko-fi speech-rule draft; financial/automation form spacing is improved and the same browser suite passes after rebuilding. Streamer.bot MCP now confirms version 1.0.7, HTTP/WebSocket connectivity, all three TDSBLive actions and thirteen custom triggers; this discovery alone does not qualify final packaged end-to-end execution. Speaker.bot and final Wine/native package qualification are still required.
+
+Windows run `37031475607` passed managed-process recovery and cleanup, but its SonarQube gate still failed security findings in the executable-path qualification interface. New-code coverage passed at 82.7%, duplication at 0.5%, and all hotspots were reviewed. The offline-guide path finding is resolved. Packaged recovery qualification now accepts only literal `portable`/`installed` modes and derives a fixed executable path from the runner-owned package directory, rather than accepting an executable argument. Managed recovery still passes locally; an arbitrary executable-path argument is rejected before any temporary test data is created. A new exact-head analysis is required. Wiki commit `48900b9` publishes all eight screenshots, and fresh browser checks verify all ten chapters and all eight images in both wiki and offline HTML.
 
 <a id="g11"></a>
 

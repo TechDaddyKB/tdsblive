@@ -1,12 +1,14 @@
 // Owns only a fresh local host and temporary data; never runs live integrations.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, writeFile, rm, realpath, stat } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, realpath } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+const mode = process.argv[2] ?? 'managed';
+assert.ok(['managed', 'portable', 'installed'].includes(mode), 'Choose managed, portable or installed qualification');
 const directory = await mkdtemp(path.join(tmpdir(), 'tdsblive-process-recovery-'));
 const data = path.join(directory, 'data');
 const { mkdir } = await import('node:fs/promises');
@@ -17,19 +19,19 @@ const port = await new Promise((resolve, reject) => {
 });
 await writeFile(path.join(data, 'configuration.json'), JSON.stringify({ server: { host: '127.0.0.1', port } }));
 const origin = `http://127.0.0.1:${port}`;
-const packagedExecutable = process.argv[2];
 let executable = path.join(process.env.DOTNET_ROOT, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
-if (packagedExecutable) {
+if (mode !== 'managed') {
   assert.equal(process.platform, 'win32', 'Packaged qualification requires Windows');
-  const candidate = await realpath(packagedExecutable);
-  const relative = path.relative(await realpath(process.env.RUNNER_TEMP), candidate);
-  assert.match(relative, /^tdsblive-package-check-[a-f0-9]{32}\\(?:portable|installed)\\TDSBLive\.exe$/,
-    'Only the owned Windows package qualification executable can run');
-  assert.ok((await stat(candidate)).isFile());
+  const packageRoot = path.resolve(process.env.TDSBLIVE_PACKAGE_CHECK_ROOT);
+  const relative = path.relative(await realpath(process.env.RUNNER_TEMP), packageRoot);
+  assert.match(relative, /^tdsblive-package-check-[a-f0-9]{32}$/,
+    'Only the owned Windows package qualification directory can be used');
+  const candidate = path.join(packageRoot, mode === 'portable' ? 'portable' : 'installed', 'TDSBLive.exe');
+  assert.equal(await realpath(candidate), candidate, 'Packaged executable must not resolve through a symbolic link');
   executable = candidate;
 }
 const argumentsList = ['--TDSBLive:DataDirectory', data, '--TDSBLive:OpenEditor=false'];
-if (!packagedExecutable) argumentsList.unshift(path.resolve('src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'));
+if (mode === 'managed') argumentsList.unshift(path.resolve('src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'));
 const child = spawn(executable, argumentsList, { stdio: 'ignore' });
 let launchError = false;
 child.on('error', () => { launchError = true; });
