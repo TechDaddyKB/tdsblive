@@ -7,7 +7,7 @@ import { request } from './api';
 import { WidgetProperties, type EditorAsset } from './WidgetProperties';
 import './visual-editor.css';
 const sizes = [[1920, 1080], [2560, 1440], [3840, 2160], [1080, 1920]];
-const kinds: Widget['kind'][] = ['text', 'image', 'video', 'audio', 'chat', 'alert'];
+const kinds: Widget['kind'][] = ['text', 'image', 'video', 'audio', 'chat', 'alert', 'donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total'];
 export function VisualEditor() {
   const [overlays, setOverlays] = useState<Scene[]>([]); const [state, setState] = useState<EditorState | null>(null);
   const [assets, setAssets] = useState<EditorAsset[]>([]); const [selected, setSelected] = useState(''); const [notice, setNotice] = useState('');

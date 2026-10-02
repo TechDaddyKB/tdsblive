@@ -5,6 +5,8 @@ import { AlertQueue, alertText, type AlertJob } from './AlertQueue';
 import type { ChatEvent, OverlayDefinition } from './chat';
 import type { Scene, Widget } from './scene';
 import './canvas.css';
+import { DonorWidget, type DonorSnapshot } from './DonorWidget';
+import { donorKinds } from './scene';
 export function MediaAsset({ id, overlay, token, volume, muted, loop, name }: { id: string | null; overlay: string; token: string; volume: number; muted: boolean; loop: boolean; name: string }) {
   const [asset, setAsset] = useState<{ url: string; mime: string } | null>(null); const [error, setError] = useState('');
   const media = useRef<HTMLMediaElement | null>(null);
@@ -49,6 +51,7 @@ function ActiveAlert({ job, overlay, token, silent }: { job: AlertJob; overlay: 
 export function CanvasRuntime({ id, token = '', preview = false, previewAudio = false }: { id: string; token?: string; preview?: boolean; previewAudio?: boolean }) {
   const [scene, setScene] = useState<Scene | null>(null); const [events, setEvents] = useState<ChatEvent[]>([]); const [active, setActive] = useState<AlertJob[]>([]);
   const [status, setStatus] = useState('Connecting'); const settings = useRef<Scene | null>(null); const queue = useRef(new AlertQueue());
+  const [donors, setDonors] = useState<DonorSnapshot[]>([]);
   useEffect(() => {
     const scheduler = queue.current; scheduler.clear();
     const connection = new ChatConnection(id, token, preview, definition => {
@@ -57,7 +60,7 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
       const value = settings.current; if (!value) return;
       const now = Date.now(); if (delivery !== 'history') for (const event of incoming) for (const widget of value.widgets) scheduler.enqueue(widget, event, now);
       setActive(scheduler.tick(now)); setEvents(incoming);
-    }, setStatus, true);
+    }, setStatus, true, setDonors);
     void connection.start();
     const timer = setInterval(() => { const jobs = scheduler.tick(Date.now()); setActive(old => old.map(j => j.key).join(',') === jobs.map(j => j.key).join(',') ? old : jobs); }, 100);
     return () => { clearInterval(timer); connection.stop(); scheduler.clear(); };
@@ -68,6 +71,7 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
     {scene.widgets.filter(w => !w.hidden).map(w => <div className="runtime-widget" key={w.id} data-widget-id={w.id}
       style={{ left: w.x, top: w.y, width: w.width, height: w.height, transform: `rotate(${w.rotation}deg)`, color: w.color, fontSize: w.fontSize }}>
       {w.kind === 'text' && <div className="widget-text">{w.text}</div>}
+      {donorKinds.includes(w.kind) && <DonorWidget widget={w} snapshot={donors.find(s => s.widgetId === w.id)} overlay={id} token={token} />}
       {['image', 'video', 'audio'].includes(w.kind) && <MediaAsset id={w.assetId} overlay={id} token={token} volume={w.volume} muted={w.muted || preview && !previewAudio} loop={w.loop} name={w.name} />}
       {w.kind === 'chat' && <EmbeddedChat scene={scene} widget={w} events={events} token={token} />}
       {w.kind === 'alert' && active.filter(j => j.widget.id === w.id).map(job => <ActiveAlert key={job.key} job={job} overlay={id} token={token} silent={preview && !previewAudio} />)}

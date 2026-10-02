@@ -4,6 +4,11 @@
     "title": "ExtensionSuite.Host | v1",
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:37831/"
+    }
+  ],
   "paths": {
     "/api/rumble/status": {
       "get": {
@@ -2417,6 +2422,96 @@
         },
         "additionalProperties": false
       },
+      "DonorWidgetSettings": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eventTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minimumUsdMinor": {
+            "type": "string"
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "customStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "customEndExclusive": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "showName": {
+            "type": "boolean"
+          },
+          "showAvatar": {
+            "type": "boolean"
+          },
+          "showPlatformBadges": {
+            "type": "boolean"
+          },
+          "showAmount": {
+            "type": "boolean"
+          },
+          "showCrown": {
+            "type": "boolean"
+          },
+          "template": {
+            "type": "string"
+          },
+          "fontFamily": {
+            "type": "string"
+          },
+          "animation": {
+            "type": "string"
+          },
+          "transitionMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "crownAssetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fontAssetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "EventBadge": {
         "required": [
           "name"
@@ -3691,6 +3786,9 @@
           },
           "alert": {
             "$ref": "#/components/schemas/AlertSettings"
+          },
+          "donor": {
+            "$ref": "#/components/schemas/DonorWidgetSettings"
           }
         },
         "additionalProperties": false

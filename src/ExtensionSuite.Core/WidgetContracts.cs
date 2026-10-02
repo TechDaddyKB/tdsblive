@@ -21,17 +21,18 @@ public sealed record OverlayWidget
     public bool Muted { get; init; } = true;
     public ChatSettings Chat { get; init; } = new();
     public AlertSettings Alert { get; init; } = new();
+    public DonorWidgetSettings Donor { get; init; } = new();
 
     public void Validate()
     {
         if (!Guid.TryParseExact(Id, "D", out _) || string.IsNullOrWhiteSpace(Name) || Name.Length > 128 ||
-            Kind is not ("text" or "image" or "video" or "audio" or "chat" or "alert") ||
+            Kind is not ("text" or "image" or "video" or "audio" or "chat" or "alert" or "donor-crown" or "donor-leaderboard" or "latest-supporter" or "current-stream-leader" or "current-stream-total") ||
             !Finite(X, -7680, 7680) || !Finite(Y, -7680, 7680) || !Finite(Width, 1, 7680) || !Finite(Height, 1, 7680) ||
             !Finite(Rotation, -360, 360) || Text is null || Text.Length > 4096 ||
             Color is null || Color.Length != 7 || Color[0] != '#' || Color[1..].Any(c => !Uri.IsHexDigit(c)) ||
-            FontSize is < 8 or > 200 || !Finite(Volume, 0, 1) || AssetId is not null && !AssetIdentity.IsValid(AssetId) || Chat is null || Alert is null)
+            FontSize is < 8 or > 200 || !Finite(Volume, 0, 1) || AssetId is not null && !AssetIdentity.IsValid(AssetId) || Chat is null || Alert is null || Donor is null)
             throw new ArgumentException("Invalid overlay widget.");
-        Chat.Validate(); Alert.Validate();
+        Chat.Validate(); Alert.Validate(); Donor.Validate();
     }
     private static bool Finite(double value, double min, double max) => double.IsFinite(value) && value >= min && value <= max;
 }

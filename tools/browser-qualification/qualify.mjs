@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { qualifyVisualEditor } from './visual-editor.mjs';
 import { qualifyFinancial } from './financial.mjs';
+import { qualifyDonors } from './donors.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
@@ -127,6 +128,7 @@ try {
   await qualifyVisualEditor(page, origin, writeHeaders, root);
   execFileSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(root, 'tools/seed_financial_browser.py'), directory], { stdio: 'pipe' });
   await qualifyFinancial(page, origin);
+  await qualifyDonors(page, origin, writeHeaders);
   assert.equal(pageErrors, 0, 'Rendered pages raised JavaScript errors');
   console.log('G02/G05/G06 fresh-browser qualification passed: HTTP editor/login, transparent escaped four-platform chat, bounded DOM, one socket, reconnect, saved settings and persistent light/dark streamer view');
 } finally {

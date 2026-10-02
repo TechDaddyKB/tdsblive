@@ -115,7 +115,7 @@ public sealed class BotProtocolSession : IAsyncDisposable
         await lifetime.CancelAsync();
         socket.Abort();
         try { await receiver; }
-        catch (Exception error) when (error is OperationCanceledException or WebSocketException or BotRequestException or JsonException) { /* Expected closed session. */ }
+        catch (Exception error) when (error is OperationCanceledException or WebSocketException or BotRequestException or JsonException or ObjectDisposedException) { /* Abort can dispose the underlying socket before a concurrent receive observes cancellation. */ }
         socket.Dispose();
         lifetime.Dispose();
     }

@@ -5,10 +5,22 @@ export interface AlertSettings {
   overflowPolicy: 'drop-oldest' | 'drop-newest'; animation: 'none' | 'fade' | 'slide'; mediaAssetId: string | null; soundAssetId: string | null;
 }
 export interface Widget {
-  id: string; name: string; kind: 'text' | 'image' | 'video' | 'audio' | 'chat' | 'alert'; x: number; y: number; width: number; height: number;
+  id: string; name: string; kind: 'text' | 'image' | 'video' | 'audio' | 'chat' | 'alert' | 'donor-crown' | 'donor-leaderboard' | 'latest-supporter' | 'current-stream-leader' | 'current-stream-total'; x: number; y: number; width: number; height: number;
   rotation: number; locked: boolean; hidden: boolean; text: string; color: string; fontSize: number; assetId: string | null;
-  volume: number; loop: boolean; muted: boolean; chat: ChatSettings; alert: AlertSettings;
+  volume: number; loop: boolean; muted: boolean; chat: ChatSettings; alert: AlertSettings; donor?: DonorSettings;
 }
+export interface DonorSettings {
+  period: string; platforms: string[]; eventTypes: string[]; minimumUsdMinor: string; count: number;
+  customStart: string | null; customEndExclusive: string | null; showName: boolean; showAvatar: boolean;
+  showPlatformBadges: boolean; showAmount: boolean; showCrown: boolean; template: string; fontFamily: string;
+  animation: 'none' | 'fade' | 'slide'; transitionMs: number; crownAssetId: string | null; fontAssetId: string | null;
+}
+export const defaultDonor: DonorSettings = {
+  period: 'all-time', platforms: [], eventTypes: [], minimumUsdMinor: '0', count: 10, customStart: null, customEndExclusive: null,
+  showName: true, showAvatar: true, showPlatformBadges: true, showAmount: true, showCrown: true,
+  template: '{name} · {amount}', fontFamily: 'sans-serif', animation: 'fade', transitionMs: 300, crownAssetId: null, fontAssetId: null,
+};
+export const donorKinds: Widget['kind'][] = ['donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total'];
 export interface Scene extends OverlayDefinition { canvasEnabled: boolean; revisionLimit: number; widgets: Widget[] }
 export const defaultAlert: AlertSettings = {
   eventTypes: ['community.follow'], platforms: ['twitch', 'youtube', 'kick', 'rumble'], template: '{user} · {type}', group: 'main-alerts', priority: 0,
@@ -25,7 +37,7 @@ export function createWidget(kind: Widget['kind']): Widget {
   return { id: widgetId(), name: kind === 'chat' ? 'Combined Chat' : kind === 'alert' ? 'AlertBox' : kind[0].toUpperCase() + kind.slice(1),
     kind, x: 40, y: 40, width: kind === 'chat' ? 600 : 400, height: kind === 'chat' ? 700 : 200, rotation: 0, locked: false, hidden: false,
     text: 'Hello, stream!', color: '#ffffff', fontSize: 32, assetId: null, volume: .75, loop: true, muted: true,
-    chat: structuredClone(defaultSettings), alert: structuredClone(defaultAlert) };
+    chat: structuredClone(defaultSettings), alert: structuredClone(defaultAlert), donor: structuredClone(defaultDonor) };
 }
 export const alertPresets = [
   ['Follow', 'community.follow', 'twitch'], ['Subscription', 'support.subscription', 'twitch'], ['Gift Subscription', 'support.gift', 'twitch'], ['Bits', 'support.bits', 'twitch'],

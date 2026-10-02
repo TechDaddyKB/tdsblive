@@ -1,4 +1,5 @@
 import type { ChatEvent, OverlayDefinition } from './chat';
+import type { DonorSnapshot } from './DonorWidget';
 
 export class ChatConnection {
   private socket: WebSocket | null = null;
@@ -8,7 +9,7 @@ export class ChatConnection {
   private failures = 0;
   private lastReply = 0;
   constructor(private readonly id: string, private readonly token: string, private readonly preview: boolean,
-    private readonly settings: (value: OverlayDefinition) => void, private readonly events: (value: ChatEvent[], delivery: 'socket' | 'history') => void, private readonly status: (value: string) => void, private readonly canvas = false) {}
+    private readonly settings: (value: OverlayDefinition) => void, private readonly events: (value: ChatEvent[], delivery: 'socket' | 'history') => void, private readonly status: (value: string) => void, private readonly canvas = false, private readonly donors?: (value: DonorSnapshot[]) => void) {}
   private headers(): HeadersInit { return this.token ? { Authorization: `Bearer ${this.token}`, 'X-TDSBLive-Overlay': this.id } : {}; }
   async start(): Promise<void> {
     this.status('Connecting');
@@ -25,11 +26,12 @@ export class ChatConnection {
       socket.onopen = () => { this.lastReply = Date.now(); socket.send(JSON.stringify({ op: 'subscribe', types: this.canvas && definition.canvasEnabled ? ['*'] : ['chat.message'] })); };
       socket.onmessage = event => {
         try {
-          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition };
+          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition; widgets?: DonorSnapshot[] };
           this.lastReply = Date.now();
           if (message.op === 'subscribed') { this.failures = 0; this.status('Connected'); void this.history(); }
           if (message.op === 'event' && message.event) this.events([message.event], 'socket');
           if (message.op === 'settings' && message.settings) { this.settings(message.settings); void this.history(); }
+          if (message.op === 'donors' && message.widgets) this.donors?.(message.widgets);
         } catch { this.status('Invalid event ignored'); }
       };
       socket.onerror = () => { this.status('Reconnecting'); socket.close(); };

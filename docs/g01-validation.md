@@ -5,8 +5,8 @@ fixtures, provenance metadata, all 785 polls and archive comparisons before setu
 
 ## External evidence
 
-- Public MIT repository: https://github.com/camarokris/tdsblive
-- Passing Windows CI: https://github.com/camarokris/tdsblive/actions/runs/36836817528
+- Public MIT repository: https://github.com/techdaddykb/tdsblive
+- Passing Windows CI: https://github.com/techdaddykb/tdsblive/actions/runs/36836817528
 - Analyzed commit: `fccfe4eaa052f5a1db23b7bc19c1804c30157477`
 - GitHub-bound Sonar project: https://sonarcloud.io/dashboard?id=camarokris_tdsblive
 - Sonar analysis: `f19bc92e-4fe7-4f86-bc18-8b48c2c1319b`

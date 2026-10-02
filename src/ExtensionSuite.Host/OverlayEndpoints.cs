@@ -13,6 +13,7 @@ public static class OverlayEndpoints
         app.MapGet("/api/overlays", async (OverlayStore store, CancellationToken ct) => TypedResults.Ok(await store.ListAsync(ct)));
         app.MapPost("/api/overlays", async (OverlayDefinition value, OverlayStore store, AssetStore assets, CancellationToken ct) =>
         {
+            if (value.Version != 1) return Results.BadRequest();
             try { value.Validate(); } catch (ArgumentException) { return Results.BadRequest(); }
             if (!await ValidAssetsAsync(value, assets, ct)) return Results.BadRequest();
             return await store.CreateAsync(value, ct) ? Results.Created($"/api/overlays/{value.Id}", value) : Results.Conflict();
@@ -113,10 +114,11 @@ public static class OverlayEndpoints
     }
     private static async Task<bool> ValidAssetsAsync(OverlayDefinition overlay, AssetStore assets, CancellationToken ct)
     {
-        var fonts = new[] { overlay.Chat.FontAssetId }.Concat(overlay.Widgets.Select(w => w.Chat.FontAssetId)).Where(id => id is not null);
+        var fonts = new[] { overlay.Chat.FontAssetId }.Concat(overlay.Widgets.SelectMany(w => new[] { w.Chat.FontAssetId, w.Donor.FontAssetId })).Where(id => id is not null);
         foreach (var id in fonts) if ((await assets.GetAsync(id!, ct))?.Mime.StartsWith("font/", StringComparison.Ordinal) != true) return false;
         foreach (var widget in overlay.Widgets)
         {
+            if (widget.Donor.CrownAssetId is { } crown && (await assets.GetAsync(crown, ct))?.Mime.StartsWith("image/", StringComparison.Ordinal) != true) return false;
             if (widget.AssetId is { } id)
             {
                 var mime = (await assets.GetAsync(id, ct))?.Mime;
