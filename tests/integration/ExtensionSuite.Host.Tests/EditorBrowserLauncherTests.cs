@@ -2,12 +2,44 @@ using System.ComponentModel;
 using System.Diagnostics;
 using ExtensionSuite.Core;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
+using System.Text.Json;
 using Xunit;
 
 namespace ExtensionSuite.Host.Tests;
 
 public sealed class EditorBrowserLauncherTests
 {
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task HostStartupRespectsOpenEditorFlagAndSurvivesBrowserFailure(bool requested, bool succeeds)
+    {
+        using var foundation = new FoundationHostFactory();
+        var configuration = new ApplicationConfiguration { Server = new() { Port = 18474 } };
+        await File.WriteAllTextAsync(Path.Combine(foundation.DirectoryPath, "configuration.json"),
+            JsonSerializer.Serialize(configuration, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        var launcher = new RecordingLauncher(succeeds);
+        using var host = foundation.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("TDSBLive:OpenEditor", requested.ToString());
+            builder.ConfigureServices(services => services.AddSingleton<IEditorBrowserLauncher>(launcher));
+        });
+        using var client = host.CreateClient();
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/status")).StatusCode);
+        Assert.Equal(requested ? 1 : 0, launcher.Calls);
+        if (requested) Assert.Equal(18474, launcher.Server?.Port);
+    }
+
+    private sealed class RecordingLauncher(bool succeeds) : IEditorBrowserLauncher
+    {
+        public int Calls { get; private set; }
+        public ServerConfiguration? Server { get; private set; }
+        public bool Open(ServerConfiguration server) { Calls++; Server = server; return succeeds; }
+    }
+
     [Theory]
     [InlineData("127.0.0.1", "http://127.0.0.1:18474/editor")]
     [InlineData("0.0.0.0", "http://127.0.0.1:18474/editor")]

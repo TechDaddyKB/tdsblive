@@ -8,6 +8,7 @@ import { ChatPanel } from './ChatPanel';
 import { VisualEditor } from './VisualEditor';
 import { FinancialPanel } from './FinancialPanel';
 import { AutomationPanel } from './AutomationPanel';
+import './application.css';
 
 export function App() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -22,7 +23,7 @@ export function App() {
     return () => controller.abort();
   }, []);
   if (window.location.pathname === '/login') return <Login />;
-  return <main>
+  return <main className="tdsblive-editor">
     <h1>{status?.name ?? 'TDSBLive'}</h1>
     <p>Local HTTP is supported. HTTPS is optional.</p>
     <nav aria-label="Application"><a href="/editor">Overview</a> <a href="/api/diagnostics">Diagnostics</a></nav>
