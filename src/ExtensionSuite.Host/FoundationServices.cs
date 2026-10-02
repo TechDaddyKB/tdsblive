@@ -19,6 +19,9 @@ public static class FoundationServices
         builder.Logging.SetMinimumLevel(LogLevel.Trace);
         builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = ExtensionSuite.Overlays.AssetValidation.MaximumBytes);
         builder.Services.AddSingleton<ApplicationPaths>();
+        builder.Services.AddSingleton<RecoveryArchive>();
+        builder.Services.AddSingleton<RecoveryRestore>();
+        builder.Services.AddSingleton<ApplicationLifecycle>();
         builder.Services.AddSingleton<OverlayStore>();
         builder.Services.AddSingleton<AssetStore>();
         builder.Services.AddSingleton<AutomationRuleStore>();

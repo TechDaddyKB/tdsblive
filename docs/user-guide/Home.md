@@ -14,7 +14,13 @@ If you already have TDSBLive running, open the editor at
 [http://127.0.0.1:17474/editor](http://127.0.0.1:17474/editor).
 Keep TDSBLive running while you use its overlays in OBS.
 
+- [Install and update](Install-and-Update.md): choose an installer or ZIP, update safely and uninstall.
+- [First setup](First-Setup.md): connect the services you use and review them before streaming.
 - [Chat and OBS](Chat-and-OBS.md): show chat on your stream and add a reading dock.
+- [Backup and recovery](Backup-and-Recovery.md): protect saved data and restore a checked copy.
+- [Overlays and alerts](Overlays-and-Alerts.md): build a layout and test it before adding it to OBS.
+- [Supporter totals](Supporter-Totals.md): understand periods, valuations and linked identities.
+- [Automation](Automation.md): configure and review speech and sound rules.
 
 The guide will walk through installation, first setup, everyday use, connections,
 overlays, alerts, supporter totals, automation, backup, updates and recovery.

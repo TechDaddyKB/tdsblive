@@ -97,10 +97,14 @@ try {
   await page.screenshot({ path: path.join(root, 'artifacts/g10-transparent-chat.png'), omitBackground: true });
   await page.goto(`${origin}/editor`);
   await page.getByText('Host ready. Loopback access only.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Close guided setup' }).waitFor();
+  await page.getByRole('region', { name: 'Guided setup' }).screenshot({ path: path.join(output, 'guided-setup.png') });
+  await page.getByRole('button', { name: 'Close guided setup' }).click();
+  await page.getByRole('region', { name: 'Backup and recovery' }).screenshot({ path: path.join(output, 'backup-recovery.png') });
   const card = page.getByRole('region', { name: 'Combined chat setup' });
   await card.getByText('Chat appearance and filters', { exact: true }).click();
   await card.screenshot({ path: path.join(output, 'chat-settings.png') });
-  console.log('Guide chat illustrations generated from owned simulation only; inspect and secrets-scan before publishing.');
+  console.log('Guide chat/setup/recovery illustrations generated from owned simulation only; inspect and secrets-scan before publishing.');
 } finally {
   await browser?.close();
   if (!spawnFailed && host.exitCode === null) {

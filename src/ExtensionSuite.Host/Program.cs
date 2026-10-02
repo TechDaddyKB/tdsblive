@@ -19,9 +19,41 @@ if (builder.Configuration.GetValue<bool>("TDSBLive:OpenEditor"))
         app.Services.GetRequiredService<IEditorBrowserLauncher>().Open(configuration.Server);
     });
 }
-try { await app.RunAsync(); }
+var lifecycle = app.Services.GetRequiredService<ApplicationLifecycle>();
+var paths = app.Services.GetRequiredService<ApplicationPaths>();
+var restore = app.Services.GetRequiredService<RecoveryRestore>();
+try
+{
+    await app.StartAsync();
+    await app.WaitForShutdownAsync();
+    var operation = lifecycle.Operation;
+    var mayRelaunch = true;
+    if (operation?.Restore is { } prepared)
+    {
+        var shutdown = await RecoveryShutdown.DrainAsync(app);
+        await using (prepared)
+        {
+            try { await restore.ApplyAsync(prepared, shutdown); }
+            catch (Exception error) when (error is IOException or InvalidDataException or ArgumentException or InvalidOperationException or System.Data.Common.DbException)
+            {
+                mayRelaunch = false;
+                Console.Error.WriteLine("Restore failed. The safety copy is retained; reopen TDSBLive and check local recovery information.");
+                Environment.ExitCode = 1;
+            }
+        }
+    }
+    else await app.DisposeAsync();
+    if (mayRelaunch && operation?.Kind is "restart" or "restore" &&
+        !ApplicationRelauncher.TryStart(Environment.ProcessPath!, typeof(Program).Assembly.Location, paths.Root,
+            openEditor: builder.Configuration.GetValue<bool>("TDSBLive:OpenEditor")))
+    {
+        Console.Error.WriteLine("TDSBLive stopped. Open it again using its shortcut to continue.");
+        Environment.ExitCode = 1;
+    }
+}
 catch (IOException)
 {
     Console.Error.WriteLine("TDSBLive could not bind its configured HTTP address. Check for a port conflict and change server.port in configuration.json.");
     Environment.ExitCode = 1;
 }
+finally { await app.DisposeAsync(); }

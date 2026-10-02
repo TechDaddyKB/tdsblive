@@ -8,6 +8,9 @@ import { ChatPanel } from './ChatPanel';
 import { VisualEditor } from './VisualEditor';
 import { FinancialPanel } from './FinancialPanel';
 import { AutomationPanel } from './AutomationPanel';
+import { MaintenancePanel } from './MaintenancePanel';
+import { SetupWizard } from './SetupWizard';
+import { LanPanel } from './LanPanel';
 import './application.css';
 
 export function App() {
@@ -31,11 +34,14 @@ export function App() {
     <ConnectionIndicator integration="Speaker.bot" state="disconnected" /></>}
     {status && <p role="status">Host ready. {status.lanEnabled ? 'Authenticated LAN access enabled.' : 'Loopback access only.'}</p>}
     {error && <p role="alert">{error} <a href="/login">Sign in</a></p>}
+    {status && <SetupWizard />}
     {status && <BotPanel />}
     {status && <RumblePanel />}
     {status && <VisualEditor />}
     {status && <ChatPanel />}
     {status && <FinancialPanel />}
     {status && <AutomationPanel />}
+    {status && <MaintenancePanel />}
+    {status && <LanPanel />}
   </main>;
 }

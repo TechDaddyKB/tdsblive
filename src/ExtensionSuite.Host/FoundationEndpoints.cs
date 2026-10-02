@@ -11,6 +11,7 @@ namespace ExtensionSuite.Host;
 
 public sealed record AdminLogin(string Credential);
 public sealed record SecretUpdate(string Value);
+public sealed record StreamerCredentialUpdate(string Value, bool SessionOnly = true);
 public sealed record TestEventRequest(CanonicalEvent Event, bool Persist = false);
 public sealed record IntegrationStates(string StreamerBot, string SpeakerBot, string Rumble);
 public sealed record StatusResponse(string Name, bool HttpSupported, bool LanEnabled, IntegrationStates Integrations);
@@ -20,6 +21,20 @@ public static class FoundationEndpoints
 {
     public static void MapFoundationEndpoints(this WebApplication app)
     {
+        app.MapRecoveryEndpoints();
+        app.MapSetupEndpoints();
+        app.MapPost("/api/integrations/streamerbot/credential", async (StreamerCredentialUpdate update, HttpContext context, SensitiveValues sensitive) =>
+        {
+            if (string.IsNullOrEmpty(update.Value) || update.Value.Length > 4096)
+                return Results.BadRequest(new { error = "Enter a valid Streamer.bot password." });
+            if (!update.SessionOnly)
+            {
+                if (!OperatingSystem.IsWindows()) return Results.Problem("Persistent credential storage requires Windows DPAPI. Use session-only storage.", statusCode: 501);
+                await context.RequestServices.GetRequiredService<WindowsSecretVault>().SetAsync("streamerbot-password", update.Value, context.RequestAborted);
+            }
+            sensitive.Set("streamerbot-password", update.Value);
+            return Results.NoContent();
+        });
         app.MapRumbleEndpoints();
         app.MapOverlayEndpoints();
         app.MapFinancialEndpoints();
