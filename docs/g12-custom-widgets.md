@@ -26,8 +26,10 @@ permission to run bot actions.
 Each visible custom widget owns an `allow-scripts` iframe with an opaque origin,
 no same-origin/top-navigation/popup/form grants and a fresh frame capability.
 Its trusted renderer runs custom JavaScript in a dedicated worker with a
-LinkeDOM virtual `document` and `window`. HTML script tags/event attributes,
-links, nested frames, objects and unauthorized media are removed. Direct
+LinkeDOM virtual `document` and `window`. The browser compiles the custom program
+inside a dedicated blob worker; the sandbox does not grant `eval`, `Function`
+or `unsafe-eval`. HTML script tags/event attributes, links, nested frames,
+objects and unauthorized media are removed. Direct
 browser DOM access is intentionally unavailable. Custom code uses virtual DOM
 methods such as `getElementById`, `querySelector`, `textContent`, `innerHTML`
 and DOM event listeners; the renderer preserves unchanged media nodes during

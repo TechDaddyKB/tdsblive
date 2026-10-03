@@ -37,8 +37,10 @@ self.onmessage = (message: MessageEvent) => {
   if (data.op === 'init' && !initialized) {
     initialized = true; config = data.config; session = data.session; document.body.innerHTML = data.html;
     try {
-      // Evaluated only in the network-restricted worker, with a virtual DOM.
-      const execute = new Function('SBX', 'document', 'window', data.javaScript);
+      // The supplied blob program is compiled by the browser only in this
+      // network-restricted worker. No eval/Function capability is granted.
+      const execute = (self as unknown as { __SBX_RUN?: (api: typeof SBX, dom: typeof document, view: typeof document.defaultView) => void }).__SBX_RUN;
+      if (!execute) throw new Error('Widget program unavailable');
       execute(SBX, document, document.defaultView);
       dispatch('sbx:load', { config, session });
       setInterval(() => { const html = document.body.innerHTML; if (html !== previous && html.length <= 131072) { previous = html; postMessage({ op: 'render', html }); } }, 50);

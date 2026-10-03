@@ -24,5 +24,5 @@ export function customCsp(settings: CustomSettings, nonce: string): string {
   // Exact HTTPS origins only; never wildcard/local hosts or application origin.
   const domains = settings.permissions.includes('network') ? settings.networkDomains.filter(d =>
     /^[a-z0-9]+(?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/.test(d) && !/\.(local|localhost|internal)$/.test(d)).map(d => `https://${d}`).join(' ') : '';
-  return `default-src 'none'; script-src 'nonce-${nonce}' 'unsafe-eval'; style-src 'unsafe-inline'; worker-src blob:; connect-src ${domains || "'none'"}; img-src data: blob: ${domains}; media-src ${settings.permissions.includes('audio') ? 'data: blob: ' + domains : "'none'"}; font-src data: blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
+  return `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; worker-src blob:; connect-src ${domains || "'none'"}; img-src data: blob: ${domains}; media-src ${settings.permissions.includes('audio') ? 'data: blob: ' + domains : "'none'"}; font-src data: blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`;
 }

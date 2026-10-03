@@ -69,13 +69,13 @@ export async function qualifyCustomWidgets(page, origin, writeHeaders) {
   await send('future.available', 'Still permitted');
   await iframe.locator('#message').getByText('Still permitted parent-blocked navigation-blocked cookies-blocked network-blocked', { exact: true }).waitFor();
   // An explicit exact-domain grant permits only that origin, without parent credentials.
-  await page.context().route('https://example.com/permitted', route => route.fulfill({ status: 200, headers: { 'Access-Control-Allow-Origin': '*' }, contentType: 'text/plain', body: 'Allowlisted domain reached' }));
+  await page.context().route('https://example.com/**', route => route.request().url().endsWith('/permitted') ? route.fulfill({ status: 200, headers: { 'Access-Control-Allow-Origin': '*' }, contentType: 'text/plain', body: 'Allowlisted domain reached' }) : route.abort());
   scene = await read(); scene.widgets[0].custom.permissions = ['storage', 'network']; scene.widgets[0].custom.networkDomains = ['example.com'];
   scene.widgets[0].custom.html += '<p id="network">Network pending</p>';
   scene.widgets[0].custom.javaScript += "; fetch('https://example.com/permitted').then(r=>r.text()).then(t=>document.getElementById('network').textContent=t);";
   assert.equal((await fetch(`${origin}/api/overlays/g12-browser`, { method: 'PUT', headers: writeHeaders, body: JSON.stringify(scene) })).status, 200);
   await iframe.locator('#network').getByText('Allowlisted domain reached', { exact: true }).waitFor();
-  await page.context().unroute('https://example.com/permitted');
+  await page.context().unroute('https://example.com/**');
   await runtime.close();
   // Portable overlay and widget are created by UI and imported through UI.
   await page.reload(); await editor.getByLabel('Overlay', { exact: true }).selectOption('g12-browser');

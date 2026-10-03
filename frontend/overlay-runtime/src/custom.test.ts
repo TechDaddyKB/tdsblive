@@ -6,7 +6,7 @@ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(
 it('defaults to blocked networking, frames, forms and remote scripts, with separate audio permission', () => {
   const csp = customCsp(defaultCustom, 'owned');
   expect(csp).toContain("connect-src 'none'"); expect(csp).toContain("media-src 'none'"); expect(csp).toContain("frame-src 'none'");
-  expect(csp).toContain("script-src 'nonce-owned' 'unsafe-eval'"); expect(csp).not.toContain("script-src 'unsafe-inline'");
+  expect(csp).toContain("script-src 'nonce-owned'"); expect(csp).not.toContain("script-src 'unsafe-inline'"); expect(csp).not.toContain('unsafe-eval');
   const allowed = customCsp({ ...defaultCustom, permissions: ['network', 'audio'], networkDomains: ['example.com', '*.bad.com', '127.0.0.1', 'api.local'] }, 'owned');
   expect(allowed).toContain('connect-src https://example.com'); expect(allowed).not.toContain('bad.com'); expect(allowed).not.toContain('127.0.0.1'); expect(allowed).not.toContain('api.local');
 });

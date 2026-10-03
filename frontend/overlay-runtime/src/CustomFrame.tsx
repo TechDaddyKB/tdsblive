@@ -6,7 +6,9 @@ import { widgetId, type Widget } from './scene';
 // This function is serialized into the opaque iframe. It is trusted rendering
 // code; custom JavaScript runs exclusively in its disposable dedicated worker.
 export function frameBootstrap(channel: string, settings: CustomSettings, workerCode: string, assets: Record<string, string>) {
-  const worker = new Worker(URL.createObjectURL(new Blob([workerCode], { type: 'text/javascript' })));
+  const program = `${workerCode}\nself.__SBX_RUN = function(SBX, document, window) {\n${settings.javaScript}\n};`;
+  const worker = new Worker(URL.createObjectURL(new Blob([program], { type: 'text/javascript' })));
+  worker.onerror = () => parent.postMessage({ op: 'error', channel }, '*');
   const root = document.createElement('div'); document.body.append(root);
   const style = document.createElement('style'); style.textContent = settings.css.replace(/sbx-asset:([0-9a-f]{64})/g, (_match, id: string) => assets[id] ?? ''); document.head.append(style);
   const tags = new Set('DIV SPAN P BR BR HR H1 H2 H3 H4 UL OL LI STRONG EM B I SMALL PRE CODE TABLE THEAD TBODY TR TD TH IMG SVG PATH CIRCLE RECT G BUTTON LABEL INPUT SELECT OPTION TEXTAREA VIDEO AUDIO SOURCE'.split(' '));
@@ -60,7 +62,7 @@ export function frameBootstrap(channel: string, settings: CustomSettings, worker
     const target = e.target as HTMLInputElement;
     if (target.id) worker.postMessage({ op: 'dom-event', type, id: target.id, value: target.value });
   });
-  worker.postMessage({ op: 'init', html: settings.html, javaScript: settings.javaScript, config: settings.config, session: {} });
+  worker.postMessage({ op: 'init', html: settings.html, config: settings.config, session: {} });
   parent.postMessage({ op: 'ready', channel }, '*');
 }
 
