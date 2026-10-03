@@ -45,7 +45,9 @@ export class EditorSession {
     this.work = Promise.resolve().then(() => this.persist(sent)).then(saved => {
       if (this.disposed) return;
       this.baseline = fingerprint(saved);
-      const document = { ...this.state.document, version: saved.version };
+      // The server may supply newly introduced defaults to an older document.
+      // Accept that normalization only when no edit happened during the save.
+      const document = fingerprint(this.state.document) === fingerprint(sent) ? structuredClone(saved) : { ...this.state.document, version: saved.version };
       this.update(document, fingerprint(document) === this.baseline ? 'saved' : 'unsaved');
     }).catch((error: unknown) => {
       if (!this.disposed) this.update(this.state.document, error instanceof Error && 'status' in error && error.status === 409 ? 'conflict' : 'error');

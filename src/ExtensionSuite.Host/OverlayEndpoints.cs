@@ -76,6 +76,14 @@ public static class OverlayEndpoints
             return Results.Ok(history.Where(item => overlay.CanvasEnabled ? overlay.Widgets.Any(w => !w.Hidden && w.Kind == "chat" && w.Chat.Accepts(item)) : overlay.Chat.Accepts(item))
                 .Take(overlay.CanvasEnabled ? 500 : overlay.Chat.MaximumMessages).Select(PublicChat).ToArray());
         }).Produces<CanonicalEvent[]>();
+        app.MapGet("/api/overlays/{id}/events", async (string id, OverlayStore overlays, EventStore events, CancellationToken ct) =>
+        {
+            var overlay = await overlays.GetAsync(id, ct);
+            if (overlay is null) return Results.NotFound();
+            var history = await events.ReadAsync(500, cancellationToken: ct);
+            return Results.Ok(history.Where(item => overlay.CanvasEnabled && overlay.Widgets.Any(w => !w.Hidden && w.Kind == "event-list" && w.EventList.Accepts(item)))
+                .Select(PublicChat).ToArray());
+        }).Produces<CanonicalEvent[]>();
         app.Map("/ws/overlay/{id}", async (string id, OverlayStore overlays, EditorEventHub hub, HttpContext context) =>
         {
             var overlay = await overlays.GetAsync(id, context.RequestAborted);
@@ -134,7 +142,7 @@ public static class OverlayEndpoints
         }
         return true;
     }
-    public static CanonicalEvent PublicChat(CanonicalEvent item) => item with { Raw = null, Monetary = null };
+    public static CanonicalEvent PublicChat(CanonicalEvent item) => item with { Raw = null, Monetary = null, Support = null };
     private static IResult Shell(WebApplication app)
     {
         var file = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "runtime", "index.html");

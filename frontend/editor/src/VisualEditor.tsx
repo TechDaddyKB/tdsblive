@@ -1,25 +1,29 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { defaultSettings } from '../../overlay-runtime/src/chat';
-import { createWidget, inheritGroupSettings, widgetId, type Scene, type Widget } from '../../overlay-runtime/src/scene';
+import { createWidget, inheritGroupSettings, type Scene, type Widget } from '../../overlay-runtime/src/scene';
 import { EditorSession, type EditorState } from './EditorSession';
 import { visualApi, type Revision } from './visualApi';
 import { request } from './api';
 import { WidgetProperties, type EditorAsset } from './WidgetProperties';
+import { selection, groupSelection, copySelection, pasteSelection, alignSelection, distributeSelection, nudgeSelection, rotateSelection, reorderSelection, resizeSelection, type Alignment } from './sceneOperations';
 import './visual-editor.css';
 const sizes = [[1920, 1080], [2560, 1440], [3840, 2160], [1080, 1920]];
-const kinds: Widget['kind'][] = ['text', 'image', 'video', 'audio', 'chat', 'alert', 'donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total'];
+const kinds: Widget['kind'][] = ['text', 'image', 'video', 'audio', 'chat', 'alert', 'donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total', 'event-list', 'goal-bar', 'progress-bar'];
 export function VisualEditor() {
   const [overlays, setOverlays] = useState<Scene[]>([]); const [state, setState] = useState<EditorState | null>(null);
-  const [assets, setAssets] = useState<EditorAsset[]>([]); const [selected, setSelected] = useState(''); const [notice, setNotice] = useState('');
+  const [assets, setAssets] = useState<EditorAsset[]>([]); const [selectedIds, setSelectedIds] = useState<string[]>([]); const [notice, setNotice] = useState('');
+  const [grid, setGrid] = useState(true); const [panMode, setPanMode] = useState(false);
+  const scroll = useRef<HTMLDivElement | null>(null); const pan = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  const setSelected = (id: string) => setSelectedIds(id ? [id] : []);
   const [zoom, setZoom] = useState(.4); const [snap, setSnap] = useState(true); const [revisions, setRevisions] = useState<Revision[]>([]);
   const [createName, setCreateName] = useState('Main Stream'); const [createId, setCreateId] = useState('main-stream');
   const [preset, setPreset] = useState('1920x1080'); const [width, setWidth] = useState(1920); const [height, setHeight] = useState(1080);
   const [preview, setPreview] = useState(false); const [previewAudio, setPreviewAudio] = useState(false);
   const [testType, setTestType] = useState('community.follow'); const [testPlatform, setTestPlatform] = useState('twitch'); const [raw, setRaw] = useState('{}');
   const [nativeInjection, setNativeInjection] = useState(false);
-  const [dragView, setDragView] = useState<Widget | null>(null); const [clipboard, setClipboard] = useState<Widget | null>(null);
+  const [dragView, setDragView] = useState<Widget | null>(null); const [clipboard, setClipboard] = useState<Widget[]>([]);
   const session = useRef<EditorSession | null>(null); const unsubscribe = useRef<(() => void) | undefined>(undefined);
-  const gesture = useRef<{ widget: Widget; mode: 'move' | 'resize'; x: number; y: number; latest: Widget } | null>(null);
+  const gesture = useRef<{ widget: Widget; mode: 'move' | 'resize'; x: number; y: number; latest: Widget; ids: string[]; scene: Scene } | null>(null);
   const mounted = useRef(true);
   const operation = useRef(0);
   const current = (id: number) => mounted.current && operation.current === id;
@@ -37,10 +41,20 @@ export function VisualEditor() {
     window.addEventListener('beforeunload', leave);
     return () => { mounted.current = false; ++operation.current; session.current?.dispose(); unsubscribe.current?.(); window.removeEventListener('beforeunload', leave); };
   }, []);
-  const doc = state?.document; const chosen = doc?.widgets.find(w => w.id === selected);
+  const doc = state?.document; const selected = selectedIds[0] ?? ''; const chosen = doc?.widgets.find(w => w.id === selected);
+  const selectedWidgets = doc ? selection(doc, selectedIds) : [];
+  const selectedKeys = new Set(selectedWidgets.map(w => w.id));
+  const select = (id: string, additive = false) => setSelectedIds(old => additive ? old.includes(id) ? old.filter(key => key !== id) : [...old, id] : [id]);
   const edit = (value: Scene) => session.current?.edit(value);
   const change = (w: Widget) => {
     if (!doc) return;
+    const previous = doc.widgets.find(old => old.id === w.id);
+    if (previous?.locked && w.locked) return;
+    if (previous?.groupId && w.groupId === previous.groupId) {
+      if (w.x !== previous.x || w.y !== previous.y) { edit(nudgeSelection(doc, [w.id], w.x - previous.x, w.y - previous.y)); return; }
+      if (w.width !== previous.width || w.height !== previous.height) { edit(resizeSelection(doc, [w.id], previous, w.width, w.height)); return; }
+      if (w.rotation !== previous.rotation) { edit(rotateSelection(doc, [w.id], w.rotation - previous.rotation)); return; }
+    }
     if (w.kind === 'alert' && doc.widgets.find(old => old.id === w.id)?.alert.group !== w.alert.group) w = inheritGroupSettings(w, doc.widgets);
     edit({ ...doc, widgets: doc.widgets.map(old => old.id === w.id ? w : old.kind === 'alert' && w.kind === 'alert' && old.alert.group === w.alert.group ?
       { ...old, alert: { ...old.alert, concurrency: w.alert.concurrency, maximumQueueLength: w.alert.maximumQueueLength, overflowPolicy: w.alert.overflowPolicy } } : old) });
@@ -69,11 +83,15 @@ export function VisualEditor() {
     } catch { if (current(operationId)) setNotice('Unable to create overlay. Use a unique lowercase slug, a name, and dimensions between 1 and 7680.'); }
   };
   const add = (kind: Widget['kind']) => { if (!doc || doc.widgets.length >= 100) return; const w = inheritGroupSettings(createWidget(kind), doc.widgets); edit({ ...doc, widgets: [...doc.widgets, w] }); setSelected(w.id); };
-  const remove = () => { if (doc && chosen && !chosen.locked) { edit({ ...doc, widgets: doc.widgets.filter(w => w.id !== chosen.id) }); setSelected(''); } };
-  const duplicate = (source: Widget | undefined = chosen) => { if (!doc || !source || doc.widgets.length >= 100) return; const next = inheritGroupSettings({ ...structuredClone(source), id: widgetId(), x: Math.min(7680, source.x + 20), y: Math.min(7680, source.y + 20), locked: false }, doc.widgets); edit({ ...doc, widgets: [...doc.widgets, next] }); setSelected(next.id); };
+  const remove = () => { if (doc && selectedWidgets.length && !selectedWidgets.some(w => w.locked)) { edit({ ...doc, widgets: doc.widgets.filter(w => !selectedKeys.has(w.id)) }); setSelected(''); } };
+  const duplicate = (copied?: Widget[]) => { if (!doc) return; const result = pasteSelection(doc, copied ?? copySelection(doc, selectedIds)); if (!result.ids.length) return;
+    edit({ ...result.scene, widgets: result.scene.widgets.map(w => inheritGroupSettings(w, result.scene.widgets)) }); setSelectedIds(result.ids); };
   const begin = (e: ReactPointerEvent<HTMLElement>, widget: Widget, mode: 'move' | 'resize') => {
-    e.stopPropagation(); setSelected(widget.id); e.currentTarget.focus(); if (widget.locked || widget.hidden || e.button !== 0) return;
-    e.currentTarget.setPointerCapture(e.pointerId); gesture.current = { widget, mode, x: e.clientX, y: e.clientY, latest: widget }; setDragView(widget);
+    if (!doc || panMode || e.button === 1) return;
+    e.stopPropagation(); const ids = selectedKeys.has(widget.id) ? selectedIds : [widget.id];
+    if (e.shiftKey || e.ctrlKey || e.metaKey) { select(widget.id, true); return; }
+    setSelectedIds(ids); e.currentTarget.focus(); if (selection(doc, ids).some(w => w.locked) || widget.hidden || e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId); gesture.current = { widget, mode, x: e.clientX, y: e.clientY, latest: widget, ids, scene: doc }; setDragView(widget);
   };
   const move = (e: ReactPointerEvent<HTMLElement>) => {
     const g = gesture.current; if (!g) return; const dx = (e.clientX - g.x) / zoom, dy = (e.clientY - g.y) / zoom;
@@ -82,8 +100,8 @@ export function VisualEditor() {
     g.latest = g.mode === 'move' ? { ...g.widget, x: bounded(g.widget.x + dx, -7680), y: bounded(g.widget.y + dy, -7680) } :
       { ...g.widget, width: bounded(g.widget.width + dx, 1), height: bounded(g.widget.height + dy, 1) }; setDragView(g.latest);
   };
-  const finish = () => { const g = gesture.current; gesture.current = null; setDragView(null); if (g) change(g.latest); };
-  const reorder = (offset: number) => { if (!doc || !chosen) return; const values = [...doc.widgets], from = values.findIndex(w => w.id === selected), to = Math.max(0, Math.min(values.length - 1, from + offset)); values.splice(from, 1); values.splice(to, 0, chosen); edit({ ...doc, widgets: values }); };
+  const finish = () => { const g = gesture.current; gesture.current = null; setDragView(null); if (g && g.mode === 'move') edit(nudgeSelection(g.scene, g.ids, g.latest.x - g.widget.x, g.latest.y - g.widget.y)); else if (g) edit(resizeSelection(g.scene, g.ids, g.widget, g.latest.width, g.latest.height)); };
+  const reorder = (offset: number) => { if (doc) edit(reorderSelection(doc, selectedIds, offset > 0 ? 'up' : 'down')); };
   const test = async () => {
     if (!doc) return;
     try { const parsed: unknown = JSON.parse(raw); if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid raw object');
@@ -91,6 +109,10 @@ export function VisualEditor() {
       setNotice(`Test delivered only to this overlay’s preview. Persisted: ${result.persisted}. Live actions: ${result.liveActionsAllowed}.`);
     } catch { setNotice('Unable to send test event. Raw injection must be a JSON object.'); }
   };
+  const activeGesture = gesture.current;
+  const visibleWidgets = activeGesture && dragView ? (activeGesture.mode === 'move' ?
+    nudgeSelection(activeGesture.scene, activeGesture.ids, dragView.x - activeGesture.widget.x, dragView.y - activeGesture.widget.y) :
+    resizeSelection(activeGesture.scene, activeGesture.ids, activeGesture.widget, dragView.width, dragView.height)).widgets : doc?.widgets ?? [];
   return <section aria-label="Visual overlay editor" className="visual-editor"><h2>Visual Overlay Editor</h2>
     <div className="canvas-toolbar"><label>Overlay<select aria-label="Overlay" value={doc?.id ?? ''} onChange={e => { void load(e.target.value); }}><option value="">Choose overlay…</option>{overlays.filter(o => o.canvasEnabled).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
       <label>New overlay name<input value={createName} onChange={e => setCreateName(e.target.value)} /></label><label>New overlay ID<input value={createId} onChange={e => setCreateId(e.target.value)} /></label>
@@ -105,6 +127,19 @@ export function VisualEditor() {
       <button onClick={() => { void load(doc.id, true); }}>Reload saved version</button>
       <label>Zoom<input aria-label="Canvas zoom" type="range" min={.1} max={2} step={.05} value={zoom} onChange={e => setZoom(Number(e.target.value))} /></label>
       <label><input type="checkbox" checked={snap} onChange={e => setSnap(e.target.checked)} />Snap to 10px grid</label>
+      <label><input type="checkbox" checked={grid} onChange={e => setGrid(e.target.checked)} />Show grid</label>
+      <button aria-pressed={panMode} onClick={() => setPanMode(!panMode)}>Pan canvas</button>
+      <button disabled={selectedWidgets.length < 2} onClick={() => edit(groupSelection(doc, selectedIds))}>Group selection</button>
+      <button disabled={!selectedWidgets.some(w => w.groupId)} onClick={() => edit(groupSelection(doc, selectedIds, true))}>Ungroup selection</button>
+      {(['left', 'center', 'right', 'top', 'middle', 'bottom'] as Alignment[]).map(alignment => <button key={alignment} disabled={!selectedWidgets.length} onClick={() => edit(alignSelection(doc, selectedIds, alignment))}>Align {alignment}</button>)}
+      <button disabled={selectedWidgets.length < 3} onClick={() => edit(distributeSelection(doc, selectedIds, 'x'))}>Distribute horizontally</button>
+      <button disabled={selectedWidgets.length < 3} onClick={() => edit(distributeSelection(doc, selectedIds, 'y'))}>Distribute vertically</button>
+      <button disabled={!selectedWidgets.length} onClick={() => edit(rotateSelection(doc, selectedIds, 15))}>Rotate selection 15°</button>
+      <button disabled={!selectedWidgets.length} onClick={() => edit({ ...doc, widgets: doc.widgets.map(w => selectedKeys.has(w.id) ? { ...w, locked: !selectedWidgets.every(v => v.locked) } : w) })}>Toggle selection lock</button>
+      <button disabled={!selectedWidgets.length} onClick={() => edit({ ...doc, widgets: doc.widgets.map(w => selectedKeys.has(w.id) && !w.locked ? { ...w, hidden: !selectedWidgets.every(v => v.hidden) } : w) })}>Toggle selection visibility</button>
+      <button disabled={!selectedWidgets.length} onClick={() => edit(reorderSelection(doc, selectedIds, 'front'))}>Bring selection to front</button>
+      <button disabled={!selectedWidgets.length} onClick={() => edit(reorderSelection(doc, selectedIds, 'back'))}>Send selection to back</button>
+      <output aria-label="Selected layers">{selectedWidgets.length} selected</output>
       <button onClick={() => {
         const url = new URL(`/overlay/${doc.id}`, location.href).href;
         void (async () => {
@@ -124,22 +159,28 @@ export function VisualEditor() {
         if (modifier && key === 'z') { e.preventDefault(); if (e.shiftKey) session.current?.redo(); else session.current?.undo(); }
         else if (modifier && key === 'y') { e.preventDefault(); session.current?.redo(); }
         else if (modifier && key === 'd') { e.preventDefault(); duplicate(); }
-        else if (modifier && key === 'c' && chosen) { e.preventDefault(); setClipboard(structuredClone(chosen)); }
-        else if (modifier && key === 'v' && clipboard) { e.preventDefault(); duplicate(clipboard); }
+        else if (modifier && key === 'c' && chosen) { e.preventDefault(); setClipboard(copySelection(doc, selectedIds)); }
+        else if (modifier && key === 'v' && clipboard.length) { e.preventDefault(); duplicate(clipboard); }
+        else if (modifier && key === 'a') { e.preventDefault(); setSelectedIds(doc.widgets.map(w => w.id)); }
+        else if (modifier && key === 'g') { e.preventDefault(); edit(groupSelection(doc, selectedIds, e.shiftKey)); }
         else if (key === 'delete' || key === 'backspace') { e.preventDefault(); remove(); }
-        else if (chosen && !chosen.locked && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); const n = e.shiftKey ? 10 : 1; change({ ...chosen, x: Math.max(-7680, Math.min(7680, chosen.x + (e.key === 'ArrowRight' ? n : e.key === 'ArrowLeft' ? -n : 0))), y: Math.max(-7680, Math.min(7680, chosen.y + (e.key === 'ArrowDown' ? n : e.key === 'ArrowUp' ? -n : 0))) }); }
+        else if (selectedWidgets.length && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); const n = e.shiftKey ? 10 : 1; edit(nudgeSelection(doc, selectedIds, e.key === 'ArrowRight' ? n : e.key === 'ArrowLeft' ? -n : 0, e.key === 'ArrowDown' ? n : e.key === 'ArrowUp' ? -n : 0)); }
       }}>
         <aside><h3>Widgets</h3>{kinds.map(kind => <button key={kind} onClick={() => add(kind)}>Add {kind === 'alert' ? 'AlertBox' : kind === 'chat' ? 'Combined Chat' : kind}</button>)}
-          <h3>Layers</h3><ol>{[...doc.widgets].reverse().map(w => <li key={w.id}><button aria-pressed={w.id === selected} onClick={() => setSelected(w.id)}>{w.name}{w.locked ? ' 🔒' : ''}{w.hidden ? ' (hidden)' : ''}</button></li>)}</ol>
+          <h3>Layers</h3><ol>{[...doc.widgets].reverse().map(w => <li key={w.id}><button aria-pressed={selectedKeys.has(w.id)} onClick={e => select(w.id, e.shiftKey || e.ctrlKey || e.metaKey)}>{w.name}{w.locked ? ' 🔒' : ''}{w.hidden ? ' (hidden)' : ''}{w.groupId ? ' (group)' : ''}</button></li>)}</ol>
           <button disabled={!chosen} onClick={() => duplicate()}>Duplicate</button><button disabled={!chosen || chosen.locked} onClick={remove}>Delete layer</button><button disabled={!chosen} onClick={() => reorder(1)}>Raise layer</button><button disabled={!chosen} onClick={() => reorder(-1)}>Lower layer</button>
         </aside>
-        <div className="canvas-scroll"><div style={{ width: doc.width * zoom, height: doc.height * zoom }}><div aria-label="Overlay canvas" className={`editor-canvas ${snap ? 'show-grid' : ''}`} tabIndex={0}
-          style={{ width: doc.width, height: doc.height, transform: `scale(${zoom})`, transformOrigin: 'top left' }} onPointerDown={() => setSelected('')}>
-          {doc.widgets.filter(w => !w.hidden).map(saved => { const w = dragView?.id === saved.id ? dragView : saved; return <div key={w.id} data-widget-id={w.id} aria-label={`${w.name} widget`} tabIndex={0} className={`canvas-widget ${selected === w.id ? 'selected' : ''}`}
+        <div className="canvas-scroll" ref={scroll} onPointerDown={e => {
+          if (!panMode && e.button !== 1 || !scroll.current) return; e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId);
+          pan.current = { x: e.clientX, y: e.clientY, left: scroll.current.scrollLeft, top: scroll.current.scrollTop };
+        }} onPointerMove={e => { if (pan.current && scroll.current) { scroll.current.scrollLeft = pan.current.left - e.clientX + pan.current.x; scroll.current.scrollTop = pan.current.top - e.clientY + pan.current.y; } }}
+        onPointerUp={() => { pan.current = null; }} onPointerCancel={() => { pan.current = null; }}><div style={{ width: doc.width * zoom, height: doc.height * zoom }}><div aria-label="Overlay canvas" className={`editor-canvas ${grid ? 'show-grid' : ''}`} tabIndex={0}
+          style={{ width: doc.width, height: doc.height, transform: `scale(${zoom})`, transformOrigin: 'top left' }} onPointerDown={e => { if (!panMode && !e.shiftKey) setSelected(''); }}>
+          {visibleWidgets.filter(w => !w.hidden).map(w => { return <div key={w.id} data-widget-id={w.id} aria-label={`${w.name} widget`} tabIndex={0} className={`canvas-widget ${selectedKeys.has(w.id) ? 'selected' : ''}`}
             style={{ left: w.x, top: w.y, width: w.width, height: w.height, transform: `rotate(${w.rotation}deg)`, color: w.color, fontSize: w.fontSize }}
             onPointerDown={e => begin(e, w, 'move')} onPointerMove={move} onPointerUp={finish} onPointerCancel={() => { gesture.current = null; setDragView(null); }}>
             {w.kind === 'text' ? w.text : w.kind === 'image' && w.assetId ? <img draggable={false} src={`/assets/${w.assetId}`} alt={w.name} /> : <span>{w.name}</span>}
-            {selected === w.id && !w.locked && <button className="resize-handle" aria-label="Resize widget" onPointerDown={e => begin(e, w, 'resize')} onPointerMove={move} onPointerUp={finish}>↘</button>}
+            {selectedKeys.has(w.id) && !w.locked && <button className="resize-handle" aria-label="Resize widget" onPointerDown={e => begin(e, w, 'resize')} onPointerMove={move} onPointerUp={finish}>↘</button>}
           </div>; })}</div></div></div>
         <aside>{chosen ? <WidgetProperties widget={chosen} assets={assets} change={change} /> : <p>Select a layer to edit its properties.</p>}</aside>
       </div>

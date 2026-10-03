@@ -53,6 +53,10 @@ export class ChatConnection {
   private async history(): Promise<void> {
     try {
       const response = await fetch(`/api/overlays/${this.id}/chat`, { headers: this.headers(), signal: this.abort.signal });
+      if (this.canvas && !this.preview) {
+        const history = await fetch(`/api/overlays/${this.id}/events`, { headers: this.headers(), signal: this.abort.signal });
+        if (history.ok && !this.abort.signal.aborted) this.events(await history.json() as ChatEvent[], 'history');
+      }
       if (response.ok) {
         const events = await response.json() as ChatEvent[];
         if (!this.abort.signal.aborted) this.events(events, 'history');

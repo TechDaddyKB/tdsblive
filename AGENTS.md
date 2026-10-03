@@ -18,6 +18,15 @@ inspection. Do not read `.secrets/rumble-url`, embedded recorder Git history or
 private archives unless the specific task requires approved evidence inspection;
 the archive's secret and Git members remain excluded even then.
 
+## OBS MCP routing
+
+After scanning it, follow `docs/obs-mcp.md` when using OBS tools. Use `obs_studio`
+for direct OBS control, inspection and qualification, and `obs_workflows` for
+persistent visibility presets and periodic visual monitoring. Keep TDSBLive and
+Streamer.bot as the production automation authorities. Coordinate mutations
+across servers; installation alone does not authorize broadcasting or changing
+live output.
+
 ## Goal execution and publication
 
 Follow `docs/implementation-plan.md`. Preserve goal IDs, honor prerequisites,
