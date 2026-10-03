@@ -147,5 +147,20 @@ This baseline does not qualify enabled Rumble, connected bots, Wine or a native
 Windows streaming PC. G10's accepted Wine deviations and native-PC evidence
 limitation remain separate; the matrix does not mark the CPU requirement passing.
 
-Final Windows, SonarQube and documentation/package evidence remains pending;
-G13 is In progress.
+Delivery evidence: source `0b0e6383de09ac74d338cc590f139c092f5ee422` passes
+[Windows run 37122338495](https://github.com/TechDaddyKB/tdsblive/actions/runs/37122338495): 78 core and 419 host tests without
+skips, 208 frontend tests, public replay, real-browser compatibility, actual-process
+restart/restore, contract/type drift checks and native portable/installed EXE
+qualification, reinstall, startup opt-in and uninstall. Python qualification has
+five explicit skips: two private-archive cases and three Linux-only measurement
+boundary cases; the latter all pass locally. SonarQube passes with 92.9% new-code
+coverage, zero new duplication, A ratings, all hotspots reviewed and zero open
+vulnerabilities. All CodeQL checks pass. The ten-chapter/eight-image offline guide,
+including basic local migration steps, passes a network-disabled browser audit. Both downloaded candidate package SHA-256 values match; the guide
+extracted from the actual downloaded ZIP also passes all ten chapters/eight images
+and migration content with networking disabled.
+
+G13 acceptance is complete within the recorded scope. The completion-record
+change follows normal protected delivery. The source matrix retains the explicit
+VTube Studio deferral, paid-delivery evidence limits and native streaming-PC
+performance limitation; the measured Linux CPU deviations remain visible.

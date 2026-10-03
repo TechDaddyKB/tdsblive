@@ -22,7 +22,7 @@ public static class DiagnosticSanitizer
         if (value is JsonObject obj) return ObjectShape(obj, depth);
         if (value is JsonArray array) return new JsonArray(array.Take(100).Select(item => Shape(item, depth + 1)).ToArray());
         if (value is null) return null;
-        return value?.GetValueKind() switch
+        return value.GetValueKind() switch
         {
             System.Text.Json.JsonValueKind.String => JsonValue.Create("sample"),
             System.Text.Json.JsonValueKind.Number => JsonValue.Create(0),
