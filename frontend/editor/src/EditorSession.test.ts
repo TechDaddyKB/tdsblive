@@ -6,6 +6,16 @@ const scene = (): Scene => ({ id: 'test', name: 'Test', width: 1920, height: 108
   chat: structuredClone(defaultSettings), canvasEnabled: true, revisionLimit: 50, widgets: [] });
 afterEach(() => vi.useRealTimers());
 describe('editor autosave and local history', () => {
+  it('accepts server defaults without repeatedly autosaving the same document', async () => {
+    vi.useFakeTimers();
+    const save = vi.fn(async (s: Scene) => ({ ...s, version: s.version + 1, widgets: s.widgets.map(w => ({ ...w, groupId: null })) }));
+    const session = new EditorSession(scene(), save);
+    const { createWidget } = await import('../../overlay-runtime/src/scene');
+    const widget = createWidget('text'); delete widget.groupId;
+    session.edit({ ...session.snapshot.document, widgets: [widget] });
+    await vi.advanceTimersByTimeAsync(750); expect(session.snapshot.status).toBe('saved'); expect(session.snapshot.document.widgets[0].groupId).toBeNull();
+    await vi.advanceTimersByTimeAsync(10000); expect(save).toHaveBeenCalledTimes(1); session.dispose();
+  });
   it('debounces exactly 750ms and combines repeated edits into one versioned save', async () => {
     vi.useFakeTimers(); const save = vi.fn(async (s: Scene) => ({ ...s, version: s.version + 1 })); const session = new EditorSession(scene(), save);
     session.edit({ ...session.snapshot.document, name: 'One' }); await vi.advanceTimersByTimeAsync(500);

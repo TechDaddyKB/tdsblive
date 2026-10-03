@@ -12,6 +12,7 @@ import { qualifyVisualEditor } from './visual-editor.mjs';
 import { qualifyFinancial } from './financial.mjs';
 import { qualifyDonors } from './donors.mjs';
 import { qualifyAutomation } from './automation.mjs';
+import { qualifyAdvancedEditor } from './advanced-editor.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
@@ -46,6 +47,10 @@ try {
   browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
+  page.on('response', response => {
+    if (response.request().method() === 'PUT' && response.url().includes('/api/overlays/') && response.status() >= 400)
+      console.error(`Isolated overlay save returned HTTP ${response.status()}`);
+  });
   await page.route(`${origin}/g05-badge.svg`, route => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"><rect width="18" height="18" fill="green"/></svg>' }));
   // Owned two-frame GIF fixture: red/blue pixels, 100 ms frames, infinite loop.
   const animatedGif = Buffer.from('47494638396101000100800000ff00000000ff21ff0b4e45545343415045322e30030100000021f904000a0000002c000000000100010000020244010021f904000a0000002c00000000010001000002024c01003b', 'hex');
@@ -171,6 +176,7 @@ try {
   await page.waitForFunction(() => document.querySelector('.badge-image')?.naturalWidth > 0);
   await page.screenshot({ path: path.join(root, 'artifacts/g05-streamer-chat.png') });
   await qualifyVisualEditor(page, origin, writeHeaders, root);
+  await qualifyAdvancedEditor(page, origin, writeHeaders);
   await qualifyAutomation(page, origin, writeHeaders);
   execFileSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(root, 'tools/seed_financial_browser.py'), directory], { stdio: 'pipe' });
   await qualifyFinancial(page, origin);

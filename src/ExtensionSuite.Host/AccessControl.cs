@@ -138,7 +138,7 @@ public sealed class RequestSecurity(RequestDelegate next)
         if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method)) return false;
         string? id = null;
         if (parts.Length == 3 && parts[0] == "ws" && parts[1] == "overlay") id = parts[2];
-        if (parts.Length is 3 or 4 && parts[0] == "api" && parts[1] == "overlays" && (parts.Length == 3 || parts[3] == "chat")) id = parts[2];
+        if (parts.Length is 3 or 4 && parts[0] == "api" && parts[1] == "overlays" && (parts.Length == 3 || parts[3] is "chat" or "events")) id = parts[2];
         if (parts.Length == 2 && parts[0] == "assets") id = context.Request.Headers["X-TDSBLive-Overlay"].ToString();
         if (id is null) return false;
         if (parts.Length == 2 && parts[0] == "assets")

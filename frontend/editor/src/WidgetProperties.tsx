@@ -1,3 +1,4 @@
+import { AdvancedWidgetProperties } from './AdvancedWidgetProperties';
 import { alertPresets, type Widget } from '../../overlay-runtime/src/scene';
 import { platforms } from '../../overlay-runtime/src/chat';
 import { donorKinds } from '../../overlay-runtime/src/scene';
@@ -14,8 +15,9 @@ export function WidgetProperties({ widget: w, assets, change }: { widget: Widget
   return <div className="widget-properties"><h3>Properties</h3><label>Layer name<input aria-label="Layer name" maxLength={128} value={w.name} onChange={e => change({ ...w, name: e.target.value })} /></label>
     {numeric('x', 'X', -7680, 7680)}{numeric('y', 'Y', -7680, 7680)}{numeric('width', 'Width', 1, 7680)}{numeric('height', 'Height', 1, 7680)}{numeric('rotation', 'Rotation', -360, 360)}
     <label><input type="checkbox" checked={w.locked} onChange={e => change({ ...w, locked: e.target.checked })} />Locked</label><label><input type="checkbox" checked={w.hidden} onChange={e => change({ ...w, hidden: e.target.checked })} />Hidden</label>
-    {(w.kind === 'text' || w.kind === 'alert' || donorKinds.includes(w.kind)) && <>{numeric('fontSize', 'Font size', 8, 200)}<label>Text color<input type="color" value={w.color} onChange={e => change({ ...w, color: e.target.value })} /></label></>}
+    {(w.kind === 'text' || w.kind === 'alert' || ['event-list', 'goal-bar', 'progress-bar'].includes(w.kind) || donorKinds.includes(w.kind)) && <>{numeric('fontSize', 'Font size', 8, 200)}<label>Text color<input type="color" value={w.color} onChange={e => change({ ...w, color: e.target.value })} /></label></>}
     {donorKinds.includes(w.kind) && <DonorProperties widget={w} assets={assets} change={change} />}
+    {['event-list', 'goal-bar', 'progress-bar'].includes(w.kind) && <AdvancedWidgetProperties widget={w} assets={assets} change={change} />}
     {w.kind === 'text' && <label>Text<textarea aria-label="Widget text" maxLength={4096} value={w.text} onChange={e => change({ ...w, text: e.target.value })} /></label>}
     {['image', 'video', 'audio'].includes(w.kind) && asset('Media asset', w.assetId, [`${w.kind}/`], id => change({ ...w, assetId: id }))}
     {['video', 'audio', 'alert'].includes(w.kind) && <label>Volume<input aria-label="Volume" type="range" min={0} max={1} step={.05} value={w.volume} onChange={e => change({ ...w, volume: Number(e.target.value) })} /></label>}

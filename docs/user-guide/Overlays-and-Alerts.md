@@ -76,3 +76,15 @@ than silently deleting the history. Retained revisions are limited; keep a
 
 Advanced canvas tools and custom-widget authoring belong to later goals. This
 guide describes the current basic editor, not every planned future feature.
+# Advanced canvas controls
+
+Shift/Ctrl-click layers to select several. Group selection makes them move,
+rotate and resize together; Ungroup selection releases them. Copied groups stay
+independent. Alignment, distribution, selection lock/visibility and front/back
+buttons are above the canvas. Grid visibility is independent from snapping.
+Use Pan canvas or middle-button dragging to move around a zoomed canvas.
+
+Add Event List for filtered recent activity. Goal Bar and Progress Bar can use a
+manual value or a supporter total in USD. Ledger bars use your financial period
+and filters; preview shows no production totals. See the
+[advanced editor guide](../g11-advanced-editor.md) for controls and limits.

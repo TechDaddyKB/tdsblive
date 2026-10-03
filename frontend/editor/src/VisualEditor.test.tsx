@@ -21,6 +21,40 @@ function host() {
   return { fetcher, get: () => document, conflict: (value: boolean) => { conflict = value; } };
 }
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+it('repeats group transformations, preserves independent copies and saves/reloads advanced widget settings', async () => {
+  const api = host(); render(<VisualEditor />); await screen.findByLabelText('Overlay canvas');
+  fireEvent.click(screen.getByText('Add text', { exact: true }));
+  fireEvent.change(screen.getByLabelText('X', { exact: true }), { target: { value: '500' } });
+  const layers = () => screen.getAllByRole('listitem').map(li => li.querySelector('button')!);
+  fireEvent.click(layers()[1], { shiftKey: true }); expect(screen.getByLabelText('Selected layers')).toHaveTextContent('2 selected');
+  fireEvent.click(screen.getByText('Group selection', { exact: true }));
+  for (let i = 0; i < 3; i++) {
+    fireEvent.click(screen.getByText('Rotate selection 15°', { exact: true }));
+    fireEvent.click(screen.getByText('Align left', { exact: true }));
+    fireEvent.keyDown(screen.getByLabelText('Overlay canvas'), { key: 'ArrowRight', shiftKey: true });
+    fireEvent.click(screen.getByText('Undo', { exact: true })); fireEvent.click(screen.getByText('Redo', { exact: true }));
+  }
+  fireEvent.click(screen.getByText('Duplicate', { exact: true })); expect(document.querySelectorAll('.canvas-widget')).toHaveLength(4);
+  fireEvent.click(screen.getByText('Ungroup selection', { exact: true }));
+  fireEvent.click(screen.getByText('Toggle selection lock', { exact: true }));
+  fireEvent.keyDown(screen.getByLabelText('Overlay canvas'), { key: 'Delete' }); expect(document.querySelectorAll('.canvas-widget')).toHaveLength(4);
+  fireEvent.click(screen.getByText('Toggle selection lock', { exact: true }));
+  fireEvent.click(screen.getByText('Toggle selection visibility', { exact: true })); expect(document.querySelectorAll('.canvas-widget')).toHaveLength(2);
+  fireEvent.click(screen.getByText('Toggle selection visibility', { exact: true }));
+  for (const kind of ['event-list', 'goal-bar', 'progress-bar']) fireEvent.click(screen.getByText(`Add ${kind}`, { exact: true }));
+  fireEvent.change(screen.getByLabelText('Current value'), { target: { value: '25' } });
+  fireEvent.change(screen.getByLabelText('Target value'), { target: { value: '50' } });
+  fireEvent.click(screen.getByText('Save now')); await waitFor(() => expect(api.get().widgets).toHaveLength(7));
+  expect(api.get().widgets.slice(0, 2).map(w => w.rotation)).toEqual([45, 45]);
+  expect(api.get().widgets[0].groupId).toBe(api.get().widgets[1].groupId); expect(api.get().widgets[2].groupId).toBeNull();
+  fireEvent.click(screen.getByText('Reload saved version')); await waitFor(() => expect(screen.getByLabelText('Selected layers')).toHaveTextContent('0 selected'));
+  fireEvent.click(layers()[0]); expect(screen.getByLabelText('Current value')).toHaveValue(25); expect(screen.getByLabelText('Target value')).toHaveValue(50);
+  fireEvent.click(screen.getByText('Reset manual progress')); expect(screen.getByLabelText('Current value')).toHaveValue(0);
+  fireEvent.change(screen.getByLabelText('Progress source'), { target: { value: 'ledger-usd' } }); expect(screen.getByLabelText('Donor period')).toBeInTheDocument();
+  fireEvent.click(layers()[2]); expect(screen.getByLabelText('Maximum list entries')).toHaveValue(10);
+  fireEvent.change(screen.getByLabelText('Ignored users (one per line)'), { target: { value: 'Ignored\nOther' } });
+  fireEvent.click(screen.getByText('Save now')); await waitFor(() => expect(api.get().widgets[4].eventList?.ignoredUsers).toEqual(['Ignored', 'Other']));
+});
 it.each(['missing', 'denied', 'available'] as const)('copies the OBS URL or offers manual copying with a %s clipboard', async mode => {
   host();
   const descriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');

@@ -587,6 +587,38 @@
         }
       }
     },
+    "/api/overlays/{id}/events": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CanonicalEvent"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/overlays/{id}/tokens": {
       "post": {
         "tags": [
@@ -3718,6 +3750,58 @@
         },
         "additionalProperties": false
       },
+      "EventListSettings": {
+        "type": "object",
+        "properties": {
+          "eventTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ignoredUsers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "durationMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "persistent": {
+            "type": "boolean"
+          },
+          "newestOnTop": {
+            "type": "boolean"
+          },
+          "template": {
+            "type": "string"
+          },
+          "font": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "EventMessage": {
         "required": [
           "text"
@@ -4915,6 +4999,12 @@
             ],
             "format": "double"
           },
+          "groupId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "rotation": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
             "type": [
@@ -4969,6 +5059,12 @@
           "alert": {
             "$ref": "#/components/schemas/AlertSettings"
           },
+          "eventList": {
+            "$ref": "#/components/schemas/EventListSettings"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ProgressSettings"
+          },
           "donor": {
             "$ref": "#/components/schemas/DonorWidgetSettings"
           }
@@ -5009,6 +5105,49 @@
           "mode": {
             "type": "string",
             "default": "synthetic"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProgressSettings": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "target": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "fillColor": {
+            "type": "string"
+          },
+          "trackColor": {
+            "type": "string"
+          },
+          "showValue": {
+            "type": "boolean"
+          },
+          "showPercent": {
+            "type": "boolean"
+          },
+          "orientation": {
+            "type": "string"
           }
         },
         "additionalProperties": false

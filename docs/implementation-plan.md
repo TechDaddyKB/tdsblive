@@ -94,7 +94,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G08](#g08) | Build donor widgets | G05, G07 | Complete |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Complete |
-| [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Not started |
+| [G11](#g11) | Complete advanced editor and built-in widgets | G10 | In progress |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
 
@@ -608,7 +608,7 @@ None for the approved G10 scope. The operator accepts documented Wine CPU and me
 
 ## G11 — Complete advanced editor and built-in widgets
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G10
 
 ### Deliverables
@@ -625,7 +625,9 @@ Prerequisites: G10
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+2026-10-02: implementation adds persisted flat groups, selection movement/rotation/resize, independent grouped copy/paste, alignment/distribution, z-order, selection lock/hide, separate grid visibility and pan controls. Event List and Goal/Progress bars include backend validation, scoped history, bounded rendering, ledger totals and preview isolation. All typed field controls have renderer evidence. Requirement mapping and limits: [G11 advanced editor](g11-advanced-editor.md).
+
+Local evidence so far: 182 frontend tests pass with 88.78% line coverage; 76 core and 382 host tests pass with four explicit Windows-only skips. Targeted advanced persistence/history tests pass. The real-browser audit identified a default-normalization autosave loop; the editor now accepts returned defaults only when no newer local edit exists, with a regression test. Final fresh-browser, media/OBS, reconnect/restore and exact-head Windows/Sonar evidence remain pending. This checkpoint is not G11 completion.
 
 ### Blockers
 

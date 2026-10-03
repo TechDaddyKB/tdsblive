@@ -875,6 +875,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/overlays/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CanonicalEvent"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/overlays/{id}/tokens": {
         parameters: {
             query?: never;
@@ -3443,6 +3480,19 @@ export interface components {
             imageUrl?: null | string;
             version?: null | string;
         };
+        EventListSettings: {
+            eventTypes?: string[];
+            platforms?: string[];
+            ignoredUsers?: string[];
+            /** Format: int32 */
+            count?: number | string;
+            /** Format: int32 */
+            durationMs?: number | string;
+            persistent?: boolean;
+            newestOnTop?: boolean;
+            template?: string;
+            font?: string;
+        };
         EventMessage: {
             text: null | string;
             parts?: null | components["schemas"]["EventMessagePart"][];
@@ -3741,6 +3791,7 @@ export interface components {
             width?: number | string;
             /** Format: double */
             height?: number | string;
+            groupId?: null | string;
             /** Format: double */
             rotation?: number | string;
             locked?: boolean;
@@ -3756,6 +3807,8 @@ export interface components {
             muted?: boolean;
             chat?: components["schemas"]["ChatSettings"];
             alert?: components["schemas"]["AlertSettings"];
+            eventList?: components["schemas"]["EventListSettings"];
+            progress?: components["schemas"]["ProgressSettings"];
             donor?: components["schemas"]["DonorWidgetSettings"];
         };
         PreviewEventRequest: {
@@ -3769,6 +3822,19 @@ export interface components {
             raw?: null | components["schemas"]["JsonObject"];
             /** @default synthetic */
             mode: string;
+        };
+        ProgressSettings: {
+            source?: string;
+            label?: string;
+            /** Format: double */
+            value?: number | string;
+            /** Format: double */
+            target?: number | string;
+            fillColor?: string;
+            trackColor?: string;
+            showValue?: boolean;
+            showPercent?: boolean;
+            orientation?: string;
         };
         RateLookupResponse: {
             available: boolean;

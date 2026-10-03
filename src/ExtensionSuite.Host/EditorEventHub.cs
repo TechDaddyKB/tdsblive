@@ -155,7 +155,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
                 var now = clock.GetUtcNow();
                 var settings = await settingsStore.GetAsync(subscriber.Stop.Token);
                 foreach (var widget in definition!.Widgets.Where(w => !w.Hidden && w.Kind is
-                    "donor-crown" or "donor-leaderboard" or "latest-supporter" or "current-stream-leader" or "current-stream-total"))
+                    "donor-crown" or "donor-leaderboard" or "latest-supporter" or "current-stream-leader" or "current-stream-total" or "goal-bar" or "progress-bar").Where(w => w.Kind is not ("goal-bar" or "progress-bar") || w.Progress.Source == "ledger-usd"))
                 {
                     // Preview never reads production financial totals.
                     if (subscriber.Preview)
@@ -284,7 +284,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         public bool Accepts(CanonicalEvent item) => (types.Contains(item.Type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal)) &&
             (Overlay is null || (item.Provenance == EventProvenance.Live || Preview && !Limited) &&
                 (Overlay.CanvasEnabled ? Overlay.Widgets.Any(w => !w.Hidden && (w.Kind == "chat" && w.Chat.Accepts(item) ||
-                    w.Kind == "alert" && (w.Alert.EventTypes.Contains(item.Type) || w.Alert.EventTypes.Contains("*")) && w.Alert.Platforms.Contains(item.Platform))) : Overlay.Chat.Accepts(item)));
+                    (w.Kind == "event-list" && w.EventList.Accepts(item)) || w.Kind == "alert" && (w.Alert.EventTypes.Contains(item.Type) || w.Alert.EventTypes.Contains("*")) && w.Alert.Platforms.Contains(item.Platform))) : Overlay.Chat.Accepts(item)));
         public void Subscribe(string[] selected) { types = selected; Subscribed = true; }
         public void TryStop()
         {
