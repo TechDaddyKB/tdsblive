@@ -23,8 +23,8 @@ flowchart LR
 - `ExtensionSuite.StreamerBot` and `ExtensionSuite.Rumble`: independent implemented
   adapters, referencing Core rather than frontend or each other.
 - `ExtensionSuite.Finance`: idempotent ledger/valuation/identity strategies in G07.
-- `ExtensionSuite.Overlays` and `ExtensionSuite.Web`: implemented asset validation
-  and transport/API services; later custom-widget functionality remains G12 work.
+- `ExtensionSuite.Overlays` and `ExtensionSuite.Web`: asset validation and
+  transport/API services. G12 adds mediated custom-widget state and portable packages.
 - `ExtensionSuite.Host`: composition root, HTTP editor assets, typed configuration,
   DPAPI provisioning, authenticated LAN, diagnostics, OpenAPI and editor WebSockets.
 - `frontend/editor` and `frontend/overlay-runtime`: separate Vite build targets;
@@ -40,3 +40,10 @@ G05 supplies real OBS event transport; G06 supplies basic visual editing and
 alerts, G08 donor widgets and G09 automation under the approved scope. G10 adds
 packaging, guided setup and recovery. Integration receipts remain distinct from
 operator-confirmed rendering/audio and native Windows qualification.
+
+G11 completes advanced transforms and built-in widgets. G12 provides Monaco,
+versioned custom manifests, capability-filtered opaque iframe/worker execution
+and bounded portable packages. [G13](g13-compatibility.md) supplies the optional
+local StreamElements shim and development/diagnostic tools; it adds no production
+automation authority. The [requirements matrix](requirements-matrix.md) separates
+implemented capabilities from explicitly deferred work and unavailable live evidence.

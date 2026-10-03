@@ -13,11 +13,16 @@ public sealed class EventInspectorStore(ApplicationConfiguration configuration)
     private readonly object sync = new();
     private readonly Queue<(InspectorEntry Entry, int Bytes)> entries = new();
     private int bytes;
+    private readonly RumbleShapeInspector rumbleShapes = new();
     public long Discarded { get; private set; }
 
     public void Add(EventNormalization result, JsonObject sanitizedPayload)
     {
         var payload = configuration.RetainRawEvents ? sanitizedPayload.DeepClone() as JsonObject : null;
+        if (payload is not null && result.Classification == "rumble.snapshot")
+        {
+            lock (sync) payload = new JsonObject { ["snapshot"] = payload, ["shapeInspection"] = rumbleShapes.Inspect(payload) };
+        }
         var size = payload is null ? 0 : Encoding.UTF8.GetByteCount(payload.ToJsonString());
         var limitation = result.Limitation;
         if (size > 65536) { payload = null; size = 0; limitation = "inspectorPayloadTooLarge"; }

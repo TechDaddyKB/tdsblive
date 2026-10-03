@@ -1,6 +1,12 @@
 using ExtensionSuite.Host;
 using ExtensionSuite.Core;
 
+if (await DeveloperCommands.RunAsync(args) is { } utilityExitCode)
+{
+    Environment.ExitCode = utilityExitCode;
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = AppContext.BaseDirectory });
 builder.AddFoundation();
 builder.Services.AddSingleton<IEditorBrowserLauncher, EditorBrowserLauncher>();

@@ -9,3 +9,10 @@ Build frontend assets before building the host. The editor and overlay runtime a
 Windows builds, ZIP/installer packaging and native package checks run in GitHub Actions. Backend tests emit OpenCover/TRX; frontend tests emit LCOV. SonarQube imports both coverage reports and enforces the new-code gate. Fork code never receives trusted secrets; do not bypass protected checks.
 
 For a bounded task, invoke a stable goal from [the implementation plan](implementation-plan.md), check its actual prerequisites and record acceptance evidence. Compiling or passing mock tests does not establish live integration, audible output or Windows qualification. Current MVP release evidence is in [G10 qualification](g10-qualification.md); G11–G13 remain separate later milestones.
+
+The [G13 utility guide](g13-compatibility.md#developer-tools) lists migration,
+offline production-engine Rumble replay, event replay, owned sample generation,
+backup, shape-only log sanitization and aggregate diagnostic export. Run fixtures
+against disposable data and an explicit loopback HTTP host. The [requirements
+matrix](requirements-matrix.md) records all original numbered sections and their
+evidence limits.

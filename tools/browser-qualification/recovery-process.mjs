@@ -89,21 +89,22 @@ try {
     { id: crypto.randomUUID(), name: 'Owned progress', kind: 'goal-bar', groupId, x: 600, y: 100, rotation: 15, progress: { value: 25, target: 50 } },
     { id: crypto.randomUUID(), name: 'Owned image', kind: 'image', x: 100, y: 400, assetId: image.id },
     { id: crypto.randomUUID(), name: 'Owned custom state', kind: 'custom', x: 600, y: 400, custom: {
-      permissions: ['storage'], subscriptions: ['future.available'], html: '<p id="counter">Loading state</p>',
-      javaScript: 'function refresh() { SBX.store.get().then(s => document.getElementById("counter").textContent = "State "+s.count); } refresh(); SBX.on("sbx:session", s => { if (s.connected) refresh(); });'
+      permissions: ['storage'], subscriptions: ['future.available'], html: '<p id="counter">Loading state</p><p id="legacy">Loading compatibility</p>',
+      javaScript: 'const SE_API = SBX.enableStreamElements(); function refresh() { SBX.store.get().then(s => document.getElementById("counter").textContent = "State "+s.count); SE_API.store.get("owned").then(s => document.getElementById("legacy").textContent = "Local SE state "+s.count); } refresh(); SBX.on("sbx:session", s => { if (s.connected) refresh(); });'
     } },
   ] })).json();
   const widgetStorePath = `/api/overlays/g11-recovery/widgets/${advanced.widgets[3].id}/store`;
-  await write(widgetStorePath, { count: 7 }, 'PUT');
+  await write(widgetStorePath, { count: 7, 'se:owned': { count: 7 } }, 'PUT');
   await page.goto(origin + '/overlay/g11-recovery');
   await subscribedAfter(0);
   await page.getByRole('progressbar').waitFor();
   await page.waitForFunction(() => document.querySelector('.runtime-widget > img')?.naturalWidth === 1);
   await page.frameLocator('iframe[title="Owned custom state"]').getByText('State 7', { exact: true }).waitFor();
+  await page.frameLocator('iframe[title="Owned custom state"]').getByText('Local SE state 7', { exact: true }).waitFor();
   await write('/api/setup', { step: 2, reviewed: false, version: 0 }, 'PUT');
   const backup = Buffer.from(await (await write('/api/recovery/backup')).arrayBuffer());
   await write('/api/overlays/g11-recovery', { ...advanced, widgets: advanced.widgets.map(w => w.kind === 'goal-bar' ? { ...w, progress: { ...w.progress, value: 40 } } : w) }, 'PUT');
-  await write(widgetStorePath, { count: 9 }, 'PUT');
+  await write(widgetStorePath, { count: 9, 'se:owned': { count: 9 } }, 'PUT');
   await write('/api/setup', { step: 4, reviewed: false, version: 1 }, 'PUT');
   let previousSubscriptions = subscriptions;
   await write('/api/application/restart');
@@ -112,6 +113,7 @@ try {
   assert.equal((await get('/api/setup')).step, 4);
   assert.equal((await get(widgetStorePath)).count, 9);
   await page.frameLocator('iframe[title="Owned custom state"]').getByText('State 9', { exact: true }).waitFor();
+  await page.frameLocator('iframe[title="Owned custom state"]').getByText('Local SE state 9', { exact: true }).waitFor();
   assert.equal((await get('/api/overlays/g11-recovery')).widgets[1].progress.value, 40);
   await page.waitForFunction(() => document.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow') === '40');
   const preview = await (await write('/api/recovery/validate', backup, 'POST', true)).json();
@@ -122,6 +124,7 @@ try {
   assert.equal((await get('/api/setup')).step, 2);
   assert.equal((await get(widgetStorePath)).count, 7);
   await page.frameLocator('iframe[title="Owned custom state"]').getByText('State 7', { exact: true }).waitFor();
+  await page.frameLocator('iframe[title="Owned custom state"]').getByText('Local SE state 7', { exact: true }).waitFor();
   const restored = await get('/api/overlays/g11-recovery');
   assert.deepEqual(restored.widgets, advanced.widgets);
   await page.waitForFunction(() => document.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow') === '25');
@@ -140,7 +143,7 @@ try {
     await delay(100);
   }
   assert.ok(stopped, 'Owned host did not quit');
-  console.log('G10/G11/G12 real-process restart/restore passed: open overlay browser reconnects, custom code and storage, grouped transforms, advanced settings and referenced media restored, new generations, safety-paused integrations and quit');
+  console.log('G10/G11/G12/G13 real-process restart/restore passed: open overlay browser reconnects, SBX and local SE storage, grouped transforms, advanced settings and referenced media restored, new generations, safety-paused integrations and quit');
 } finally {
   // Stop only the host at the random port belonging to this temporary data root.
   try { await protect(); await write('/api/application/quit'); await delay(500); } catch { /* Already stopped. */ }

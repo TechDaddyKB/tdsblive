@@ -96,7 +96,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Complete |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Complete |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Complete |
-| [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
+| [G13](#g13) | Complete compatibility and full-spec qualification | G12 | In progress |
 
 <a id="g00"></a>
 
@@ -671,7 +671,7 @@ None for G12.
 
 ## G13 — Complete compatibility and full-spec qualification
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G12
 
 ### Deliverables
@@ -689,7 +689,28 @@ Prerequisites: G12
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+2026-10-03: G12 prerequisite revalidated on merged main `b8d468d` (PR #16).
+Work on `codex/g13-compatibility` adds opt-in local StreamElements lifecycle,
+canonical event envelopes, permission-scoped keyed storage and bounded local
+queue/status equivalents. Unsupported remote calls throw descriptive warnings.
+Shape-only fixture and aggregate diagnostic exports remove private content;
+private local inspection remains available. Offline Rumble replay uses the
+production engine and processes all 785 captured polls without persistence or
+live actions. Focused shim and sanitizer/utility tests pass; broader rendered,
+recovery, OBS, Windows and quality-gate qualification remain pending.
+
+Local qualification checkpoint: 208 frontend tests pass with 90.50% line coverage;
+78 core and 412 host tests pass, with four explicit Windows-only skips. Current
+rendered browser regressions and real-process restart/restore pass, including
+local compatibility state. Actual OBS shows lifecycle/event/storage, loaded image
+and playing silent video, transparent PNG alpha 0–1 and differing video crops.
+Owned restart retains state 9; backup restore returns state 3. Operator confirms
+the one-second custom-widget tone was heard. Prior OBS state restored, owned
+input/scene removed and disposable host stopped. [G13 contracts and measured
+performance](g13-compatibility.md) and the [99-section matrix](requirements-matrix.md)
+record current evidence and scope limits. Linux disabled-integration baseline CPU
+exceeds numeric targets; native Windows streaming-PC performance remains unverified.
+Protected Windows/SonarQube delivery and final documentation checks remain required.
 
 ### Blockers
 

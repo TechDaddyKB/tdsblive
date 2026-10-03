@@ -44,6 +44,7 @@ public sealed class RumbleSnapshotEngine(SensitiveValues sensitive, int offlineC
         foreach (var absent in scope!.Streams.Where(entry => snapshot.Streams.All(stream => stream.Id != entry.Key)))
             ObserveOffline(absent.Key, absent.Value, baseline, poll, events, provenance);
         scope.LastSuccess = poll.ObservedAt;
+        scope.PossibleGaps += diagnostics.Count(item => item.Code == "rumble.chat.possible_gap");
         PruneChat(scope, poll.ObservedAt);
         return new(state, events.OrderBy(item => item.OccurredAt).ThenBy(item => item.Type, StringComparer.Ordinal).ToArray(),
             diagnostics.ToArray(), baseline, snapshot.Raw);
@@ -104,6 +105,7 @@ public sealed class RumbleSnapshotEngine(SensitiveValues sensitive, int offlineC
         {
             var entries = group.OrderBy(record => record.Fingerprint, StringComparer.Ordinal).ToArray();
             var item = entries[0]; var count = entries.Length;
+            if (!baseline && scope.History.TryGetValue(group.Key, out var seen)) scope.DuplicateRecords += Math.Min(seen.MaximumCount, count);
             if (!scope.History.TryGetValue(group.Key, out var occurrence))
                 scope.History[group.Key] = occurrence = new() { Kind = item.Kind, Fingerprint = item.Fingerprint };
             else if (item.Kind == "chat.message" && occurrence.Fingerprint != item.Fingerprint)

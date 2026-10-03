@@ -8,7 +8,9 @@ namespace ExtensionSuite.Host;
 
 public sealed record RumbleStatus(string State, bool Enabled, bool CredentialPresent, DateTimeOffset? LastPollAt,
     DateTimeOffset? NextPollAt, int ConsecutiveFailures, bool BaselineEstablished, long PollSequence,
-    bool ForwardTriggers, string[] LiveStreams, bool SubscriptionsLiveVerified = false, bool GiftsAuthoritative = false);
+    bool ForwardTriggers, string[] LiveStreams, bool SubscriptionsLiveVerified = false, bool GiftsAuthoritative = false,
+    double PollLatencyMilliseconds = 0, int PollIntervalSeconds = 7, long AcceptedEventsThisProcess = 0,
+    long DuplicateRecords = 0, long PossibleGaps = 0, long? Viewers = null);
 
 public sealed class RumbleIntegration(IRumbleStore store, RumbleHttpTransport transport, ApplicationConfiguration configuration,
     SensitiveValues sensitive, EventInspectorStore inspector, TimeProvider clock) : IIsolatedIntegration
@@ -82,7 +84,9 @@ public sealed class RumbleIntegration(IRumbleStore store, RumbleHttpTransport tr
             if (RumbleHttpTransport.CredentialKey(credential) is { Length: > 0 } apiKey) sensitive.Set("rumble-api-key", apiKey);
             if (context is null) { context = Guid.NewGuid().ToString(); sensitive.Set("rumble-context", context); }
             var state = await store.LoadAsync(context, EventProvenance.Live, cancellationToken);
+            var started = System.Diagnostics.Stopwatch.GetTimestamp();
             var poll = await transport.PollAsync(credential, cancellationToken);
+            var latency = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
             var batch = engine.Reconcile(state, poll, context, baseline);
             var accepted = await store.CommitAsync(context, EventProvenance.Live, batch, configuration.RetainRawEvents,
                 configuration.Rumble.ForwardTriggers && configuration.StreamerBot.ForwardLiveEvents, cancellationToken);
@@ -94,7 +98,13 @@ public sealed class RumbleIntegration(IRumbleStore store, RumbleHttpTransport tr
             var scope = batch.State.ActiveScope is { } key ? batch.State.Scopes[key] : null;
             Volatile.Write(ref status, new(batch.State.Health, true, true, poll.ObservedAt, RumbleHttpTransport.ScheduledAt(clock.GetUtcNow(), delay),
                 batch.State.ConsecutiveFailures, !baseline, batch.State.PollSequence, configuration.Rumble.ForwardTriggers && configuration.StreamerBot.ForwardLiveEvents,
-                scope?.Streams.Where(item => item.Value.Live).Select(item => item.Key).ToArray() ?? []));
+                scope?.Streams.Where(item => item.Value.Live).Select(item => item.Key).ToArray() ?? [],
+                PollLatencyMilliseconds: latency, PollIntervalSeconds: configuration.Rumble.PollIntervalSeconds,
+                AcceptedEventsThisProcess: Status.AcceptedEventsThisProcess + accepted.Length,
+                DuplicateRecords: batch.State.Scopes.Values.Sum(item => item.DuplicateRecords),
+                PossibleGaps: batch.State.Scopes.Values.Sum(item => item.PossibleGaps),
+                Viewers: scope is not null && scope.Streams.Values.Where(item => item.Live).All(item => item.Viewers is not null)
+                    ? scope.Streams.Values.Where(item => item.Live).Sum(item => item.Viewers) : null));
             return delay;
         }
         finally { gate.Release(); }

@@ -5,12 +5,15 @@ import { rumble } from './api';
 vi.mock('./api', () => ({ rumble: { status: vi.fn(), connect: vi.fn(), resetBaseline: vi.fn(), disconnect: vi.fn() } }));
 beforeEach(() => {
   vi.mocked(rumble.status).mockResolvedValue({ state: 'healthy', enabled: true, credentialPresent: true, baselineEstablished: true,
-    pollSequence: 2, consecutiveFailures: 0, forwardTriggers: false, liveStreams: [], lastPollAt: null, nextPollAt: null, subscriptionsLiveVerified: false, giftsAuthoritative: false });
+    pollSequence: 2, consecutiveFailures: 0, forwardTriggers: false, liveStreams: [], lastPollAt: null, nextPollAt: null, subscriptionsLiveVerified: false, giftsAuthoritative: false,
+    pollLatencyMilliseconds: 184.4, pollIntervalSeconds: 7, acceptedEventsThisProcess: 10, duplicateRecords: 20, possibleGaps: 1, viewers: 127 });
   vi.mocked(rumble.connect).mockResolvedValue(undefined); vi.mocked(rumble.resetBaseline).mockResolvedValue(undefined); vi.mocked(rumble.disconnect).mockResolvedValue(undefined);
 });
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 it('connects with session-only defaults and clears the credential after submission', async () => {
   render(<RumblePanel />); await screen.findByText(/Baseline established/);
+  expect(screen.getByText(/latency: 184ms; viewers: 127/)).toBeVisible();
+  expect(screen.getByText(/duplicate records suppressed: 20; possible gaps: 1/)).toBeVisible();
   const input = screen.getByLabelText('Live API URL');
   expect(input).toHaveAttribute('type', 'password');
   fireEvent.change(input, { target: { value: 'synthetic-credential' } });

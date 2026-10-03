@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { BotPanel } from './BotPanel';
-import { api, bots } from './api';
-vi.mock('./api', () => ({ api: { configuration: vi.fn(), saveConfiguration: vi.fn() }, bots: { overview: vi.fn(), discovery: vi.fn(), refreshDiscovery: vi.fn(), inspector: vi.fn(), fixture: vi.fn(), replay: vi.fn() } }));
+import { api, bots, request } from './api';
+vi.mock('./api', () => ({ request: vi.fn(), api: { configuration: vi.fn(), saveConfiguration: vi.fn() }, bots: { overview: vi.fn(), discovery: vi.fn(), refreshDiscovery: vi.fn(), inspector: vi.fn(), fixture: vi.fn(), replay: vi.fn() } }));
 beforeEach(() => {
   vi.mocked(bots.overview).mockResolvedValue({ streamerBot: { state: 'connected', version: 'test' }, speakerBot: { state: 'disabled' } });
   vi.mocked(bots.discovery).mockResolvedValue({ actions: [{ id: 'action-id', name: 'test action', enabled: false }], codeTriggers: [{ name: 'Probe', eventName: 'tdsblive.test' }], events: {} });
@@ -67,4 +67,15 @@ it('handles sample, replay and clipboard failures', async () => {
   fireEvent.click(screen.getByText('Inspect sample')); await screen.findByText(/"synthetic"/);
   Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: vi.fn().mockRejectedValue(new Error()) } });
   fireEvent.click(screen.getByText('Copy sample')); expect(await screen.findByText(/Copy unavailable/)).toBeVisible();
+});
+it('exports a shape fixture separately from private samples and reports export failures', async () => {
+  vi.mocked(request).mockResolvedValueOnce({ valuesRemoved: true, payload: { message: 'sample' } }).mockRejectedValueOnce(new Error('private'));
+  vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:test'), revokeObjectURL: vi.fn() });
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+  render(<BotPanel />); fireEvent.click(await screen.findByText('Save sanitized shape'));
+  expect(await screen.findByText(/Shape fixture saved with values removed/)).toBeVisible();
+  expect(request).toHaveBeenCalledWith('/api/inspector/test-id/sanitized-fixture'); expect(click).toHaveBeenCalled();
+  fireEvent.click(screen.getByText('Save sanitized shape'));
+  expect(await screen.findByText('Unable to sanitize this sample.')).toBeVisible();
+  expect(screen.queryByText('private')).not.toBeInTheDocument(); click.mockRestore();
 });

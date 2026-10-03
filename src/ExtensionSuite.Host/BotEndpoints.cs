@@ -54,6 +54,15 @@ public static class BotEndpoints
             var entry = inspector.Find(id);
             return entry is null ? Results.NotFound() : Results.Json(entry, EventStore.JsonOptions);
         });
+        app.MapGet("/api/inspector/{id:guid}/sanitized-fixture", (Guid id, EventInspectorStore inspector) =>
+        {
+            var entry = inspector.Find(id);
+            return entry is null ? Results.NotFound() : Results.Json(new
+            {
+                formatVersion = 1, purpose = "shapeOnly", valuesRemoved = true,
+                payload = DiagnosticSanitizer.Shape(entry.Payload)
+            });
+        });
         app.MapPost("/api/inspector/{id:guid}/replay", async (Guid id, InspectorReplayRequest request, EventInspectorStore inspector,
             EventStore store, EditorEventHub hub, ApplicationConfiguration configuration, CancellationToken cancellationToken) =>
         {

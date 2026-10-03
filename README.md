@@ -66,6 +66,8 @@ credential setup, authenticated LAN and generated contracts.
   [events](docs/events.md), [overlays](docs/overlays.md), [widgets](docs/widgets.md),
   [automation](docs/automation.md) and [database/recovery](docs/database.md).
 - [SonarQube Cloud project](https://sonarcloud.io/summary/new_code?id=camarokris_tdsblive).
+- [Local compatibility and developer utilities](docs/g13-compatibility.md), and
+  [all numbered requirements with evidence limits](docs/requirements-matrix.md).
 
 Original archives, credentials, private captures, user data, generated reports
 and build output are not committed. Public fixtures retain specified date/amount

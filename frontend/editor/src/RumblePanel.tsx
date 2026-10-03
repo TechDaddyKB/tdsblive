@@ -34,6 +34,7 @@ export function RumblePanel() {
     <button disabled={busy} onClick={() => void operation(() => rumble.disconnect())}>Disconnect Rumble</button>
     <p>Trigger forwarding: {status?.forwardTriggers ? 'Enabled' : 'Disabled'}. Subscription and gift automation remain unverified and gated.</p>
     {status && <p>Successful baseline: {status.baselineEstablished ? 'Yes' : 'No'}; polls: {status.pollSequence}; live streams: {status.liveStreams.length}; consecutive failures: {status.consecutiveFailures}.</p>}
+    {status && <p>Last poll: {status.lastPollAt ?? 'Not polled'}; interval: {status.pollIntervalSeconds ?? 7}s; latency: {Math.round(Number(status.pollLatencyMilliseconds ?? 0))}ms; viewers: {status.viewers ?? 'Unknown'}; accepted events this process: {status.acceptedEventsThisProcess ?? 0}; duplicate records suppressed: {status.duplicateRecords ?? 0}; possible gaps: {status.possibleGaps ?? 0}.</p>}
     {error && <p role="alert">{error}</p>}
     <RumbleSettings />
   </section>;

@@ -63,12 +63,22 @@ public sealed class RumbleHostTests
         Volatile.Write(ref snapshotCount, 2);
         await rumble.PollOnceAsync(default);
         Assert.True(rumble.Status.BaselineEstablished); Assert.Equal("healthy", rumble.Status.State);
+        Assert.True(rumble.Status.PollLatencyMilliseconds >= 0);
+        Assert.Equal(7, rumble.Status.PollIntervalSeconds);
+        Assert.True(rumble.Status.AcceptedEventsThisProcess > 0);
+        Assert.True(rumble.Status.DuplicateRecords > 0);
+        Assert.Null(rumble.Status.Viewers);
         Assert.Contains(await events.ReadAsync(), item => item.Type == "chat.message");
         var before = (await events.ReadAsync()).Count(item => item.Type == "chat.message");
         await rumble.ResetBaselineAsync(default); await rumble.PollOnceAsync(default);
         Assert.Equal(before, (await events.ReadAsync()).Count(item => item.Type == "chat.message"));
         Assert.Empty(await configured.Services.GetRequiredService<RumbleStore>().PendingTriggersAsync(default));
         Assert.DoesNotContain("synthetic-private", System.Text.Json.JsonSerializer.Serialize(configured.Services.GetRequiredService<EventInspectorStore>().Read()));
+        var inspector = configured.Services.GetRequiredService<EventInspectorStore>();
+        var snapshot = inspector.Read().First(item => item.Classification == "rumble.snapshot");
+        var sanitized = await client.GetStringAsync($"/api/inspector/{snapshot.Id}/sanitized-fixture");
+        Assert.Contains("shapeOnly", sanitized); Assert.DoesNotContain("synthetic-user", sanitized);
+        Assert.DoesNotContain("synthetic-stream", sanitized); Assert.DoesNotContain(Credential, sanitized);
         await rumble.DisconnectAsync(default); await rumble.PollOnceAsync(default); Assert.False(rumble.Status.CredentialPresent);
     }
 

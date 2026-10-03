@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, bots, type BotOverview, type Discovery, type InspectorItem } from './api';
 import { ConnectionIndicator } from './ConnectionIndicator';
 import { BotPermissions } from './BotPermissions';
+import { request } from './api';
 
 export function BotPanel() {
   const [overview, setOverview] = useState<BotOverview | null>(null);
@@ -46,6 +47,16 @@ export function BotPanel() {
     try { await bots.replay(id); setNotice('Replay published locally without persistence or live automation.'); }
     catch { setNotice('Unable to replay this event.'); }
   }
+  async function sanitized(id: string) {
+    try {
+      const fixture = await request<unknown>(`/api/inspector/${id}/sanitized-fixture`);
+      setSelected(fixture);
+      const url = URL.createObjectURL(new Blob([JSON.stringify(fixture, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a'); link.href = url; link.download = 'tdsblive-shape-fixture.json'; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setNotice('Shape fixture saved with values removed and unknown field names replaced.');
+    } catch { setNotice('Unable to sanitize this sample.'); }
+  }
   async function refreshDiscovery() {
     try { setDiscovery(await bots.refreshDiscovery()); setNotice('Discovery refreshed.'); }
     catch { setNotice('Unable to refresh discovery.'); }
@@ -82,6 +93,7 @@ export function BotPanel() {
     <ul>{entries.map(entry => <li key={entry.id}>{entry.event?.nativeType ?? entry.classification} {entry.limitation ?? ''}
       <button onClick={() => { void sample(entry.id, false); }}>Inspect sample</button>
       <button onClick={() => { void sample(entry.id, true); }}>Save private fixture</button>
+      <button onClick={() => { void sanitized(entry.id); }}>Save sanitized shape</button>
       {entry.event && <button onClick={() => { void replay(entry.id); }}>Replay locally</button>}
     </li>)}</ul>
     {selected !== null && <><pre>{JSON.stringify(selected, null, 2)}</pre><button onClick={() => { void copy(); }}>Copy sample</button></>}

@@ -32,6 +32,37 @@ cycle. A baseline records what was already present; those historical messages
 do not generate fresh alerts. Resetting the baseline intentionally repeats that
 suppression. Session-only URLs must be entered again after restart.
 
+The Rumble panel shows the last poll, configured interval, measured request
+latency, live viewer total, events accepted during this process, duplicate
+records suppressed and possible snapshot gaps. Duplicate/gap counters survive
+restart in the polling state; baseline suppression is not counted as a duplicate.
+A possible gap means the API window may have missed messages, not that missing
+messages were recovered. Unknown viewer values remain labelled Unknown.
+
+For developer inspection, search the Event inspector for `rumble.snapshot` and
+choose **Inspect sample**. It includes the last stored private snapshot and
+observed/unknown/changed field types. Subscriber and gift shapes still need live
+evidence before authoritative support processing. **Save sanitized shape** strips
+values and replaces unknown field names for structural tests. Ordinary copied
+samples and private fixtures can contain personal messages; keep them private.
+
+## Sharing diagnostics
+
+In **Backup and recovery**, choose **Export sanitized diagnostics**. This file
+contains aggregate event/delivery counts and basic application metadata, without
+messages, supporter records, configuration or logs. Review it before sharing.
+Backups and ordinary log downloads remain private. Developers can use the
+[online utility guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g13-compatibility.md) to generate owned samples or sanitize log
+structure without copying original messages.
+
+## Migrating a custom widget
+
+The [online local compatibility guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g13-compatibility.md) explains the optional
+StreamElements lifecycle/store shim. It supports simple owned widgets within
+TDSBLive's sandbox. Cloud counters, remote account storage, full session totals
+and browser-library imports are unavailable. Review source and grant permissions
+explicitly; a descriptive unsupported-call error means that call needs migration.
+
 ## Chat appears in the browser but not OBS
 
 Check the Browser Source URL and size. Use the transparent overlay URL for the

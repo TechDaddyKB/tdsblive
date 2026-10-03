@@ -92,3 +92,20 @@ protocol requirement, with no rule exclusion. C# package/version regexes use
 non-backtracking matching and a 100 ms timeout. Custom worker programs are
 browser-compiled blob scripts; production `eval`/`Function` and `unsafe-eval`
 are absent.
+
+G13's local compatibility adapter receives only the existing mediated SBX
+capabilities. It cannot grant access to cloud services, account-wide stores,
+production action queues or parent tokens. Initial and updated worker sessions
+are restricted to connected/preview/muted booleans; arbitrary parent session
+properties are dropped. Unsupported-call warnings use fixed public API names
+and never echo arbitrary property names. The reviewed opaque-frame wildcard
+sends retain the same WindowProxy/capability boundary.
+
+Private inspector fixtures and logs are credential-redacted, not public-safe.
+Shape exports remove all scalar values and replace unknown field names, with
+depth/array bounds. Aggregate diagnostic export uses an explicit allowlist of
+application metadata and event/outbox counts; it never includes configuration,
+logs or user records. Developer file utilities require deterministic scanning
+before parsing, including gzip expanded bytes. Scanning failures fail closed;
+error output never includes source values, paths, scanner text or parser text.
+See [G13 sharing and utility limits](g13-compatibility.md).

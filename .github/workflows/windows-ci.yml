@@ -111,6 +111,9 @@ jobs:
         run: python tools/prepare_rumble_replay.py
 
       - name: Test .NET with OpenCover and TRX
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
         run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 
       - name: Test frontend with LCOV

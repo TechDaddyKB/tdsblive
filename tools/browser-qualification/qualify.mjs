@@ -14,6 +14,7 @@ import { qualifyDonors } from './donors.mjs';
 import { qualifyAutomation } from './automation.mjs';
 import { qualifyCustomWidgets } from './custom-widgets.mjs';
 import { qualifyAdvancedEditor } from './advanced-editor.mjs';
+import { qualifyCompatibility } from './compatibility.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
@@ -179,6 +180,7 @@ try {
   await qualifyVisualEditor(page, origin, writeHeaders, root);
   await qualifyAdvancedEditor(page, origin, writeHeaders);
   await qualifyCustomWidgets(page, origin, writeHeaders);
+  await qualifyCompatibility(page, origin, writeHeaders);
   await qualifyAutomation(page, origin, writeHeaders);
   execFileSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(root, 'tools/seed_financial_browser.py'), directory], { stdio: 'pipe' });
   await qualifyFinancial(page, origin);
