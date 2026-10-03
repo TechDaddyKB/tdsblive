@@ -1,5 +1,6 @@
 """Local-only utility boundaries with disposable owned fixtures."""
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -8,6 +9,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
 from developer import LocalHost, replay, sample_event
+from measure_owned_host import process_directory, owned_data_directory
 
 
 class DeveloperUtilityTests(unittest.TestCase):
@@ -42,6 +44,37 @@ class DeveloperUtilityTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         replay(host, path)
                 host.request.assert_not_called()
+
+
+@unittest.skipUnless(sys.platform == 'linux', 'Linux /proc and private-directory qualification only')
+class OwnedMeasurementBoundaryTests(unittest.TestCase):
+    def test_process_id_cannot_escape_proc(self):
+        self.assertEqual(Path('/proc') / str(os.getpid()), process_directory(os.getpid()))
+        for value in ('../owned', '/etc', 0, -1, 2147483648):
+            with self.assertRaises(ValueError):
+                process_directory(value)
+
+    def test_workload_requires_private_owned_disposable_directory(self):
+        with tempfile.TemporaryDirectory(prefix='tdsblive-g13-owned-') as directory:
+            data = Path(directory)
+            self.assertEqual(data.resolve(), owned_data_directory(directory))
+            data.chmod(0o755)
+            with self.assertRaises(ValueError):
+                owned_data_directory(directory)
+            data.chmod(0o700)
+            with patch('measure_owned_host.os.getuid', return_value=data.stat().st_uid + 1):
+                with self.assertRaises(ValueError):
+                    owned_data_directory(directory)
+        with tempfile.TemporaryDirectory(prefix='tdsblive-not-g13-') as directory:
+            with self.assertRaises(ValueError):
+                owned_data_directory(directory)
+
+    def test_symlink_cannot_admit_another_directory(self):
+        with tempfile.TemporaryDirectory(prefix='tdsblive-g13-owned-') as directory:
+            link = Path(directory) / 'link'
+            link.symlink_to(directory, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                owned_data_directory(link)
 
 
 if __name__ == '__main__':

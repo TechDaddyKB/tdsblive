@@ -63,6 +63,16 @@ TDSBLive's sandbox. Cloud counters, remote account storage, full session totals
 and browser-library imports are unavailable. Review source and grant permissions
 explicitly; a descriptive unsupported-call error means that call needs migration.
 
+In the widget JavaScript, opt in with `const SE_API = SBX.enableStreamElements();`
+and register the usual `onWidgetLoad`, `onEventReceived` and `onSessionUpdate`
+listeners. Define local fields, event subscriptions and permissions in the custom
+widget settings. `fieldData` comes from those local settings. Chat uses the
+`message` listener with a canonical TDSBLive event; adapt code that expects the
+original remote message shape. Grant storage permission before using
+`SE_API.store.get(key)` or `SE_API.store.set(key, value)`. Keys hold JSON objects
+for this widget instance and survive restart/backup restore; they do not synchronize
+with a StreamElements account.
+
 ## Chat appears in the browser but not OBS
 
 Check the Browser Source URL and size. Use the transparent overlay URL for the

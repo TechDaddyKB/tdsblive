@@ -19,26 +19,28 @@ public static class DiagnosticSanitizer
     public static JsonNode? Shape(JsonNode? value, int depth = 0)
     {
         if (depth > 32) return JsonValue.Create("[depth limit]");
-        if (value is JsonObject obj)
-        {
-            var result = new JsonObject();
-            var ordinal = 0;
-            foreach (var field in obj)
-            {
-                var key = PublicFields.Contains(field.Key) ? field.Key : "unknownField" + ++ordinal;
-                while (result.ContainsKey(key) || obj.ContainsKey(key) && key != field.Key) key = "unknownField" + ++ordinal;
-                result[key] = Shape(field.Value, depth + 1);
-            }
-            return result;
-        }
+        if (value is JsonObject obj) return ObjectShape(obj, depth);
         if (value is JsonArray array) return new JsonArray(array.Take(100).Select(item => Shape(item, depth + 1)).ToArray());
         if (value is null) return null;
-        if (value is JsonValue scalar)
+        return value?.GetValueKind() switch
         {
-            if (scalar.GetValueKind() == System.Text.Json.JsonValueKind.String) return JsonValue.Create("sample");
-            if (scalar.GetValueKind() == System.Text.Json.JsonValueKind.Number) return JsonValue.Create(0);
-            if (scalar.GetValueKind() is System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False) return JsonValue.Create(false);
+            System.Text.Json.JsonValueKind.String => JsonValue.Create("sample"),
+            System.Text.Json.JsonValueKind.Number => JsonValue.Create(0),
+            System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False => JsonValue.Create(false),
+            _ => null
+        };
+    }
+
+    private static JsonObject ObjectShape(JsonObject source, int depth)
+    {
+        var result = new JsonObject();
+        var ordinal = 0;
+        foreach (var field in source)
+        {
+            var key = PublicFields.Contains(field.Key) ? field.Key : "unknownField" + ++ordinal;
+            while (result.ContainsKey(key) || source.ContainsKey(key) && key != field.Key) key = "unknownField" + ++ordinal;
+            result[key] = Shape(field.Value, depth + 1);
         }
-        return null;
+        return result;
     }
 }

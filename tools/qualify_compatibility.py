@@ -9,7 +9,6 @@ import sqlite3
 import subprocess
 import tempfile
 import time
-import urllib.error
 import urllib.request
 import uuid
 import wave
@@ -19,6 +18,8 @@ from qualify_financial import Client, insert_events
 from developer import sample_event
 from qualify_foundation import unused_port, wait_ready
 from rumble_evidence import ROOT, safe_read, scan_bytes
+
+STORE_KEY = 'se:owned'
 
 def owned_png():
     def chunk(kind, data):
@@ -31,9 +32,42 @@ def ready(origin):
     while time.monotonic() < deadline:
         try:
             return Client(origin)
-        except (OSError, urllib.error.URLError):
+        except OSError:
             time.sleep(.1)
     raise RuntimeError('Owned host did not become ready.')
+
+
+def interactive(root, origin, store, client):
+    backup = None
+    while True:
+        command = input().strip()
+        if command == 'quit': return
+        if command in ('event', 'tone'):
+            publish_owned_event(root, command)
+        elif command == 'state9': client.call(store, {STORE_KEY: {'count': 9}}, 'PUT')
+        elif command == 'backup':
+            request = urllib.request.Request(origin + '/api/recovery/backup', method='POST', headers={'X-TDSBLive-CSRF': client.nonce})
+            backup = client.opener.open(request).read()
+        elif command == 'restart':
+            client.call('/api/application/restart', {}, 'POST'); time.sleep(1); client = ready(origin)
+            assert client.call(store)[STORE_KEY]['count'] == 9
+        elif command == 'restore' and backup is not None:
+            request = urllib.request.Request(origin + '/api/recovery/validate', method='POST', data=backup, headers={'Content-Type': 'application/zip', 'X-TDSBLive-CSRF': client.nonce})
+            preview = json.load(client.opener.open(request))
+            client.call('/api/recovery/restore', {'id': preview['id'], 'confirm': True}, 'POST'); time.sleep(1); client = ready(origin)
+            assert client.call(store)[STORE_KEY]['count'] == 3
+        else:
+            print('Unknown command or backup missing.', flush=True); continue
+        print(f'Owned {command} completed.', flush=True)
+
+
+def publish_owned_event(root, command):
+    event = sample_event()
+    event.update({'source': 'owned-g13-fixture', 'provenance': 'live', 'type': 'chat.message' if command == 'event' else 'owned.tone'})
+    event['message']['text'] = 'Owned shim event rendered'
+    insert_events(root / 'tdsblive.db', [event])
+    with sqlite3.connect(root / 'tdsblive.db') as database:
+        database.execute('UPDATE Outbox SET DeliveredAtTicks = NULL WHERE EventId = ?', (event['id'].upper(),))
 
 
 def run(hold):
@@ -74,39 +108,14 @@ SBX.on('owned.tone', () => {{ const sound = document.createElement('audio'); sou
             client.call('/api/overlays', {'id': 'g13-owned', 'name': 'Owned G13 compatibility', 'width': 1000, 'height': 700,
                 'canvasEnabled': True, 'widgets': [{'id': identifier, 'kind': 'custom', 'name': 'Owned compatibility', 'width': 980, 'height': 680, 'x': 10, 'y': 10, 'custom': custom}]}, 'POST')
             store = f'/api/overlays/g13-owned/widgets/{identifier}/store'
-            client.call(store, {'se:owned': {'count': 3}}, 'PUT')
-            backup = None
+            client.call(store, {STORE_KEY: {'count': 3}}, 'PUT')
             print(f'Owned G13 OBS URL: {origin}/overlay/g13-owned (1000 x 700)', flush=True)
             print('Host integrations disabled. Commands: event, tone, backup, state9, restart, restore, quit.', flush=True)
             if not hold:
                 subprocess.run(['python', str(ROOT / 'tools/developer.py'), 'diagnostics', '--file', str(root / 'diagnostics.json'), '--host', origin], check=True)
                 print('Owned aggregate diagnostic utility passed.', flush=True)
                 return
-            while True:
-                command = input().strip()
-                if command == 'quit': break
-                if command in ('event', 'tone'):
-                    event = sample_event()
-                    event.update({'source': 'owned-g13-fixture', 'provenance': 'live', 'type': 'chat.message' if command == 'event' else 'owned.tone'})
-                    event['message']['text'] = 'Owned shim event rendered'
-                    insert_events(root / 'tdsblive.db', [event])
-                    with sqlite3.connect(root / 'tdsblive.db') as database:
-                        database.execute('UPDATE Outbox SET DeliveredAtTicks = NULL WHERE EventId = ?', (event['id'].upper(),))
-                elif command == 'state9': client.call(store, {'se:owned': {'count': 9}}, 'PUT')
-                elif command == 'backup':
-                    request = urllib.request.Request(origin + '/api/recovery/backup', method='POST', headers={'X-TDSBLive-CSRF': client.nonce})
-                    backup = client.opener.open(request).read()
-                elif command == 'restart':
-                    client.call('/api/application/restart', {}, 'POST'); time.sleep(1); client = ready(origin)
-                    assert client.call(store)['se:owned']['count'] == 9
-                elif command == 'restore' and backup is not None:
-                    request = urllib.request.Request(origin + '/api/recovery/validate', method='POST', data=backup, headers={'Content-Type': 'application/zip', 'X-TDSBLive-CSRF': client.nonce})
-                    preview = json.load(client.opener.open(request))
-                    client.call('/api/recovery/restore', {'id': preview['id'], 'confirm': True}, 'POST'); time.sleep(1); client = ready(origin)
-                    assert client.call(store)['se:owned']['count'] == 3
-                else:
-                    print('Unknown command or backup missing.', flush=True); continue
-                print(f'Owned {command} completed.', flush=True)
+            interactive(root, origin, store, client)
         finally:
             try:
                 ready(origin).call('/api/application/quit', {}, 'POST')

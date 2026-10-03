@@ -67,7 +67,8 @@ export function createStreamElements(api: LocalApi, emit: Dispatch, warn: (messa
     event(value: unknown) {
       if (!enabled) return;
       const event = object(value);
-      const detail = { listener: event.type === 'chat.message' ? 'message' : String(event.type ?? 'unknown'), event: structuredClone(event) };
+      const type = typeof event.type === 'string' ? event.type : 'unknown';
+      const detail = { listener: type === 'chat.message' ? 'message' : type, event: structuredClone(event) };
       if (detail.listener === 'message') emit('onEventReceived', detail);
       else if (!held) deliver(detail);
       else if (queue.length < 100) queue.push(detail);

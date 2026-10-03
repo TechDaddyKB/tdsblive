@@ -9,6 +9,7 @@ namespace ExtensionSuite.Host;
 
 public static class DeveloperCommands
 {
+    private static readonly JsonSerializerOptions ReplayJson = new(JsonSerializerDefaults.Web);
     private const int MaximumBytes = 64 * 1024 * 1024;
 
     public static async Task<int?> RunAsync(string[] args)
@@ -16,24 +17,24 @@ public static class DeveloperCommands
         if (args.Length == 0 || args[0] != "tools") return null;
         if (args.Length != 3 || args[1] is not ("rumble-replay" or "sanitize-logs"))
         {
-            Console.Error.WriteLine("Usage: TDSBLive tools rumble-replay|sanitize-logs <scanner-approved JSONL[.gz]>");
+            await Console.Error.WriteLineAsync("Usage: TDSBLive tools rumble-replay|sanitize-logs <scanner-approved JSONL[.gz]>");
             return 2;
         }
         try
         {
             var input = await ReadApprovedAsync(args[2]);
-            if (args[1] == "rumble-replay") Console.WriteLine(JsonSerializer.Serialize(Replay(input)));
+            if (args[1] == "rumble-replay") await Console.Out.WriteLineAsync(JsonSerializer.Serialize(Replay(input)));
             else
             {
                 var rows = ParseLines(input);
-                foreach (var row in rows) Console.WriteLine(DiagnosticSanitizer.Shape(row)?.ToJsonString() ?? "null");
+                foreach (var row in rows) await Console.Out.WriteLineAsync(DiagnosticSanitizer.Shape(row)?.ToJsonString() ?? "null");
             }
             return 0;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException or JsonException or ArgumentException or FormatException or InvalidOperationException or OverflowException or System.ComponentModel.Win32Exception)
         {
             // Never echo the input, path, parser exception or scanner output.
-            Console.Error.WriteLine("Utility refused the input. Require valid bounded chronological JSONL and a successful secrets scan. If credentials are present, rotate them at their source and remove them before retrying.");
+            await Console.Error.WriteLineAsync("Utility refused the input. Require valid bounded chronological JSONL and a successful secrets scan. If credentials are present, rotate them at their source and remove them before retrying.");
             return 1;
         }
     }
@@ -50,13 +51,13 @@ public static class DeveloperCommands
             var poll = row["observed_at"] is { } capturedTime
                 ? new RumblePoll(DateTimeOffset.Parse(capturedTime.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
                     row["outcome"]?.GetValue<string>() ?? "ok", row["http_status"]?.GetValue<int>() ?? 200, row["payload"] as JsonObject)
-                : row.Deserialize<RumblePoll>(new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? throw new InvalidDataException();
+                : row.Deserialize<RumblePoll>(ReplayJson) ?? throw new InvalidDataException();
             if (poll.ObservedAt == default) throw new InvalidDataException();
             if (poll.ObservedAt.Offset != TimeSpan.Zero || previous is { } last && poll.ObservedAt < last) throw new InvalidDataException();
             var batch = engine.Reconcile(state, poll, "offline-replay", count == 0, EventProvenance.Replay);
             state = batch.State; previous = poll.ObservedAt; count++;
-            foreach (var item in batch.Events) events[item.Type] = events.GetValueOrDefault(item.Type) + 1;
-            foreach (var item in batch.Diagnostics) diagnostics[item.Code] = diagnostics.GetValueOrDefault(item.Code) + 1;
+            foreach (var type in batch.Events.Select(item => item.Type)) events[type] = events.GetValueOrDefault(type) + 1;
+            foreach (var code in batch.Diagnostics.Select(item => item.Code)) diagnostics[code] = diagnostics.GetValueOrDefault(code) + 1;
         }
         return new { polls = count, events, diagnostics, provenance = "replay", persisted = false, liveActionsAllowed = false };
     }
@@ -82,20 +83,34 @@ public static class DeveloperCommands
             while ((read = await gzip.ReadAsync(buffer)) != 0)
             {
                 if (data.Length + read > MaximumBytes) throw new InvalidDataException();
-                data.Write(buffer, 0, read);
+                await data.WriteAsync(buffer.AsMemory(0, read));
             }
-            var temporary = Path.GetTempFileName();
-            try { await File.WriteAllBytesAsync(temporary, data.ToArray()); await ScanAsync(temporary); }
-            finally { File.Delete(temporary); }
+            var directory = Directory.CreateTempSubdirectory("tdsblive-utility-");
+            var temporary = Path.Combine(directory.FullName, Path.GetRandomFileName());
+            try
+            {
+                await using (var expanded = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    await expanded.WriteAsync(data.ToArray());
+                await ScanAsync(temporary);
+            }
+            finally { directory.Delete(recursive: true); }
         }
         else await file.CopyToAsync(data);
         if (data.Length > MaximumBytes) throw new InvalidDataException();
         return data.ToArray();
     }
 
+    private static string ScannerPath()
+    {
+        var name = OperatingSystem.IsWindows() ? "sonar.exe" : "sonar";
+        var directories = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator);
+        return directories.Where(Path.IsPathFullyQualified).Select(directory => Path.Combine(directory, name))
+            .FirstOrDefault(File.Exists) ?? throw new InvalidDataException();
+    }
+
     private static async Task ScanAsync(string path)
     {
-        var start = new ProcessStartInfo("sonar") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        var start = new ProcessStartInfo(ScannerPath()) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
         foreach (var argument in new[] { "analyze", "secrets", "--", path }) start.ArgumentList.Add(argument);
         using var process = Process.Start(start) ?? throw new InvalidDataException();
         var output = process.StandardOutput.ReadToEndAsync(); var error = process.StandardError.ReadToEndAsync();

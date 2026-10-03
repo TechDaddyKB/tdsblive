@@ -109,3 +109,16 @@ logs or user records. Developer file utilities require deterministic scanning
 before parsing, including gzip expanded bytes. Scanning failures fail closed;
 error output never includes source values, paths, scanner text or parser text.
 See [G13 sharing and utility limits](g13-compatibility.md).
+
+G13 follow-up review (2026-10-03): the changed session send is the same required
+parent-to-owned-opaque-frame protocol described above. Its payload now contains
+only connected/preview/muted booleans and the fresh channel capability. The
+`S2819` session finding is individually reviewed as a false positive; exact-origin
+addressing cannot reach an opaque sandbox, and tokens remain outside the frame.
+Scanner subprocesses resolve an absolute executable from fully qualified PATH
+entries and never use a shell. Expanded evidence uses a private randomly created
+temporary directory and an exclusive random file, then removes both. Linux
+measurement converts process IDs to bounded positive integers and admits workload
+data only beneath the OS temporary root in a private, same-user, non-symlink G13
+directory. Boundary tests reject traversal, public directories, foreign ownership
+and symlinks before fixture writes.

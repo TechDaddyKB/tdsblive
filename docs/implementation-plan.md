@@ -700,7 +700,7 @@ live actions. Focused shim and sanitizer/utility tests pass; broader rendered,
 recovery, OBS, Windows and quality-gate qualification remain pending.
 
 Local qualification checkpoint: 208 frontend tests pass with 90.50% line coverage;
-78 core and 412 host tests pass, with four explicit Windows-only skips. Current
+78 core and 415 host tests pass, with four explicit Windows-only skips. Current
 rendered browser regressions and real-process restart/restore pass, including
 local compatibility state. Actual OBS shows lifecycle/event/storage, loaded image
 and playing silent video, transparent PNG alpha 0–1 and differing video crops.
@@ -714,7 +714,18 @@ Protected Windows/SonarQube delivery and final documentation checks remain requi
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+Windows CI and SonarQube quality gate remain acceptance gates. OBS sound/video,
+media/reconnect/restore and offline-guide checks have passed. Initial candidate
+`ca5e340` passes native tests, replay, browser, recovery and contracts in
+[run 37121010556](https://github.com/TechDaddyKB/tdsblive/actions/runs/37121010556),
+but Sonar rejects security findings despite 93.3% new-code coverage and zero
+new duplication. Follow-up code resolves an absolute scanner executable, uses
+private exclusive temporary evidence files and strengthens owned-host measurement
+admission. The opaque-frame session send is individually reviewed against the
+existing WindowProxy/capability protocol; its payload contains only three public
+booleans. Six utility/measurement boundary tests, 208 frontend tests and 78 core /
+415 host tests pass locally after remediation. Protected delivery remains required;
+this checkpoint is not completion.
 
 ## Official reference documentation
 

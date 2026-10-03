@@ -11,6 +11,8 @@ from urllib.request import Request, HTTPCookieProcessor, build_opener
 from rumble_evidence import EvidenceError, safe_read, scan_bytes
 
 
+BACKUP_PATH = '/api/recovery/backup'
+
 def sample_event():
     now = datetime.now(timezone.utc).isoformat()
     return {
@@ -32,11 +34,15 @@ class LocalHost:
 
     def request(self, path, value=None):
         headers = {}
-        if value is not None or path == '/api/recovery/backup':
+        if value is not None or path == BACKUP_PATH:
             token = json.loads(self.request('/api/auth/csrf'))['requestToken']
             headers['X-TDSBLive-CSRF'] = token
             headers['Content-Type'] = 'application/json'
-        body = json.dumps(value).encode() if value is not None else b'' if path == '/api/recovery/backup' else None
+        body = None
+        if value is not None:
+            body = json.dumps(value).encode()
+        elif path == BACKUP_PATH:
+            body = b''
         with self.client.open(Request(self.url + path, data=body, headers=headers), timeout=30) as response:
             content = response.read(64 * 1024 * 1024 + 1)
         if len(content) > 64 * 1024 * 1024:
@@ -76,7 +82,7 @@ def main():
             content = scan_bytes((json.dumps(sample_event(), indent=2) + '\n').encode(), 'owned sample')
         else:
             host = LocalHost(args.host or '')
-            content = host.request('/api/recovery/backup' if args.command == 'backup' else '/api/diagnostics/export')
+            content = host.request(BACKUP_PATH if args.command == 'backup' else '/api/diagnostics/export')
             if args.command == 'diagnostics':
                 content = scan_bytes(content, 'aggregate diagnostics')
         with args.file.open('xb') as output:
