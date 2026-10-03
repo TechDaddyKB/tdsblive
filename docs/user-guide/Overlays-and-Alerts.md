@@ -74,9 +74,7 @@ saved versions. Restoring an older version creates a new saved revision rather
 than silently deleting the history. Retained revisions are limited; keep a
 [backup](Backup-and-Recovery.md) for longer-term recovery.
 
-Advanced canvas tools and custom-widget authoring belong to later goals. This
-guide describes the current basic editor, not every planned future feature.
-# Advanced canvas controls
+## Advanced canvas controls
 
 Shift/Ctrl-click layers to select several. Group selection makes them move,
 rotate and resize together; Ungroup selection releases them. Copied groups stay
@@ -86,5 +84,6 @@ Use Pan canvas or middle-button dragging to move around a zoomed canvas.
 
 Add Event List for filtered recent activity. Goal Bar and Progress Bar can use a
 manual value or a supporter total in USD. Ledger bars use your financial period
-and filters; preview shows no production totals. See the
-[advanced editor guide](../g11-advanced-editor.md) for controls and limits.
+and filters; preview shows no production totals. See the online
+[advanced editor guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g11-advanced-editor.md)
+for full controls and limits. Custom-widget authoring belongs to the next milestone.

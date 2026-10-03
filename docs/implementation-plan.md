@@ -633,7 +633,7 @@ OBS 32.2.2 / WebSocket 5.7.4 displays the owned Event List, 12.5% ledger goal, 5
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+Windows run `37086175391` passes browser, actual-process recovery, contract and coverage verification. SonarQube passes with 84.3% new-code coverage, zero new duplication and all security hotspots reviewed. Packaging exposed an unsupported relative link in the offline guide; the corrected guide passes a network-disabled browser audit of all ten chapters and eight images. The corrected Windows package and packaged-process qualification remain the final acceptance gates.
 
 <a id="g12"></a>
 
