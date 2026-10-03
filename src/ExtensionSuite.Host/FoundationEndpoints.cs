@@ -131,6 +131,19 @@ public static class FoundationEndpoints
             var current = Path.Combine(paths.Logs, DateTime.UtcNow.ToString("yyyy-MM-dd") + ".jsonl");
             return File.Exists(current) ? Results.File(current, "application/x-ndjson", "tdsblive-log.jsonl") : Results.NotFound();
         });
+        app.MapGet("/api/diagnostics/export", async (IDbContextFactory<FoundationDbContext> factory, CancellationToken cancellationToken) =>
+        {
+            await using var db = await factory.CreateDbContextAsync(cancellationToken);
+            return Results.Json(new
+            {
+                formatVersion = 1, application = "TDSBLive", generatedAt = DateTimeOffset.UtcNow,
+                platform = OperatingSystem.IsWindows() ? "windows" : "other",
+                database = new { events = await db.Events.CountAsync(cancellationToken),
+                    pendingDeliveries = await db.Outbox.CountAsync(row => row.DeliveredAtTicks == null, cancellationToken) },
+                includesUserData = false, includesConfiguration = false, includesLogs = false,
+                limitation = "Aggregate counts only; use private local diagnostics for detailed troubleshooting."
+            });
+        });
     }
 
     private static IResult EditorShell(WebApplication app)

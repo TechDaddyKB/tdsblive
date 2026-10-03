@@ -54,3 +54,14 @@ it.each(['Restart', 'Quit'])('%s queues the operation once and disables further 
   expect(fetch.mock.calls[1]?.[0]).toBe(`/api/application/${operation.toLowerCase()}`);
   expect(screen.getByRole('status')).toHaveTextContent(operation === 'Quit' ? 'TDSBLive is closing' : 'TDSBLive is restarting');
 });
+it('downloads aggregate diagnostics and handles denial without printing server content', async () => {
+  const fetch = vi.fn().mockResolvedValueOnce(new Response('{"includesUserData":false}'))
+    .mockResolvedValueOnce(new Response('private', { status: 403 }));
+  vi.stubGlobal('fetch', fetch); vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:test'), revokeObjectURL: vi.fn() });
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+  render(<MaintenancePanel />); fireEvent.click(screen.getByText('Export sanitized diagnostics'));
+  expect(await screen.findByText(/aggregate counts without configuration/)).toBeVisible();
+  expect(fetch).toHaveBeenCalledWith('/api/diagnostics/export', { credentials: 'same-origin' }); expect(click).toHaveBeenCalled();
+  fireEvent.click(screen.getByText('Export sanitized diagnostics'));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Open the editor on the computer'); click.mockRestore();
+});

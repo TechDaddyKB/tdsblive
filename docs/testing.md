@@ -66,3 +66,12 @@ before staging. To prepare the wiki copy, run
 `python tools/sync_user_guide.py /path/to/wiki-checkout`, review its diff, then
 commit/push the wiki separately. The script scans source files and validates
 local page/image links before copying; it does not publish automatically.
+
+G11/G12 qualify advanced editor interactions, local Monaco, opaque custom worker
+permissions, storage and malicious ZIP admission. G13 adds local compatibility
+fixtures, rendered lifecycle/chat/store/status checks, value-free shape exports,
+aggregate diagnostics and offline production-engine replay. The [requirements
+matrix](requirements-matrix.md) records all numbered sections and explicit
+live-evidence limits. Actual OBS sound/video, restart/restore and native Windows
+packaging remain distinct gates. [Developer utilities](g13-compatibility.md)
+operate on scanner-approved files and disposable local hosts.

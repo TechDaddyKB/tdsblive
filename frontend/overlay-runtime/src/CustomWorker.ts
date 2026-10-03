@@ -1,4 +1,5 @@
 import { parseHTML } from 'linkedom';
+import { createStreamElements } from './StreamElements';
 
 // User code never receives the browser Document/Window. A worker cannot navigate
 // a frame, access cookies, parent DOM, storage, or the owning page's credentials.
@@ -13,6 +14,7 @@ const dispatch = (type: string, value: unknown) => {
   virtual.dispatchEvent(new virtual.CustomEvent(type, { detail: value }));
 };
 const SBX = Object.freeze({
+  enableStreamElements: () => compatibility.enable(),
   on(type: string, handler: (value: unknown) => void) {
     if (typeof type !== 'string' || type.length > 128 || typeof handler !== 'function' || !listeners.has(type) && listeners.size >= 128) throw new Error('Invalid event handler');
     const handlers = listeners.get(type) ?? []; if (handlers.length >= 32) throw new Error('Handler limit reached');
@@ -24,6 +26,7 @@ const SBX = Object.freeze({
   }),
   render: (html: string) => { if (typeof html !== 'string' || html.length > 131072) throw new Error('Render limit exceeded'); document.body.innerHTML = html; },
 });
+const compatibility = createStreamElements(SBX, dispatch, error => postMessage({ op: 'error', error }));
 function request(method: string, value?: unknown): Promise<unknown> {
   if (pending.size >= 8) return Promise.reject(new Error('Storage request limit reached'));
   const id = ++sequence;
@@ -43,11 +46,12 @@ self.onmessage = (message: MessageEvent) => {
       if (!execute) throw new Error('Widget program unavailable');
       execute(SBX, document, document.defaultView);
       dispatch('sbx:load', { config, session });
+      compatibility.load();
       setInterval(() => { const html = document.body.innerHTML; if (html !== previous && html.length <= 131072) { previous = html; postMessage({ op: 'render', html }); } }, 50);
     } catch { postMessage({ op: 'error', error: 'Widget JavaScript failed' }); }
   }
-  if (data.op === 'event') { dispatch(data.event.type, data.event); dispatch('sbx:event', data.event); }
-  if (data.op === 'session') { session = data.session; dispatch('sbx:session', session); }
+  if (data.op === 'event') { dispatch(data.event.type, data.event); dispatch('sbx:event', data.event); compatibility.event(data.event); }
+  if (data.op === 'session') { session = data.session; dispatch('sbx:session', session); compatibility.session(); }
   if (data.op === 'config') { config = data.config; dispatch('sbx:config', config); }
   if (data.op === 'store-result') {
     const result = pending.get(data.id); pending.delete(data.id);

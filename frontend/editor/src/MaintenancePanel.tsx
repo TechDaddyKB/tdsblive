@@ -61,6 +61,14 @@ export function MaintenancePanel() {
         await download('/api/recovery/backup', `TDSBLive-backup-${new Date().toISOString().slice(0, 10)}.zip`);
         setMessage('Backup download started. Keep the ZIP file in a safe place.');
       })}>Download backup</button>
+      <button onClick={() => void run(async () => {
+        const response = await fetch('/api/diagnostics/export', { credentials: 'same-origin' });
+        if (!response.ok) throw new ApiError(response.status);
+        const url = URL.createObjectURL(await response.blob());
+        const link = document.createElement('a'); link.href = url; link.download = 'TDSBLive-diagnostics.json'; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setMessage('Diagnostics download started. It contains aggregate counts without configuration, logs or messages.');
+      })}>Export sanitized diagnostics</button>
     </fieldset>
     <fieldset disabled={busy || stopping}>
       <legend>Restore a backup</legend>

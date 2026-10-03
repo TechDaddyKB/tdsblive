@@ -7,7 +7,7 @@ async function setup(permissions: string[] = ['storage']) {
   const widget = createWidget('custom'); widget.custom!.permissions = permissions;
   const fetcher = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => url.includes('CustomWorker') ? new Response('owned worker') : url === '/api/auth/csrf' ? Response.json({ requestToken: 'owned' }) : init?.method === 'PUT' ? new Response(null, { status: 204 }) : Response.json({ count: 3 }));
   vi.stubGlobal('fetch', fetcher);
-  const view = render(<CustomFrame widget={widget} overlay="owned" token="owned-viewing-value" preview deliveries={[]} session={{ connected: true }} />);
+  const view = render(<CustomFrame widget={widget} overlay="owned" token="owned-viewing-value" preview deliveries={[]} session={{ connected: true, privateValue: 'private-session' }} />);
   const frame = await screen.findByTitle('Custom') as HTMLIFrameElement;
   const channel = /nonce="([a-f0-9]+)"/.exec(frame.srcdoc)![1]; const send = vi.spyOn(frame.contentWindow!, 'postMessage').mockImplementation(() => {});
   const message = async (data: object, source: MessageEventSource | null = frame.contentWindow, origin = 'null') => {
@@ -17,7 +17,8 @@ async function setup(permissions: string[] = ['storage']) {
 }
 it('keeps tokens outside the opaque document, routes events/session, and stores through mediated scoped endpoints', async () => {
   const { widget, fetcher, view, frame, send, message } = await setup(); expect(frame.srcdoc).not.toContain('owned-viewing-value'); expect(frame).toHaveAttribute('sandbox', 'allow-scripts');
-  await message({ op: 'ready' }); expect(send).toHaveBeenCalledWith(expect.objectContaining({ op: 'session', session: { connected: true } }), '*');
+  expect(frame.srcdoc).not.toContain('private-session');
+  await message({ op: 'ready' }); expect(send).toHaveBeenCalledWith(expect.objectContaining({ op: 'session', session: { connected: true, preview: true, muted: true } }), '*');
   view.rerender(<CustomFrame widget={widget} overlay="owned" token="owned-viewing-value" preview deliveries={[{ widgetId: widget.id, event: { type: 'future' } }, { widgetId: 'other', event: {} }]} session={{ connected: false }} />);
   expect(send).toHaveBeenCalledWith(expect.objectContaining({ op: 'event', event: { type: 'future' } }), '*');
   await message({ op: 'store', id: 1, method: 'get' }); await waitFor(() => expect(send).toHaveBeenCalledWith(expect.objectContaining({ op: 'store-result', id: 1, value: { count: 3 } }), '*'));

@@ -25,6 +25,8 @@ public sealed class RumbleState
 }
 public sealed class RumbleScopeState
 {
+    public long DuplicateRecords { get; set; }
+    public long PossibleGaps { get; set; }
     public Dictionary<string, RumbleStreamState> Streams { get; set; } = [];
     public Dictionary<string, RumbleOccurrence> History { get; set; } = [];
     public HashSet<string> InitializedCollections { get; set; } = [];

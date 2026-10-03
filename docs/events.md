@@ -45,3 +45,10 @@ Optional `message.parts` preserves structured text/emote/GIF rendering metadata
 (`kind`, `text`, `imageUrl`, `source`, `zeroWidth`) without requiring raw payload
 access. Plain-text records deserialize with parts absent. The owning G05 document
 describes normalized positions, URL validation, limits and fallback behavior.
+
+Custom widgets receive only explicitly permitted events/fields. [Local
+StreamElements compatibility](g13-compatibility.md) maps canonical chat to the
+`message` listener and preserves canonical type names for other events; it does
+not invent cloud event/session data. Private inspector samples differ from
+shape-only sharing fixtures. Developer file replay is isolated and cannot
+dispatch live bot actions or write ordinary financial totals.

@@ -96,7 +96,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Complete |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Complete |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Complete |
-| [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
+| [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Complete |
 
 <a id="g00"></a>
 
@@ -598,7 +598,7 @@ Resumed qualification (2026-10-02): operator reports the Rumble baseline establi
 
 Final delivery (2026-10-02): [Windows run 37073729890](https://github.com/TechDaddyKB/tdsblive/actions/runs/37073729890), source `649b2d105bc3bda0bfd1012adcc40bbf190ddef6`, passes 75 core and 384 host tests without skips, 175 frontend tests, OpenCover/LCOV imports, SonarQube quality gate and native ZIP/installer qualification. All protected PR checks pass. Both downloaded package checksums match, and the actual downloaded EXE passes both real-browser read-only bot tests under Wine with empty execution histories and graceful exit. Its bundled guide passes ten chapters/eight images, navigation and UTF-8 with networking disabled. Protected [PR #13](https://github.com/TechDaddyKB/tdsblive/pull/13) merged as `be467726b251fa31bb80f4d1eef1711e693b0870`; its tree exactly matches tested source `649b2d1`. [MVP release v0.1.0](https://github.com/TechDaddyKB/tdsblive/releases/tag/v0.1.0) is public, tagged at that merge and includes the verified Windows x64 ZIP, installer and `SHA256SUMS.txt`; uploaded digests and sizes match all three local artifacts. Wiki `3913754` publishes the matching complete guide and passes fresh-browser checks. The completion-record change is documentation only and follows normal protected delivery.
 
-G00–G10 satisfy MVP completion under the explicit approved scope. G11 completion is recorded below; G12–G13 remain Not started. Wine performance deviations are accepted and documented, not passing targets. Actual paid-platform delivery and native Windows streaming-PC performance remain unverified; VTube Studio remains on hold.
+G00–G10 satisfy MVP completion under the explicit approved scope. G11–G13 progression and completion evidence are recorded below. Wine performance deviations are accepted and documented, not passing targets. Actual paid-platform delivery and native Windows streaming-PC performance remain unverified; VTube Studio remains on hold.
 
 ### Blockers
 
@@ -671,7 +671,7 @@ None for G12.
 
 ## G13 — Complete compatibility and full-spec qualification
 
-Status: **Not started**
+Status: **Complete**
 Prerequisites: G12
 
 ### Deliverables
@@ -689,11 +689,52 @@ Prerequisites: G12
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+Initial implementation checkpoint (2026-10-03): G12 prerequisite revalidated on merged main `b8d468d` (PR #16).
+Work on `codex/g13-compatibility` adds opt-in local StreamElements lifecycle,
+canonical event envelopes, permission-scoped keyed storage and bounded local
+queue/status equivalents. Unsupported remote calls throw descriptive warnings.
+Shape-only fixture and aggregate diagnostic exports remove private content;
+private local inspection remains available. Offline Rumble replay uses the
+production engine and processes all 785 captured polls without persistence or
+live actions. Focused shim and sanitizer/utility tests pass; broader rendered,
+recovery, OBS, Windows and quality-gate qualification remain pending.
+
+Local qualification checkpoint before protected delivery: 208 frontend tests pass with 90.50% line coverage;
+78 core and 415 host tests pass, with four explicit Windows-only skips. Current
+rendered browser regressions and real-process restart/restore pass, including
+local compatibility state. Actual OBS shows lifecycle/event/storage, loaded image
+and playing silent video, transparent PNG alpha 0–1 and differing video crops.
+Owned restart retains state 9; backup restore returns state 3. Operator confirms
+the one-second custom-widget tone was heard. Prior OBS state restored, owned
+input/scene removed and disposable host stopped. [G13 contracts and measured
+performance](g13-compatibility.md) and the [99-section matrix](requirements-matrix.md)
+record current evidence and scope limits. Linux disabled-integration baseline CPU
+exceeds numeric targets; native Windows streaming-PC performance remains unverified.
+At this checkpoint, protected Windows/SonarQube delivery and final documentation checks remained required.
+
+Completion audit (2026-10-03): source `0b0e6383de09ac74d338cc590f139c092f5ee422`
+passes [Windows run 37122338495](https://github.com/TechDaddyKB/tdsblive/actions/runs/37122338495), including 78 core and 419 host tests without skips,
+208 frontend tests, rendered G13/regression qualification, process restart/restore,
+contracts, native ZIP/installer recovery, reinstall, startup opt-in and uninstall.
+SonarQube passes with 92.9% new-code coverage, zero duplication, A ratings, all
+hotspots reviewed and zero open vulnerabilities; all CodeQL checks pass. The
+corrected scanner and private measurement boundaries pass their local tests.
+The offline guide passes ten chapters/eight images and local migration steps with
+networking disabled. Both downloaded candidate package SHA-256 values match; the guide
+extracted from the actual downloaded ZIP also passes all ten chapters/eight images
+and migration content with networking disabled. The operator's audible confirmation and actual owned OBS
+media/restart/restore evidence above close the live rendering gates. All 99 source
+sections are classified in the public requirement matrix. A redundant scalar null
+check reported as a minor code smell is removed in this completion-record change,
+which follows normal protected PR checks.
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+None for the approved G13 scope. VTube Studio remains explicitly deferred. Actual
+paid-platform delivery and native Windows streaming-PC performance remain
+unverified by the established evidence scope; the available Linux CPU measurement
+misses numeric targets. These are explicit requirement dispositions, not passing
+performance or live-delivery claims. G00–G13 are Complete within that scope.
 
 ## Official reference documentation
 

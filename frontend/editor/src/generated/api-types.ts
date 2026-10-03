@@ -1718,6 +1718,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inspector/{id}/sanitized-fixture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/inspector/{id}/replay": {
         parameters: {
             query?: never;
@@ -2251,6 +2286,39 @@ export interface paths {
         trace?: never;
     };
     "/api/diagnostics/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diagnostics/export": {
         parameters: {
             query?: never;
             header?: never;
@@ -4049,6 +4117,33 @@ export interface components {
             subscriptionsLiveVerified: boolean;
             /** @default false */
             giftsAuthoritative: boolean;
+            /**
+             * Format: double
+             * @default 0
+             */
+            pollLatencyMilliseconds: number | string;
+            /**
+             * Format: int32
+             * @default 7
+             */
+            pollIntervalSeconds: number | string;
+            /**
+             * Format: int64
+             * @default 0
+             */
+            acceptedEventsThisProcess: number | string;
+            /**
+             * Format: int64
+             * @default 0
+             */
+            duplicateRecords: number | string;
+            /**
+             * Format: int64
+             * @default 0
+             */
+            possibleGaps: number | string;
+            /** Format: int64 */
+            viewers?: null | number | string;
         };
         SecretUpdate: {
             value: string;

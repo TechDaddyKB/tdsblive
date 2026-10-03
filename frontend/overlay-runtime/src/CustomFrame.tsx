@@ -5,7 +5,7 @@ import { widgetId, type Widget } from './scene';
 
 // This function is serialized into the opaque iframe. It is trusted rendering
 // code; custom JavaScript runs exclusively in its disposable dedicated worker.
-export function frameBootstrap(channel: string, settings: CustomSettings, workerCode: string, assets: Record<string, string>, parentOrigin: string) {
+export function frameBootstrap(channel: string, settings: CustomSettings, workerCode: string, assets: Record<string, string>, parentOrigin: string, initialSession: unknown = {}) {
   const program = `${workerCode}\nself.__SBX_RUN = function(SBX, document, window) {\n${settings.javaScript}\n};`;
   const worker = new Worker(URL.createObjectURL(new Blob([program], { type: 'text/javascript' })));
   worker.onerror = () => parent.postMessage({ op: 'error', channel }, parentOrigin);
@@ -62,7 +62,7 @@ export function frameBootstrap(channel: string, settings: CustomSettings, worker
     const target = e.target as HTMLInputElement;
     if (target.id) worker.postMessage({ op: 'dom-event', type, id: target.id, value: target.value });
   });
-  worker.postMessage({ op: 'init', html: settings.html, config: settings.config, session: {} });
+  worker.postMessage({ op: 'init', html: settings.html, config: settings.config, session: initialSession });
   parent.postMessage({ op: 'ready', channel }, parentOrigin);
 }
 
@@ -72,9 +72,9 @@ export function assetDataUrl(bytes: Uint8Array, mime: string): string {
   for (let index = 0; index < bytes.length; index += 16384) binary += String.fromCharCode(...bytes.subarray(index, index + 16384));
   return `data:${mime};base64,${btoa(binary)}`;
 }
-export function frameDocument(settings: CustomSettings, worker: string, channel: string, assets: Record<string, string> = {}): string {
+export function frameDocument(settings: CustomSettings, worker: string, channel: string, assets: Record<string, string> = {}, session: unknown = {}): string {
   const csp = customCsp(settings, channel).replaceAll('&', '&amp;').replaceAll('"', '&quot;');
-  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"></head><body><script nonce="${channel}">(${frameBootstrap.toString()})(${safeJson(channel)},${safeJson(settings)},${safeJson(worker)},${safeJson(assets)},${safeJson(location.origin)})</script></body></html>`;
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"></head><body><script nonce="${channel}">(${frameBootstrap.toString()})(${safeJson(channel)},${safeJson(settings)},${safeJson(worker)},${safeJson(assets)},${safeJson(location.origin)},${safeJson(session)})</script></body></html>`;
 }
 
 export function CustomFrame({ widget, overlay, token, preview, deliveries, session, audioEnabled = true }: {
@@ -83,7 +83,8 @@ export function CustomFrame({ widget, overlay, token, preview, deliveries, sessi
   const frame = useRef<HTMLIFrameElement>(null); const [source, setSource] = useState(''); const [error, setError] = useState('');
   const channel = useRef(''); const ready = useRef(false);
   const settings = useMemo(() => audioEnabled ? widget.custom ?? defaultCustom : { ...(widget.custom ?? defaultCustom), permissions: (widget.custom ?? defaultCustom).permissions.filter(p => p !== 'audio') }, [widget.custom, audioEnabled]);
-  const sessionValue = useRef(session); sessionValue.current = session;
+  const publicSession = useMemo(() => ({ connected: !!(session && typeof session === 'object' && 'connected' in session && session.connected), preview, muted: !settings.permissions.includes('audio') }), [session, preview, settings.permissions]);
+  const sessionValue = useRef(publicSession); sessionValue.current = publicSession;
   const configValue = useRef(settings.config); configValue.current = settings.config;
   const executionKey = JSON.stringify({ ...settings, config: {} });
   useEffect(() => {
@@ -125,7 +126,7 @@ export function CustomFrame({ widget, overlay, token, preview, deliveries, sessi
           if (totalBytes > 64 * 1024 * 1024) throw new Error();
           assets[id] = assetDataUrl(bytes, response.headers.get('Content-Type') ?? 'application/octet-stream');
         }
-        if (!disposed) setSource(frameDocument(settings, code, capability, assets));
+        if (!disposed) setSource(frameDocument(settings, code, capability, assets, sessionValue.current));
       } catch { if (!disposed) setError('Custom widget unavailable'); }
     })();
     return () => { disposed = true; ready.current = false; controller.abort(); removeEventListener('message', receive); };
@@ -135,6 +136,6 @@ export function CustomFrame({ widget, overlay, token, preview, deliveries, sessi
     for (const delivery of deliveries.filter(d => d.widgetId === widget.id)) frame.current?.contentWindow?.postMessage({ op: 'event', event: delivery.event, channel: channel.current }, '*');
   }, [deliveries, widget.id]);
   useEffect(() => { if (ready.current) frame.current?.contentWindow?.postMessage({ op: 'config', config: settings.config, channel: channel.current }, '*'); }, [settings.config]);
-  useEffect(() => { if (ready.current) frame.current?.contentWindow?.postMessage({ op: 'session', session, channel: channel.current }, '*'); }, [session]);
+  useEffect(() => { if (ready.current) frame.current?.contentWindow?.postMessage({ op: 'session', session: publicSession, channel: channel.current }, '*'); }, [publicSession]);
   return <>{error && <output>{error}</output>}{source && <iframe ref={frame} title={widget.name} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={source} style={{ border: 0, width: '100%', height: '100%' }} />}</>;
 }
