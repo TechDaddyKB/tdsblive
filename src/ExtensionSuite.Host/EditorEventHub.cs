@@ -62,20 +62,39 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         await Task.WhenAll(active.Select(subscriber => subscriber.Drained.Task)).WaitAsync(cancellationToken);
     }
 
+    private static object CustomDelivery(OverlayDefinition overlay, CanonicalEvent item) => new {
+        op = "custom-events", widgets = overlay.Widgets.Where(w => !w.Hidden && w.Kind == "custom" && w.Custom.Accepts(item)).Select(w => new {
+            widgetId = w.Id, @event = item with { Raw = w.Custom.Permissions.Contains("raw") ? item.Raw : null,
+                Monetary = w.Custom.Permissions.Contains("financial") ? item.Monetary : null, Support = w.Custom.Permissions.Contains("financial") ? item.Support : null }
+        }).ToArray()
+    };
+    private void SendCustom(Subscriber subscriber, CanonicalEvent item)
+    {
+        if (subscriber.Overlay is not { } overlay || !overlay.Widgets.Any(w => !w.Hidden && w.Kind == "custom" && w.Custom.Accepts(item))) return;
+        var payload = CredentialRedactor.Json(JsonSerializer.SerializeToNode(CustomDelivery(overlay, item), EventStore.JsonOptions), sensitive.Snapshot())!.ToJsonString(EventStore.JsonOptions);
+        if (!subscriber.Queue.Writer.TryWrite(payload)) subscriber.TryStop();
+    }
     public void Publish(CanonicalEvent item)
     {
         var payload = CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = item }, EventStore.JsonOptions), sensitive.Snapshot())!
             .ToJsonString(EventStore.JsonOptions);
         foreach (var subscriber in subscribers.Values)
+        {
+            if (subscriber.Accepts(item)) SendCustom(subscriber, item);
             if (subscriber.Accepts(item) && !subscriber.Queue.Writer.TryWrite(subscriber.Overlay is null ? payload :
                 CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = OverlayEndpoints.PublicChat(item) }, EventStore.JsonOptions), sensitive.Snapshot())!.ToJsonString(EventStore.JsonOptions))) subscriber.TryStop();
+        }
     }
 
     public void PublishPreview(string overlayId, CanonicalEvent item)
     {
         var payload = JsonSerializer.Serialize(new { op = "event", @event = OverlayEndpoints.PublicChat(item) }, EventStore.JsonOptions);
         foreach (var subscriber in subscribers.Values.Where(s => s.Preview && !s.Limited && s.Overlay?.Id == overlayId))
-            if (subscriber.Accepts(item) && !subscriber.Queue.Writer.TryWrite(payload)) subscriber.TryStop();
+        {
+            if (!subscriber.Accepts(item)) continue;
+            SendCustom(subscriber, item);
+            if (!subscriber.Queue.Writer.TryWrite(payload)) subscriber.TryStop();
+        }
     }
 
     public void UpdateOverlay(OverlayDefinition definition)
@@ -284,7 +303,7 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         public bool Accepts(CanonicalEvent item) => (types.Contains(item.Type, StringComparer.Ordinal) || types.Contains("*", StringComparer.Ordinal)) &&
             (Overlay is null || (item.Provenance == EventProvenance.Live || Preview && !Limited) &&
                 (Overlay.CanvasEnabled ? Overlay.Widgets.Any(w => !w.Hidden && (w.Kind == "chat" && w.Chat.Accepts(item) ||
-                    (w.Kind == "event-list" && w.EventList.Accepts(item)) || w.Kind == "alert" && (w.Alert.EventTypes.Contains(item.Type) || w.Alert.EventTypes.Contains("*")) && w.Alert.Platforms.Contains(item.Platform))) : Overlay.Chat.Accepts(item)));
+                    (w.Kind == "custom" && w.Custom.Accepts(item)) || (w.Kind == "event-list" && w.EventList.Accepts(item)) || w.Kind == "alert" && (w.Alert.EventTypes.Contains(item.Type) || w.Alert.EventTypes.Contains("*")) && w.Alert.Platforms.Contains(item.Platform))) : Overlay.Chat.Accepts(item)));
         public void Subscribe(string[] selected) { types = selected; Subscribed = true; }
         public void TryStop()
         {

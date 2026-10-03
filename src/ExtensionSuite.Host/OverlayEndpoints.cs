@@ -11,23 +11,23 @@ public static class OverlayEndpoints
     public static void MapOverlayEndpoints(this WebApplication app)
     {
         app.MapGet("/api/overlays", async (OverlayStore store, CancellationToken ct) => TypedResults.Ok(await store.ListAsync(ct)));
-        app.MapPost("/api/overlays", async (OverlayDefinition value, OverlayStore store, AssetStore assets, CancellationToken ct) =>
+        app.MapPost("/api/overlays", async (OverlayDefinition value, OverlayStore store, AssetStore assets, SensitiveValues sensitive, CancellationToken ct) =>
         {
             if (value.Version != 1) return Results.BadRequest();
             try { value.Validate(); } catch (ArgumentException) { return Results.BadRequest(); }
-            if (!await ValidAssetsAsync(value, assets, ct)) return Results.BadRequest();
+            if (!await ValidAssetsAsync(value, assets, sensitive, ct)) return Results.BadRequest();
             return await store.CreateAsync(value, ct) ? Results.Created($"/api/overlays/{value.Id}", value) : Results.Conflict();
         }).Produces<OverlayDefinition>(201);
         app.MapGet("/api/overlays/{id}/revisions", async (string id, OverlayStore store, CancellationToken ct) =>
             await store.GetAsync(id, ct) is null ? Results.NotFound() : Results.Ok(await store.RevisionsAsync(id, ct))).Produces<OverlayRevision[]>();
         app.MapPost("/api/overlays/{id}/revisions/{version:int}/restore", async (string id, int version, RestoreOverlayRevision request,
-            OverlayStore store, AssetStore assets, EditorEventHub hub, CancellationToken ct) =>
+            OverlayStore store, AssetStore assets, SensitiveValues sensitive, EditorEventHub hub, CancellationToken ct) =>
         {
             var saved = await store.RevisionAsync(id, version, ct);
             if (saved is null) return Results.NotFound();
             var restored = saved with { Version = request.ExpectedVersion };
             try { restored.Validate(); } catch (ArgumentException) { return Results.BadRequest(); }
-            if (!await ValidAssetsAsync(restored, assets, ct)) return Results.BadRequest();
+            if (!await ValidAssetsAsync(restored, assets, sensitive, ct)) return Results.BadRequest();
             if (!await store.SaveAsync(restored, ct)) return Results.Conflict();
             var updated = (await store.GetAsync(id, ct))!; hub.UpdateOverlay(updated); return Results.Ok(updated);
         }).Produces<OverlayDefinition>();
@@ -59,11 +59,11 @@ public static class OverlayEndpoints
             await store.GetAsync(id, ct) is null ? Results.NotFound() : Shell(app));
         app.MapGet("/api/overlays/{id}", async (string id, OverlayStore store, CancellationToken ct) =>
             await store.GetAsync(id, ct) is { } value ? Results.Ok(value) : Results.NotFound()).Produces<OverlayDefinition>();
-        app.MapPut("/api/overlays/{id}", async (string id, [FromBody] OverlayDefinition value, OverlayStore store, AssetStore assets, EditorEventHub hub, CancellationToken ct) =>
+        app.MapPut("/api/overlays/{id}", async (string id, [FromBody] OverlayDefinition value, OverlayStore store, AssetStore assets, SensitiveValues sensitive, EditorEventHub hub, CancellationToken ct) =>
         {
             if (value.Id != id) return Results.BadRequest();
             try { value.Validate(); } catch (ArgumentException) { return Results.BadRequest(); }
-            if (!await ValidAssetsAsync(value, assets, ct)) return Results.BadRequest();
+            if (!await ValidAssetsAsync(value, assets, sensitive, ct)) return Results.BadRequest();
             if (!await store.SaveAsync(value, ct)) return Results.Conflict();
             var updated = (await store.GetAsync(id, ct))!; hub.UpdateOverlay(updated);
             return Results.Ok(updated);
@@ -120,12 +120,15 @@ public static class OverlayEndpoints
             return Results.File(store.PathFor(id), info.Mime, enableRangeProcessing: true);
         });
     }
-    private static async Task<bool> ValidAssetsAsync(OverlayDefinition overlay, AssetStore assets, CancellationToken ct)
+    private static async Task<bool> ValidAssetsAsync(OverlayDefinition overlay, AssetStore assets, SensitiveValues sensitive, CancellationToken ct)
     {
         var fonts = new[] { overlay.Chat.FontAssetId }.Concat(overlay.Widgets.SelectMany(w => new[] { w.Chat.FontAssetId, w.Donor.FontAssetId })).Where(id => id is not null);
         foreach (var id in fonts) if ((await assets.GetAsync(id!, ct))?.Mime.StartsWith("font/", StringComparison.Ordinal) != true) return false;
         foreach (var widget in overlay.Widgets)
         {
+            var customNode = JsonSerializer.SerializeToNode(widget.Custom, EventStore.JsonOptions);
+            if (!System.Text.Json.Nodes.JsonNode.DeepEquals(customNode, CredentialRedactor.Json(customNode?.DeepClone(), sensitive.Snapshot()))) return false;
+            foreach (var customAsset in widget.Custom.AssetIds) if (await assets.GetAsync(customAsset, ct) is null) return false;
             if (widget.Donor.CrownAssetId is { } crown && (await assets.GetAsync(crown, ct))?.Mime.StartsWith("image/", StringComparison.Ordinal) != true) return false;
             if (widget.AssetId is { } id)
             {

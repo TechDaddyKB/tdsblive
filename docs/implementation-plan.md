@@ -95,7 +95,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Complete |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Complete |
-| [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
+| [G12](#g12) | Deliver custom-widget platform and portability | G11 | In progress |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
 
 <a id="g00"></a>
@@ -639,7 +639,7 @@ None for the approved G11 scope. Corrected commit `cf00f6944e5d694e1c651379b16b5
 
 ## G12 — Deliver custom-widget platform and portability
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G11
 
 ### Deliverables
@@ -657,7 +657,7 @@ Prerequisites: G11
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+2026-10-03: G11 prerequisite revalidated: protected PR #15 merged as `870222d` with successful Windows and Sonar checks; main protection still requires both checks. Implementation includes local Monaco, schema-driven fields/subscriptions, an opaque iframe with worker-isolated virtual DOM, explicit event/media/network/storage capabilities and bounded portable ZIP admission. [G12 contracts and limits](g12-custom-widgets.md). Focused real-browser sandbox/Monaco/event/storage/spoof/package checks pass. Actual-process restart/restore retains custom code and persistent state with an open reconnecting browser. Actual OBS 32.2.2 displays owned custom text, image, event updates, persistent state and silent video. Two successive PNGs have alpha 0–1 and different playing-video crops. An actual owned-host restart reconnects OBS and shows persisted state 7; actual backup restore returns state 3 while image/video and custom source remain visible. Prior OBS state was restored, owned scene/source removed and disposable host shut down. A one-second owned tone was dispatched through the custom renderer; operator audible confirmation and exact-head Windows/Sonar remain pending. G12 is not complete.
 
 ### Blockers
 

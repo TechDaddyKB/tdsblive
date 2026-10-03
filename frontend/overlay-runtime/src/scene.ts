@@ -1,3 +1,4 @@
+import { defaultCustom, type CustomSettings } from './custom';
 import { defaultSettings, type ChatSettings, type OverlayDefinition } from './chat';
 export interface AlertSettings {
   eventTypes: string[]; platforms: string[]; template: string; group: string; priority: number; durationMs: number; cooldownMs: number;
@@ -5,9 +6,9 @@ export interface AlertSettings {
   overflowPolicy: 'drop-oldest' | 'drop-newest'; animation: 'none' | 'fade' | 'slide'; mediaAssetId: string | null; soundAssetId: string | null;
 }
 export interface Widget {
-  id: string; name: string; kind: 'text' | 'image' | 'video' | 'audio' | 'chat' | 'alert' | 'donor-crown' | 'donor-leaderboard' | 'latest-supporter' | 'current-stream-leader' | 'current-stream-total' | 'event-list' | 'goal-bar' | 'progress-bar'; x: number; y: number; width: number; height: number;
+  id: string; name: string; kind: 'text' | 'image' | 'video' | 'audio' | 'chat' | 'alert' | 'donor-crown' | 'donor-leaderboard' | 'latest-supporter' | 'current-stream-leader' | 'current-stream-total' | 'event-list' | 'goal-bar' | 'progress-bar' | 'custom'; x: number; y: number; width: number; height: number;
   groupId?: string | null; rotation: number; locked: boolean; hidden: boolean; text: string; color: string; fontSize: number; assetId: string | null;
-  volume: number; loop: boolean; muted: boolean; chat: ChatSettings; alert: AlertSettings; donor?: DonorSettings; eventList?: EventListSettings; progress?: ProgressSettings;
+  volume: number; loop: boolean; muted: boolean; chat: ChatSettings; alert: AlertSettings; donor?: DonorSettings; eventList?: EventListSettings; progress?: ProgressSettings; custom?: CustomSettings;
 }
 export interface DonorSettings {
   period: string; platforms: string[]; eventTypes: string[]; minimumUsdMinor: string; count: number;
@@ -37,7 +38,7 @@ export function createWidget(kind: Widget['kind']): Widget {
   return { id: widgetId(), name: kind === 'chat' ? 'Combined Chat' : kind === 'alert' ? 'AlertBox' : kind[0].toUpperCase() + kind.slice(1),
     kind, groupId: null, x: 40, y: 40, width: kind === 'chat' ? 600 : 400, height: kind === 'chat' ? 700 : 200, rotation: 0, locked: false, hidden: false,
     text: 'Hello, stream!', color: '#ffffff', fontSize: 32, assetId: null, volume: .75, loop: true, muted: true,
-    eventList: structuredClone(defaultEventList), progress: structuredClone(defaultProgress), chat: structuredClone(defaultSettings), alert: structuredClone(defaultAlert), donor: { ...structuredClone(defaultDonor), template: kind === 'current-stream-total' ? '{amount}' : defaultDonor.template } };
+    custom: structuredClone(defaultCustom), eventList: structuredClone(defaultEventList), progress: structuredClone(defaultProgress), chat: structuredClone(defaultSettings), alert: structuredClone(defaultAlert), donor: { ...structuredClone(defaultDonor), template: kind === 'current-stream-total' ? '{amount}' : defaultDonor.template } };
 }
 export const alertPresets = [
   ['Follow', 'community.follow', 'twitch'], ['Subscription', 'support.subscription', 'twitch'], ['Gift Subscription', 'support.gift', 'twitch'], ['Bits', 'support.bits', 'twitch'],

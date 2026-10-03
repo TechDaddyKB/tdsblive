@@ -26,6 +26,7 @@ public static class FoundationServices
         builder.Services.AddSingleton<RecoveryRestore>();
         builder.Services.AddSingleton<ApplicationLifecycle>();
         builder.Services.AddSingleton<OverlayStore>();
+        builder.Services.AddSingleton<PortablePackages>();
         builder.Services.AddSingleton<AssetStore>();
         builder.Services.AddSingleton<AutomationRuleStore>();
         builder.Services.AddSingleton<AutomationExecutionStore>();
@@ -72,7 +73,17 @@ public static class FoundationServices
         builder.Services.AddSingleton<ICurrencyRateProvider>(services => services.GetRequiredService<CachedCurrencyRates>());
         builder.Services.AddSingleton<FinancialProjection>();
         builder.Services.AddSingleton<IIsolatedIntegration, FinancialHostedIntegration>();
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi(options => options.AddSchemaTransformer((schema, context, ct) =>
+        {
+            if (context.JsonTypeInfo.Type == typeof(System.Text.Json.Nodes.JsonObject))
+            {
+                // JsonObject accepts arbitrary JSON properties even when typed
+                // DTOs reject unmapped members. Reflect that actual wire contract.
+                schema.AdditionalPropertiesAllowed = true;
+                schema.AdditionalProperties = new Microsoft.OpenApi.OpenApiSchema();
+            }
+            return Task.CompletedTask;
+        }));
         builder.Services.AddSingleton<EditorEventHub>();
         builder.Services.AddSingleton<IntegrationHealthRegistry>();
         builder.Services.AddSingleton<EventInspectorStore>();

@@ -1,0 +1,32 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
+import { CustomProperties } from './CustomProperties';
+import { createWidget } from '../../overlay-runtime/src/scene';
+vi.mock('./MonacoCodeEditor', () => ({ default: ({ value, change }: { value: string; change: (value: string) => void }) => <textarea aria-label="Code source" value={value} onChange={e => change(e.target.value)} /> }));
+vi.mock('./api', () => ({ bots: { discovery: async () => ({ events: { general: ['Owned'] }, actions: [{ id: 'stable-id', name: 'Owned action' }] }) } }));
+afterEach(cleanup);
+it('edits source, subscriptions, domain permissions, assets and version metadata', async () => {
+  const w = createWidget('custom'); const change = vi.fn(); const assets = [{ id: 'a'.repeat(64), filename: 'owned.gif', mime: 'image/gif' }];
+  const view = render(<CustomProperties widget={w} assets={assets} change={change} />);
+  fireEvent.change(await screen.findByLabelText('Code source'), { target: { value: '<p>Owned HTML</p>' } }); expect(change.mock.lastCall![0].custom.html).toBe('<p>Owned HTML</p>');
+  fireEvent.click(screen.getByRole('button', { name: 'CSS' })); fireEvent.change(screen.getByLabelText('Code source'), { target: { value: 'p { color: red; }' } }); expect(change.mock.lastCall![0].custom.css).toContain('red');
+  fireEvent.click(screen.getByRole('button', { name: 'JavaScript' })); fireEvent.change(screen.getByLabelText('Code source'), { target: { value: "SBX.on('future', () => {});" } }); expect(change.mock.lastCall![0].custom.javaScript).toContain('future');
+  fireEvent.change(screen.getByLabelText('Package version'), { target: { value: '2.0.0' } }); expect(change.mock.lastCall![0].custom.packageVersion).toBe('2.0.0');
+  fireEvent.change(screen.getByLabelText('Author'), { target: { value: 'Owned author' } }); expect(change.mock.lastCall![0].custom.author).toBe('Owned author');
+  fireEvent.change(screen.getByLabelText('Custom subscriptions'), { target: { value: 'future.available,chat.message' } }); expect(change.mock.lastCall![0].custom.subscriptions).toEqual(['future.available', 'chat.message']);
+  fireEvent.click(screen.getByLabelText('Allow network')); const network = change.mock.lastCall![0]; view.rerender(<CustomProperties widget={network} assets={assets} change={change} />);
+  fireEvent.change(screen.getByLabelText('Network domains'), { target: { value: 'example.com' } }); expect(change.mock.lastCall![0].custom.networkDomains).toEqual(['example.com']);
+  fireEvent.click(screen.getByLabelText('Allow network')); expect(change.mock.lastCall![0].custom.networkDomains).toEqual([]);
+  const option = screen.getByRole('option', { name: 'owned.gif' }) as HTMLOptionElement; option.selected = true;
+  fireEvent.change(screen.getByLabelText('Custom assets')); expect(change.mock.lastCall![0].custom.assetIds).toEqual(['a'.repeat(64)]);
+});
+it('applies only parsed field arrays and edits schema-driven config while retaining invalid drafts', async () => {
+  const change = vi.fn(); const w = createWidget('custom'); const view = render(<CustomProperties widget={w} assets={[]} change={change} />);
+  await screen.findByLabelText('Code source'); fireEvent.click(screen.getByRole('button', { name: 'Settings JSON' }));
+  fireEvent.change(screen.getByLabelText('Code source'), { target: { value: '{}' } }); fireEvent.click(screen.getByText('Apply settings schema')); expect(screen.getByText('Settings must be a valid JSON field array.')).toBeVisible();
+  fireEvent.change(screen.getByLabelText('Code source'), { target: { value: '[{"key":"label","label":"Owned label","type":"text"},{"key":"reset","label":"Reset","type":"button"}]' } });
+  fireEvent.click(screen.getByText('Apply settings schema')); const updated = change.mock.lastCall![0]; view.rerender(<CustomProperties widget={updated} assets={[]} change={change} />);
+  fireEvent.change(screen.getByLabelText('Owned label'), { target: { value: 'Configured' } }); expect(change.mock.lastCall![0].custom.config.label).toBe('Configured');
+  fireEvent.click(screen.getByRole('button', { name: 'Reset' })); expect(change.mock.lastCall![0].custom.config.reset).toBeTypeOf('number');
+  view.rerender(<CustomProperties widget={createWidget('custom')} assets={[]} change={change} />); expect(screen.getByLabelText('Code source')).toHaveValue('[]');
+});

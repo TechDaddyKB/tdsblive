@@ -68,7 +68,8 @@ public sealed class RequestSecurity(RequestDelegate next)
     public async Task InvokeAsync(HttpContext context, ApplicationConfiguration configuration, AccessControl access, IAntiforgery antiforgery, OverlayStore overlays)
     {
         var request = context.Request;
-        var bodyLimit = request.Path == "/api/recovery/validate" && HttpMethods.IsPost(request.Method) ? RecoveryArchive.MaximumArchiveBytes :
+        var bodyLimit = request.Path == "/api/packages/import" && HttpMethods.IsPost(request.Method) ? PortablePackages.MaximumArchiveBytes :
+            request.Path == "/api/recovery/validate" && HttpMethods.IsPost(request.Method) ? RecoveryArchive.MaximumArchiveBytes :
             request.Path == "/api/assets" && HttpMethods.IsPost(request.Method) ? ExtensionSuite.Overlays.AssetValidation.MaximumBytes :
             request.Path.StartsWithSegments("/api/overlays") && !request.Path.Value!.EndsWith("/preview-events", StringComparison.Ordinal) ? 2 * 1024 * 1024 : 65536;
         var sizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
@@ -135,8 +136,10 @@ public sealed class RequestSecurity(RequestDelegate next)
 
     private static async Task<bool> LimitedOverlayAsync(HttpContext context, string[] parts, OverlayStore store)
     {
-        if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method)) return false;
-        string? id = null;
+        var widgetStore = parts.Length == 6 && parts[0] == "api" && parts[1] == "overlays" && parts[3] == "widgets" && parts[5] == "store" && Guid.TryParseExact(parts[4], "D", out _);
+        if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method) && !(widgetStore && HttpMethods.IsPut(context.Request.Method))) return false;
+
+        string? id = widgetStore ? parts[2] : null;
         if (parts.Length == 3 && parts[0] == "ws" && parts[1] == "overlay") id = parts[2];
         if (parts.Length is 3 or 4 && parts[0] == "api" && parts[1] == "overlays" && (parts.Length == 3 || parts[3] is "chat" or "events")) id = parts[2];
         if (parts.Length == 2 && parts[0] == "assets") id = context.Request.Headers["X-TDSBLive-Overlay"].ToString();
@@ -147,7 +150,7 @@ public sealed class RequestSecurity(RequestDelegate next)
             if (definition is null) return false;
             var referenced = definition.Chat.FontAssetId == parts[1] || definition.Widgets.Any(w =>
                 w.AssetId == parts[1] || w.Chat.FontAssetId == parts[1] || w.Alert.MediaAssetId == parts[1] || w.Alert.SoundAssetId == parts[1] ||
-                w.Donor.CrownAssetId == parts[1] || w.Donor.FontAssetId == parts[1]);
+                w.Custom.AssetIds.Contains(parts[1]) || w.Donor.CrownAssetId == parts[1] || w.Donor.FontAssetId == parts[1]);
             if (!referenced && context.RequestServices.GetService<AutomationOverlaySound>()?.Authorizes(id, parts[1]) != true) return false;
         }
         var authorization = context.Request.Headers.Authorization.ToString();

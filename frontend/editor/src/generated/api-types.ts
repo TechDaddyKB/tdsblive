@@ -1118,6 +1118,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/overlays/{id}/widgets/{widgetId}/store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    widgetId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    widgetId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["JsonObject"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/overlays/{id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    widgetId?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/packages/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OverlayDefinition"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/integrations": {
         parameters: {
             query?: never;
@@ -3446,6 +3578,21 @@ export interface components {
         CsrfResponse: {
             requestToken: null | string;
         };
+        CustomWidgetSettings: {
+            /** Format: int32 */
+            manifestVersion?: number | string;
+            packageVersion?: string;
+            author?: string;
+            html?: string;
+            css?: string;
+            javaScript?: string;
+            fields?: components["schemas"]["JsonArray"];
+            config?: components["schemas"]["JsonObject"];
+            subscriptions?: string[];
+            permissions?: string[];
+            networkDomains?: string[];
+            assetIds?: string[];
+        };
         DonorWidgetSettings: {
             period?: string;
             platforms?: string[];
@@ -3703,7 +3850,10 @@ export interface components {
             speakerBot: string;
             rumble: string;
         };
-        JsonObject: Record<string, never>;
+        JsonArray: unknown[];
+        JsonObject: {
+            [key: string]: unknown;
+        };
         LedgerPeriodRange: {
             /** Format: date-time */
             startInclusive: null | string;
@@ -3809,6 +3959,7 @@ export interface components {
             alert?: components["schemas"]["AlertSettings"];
             eventList?: components["schemas"]["EventListSettings"];
             progress?: components["schemas"]["ProgressSettings"];
+            custom?: components["schemas"]["CustomWidgetSettings"];
             donor?: components["schemas"]["DonorWidgetSettings"];
         };
         PreviewEventRequest: {

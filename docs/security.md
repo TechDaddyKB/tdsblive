@@ -73,3 +73,7 @@ assignments, userinfo, fragments, other hosts/endpoints and unknown query keys.
 Unstructured/query URLs still receive the existing redaction. This is required
 for Twitch's supplied GIF URLs; it does not allow credentials or establish support
 for an unobserved CDN format. Regression tests cover persistence and socket delivery.
+
+## Custom widget boundary
+
+G12 custom JavaScript executes in a dedicated worker with a virtual DOM inside an opaque `allow-scripts` iframe. A constrained trusted renderer prevents code, navigation, nested frames and event-handler attributes from entering the browser DOM. Worker CSP denies networking by default and permits only explicitly granted exact HTTPS domains; browser scripts cannot navigate the worker. Frame identity, opaque origin and a fresh capability bind bounded storage messages to a widget. Tokens remain in parent headers and never enter custom source/session/config. Financial, chat, redacted raw data, storage, media/audio and network capabilities require separate grants. Imported packages revoke those grants. See [custom widget security and package limits](g12-custom-widgets.md).

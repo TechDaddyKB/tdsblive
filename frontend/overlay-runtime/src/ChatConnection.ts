@@ -1,3 +1,4 @@
+import type { CustomDelivery } from './custom';
 import type { ChatEvent, OverlayDefinition } from './chat';
 import type { DonorSnapshot } from './DonorWidget';
 import type { AutomationSoundCommand, AutomationSoundState } from './AutomationSound';
@@ -11,7 +12,7 @@ export class ChatConnection {
   private lastReply = 0;
   constructor(private readonly id: string, private readonly token: string, private readonly preview: boolean,
     private readonly settings: (value: OverlayDefinition) => void, private readonly events: (value: ChatEvent[], delivery: 'socket' | 'history') => void, private readonly status: (value: string) => void, private readonly canvas = false, private readonly donors?: (value: DonorSnapshot[]) => void,
-    private readonly sound?: (value: AutomationSoundCommand) => void, private readonly stopSound?: (executionId: string) => void) {}
+    private readonly sound?: (value: AutomationSoundCommand) => void, private readonly stopSound?: (executionId: string) => void, private readonly custom?: (value: CustomDelivery[]) => void) {}
   private headers(): HeadersInit { return this.token ? { Authorization: `Bearer ${this.token}`, 'X-TDSBLive-Overlay': this.id } : {}; }
   async start(): Promise<void> {
     this.status('Connecting');
@@ -28,12 +29,13 @@ export class ChatConnection {
       socket.onopen = () => { this.lastReply = Date.now(); socket.send(JSON.stringify({ op: 'subscribe', types: this.canvas && definition.canvasEnabled ? ['*'] : ['chat.message'] })); };
       socket.onmessage = event => {
         try {
-          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition; widgets?: DonorSnapshot[]; command?: AutomationSoundCommand; executionId?: string };
+          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition; widgets?: DonorSnapshot[] | CustomDelivery[]; command?: AutomationSoundCommand; executionId?: string };
           this.lastReply = Date.now();
           if (message.op === 'subscribed') { this.failures = 0; this.status('Connected'); void this.history(); }
           if (message.op === 'event' && message.event) this.events([message.event], 'socket');
           if (message.op === 'settings' && message.settings) { this.settings(message.settings); void this.history(); }
-          if (message.op === 'donors' && message.widgets) this.donors?.(message.widgets);
+          if (message.op === 'custom-events' && Array.isArray(message.widgets)) this.custom?.(message.widgets as CustomDelivery[]);
+          if (message.op === 'donors' && message.widgets) this.donors?.(message.widgets as DonorSnapshot[]);
           if (message.op === 'sound' && message.command && this.canvas && !this.preview) this.sound?.(message.command);
           if (message.op === 'sound-stop' && message.executionId && this.canvas && !this.preview) this.stopSound?.(message.executionId);
         } catch { this.status('Invalid event ignored'); }

@@ -64,3 +64,7 @@ again when you want to use your overlays and integrations.
 
 These controls are available only on the computer running TDSBLive. A remote
 LAN editor cannot download private backups, restore data or stop the host.
+
+## Portable overlays and widgets
+
+Use the visual editor's **Export overlay**, **Export selected widget** and **Import portable package** controls to move layout, settings, custom code and referenced assets. These packages exclude credentials, viewing links and persistent custom-widget state. Import creates fresh identities and disables custom permissions. Full backups retain widget state; preview state stays separate from production state.

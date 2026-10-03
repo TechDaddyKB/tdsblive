@@ -1,3 +1,4 @@
+import { CustomProperties } from './CustomProperties';
 import { AdvancedWidgetProperties } from './AdvancedWidgetProperties';
 import { alertPresets, type Widget } from '../../overlay-runtime/src/scene';
 import { platforms } from '../../overlay-runtime/src/chat';
@@ -16,6 +17,7 @@ export function WidgetProperties({ widget: w, assets, change }: { widget: Widget
     {numeric('x', 'X', -7680, 7680)}{numeric('y', 'Y', -7680, 7680)}{numeric('width', 'Width', 1, 7680)}{numeric('height', 'Height', 1, 7680)}{numeric('rotation', 'Rotation', -360, 360)}
     <label><input type="checkbox" checked={w.locked} onChange={e => change({ ...w, locked: e.target.checked })} />Locked</label><label><input type="checkbox" checked={w.hidden} onChange={e => change({ ...w, hidden: e.target.checked })} />Hidden</label>
     {(w.kind === 'text' || w.kind === 'alert' || ['event-list', 'goal-bar', 'progress-bar'].includes(w.kind) || donorKinds.includes(w.kind)) && <>{numeric('fontSize', 'Font size', 8, 200)}<label>Text color<input type="color" value={w.color} onChange={e => change({ ...w, color: e.target.value })} /></label></>}
+    {w.kind === 'custom' && <CustomProperties widget={w} assets={assets} change={change} />}
     {donorKinds.includes(w.kind) && <DonorProperties widget={w} assets={assets} change={change} />}
     {['event-list', 'goal-bar', 'progress-bar'].includes(w.kind) && <AdvancedWidgetProperties widget={w} assets={assets} change={change} />}
     {w.kind === 'text' && <label>Text<textarea aria-label="Widget text" maxLength={4096} value={w.text} onChange={e => change({ ...w, text: e.target.value })} /></label>}
