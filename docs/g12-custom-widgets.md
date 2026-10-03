@@ -124,6 +124,12 @@ opaque frame/worker execution, blocked network/parent/navigation/cookie access,
 arbitrary available-event delivery, preview-isolated persisted state, spoof
 rejection and both package UI round-trips. Actual-process restart and backup
 restore pass custom code/state restoration with the overlay browser reconnecting.
-Local backend admission/storage/package tests pass. These do not establish OBS
-media playback, audible output, native Windows behavior or the Sonar quality gate;
-final goal evidence is recorded in the implementation plan when verified.
+Local backend admission/storage/package tests pass. Source `416db6f` passes
+Windows run [37104260203](https://github.com/TechDaddyKB/tdsblive/actions/runs/37104260203),
+including native portable/installed EXE recovery, 482 backend tests without skips,
+201 frontend tests and the Sonar quality gate (80.7% new-code coverage).
+CodeQL passes. Actual OBS renders owned custom text, persisted state, image and
+playing video; actual host restart/backup restore retain custom code and state.
+Prior OBS state is restored and owned sources/hosts removed. The dispatched
+owned tone still needs operator audible confirmation. G12 remains In progress;
+the implementation plan records the acceptance evidence and remaining gate.
