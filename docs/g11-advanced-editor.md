@@ -89,7 +89,7 @@ monetary payloads and never exposes privileged `/api/events` through that token.
 Invisible widgets do not subscribe. Server filtering applies to live socket and
 REST history; simulation delivery stays limited to the target owned preview.
 
-Current acceptance evidence and remaining gates are recorded in the G11 section
-of [the implementation plan](implementation-plan.md#g11). Real OBS media,
-reconnect/restore, native Windows CI and Sonar quality results must be recorded
-before G11 is marked Complete.
+Completed acceptance evidence is recorded in the G11 section of
+[the implementation plan](implementation-plan.md#g11), including actual OBS
+media and audible playback, reconnect/restore, native Windows packages and the
+SonarQube quality gate.

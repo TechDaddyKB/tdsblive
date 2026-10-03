@@ -94,7 +94,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G08](#g08) | Build donor widgets | G05, G07 | Complete |
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Complete |
-| [G11](#g11) | Complete advanced editor and built-in widgets | G10 | In progress |
+| [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Complete |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
 
@@ -598,7 +598,7 @@ Resumed qualification (2026-10-02): operator reports the Rumble baseline establi
 
 Final delivery (2026-10-02): [Windows run 37073729890](https://github.com/TechDaddyKB/tdsblive/actions/runs/37073729890), source `649b2d105bc3bda0bfd1012adcc40bbf190ddef6`, passes 75 core and 384 host tests without skips, 175 frontend tests, OpenCover/LCOV imports, SonarQube quality gate and native ZIP/installer qualification. All protected PR checks pass. Both downloaded package checksums match, and the actual downloaded EXE passes both real-browser read-only bot tests under Wine with empty execution histories and graceful exit. Its bundled guide passes ten chapters/eight images, navigation and UTF-8 with networking disabled. Protected [PR #13](https://github.com/TechDaddyKB/tdsblive/pull/13) merged as `be467726b251fa31bb80f4d1eef1711e693b0870`; its tree exactly matches tested source `649b2d1`. [MVP release v0.1.0](https://github.com/TechDaddyKB/tdsblive/releases/tag/v0.1.0) is public, tagged at that merge and includes the verified Windows x64 ZIP, installer and `SHA256SUMS.txt`; uploaded digests and sizes match all three local artifacts. Wiki `3913754` publishes the matching complete guide and passes fresh-browser checks. The completion-record change is documentation only and follows normal protected delivery.
 
-G00–G10 satisfy MVP completion under the explicit approved scope. G11–G13 remain Not started. Wine performance deviations are accepted and documented, not passing targets. Actual paid-platform delivery and native Windows streaming-PC performance remain unverified; VTube Studio remains on hold.
+G00–G10 satisfy MVP completion under the explicit approved scope. G11 completion is recorded below; G12–G13 remain Not started. Wine performance deviations are accepted and documented, not passing targets. Actual paid-platform delivery and native Windows streaming-PC performance remain unverified; VTube Studio remains on hold.
 
 ### Blockers
 
@@ -608,7 +608,7 @@ None for the approved G10 scope. The operator accepts documented Wine CPU and me
 
 ## G11 — Complete advanced editor and built-in widgets
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G10
 
 ### Deliverables
@@ -633,7 +633,7 @@ OBS 32.2.2 / WebSocket 5.7.4 displays the owned Event List, 12.5% ledger goal, 5
 
 ### Blockers
 
-Windows run `37086175391` passes browser, actual-process recovery, contract and coverage verification. SonarQube passes with 84.3% new-code coverage, zero new duplication and all security hotspots reviewed. Packaging exposed an unsupported relative link in the offline guide; the corrected guide passes a network-disabled browser audit of all ten chapters and eight images. The corrected Windows package and packaged-process qualification remain the final acceptance gates.
+None for the approved G11 scope. Corrected commit `cf00f6944e5d694e1c651379b16b51ed7911f2fe` passes [Windows CI run 37087437529](https://github.com/TechDaddyKB/tdsblive/actions/runs/37087437529), including native tests, rendered-editor qualification, actual-process restart/restore, contracts, SonarQube, self-contained ZIP/installer creation and native portable/installed EXE recovery, reinstall, startup opt-in and uninstall. SonarQube passes with 84.3% new-code coverage, zero new duplication and all security hotspots reviewed. The offline guide passes a network-disabled browser audit of all ten chapters and eight images. The runtime audit reports 78,777 compressed JavaScript bytes and no editor dependencies. Audible OBS qualification used the owned local program scene with streaming and recording off; prior OBS state was restored. All G11 acceptance criteria are satisfied. [PR #15](https://github.com/TechDaddyKB/tdsblive/pull/15) contains the implementation and operator-requested AGENTS/OBS-routing changes; final completion documentation follows the same protected delivery checks. G12 custom code and package portability remain out of scope.
 
 <a id="g12"></a>
 
