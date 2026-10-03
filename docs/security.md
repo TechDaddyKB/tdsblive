@@ -77,3 +77,18 @@ for an unobserved CDN format. Regression tests cover persistence and socket deli
 ## Custom widget boundary
 
 G12 custom JavaScript executes in a dedicated worker with a virtual DOM inside an opaque `allow-scripts` iframe. A constrained trusted renderer prevents code, navigation, nested frames and event-handler attributes from entering the browser DOM. Worker CSP denies networking by default and permits only explicitly granted exact HTTPS domains; browser scripts cannot navigate the worker. Frame identity, opaque origin and a fresh capability bind bounded storage messages to a widget. Tokens remain in parent headers and never enter custom source/session/config. Financial, chat, redacted raw data, storage, media/audio and network capabilities require separate grants. Imported packages revoke those grants. See [custom widget security and package limits](g12-custom-widgets.md).
+
+G12 security review (2026-10-03): frame-to-parent messages target the exact
+application origin; the frame checks the sender's origin, WindowProxy and fresh
+capability. Parent-to-frame messages must use `*` because sandboxed frames have
+opaque origins. These four `S2819` findings are individually accepted: sends
+target only the owned iframe's WindowProxy, carry its fresh capability, and
+contain granted events/config/session or scoped store results, never access
+tokens. The trusted frame cannot navigate through custom worker code or inert
+rendered markup; a replacement frame receives a new capability. Real-browser
+tests verify parent/navigation denial and spoof rejection; unit tests reject
+sibling frames, incorrect origins and channels. This is a narrow reviewed
+protocol requirement, with no rule exclusion. C# package/version regexes use
+non-backtracking matching and a 100 ms timeout. Custom worker programs are
+browser-compiled blob scripts; production `eval`/`Function` and `unsafe-eval`
+are absent.

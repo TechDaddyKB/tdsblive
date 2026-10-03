@@ -21,7 +21,7 @@ public sealed record CustomWidgetSettings
 
     public void Validate()
     {
-        if (ManifestVersion != 1 || !System.Text.RegularExpressions.Regex.IsMatch(PackageVersion ?? "", @"^\d{1,6}\.\d{1,6}\.\d{1,6}\z") ||
+        if (ManifestVersion != 1 || !System.Text.RegularExpressions.Regex.IsMatch(PackageVersion ?? "", @"^\d{1,6}\.\d{1,6}\.\d{1,6}\z", System.Text.RegularExpressions.RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100)) ||
             Author is null || Author.Length > 128 || Html is null || Html.Length > 131072 || Css is null || Css.Length > 65536 ||
             JavaScript is null || JavaScript.Length > 131072 || Fields is null || Fields.Count > 100 || Fields.ToJsonString().Length > 65536 ||
             Config is null || Config.ToJsonString().Length > 65536 || Subscriptions is null || Subscriptions.Length > 128 ||

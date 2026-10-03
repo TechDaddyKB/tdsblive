@@ -61,7 +61,7 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
     }
     private static bool HasFilesystemPath(JsonNode? node) => node switch
     {
-        JsonValue value when value.TryGetValue<string>(out var text) => text.StartsWith("/", StringComparison.Ordinal) && !text.StartsWith("</", StringComparison.Ordinal) && !text.StartsWith("//", StringComparison.Ordinal) && !text.StartsWith("/*", StringComparison.Ordinal) || text.StartsWith("\\\\", StringComparison.Ordinal) || System.Text.RegularExpressions.Regex.IsMatch(text, @"^[A-Za-z]:[\\/]"),
+        JsonValue value when value.TryGetValue<string>(out var text) => text.StartsWith("/", StringComparison.Ordinal) && !text.StartsWith("</", StringComparison.Ordinal) && !text.StartsWith("//", StringComparison.Ordinal) && !text.StartsWith("/*", StringComparison.Ordinal) || text.StartsWith("\\\\", StringComparison.Ordinal) || System.Text.RegularExpressions.Regex.IsMatch(text, @"^[A-Za-z]:[\\/]", System.Text.RegularExpressions.RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100)),
         JsonObject obj => obj.Any(pair => HasFilesystemPath(pair.Value)),
         JsonArray array => array.Any(HasFilesystemPath), _ => false
     };
@@ -92,7 +92,7 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
         }
         var manifest = Read<PortableManifest>(files, "manifest.json");
         if (manifest.FormatVersion != 1 || manifest.Kind is not ("overlay" or "widget") || manifest.Assets is null || manifest.Assets.Length > 100 ||
-            manifest.Author is null || manifest.Author.Length > 128 || !System.Text.RegularExpressions.Regex.IsMatch(manifest.PackageVersion ?? "", @"^\d{1,6}\.\d{1,6}\.\d{1,6}\z")) throw new ArgumentException("Unsupported package manifest.");
+            manifest.Author is null || manifest.Author.Length > 128 || !System.Text.RegularExpressions.Regex.IsMatch(manifest.PackageVersion ?? "", @"^\d{1,6}\.\d{1,6}\.\d{1,6}\z", System.Text.RegularExpressions.RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100))) throw new ArgumentException("Unsupported package manifest.");
         var widgets = files.Keys.Where(k => k.StartsWith("widgets/", StringComparison.Ordinal)).Select(k => Read<OverlayWidget>(files, k)).ToArray();
         if (widgets.Length > 100 || manifest.Kind == "widget" && widgets.Length != 1) throw new ArgumentException("Invalid widget count.");
         foreach (var widget in widgets) { widget.Validate(); if (!files.ContainsKey("widgets/" + widget.Id + ".json")) throw new ArgumentException("Widget identity mismatch."); }

@@ -26,7 +26,7 @@ it('renders only inert permitted markup and mediates DOM events without exposing
   const worker = { onmessage: null as ((e: MessageEvent) => void) | null, postMessage: (v: unknown) => posts.push(v), terminate: vi.fn() };
   vi.stubGlobal('Worker', class { constructor() { return worker; } });
   Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:worker' });
-  frameBootstrap('owned', defaultCustom, 'worker', { asset: 'blob:owned-image' });
+  frameBootstrap('owned', defaultCustom, 'worker', { asset: 'blob:owned-image' }, location.origin);
   worker.onmessage!({ data: { op: 'render', html: '<script>escape()</script><iframe src="https://bad.com"></iframe><a href="https://bad.com">escape</a><img src="/api/private" onerror="escape()"><img src="asset"><audio src="asset"></audio><button id="click">Click</button>' } } as MessageEvent);
   expect(document.querySelectorAll('script,iframe,a,audio')).toHaveLength(0); expect(document.querySelectorAll('img')).toHaveLength(2);
   expect(document.querySelector('img')).not.toHaveAttribute('src'); expect(document.querySelectorAll('img')[1]).toHaveAttribute('src', 'blob:owned-image');

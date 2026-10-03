@@ -58,7 +58,7 @@ export async function qualifyCustomWidgets(page, origin, writeHeaders) {
   const stored = await (await fetch(`${origin}/api/overlays/g12-browser/widgets/${widget.id}/store?preview=1`)).json(); assert.deepEqual(stored, { count: 7 });
   assert.deepEqual(await (await fetch(`${origin}/api/overlays/g12-browser/widgets/${widget.id}/store`)).json(), {});
   // Wrong source/channel spoof must not write storage.
-  await runtime.evaluate(() => window.postMessage({ channel: 'spoofed', op: 'store', id: 1, method: 'set', value: { count: 99 } }, '*'));
+  await runtime.evaluate(() => window.postMessage({ channel: 'spoofed', op: 'store', id: 1, method: 'set', value: { count: 99 } }, location.origin));
   await runtime.reload(); await iframe.locator('#message').getByText('Restored 7', { exact: true }).waitFor();
   assert.equal((await (await fetch(`${origin}/api/overlays/g12-browser/widgets/${widget.id}/store?preview=1`)).json()).count, 7);
   // Disable chat/raw/financial/audio: arbitrary unprivileged events remain available.

@@ -5,10 +5,10 @@ import { widgetId, type Widget } from './scene';
 
 // This function is serialized into the opaque iframe. It is trusted rendering
 // code; custom JavaScript runs exclusively in its disposable dedicated worker.
-export function frameBootstrap(channel: string, settings: CustomSettings, workerCode: string, assets: Record<string, string>) {
+export function frameBootstrap(channel: string, settings: CustomSettings, workerCode: string, assets: Record<string, string>, parentOrigin: string) {
   const program = `${workerCode}\nself.__SBX_RUN = function(SBX, document, window) {\n${settings.javaScript}\n};`;
   const worker = new Worker(URL.createObjectURL(new Blob([program], { type: 'text/javascript' })));
-  worker.onerror = () => parent.postMessage({ op: 'error', channel }, '*');
+  worker.onerror = () => parent.postMessage({ op: 'error', channel }, parentOrigin);
   const root = document.createElement('div'); document.body.append(root);
   const style = document.createElement('style'); style.textContent = settings.css.replace(/sbx-asset:([0-9a-f]{64})/g, (_match, id: string) => assets[id] ?? ''); document.head.append(style);
   const tags = new Set('DIV SPAN P BR BR HR H1 H2 H3 H4 UL OL LI STRONG EM B I SMALL PRE CODE TABLE THEAD TBODY TR TD TH IMG SVG PATH CIRCLE RECT G BUTTON LABEL INPUT SELECT OPTION TEXTAREA VIDEO AUDIO SOURCE'.split(' '));
@@ -52,10 +52,10 @@ export function frameBootstrap(channel: string, settings: CustomSettings, worker
     if (++messages > 60) { worker.terminate(); return; }
     const value = e.data;
     if (value?.op === 'render') { render(value.html); return; }
-    if (value?.op === 'store' || value?.op === 'error') parent.postMessage({ ...value, channel }, '*');
+    if (value?.op === 'store' || value?.op === 'error') parent.postMessage({ ...value, channel }, parentOrigin);
   };
   addEventListener('message', event => {
-    if (event.source !== parent || event.data?.channel !== channel) return;
+    if (event.source !== parent || event.origin !== parentOrigin || event.data?.channel !== channel) return;
     worker.postMessage(event.data);
   });
   for (const type of ['click', 'input', 'change']) root.addEventListener(type, e => {
@@ -63,7 +63,7 @@ export function frameBootstrap(channel: string, settings: CustomSettings, worker
     if (target.id) worker.postMessage({ op: 'dom-event', type, id: target.id, value: target.value });
   });
   worker.postMessage({ op: 'init', html: settings.html, config: settings.config, session: {} });
-  parent.postMessage({ op: 'ready', channel }, '*');
+  parent.postMessage({ op: 'ready', channel }, parentOrigin);
 }
 
 const safeJson = (value: unknown) => JSON.stringify(value).replaceAll('<', '\\u003c');
@@ -74,7 +74,7 @@ export function assetDataUrl(bytes: Uint8Array, mime: string): string {
 }
 export function frameDocument(settings: CustomSettings, worker: string, channel: string, assets: Record<string, string> = {}): string {
   const csp = customCsp(settings, channel).replaceAll('&', '&amp;').replaceAll('"', '&quot;');
-  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"></head><body><script nonce="${channel}">(${frameBootstrap.toString()})(${safeJson(channel)},${safeJson(settings)},${safeJson(worker)},${safeJson(assets)})</script></body></html>`;
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"></head><body><script nonce="${channel}">(${frameBootstrap.toString()})(${safeJson(channel)},${safeJson(settings)},${safeJson(worker)},${safeJson(assets)},${safeJson(location.origin)})</script></body></html>`;
 }
 
 export function CustomFrame({ widget, overlay, token, preview, deliveries, session, audioEnabled = true }: {
