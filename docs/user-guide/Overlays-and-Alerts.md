@@ -87,3 +87,11 @@ manual value or a supporter total in USD. Ledger bars use your financial period
 and filters; preview shows no production totals. See the online
 [advanced editor guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g11-advanced-editor.md)
 for full controls and limits. Custom-widget authoring belongs to the next milestone.
+
+## Custom code widgets
+
+Choose **Add custom** to edit HTML, CSS, JavaScript and Settings JSON in the local Monaco editor. Custom code runs with a virtual DOM in an isolated worker inside its sandboxed iframe. Use `document.getElementById`, DOM text/HTML updates and `SBX.on` for canonical or arbitrary available events. Browser navigation, parent access and real browser Window APIs are unavailable.
+
+Permissions default off. Enable chat, financial, redacted raw data, persistent storage, media/audio or exact HTTPS network domains only after reviewing the code. Silent preview suppresses custom media/audio as well. Declared media assets use asset IDs in `src`; CSS can use `sbx-asset:ASSET_ID`. The full API, schema and limits are in the [custom-widget guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g12-custom-widgets.md).
+
+**Export overlay** and **Export selected widget** download portable `.sbxoverlay` and `.sbxwidget` ZIPs. **Import portable package** creates a new overlay or adds a widget to the selected overlay, remaps identities and disables custom permissions for review. Widget state and access tokens are excluded. Full backup/restore retains custom code and state.

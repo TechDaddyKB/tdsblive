@@ -1,3 +1,4 @@
+import { PortableControls } from './PortableControls';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { defaultSettings } from '../../overlay-runtime/src/chat';
 import { createWidget, inheritGroupSettings, type Scene, type Widget } from '../../overlay-runtime/src/scene';
@@ -8,7 +9,7 @@ import { WidgetProperties, type EditorAsset } from './WidgetProperties';
 import { selection, groupSelection, copySelection, pasteSelection, alignSelection, distributeSelection, nudgeSelection, rotateSelection, reorderSelection, resizeSelection, type Alignment } from './sceneOperations';
 import './visual-editor.css';
 const sizes = [[1920, 1080], [2560, 1440], [3840, 2160], [1080, 1920]];
-const kinds: Widget['kind'][] = ['text', 'image', 'video', 'audio', 'chat', 'alert', 'donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total', 'event-list', 'goal-bar', 'progress-bar'];
+const kinds: Widget['kind'][] = ['text', 'image', 'video', 'audio', 'chat', 'alert', 'donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total', 'event-list', 'goal-bar', 'progress-bar', 'custom'];
 export function VisualEditor() {
   const [overlays, setOverlays] = useState<Scene[]>([]); const [state, setState] = useState<EditorState | null>(null);
   const [assets, setAssets] = useState<EditorAsset[]>([]); const [selectedIds, setSelectedIds] = useState<string[]>([]); const [notice, setNotice] = useState('');
@@ -154,6 +155,7 @@ export function VisualEditor() {
       <label>Retained revisions<input aria-label="Retained revisions" type="number" min={1} max={200} value={doc.revisionLimit} onChange={e => { const value = e.target.valueAsNumber; if (Number.isInteger(value) && value >= 1 && value <= 200) edit({ ...doc, revisionLimit: value }); }} /></label></div>
       {state.status === 'conflict' && <p role="alert">Another editor changed this overlay. Your local edits are retained. Reload the saved version to resolve the conflict.</p>}
       <div className="canvas-workspace" onKeyDown={e => {
+        if (e.target instanceof HTMLElement && (e.target.isContentEditable || e.target.closest('.monaco-editor'))) return;
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
         const modifier = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
         if (modifier && key === 'z') { e.preventDefault(); if (e.shiftKey) session.current?.redo(); else session.current?.undo(); }
@@ -166,7 +168,7 @@ export function VisualEditor() {
         else if (key === 'delete' || key === 'backspace') { e.preventDefault(); remove(); }
         else if (selectedWidgets.length && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); const n = e.shiftKey ? 10 : 1; edit(nudgeSelection(doc, selectedIds, e.key === 'ArrowRight' ? n : e.key === 'ArrowLeft' ? -n : 0, e.key === 'ArrowDown' ? n : e.key === 'ArrowUp' ? -n : 0)); }
       }}>
-        <aside><h3>Widgets</h3>{kinds.map(kind => <button key={kind} onClick={() => add(kind)}>Add {kind === 'alert' ? 'AlertBox' : kind === 'chat' ? 'Combined Chat' : kind}</button>)}
+        <aside><PortableControls overlay={doc.id} widget={chosen?.id} flush={async () => !session.current || await session.current.flush()} imported={async value => { const values = await visualApi.list(); setOverlays(values); setAssets(await request<EditorAsset[]>('/api/assets')); install(value); }} /><h3>Widgets</h3>{kinds.map(kind => <button key={kind} onClick={() => add(kind)}>Add {kind === 'alert' ? 'AlertBox' : kind === 'chat' ? 'Combined Chat' : kind}</button>)}
           <h3>Layers</h3><ol>{[...doc.widgets].reverse().map(w => <li key={w.id}><button aria-pressed={selectedKeys.has(w.id)} onClick={e => select(w.id, e.shiftKey || e.ctrlKey || e.metaKey)}>{w.name}{w.locked ? ' 🔒' : ''}{w.hidden ? ' (hidden)' : ''}{w.groupId ? ' (group)' : ''}</button></li>)}</ol>
           <button disabled={!chosen} onClick={() => duplicate()}>Duplicate</button><button disabled={!chosen || chosen.locked} onClick={remove}>Delete layer</button><button disabled={!chosen} onClick={() => reorder(1)}>Raise layer</button><button disabled={!chosen} onClick={() => reorder(-1)}>Lower layer</button>
         </aside>

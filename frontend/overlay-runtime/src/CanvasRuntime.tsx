@@ -1,3 +1,5 @@
+import { CustomFrame } from './CustomFrame';
+import type { CustomDelivery } from './custom';
 import { EventList } from './EventList';
 import { ProgressWidget } from './ProgressWidget';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -55,6 +57,8 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
   const [scene, setScene] = useState<Scene | null>(null); const [events, setEvents] = useState<ChatEvent[]>([]); const [active, setActive] = useState<AlertJob[]>([]);
   const [status, setStatus] = useState('Connecting'); const settings = useRef<Scene | null>(null); const queue = useRef(new AlertQueue());
   const [listEvents, setListEvents] = useState<ChatEvent[]>([]); const [clock, setClock] = useState(Date.now());
+  const [customEvents, setCustomEvents] = useState<CustomDelivery[]>([]);
+  const customSession = useMemo(() => ({ connected: status === 'Connected', preview }), [status, preview]);
   const [donors, setDonors] = useState<DonorSnapshot[]>([]);
   useEffect(() => {
     const scheduler = queue.current; scheduler.clear(); setListEvents([]);
@@ -66,7 +70,7 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
       const now = Date.now(); if (delivery !== 'history') for (const event of incoming) for (const widget of value.widgets) scheduler.enqueue(widget, event, now);
       setActive(scheduler.tick(now)); setEvents(incoming);
       setListEvents(old => { const unique = new Map(old.map(e => [e.id, e])); for (const e of incoming) unique.set(e.id, e); return [...unique.values()].sort((a, b) => Date.parse(a.receivedAt) - Date.parse(b.receivedAt)).slice(-500); });
-    }, setStatus, true, setDonors, command => { void sound.play(command); }, executionId => sound.interrupt(executionId));
+    }, setStatus, true, setDonors, command => { void sound.play(command); }, executionId => sound.interrupt(executionId), setCustomEvents);
     void connection.start();
     const timer = setInterval(() => { const now = Date.now(); const jobs = scheduler.tick(now);
       if (settings.current?.widgets.some(w => !w.hidden && w.kind === 'event-list' && !(w.eventList ?? defaultEventList).persistent))
@@ -79,6 +83,7 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
     {preview && <output className="canvas-preview-label">Test preview · {previewAudio ? 'audio enabled' : 'silent'} · {status}</output>}
     {scene.widgets.filter(w => !w.hidden).map(w => <div className="runtime-widget" key={w.id} data-widget-id={w.id}
       style={{ left: w.x, top: w.y, width: w.width, height: w.height, transform: `rotate(${w.rotation}deg)`, color: w.color, fontSize: w.fontSize }}>
+      {w.kind === 'custom' && <CustomFrame widget={w} overlay={id} token={token} preview={preview} audioEnabled={!preview || previewAudio} deliveries={customEvents} session={customSession} />}
       {w.kind === 'event-list' && <EventList widget={w} events={listEvents} now={clock} />}
       {['goal-bar', 'progress-bar'].includes(w.kind) && <ProgressWidget widget={w} snapshot={donors.find(s => s.widgetId === w.id)} />}
       {w.kind === 'text' && <div className="widget-text">{w.text}</div>}

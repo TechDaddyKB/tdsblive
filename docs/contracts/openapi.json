@@ -4,6 +4,11 @@
     "title": "ExtensionSuite.Host | v1",
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:17475/"
+    }
+  ],
   "paths": {
     "/api/application/status": {
       "get": {
@@ -796,6 +801,122 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/overlays/{id}/widgets/{widgetId}/store": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "widgetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "widgetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonObject"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/overlays/{id}/export": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "widgetId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/packages/import": {
+      "post": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayDefinition"
+                }
+              }
+            }
           }
         }
       }
@@ -3612,6 +3733,65 @@
         },
         "additionalProperties": false
       },
+      "CustomWidgetSettings": {
+        "type": "object",
+        "properties": {
+          "manifestVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "packageVersion": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          },
+          "css": {
+            "type": "string"
+          },
+          "javaScript": {
+            "type": "string"
+          },
+          "fields": {
+            "$ref": "#/components/schemas/JsonArray"
+          },
+          "config": {
+            "$ref": "#/components/schemas/JsonObject"
+          },
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "networkDomains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "DonorWidgetSettings": {
         "type": "object",
         "properties": {
@@ -4667,8 +4847,12 @@
         },
         "additionalProperties": false
       },
+      "JsonArray": {
+        "type": "array"
+      },
       "JsonObject": {
-        "type": "object"
+        "type": "object",
+        "additionalProperties": {}
       },
       "LedgerPeriodRange": {
         "required": [
@@ -5064,6 +5248,9 @@
           },
           "progress": {
             "$ref": "#/components/schemas/ProgressSettings"
+          },
+          "custom": {
+            "$ref": "#/components/schemas/CustomWidgetSettings"
           },
           "donor": {
             "$ref": "#/components/schemas/DonorWidgetSettings"

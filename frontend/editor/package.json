@@ -7,5 +7,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build"
+  },
+  "dependencies": {
+    "monaco-editor": "0.57.0"
   }
 }

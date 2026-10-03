@@ -95,7 +95,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G09](#g09) | Build automation rules | G03, G06, G07 | Complete |
 | [G10](#g10) | Deliver and validate the MVP | G01–G09 | Complete |
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Complete |
-| [G12](#g12) | Deliver custom-widget platform and portability | G11 | Not started |
+| [G12](#g12) | Deliver custom-widget platform and portability | G11 | Complete |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Not started |
 
 <a id="g00"></a>
@@ -639,7 +639,7 @@ None for the approved G11 scope. Corrected commit `cf00f6944e5d694e1c651379b16b5
 
 ## G12 — Deliver custom-widget platform and portability
 
-Status: **Not started**
+Status: **Complete**
 Prerequisites: G11
 
 ### Deliverables
@@ -657,11 +657,15 @@ Prerequisites: G11
 
 ### Validation evidence
 
-None recorded. Planning inspection is not implementation acceptance.
+2026-10-03: G11 prerequisite revalidated: protected PR #15 merged as `870222d` with successful Windows and Sonar checks; main protection still requires both checks. Implementation includes local Monaco, schema-driven fields/subscriptions, an opaque iframe with worker-isolated virtual DOM, explicit event/media/network/storage capabilities and bounded portable ZIP admission. [G12 contracts and limits](g12-custom-widgets.md). Focused real-browser sandbox/Monaco/event/storage/spoof/package checks pass. Actual-process restart/restore retains custom code and persistent state with an open reconnecting browser. Actual OBS 32.2.2 displays owned custom text, image, event updates, persistent state and silent video. Two successive PNGs have alpha 0–1 and different playing-video crops. An actual owned-host restart reconnects OBS and shows persisted state 7; actual backup restore returns state 3 while image/video and custom source remain visible. Prior OBS state was restored, owned scene/source removed and disposable host shut down. A one-second owned tone was dispatched through the custom renderer; operator audible confirmation and exact-head Windows/Sonar remain pending. G12 is not complete.
+
+Delivery-candidate checkpoint (2026-10-03): source `416db6f0a73fb3a8ba3e5989dcae48d02fc4571a` passes [Windows run 37104260203](https://github.com/TechDaddyKB/tdsblive/actions/runs/37104260203): 76 core and 406 host tests without skips, 201 frontend tests, real-browser G12 qualification, actual-process reconnect/restore, contracts and native portable/installed EXE recovery, reinstall and uninstall. SonarQube passes with 80.7% new-code coverage, zero new duplication, ratings A and all hotspots reviewed; no open vulnerability remains. All CodeQL checks pass. Production dynamic evaluation was removed in favor of browser-compiled blob workers, frame-to-parent messaging now targets/checks the exact application origin, and package regexes have bounded non-backtracking execution. Four required parent-to-opaque-frame wildcard sends are individually reviewed, with rationale in [security review](security.md). The final source renders text, persisted state, image and video in the owned active OBS program scene, with streaming/recording off. Prior OBS state was restored and the owned scene/source/host removed. The network-disabled offline guide audit passes all ten chapters/eight images. [PR #16](https://github.com/TechDaddyKB/tdsblive/pull/16) remains open; audible confirmation of the previously dispatched owned tone is still pending, so G12 remains In progress.
+
+Completion audit (2026-10-03): the operator confirms “i heard the tone.” This closes the remaining actual OBS sound gate. Documentation checkpoint `c86b45d` passes [Windows run 37105481853](https://github.com/TechDaddyKB/tdsblive/actions/runs/37105481853), SonarQube and all CodeQL checks. All G12 deliverables and acceptance criteria are satisfied by the source, browser, package, native Windows, OBS and operator evidence above. This completion-record change follows normal protected PR checks; G13 remains Not started.
 
 ### Blockers
 
-Real OBS sound/video behavior, final media/reconnect/restore audit, Windows CI and SonarQube quality gate remain acceptance gates. Implementation and verification continue; these are not grounds to mark the goal complete.
+None for G12.
 
 <a id="g13"></a>
 
