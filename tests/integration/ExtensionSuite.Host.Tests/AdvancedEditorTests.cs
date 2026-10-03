@@ -47,7 +47,7 @@ public sealed class AdvancedEditorTests
         var token = (await (await admin.PostAsJsonAsync("/api/overlays/event-history/tokens", new CreateOverlayToken())).Content.ReadFromJsonAsync<CreatedOverlayToken>())!;
         using var viewer = app.CreateClient(); viewer.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
         var history = (await viewer.GetFromJsonAsync<CanonicalEvent[]>("/api/overlays/event-history/events", EventStore.JsonOptions))!;
-        Assert.Single(history); Assert.Equal(item.Id, history[0].Id); Assert.Null(history[0].Raw); Assert.Null(history[0].Monetary);
+        Assert.Single(history); Assert.Equal(item.Id, history[0].Id); Assert.Null(history[0].Raw); Assert.Null(history[0].Monetary); Assert.Null(history[0].Support);
         Assert.Equal(HttpStatusCode.Unauthorized, (await viewer.GetAsync("/api/events")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await viewer.GetAsync("/api/overlays/combined-chat/events")).StatusCode);
     }

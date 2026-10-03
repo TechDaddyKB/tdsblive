@@ -80,22 +80,41 @@ try {
     try { if (JSON.parse(String(frame.payload)).op === 'subscribed') subscriptions++; }
     catch { /* Other browser traffic is not a subscription acknowledgment. */ }
   }));
-  await page.goto(origin + '/overlay/combined-chat');
+  const imageUpload = await fetch(origin + '/api/assets', { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'X-TDSBLive-CSRF': token,
+    'Content-Type': 'image/gif', 'X-Asset-Filename': 'owned-recovery.gif' }, body: Buffer.from('47494638396101000100800000ff00000000ff2c00000000010001000002024401003b', 'hex') });
+  assert.ok(imageUpload.ok); const image = await imageUpload.json();
+  const groupId = crypto.randomUUID();
+  const advanced = await (await write('/api/overlays', { id: 'g11-recovery', name: 'Owned advanced recovery', width: 1920, height: 1080, canvasEnabled: true, widgets: [
+    { id: crypto.randomUUID(), name: 'Owned event list', kind: 'event-list', groupId, x: 100, y: 100, rotation: 15 },
+    { id: crypto.randomUUID(), name: 'Owned progress', kind: 'goal-bar', groupId, x: 600, y: 100, rotation: 15, progress: { value: 25, target: 50 } },
+    { id: crypto.randomUUID(), name: 'Owned image', kind: 'image', x: 100, y: 400, assetId: image.id },
+  ] })).json();
+  await page.goto(origin + '/overlay/g11-recovery');
   await subscribedAfter(0);
+  await page.getByRole('progressbar').waitFor();
+  await page.waitForFunction(() => document.querySelector('.runtime-widget > img')?.naturalWidth === 1);
   await write('/api/setup', { step: 2, reviewed: false, version: 0 }, 'PUT');
   const backup = Buffer.from(await (await write('/api/recovery/backup')).arrayBuffer());
+  await write('/api/overlays/g11-recovery', { ...advanced, widgets: advanced.widgets.map(w => w.kind === 'goal-bar' ? { ...w, progress: { ...w.progress, value: 40 } } : w) }, 'PUT');
   await write('/api/setup', { step: 4, reviewed: false, version: 1 }, 'PUT');
   let previousSubscriptions = subscriptions;
   await write('/api/application/restart');
   generation = await ready(generation); await protect();
   await subscribedAfter(previousSubscriptions);
   assert.equal((await get('/api/setup')).step, 4);
+  assert.equal((await get('/api/overlays/g11-recovery')).widgets[1].progress.value, 40);
+  await page.waitForFunction(() => document.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow') === '40');
   const preview = await (await write('/api/recovery/validate', backup, 'POST', true)).json();
   previousSubscriptions = subscriptions;
   await write('/api/recovery/restore', { id: preview.id, confirm: true });
   generation = await ready(generation); await protect();
   await subscribedAfter(previousSubscriptions);
   assert.equal((await get('/api/setup')).step, 2);
+  const restored = await get('/api/overlays/g11-recovery');
+  assert.deepEqual(restored.widgets, advanced.widgets);
+  await page.waitForFunction(() => document.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow') === '25');
+  await page.waitForFunction(() => document.querySelector('.runtime-widget > img')?.naturalWidth === 1);
+  assert.equal(await page.locator('.runtime-widget').first().evaluate(node => node.style.transform), 'rotate(15deg)');
   const configuration = await get('/api/configuration');
   assert.equal(configuration.streamerBot.enabled, false);
   assert.equal(configuration.speakerBot.enabled, false);
@@ -109,7 +128,7 @@ try {
     await delay(100);
   }
   assert.ok(stopped, 'Owned host did not quit');
-  console.log('G10 real-process restart/restore passed: open overlay browser reconnects, new generations, saved data, safety-paused integrations and quit');
+  console.log('G10/G11 real-process restart/restore passed: open overlay browser reconnects, grouped transforms, advanced settings and referenced media restored, new generations, safety-paused integrations and quit');
 } finally {
   // Stop only the host at the random port belonging to this temporary data root.
   try { await protect(); await write('/api/application/quit'); await delay(500); } catch { /* Already stopped. */ }

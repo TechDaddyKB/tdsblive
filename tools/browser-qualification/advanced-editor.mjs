@@ -6,6 +6,8 @@ export async function qualifyAdvancedEditor(page, origin, writeHeaders) {
   await editor.getByLabel('New overlay ID').fill('g11-browser');
   await editor.getByLabel('New overlay name').fill('Advanced editor qualification');
   await editor.getByRole('button', { name: 'Create overlay', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[aria-label="Overlay"]')?.value === 'g11-browser' &&
+    document.querySelector('[aria-label="Overlay name"]')?.value === 'Advanced editor qualification');
   await editor.getByLabel('Overlay canvas').waitFor();
   const saved = () => page.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
   const document = async () => (await fetch(`${origin}/api/overlays/g11-browser`)).json();
@@ -14,6 +16,7 @@ export async function qualifyAdvancedEditor(page, origin, writeHeaders) {
     await editor.getByLabel('Layer name').fill(name); await editor.getByLabel('X', { exact: true }).fill(String(x));
     await editor.getByLabel('Width', { exact: true }).fill('100');
   }
+  await saved();
   await editor.getByRole('button', { name: 'First', exact: true }).click();
   await editor.getByRole('button', { name: 'Second', exact: true }).click({ modifiers: ['Shift'] });
   await editor.getByRole('button', { name: 'Third', exact: true }).click({ modifiers: ['Shift'] });
@@ -50,11 +53,11 @@ export async function qualifyAdvancedEditor(page, origin, writeHeaders) {
   await editor.getByLabel('Width', { exact: true }).fill('150'); await saved();
   assert.ok((await document()).widgets.slice(3).every(w => w.width === 150));
   await editor.getByLabel('Canvas zoom').fill('2'); await editor.getByRole('button', { name: 'Pan canvas', exact: true }).click();
-  const viewport = editor.locator('.canvas-scroll'); const box = await viewport.boundingBox(); assert.ok(box);
+  const viewport = editor.locator('.canvas-scroll'); await viewport.scrollIntoViewIfNeeded(); const box = await viewport.boundingBox(); assert.ok(box);
   await viewport.evaluate(node => { node.scrollTop = 300; });
   await page.mouse.move(box.x + 40, box.y + 70); await page.mouse.down(); await page.mouse.move(box.x + 40, box.y + 20, { steps: 5 }); await page.mouse.up();
   assert.ok(await viewport.evaluate(node => node.scrollTop) > 300);
-  await editor.getByRole('button', { name: 'Pan canvas', exact: true }).click(); await editor.getByLabel('Canvas zoom').fill('.4');
+  await editor.getByRole('button', { name: 'Pan canvas', exact: true }).click(); await editor.getByLabel('Canvas zoom').fill('0.4');
   await editor.getByLabel('Show grid', { exact: true }).uncheck(); assert.equal(await editor.locator('.show-grid').count(), 0);
   assert.equal(await editor.getByLabel('Snap to 10px grid').isChecked(), true);
   for (const kind of ['event-list', 'goal-bar', 'progress-bar']) await editor.getByRole('button', { name: `Add ${kind}`, exact: true }).click();

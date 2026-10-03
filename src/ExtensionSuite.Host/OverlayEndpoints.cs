@@ -142,7 +142,7 @@ public static class OverlayEndpoints
         }
         return true;
     }
-    public static CanonicalEvent PublicChat(CanonicalEvent item) => item with { Raw = null, Monetary = null };
+    public static CanonicalEvent PublicChat(CanonicalEvent item) => item with { Raw = null, Monetary = null, Support = null };
     private static IResult Shell(WebApplication app)
     {
         var file = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "runtime", "index.html");

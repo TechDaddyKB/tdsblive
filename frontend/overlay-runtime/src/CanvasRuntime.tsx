@@ -5,7 +5,7 @@ import { CombinedChat } from './CombinedChat';
 import { ChatConnection } from './ChatConnection';
 import { AlertQueue, alertText, type AlertJob } from './AlertQueue';
 import type { ChatEvent, OverlayDefinition } from './chat';
-import type { Scene, Widget } from './scene';
+import { defaultEventList, type Scene, type Widget } from './scene';
 import './canvas.css';
 import { DonorWidget, type DonorSnapshot } from './DonorWidget';
 import { donorKinds } from './scene';
@@ -68,7 +68,10 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
       setListEvents(old => { const unique = new Map(old.map(e => [e.id, e])); for (const e of incoming) unique.set(e.id, e); return [...unique.values()].sort((a, b) => Date.parse(a.receivedAt) - Date.parse(b.receivedAt)).slice(-500); });
     }, setStatus, true, setDonors, command => { void sound.play(command); }, executionId => sound.interrupt(executionId));
     void connection.start();
-    const timer = setInterval(() => { const now = Date.now(); const jobs = scheduler.tick(now); setClock(old => Math.floor(old / 1000) === Math.floor(now / 1000) ? old : now); setActive(old => old.map(j => j.key).join(',') === jobs.map(j => j.key).join(',') ? old : jobs); }, 100);
+    const timer = setInterval(() => { const now = Date.now(); const jobs = scheduler.tick(now);
+      if (settings.current?.widgets.some(w => !w.hidden && w.kind === 'event-list' && !(w.eventList ?? defaultEventList).persistent))
+        setClock(old => Math.floor(old / 1000) === Math.floor(now / 1000) ? old : now);
+      setActive(old => old.map(j => j.key).join(',') === jobs.map(j => j.key).join(',') ? old : jobs); }, 100);
     return () => { clearInterval(timer); sound.stop(); connection.stop(); scheduler.clear(); };
   }, [id, token, preview]);
   if (!scene) return <output>{status}</output>;

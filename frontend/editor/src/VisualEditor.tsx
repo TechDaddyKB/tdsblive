@@ -87,7 +87,8 @@ export function VisualEditor() {
   const duplicate = (copied?: Widget[]) => { if (!doc) return; const result = pasteSelection(doc, copied ?? copySelection(doc, selectedIds)); if (!result.ids.length) return;
     edit({ ...result.scene, widgets: result.scene.widgets.map(w => inheritGroupSettings(w, result.scene.widgets)) }); setSelectedIds(result.ids); };
   const begin = (e: ReactPointerEvent<HTMLElement>, widget: Widget, mode: 'move' | 'resize') => {
-    e.stopPropagation(); if (!doc || panMode) return; const ids = selectedKeys.has(widget.id) ? selectedIds : [widget.id];
+    if (!doc || panMode || e.button === 1) return;
+    e.stopPropagation(); const ids = selectedKeys.has(widget.id) ? selectedIds : [widget.id];
     if (e.shiftKey || e.ctrlKey || e.metaKey) { select(widget.id, true); return; }
     setSelectedIds(ids); e.currentTarget.focus(); if (selection(doc, ids).some(w => w.locked) || widget.hidden || e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId); gesture.current = { widget, mode, x: e.clientX, y: e.clientY, latest: widget, ids, scene: doc }; setDragView(widget);
@@ -108,6 +109,10 @@ export function VisualEditor() {
       setNotice(`Test delivered only to this overlay’s preview. Persisted: ${result.persisted}. Live actions: ${result.liveActionsAllowed}.`);
     } catch { setNotice('Unable to send test event. Raw injection must be a JSON object.'); }
   };
+  const activeGesture = gesture.current;
+  const visibleWidgets = activeGesture && dragView ? (activeGesture.mode === 'move' ?
+    nudgeSelection(activeGesture.scene, activeGesture.ids, dragView.x - activeGesture.widget.x, dragView.y - activeGesture.widget.y) :
+    resizeSelection(activeGesture.scene, activeGesture.ids, activeGesture.widget, dragView.width, dragView.height)).widgets : doc?.widgets ?? [];
   return <section aria-label="Visual overlay editor" className="visual-editor"><h2>Visual Overlay Editor</h2>
     <div className="canvas-toolbar"><label>Overlay<select aria-label="Overlay" value={doc?.id ?? ''} onChange={e => { void load(e.target.value); }}><option value="">Choose overlay…</option>{overlays.filter(o => o.canvasEnabled).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
       <label>New overlay name<input value={createName} onChange={e => setCreateName(e.target.value)} /></label><label>New overlay ID<input value={createId} onChange={e => setCreateId(e.target.value)} /></label>
@@ -171,7 +176,7 @@ export function VisualEditor() {
         }} onPointerMove={e => { if (pan.current && scroll.current) { scroll.current.scrollLeft = pan.current.left - e.clientX + pan.current.x; scroll.current.scrollTop = pan.current.top - e.clientY + pan.current.y; } }}
         onPointerUp={() => { pan.current = null; }} onPointerCancel={() => { pan.current = null; }}><div style={{ width: doc.width * zoom, height: doc.height * zoom }}><div aria-label="Overlay canvas" className={`editor-canvas ${grid ? 'show-grid' : ''}`} tabIndex={0}
           style={{ width: doc.width, height: doc.height, transform: `scale(${zoom})`, transformOrigin: 'top left' }} onPointerDown={e => { if (!panMode && !e.shiftKey) setSelected(''); }}>
-          {doc.widgets.filter(w => !w.hidden).map(saved => { const w = dragView?.id === saved.id ? dragView : saved; return <div key={w.id} data-widget-id={w.id} aria-label={`${w.name} widget`} tabIndex={0} className={`canvas-widget ${selectedKeys.has(w.id) ? 'selected' : ''}`}
+          {visibleWidgets.filter(w => !w.hidden).map(w => { return <div key={w.id} data-widget-id={w.id} aria-label={`${w.name} widget`} tabIndex={0} className={`canvas-widget ${selectedKeys.has(w.id) ? 'selected' : ''}`}
             style={{ left: w.x, top: w.y, width: w.width, height: w.height, transform: `rotate(${w.rotation}deg)`, color: w.color, fontSize: w.fontSize }}
             onPointerDown={e => begin(e, w, 'move')} onPointerMove={move} onPointerUp={finish} onPointerCancel={() => { gesture.current = null; setDragView(null); }}>
             {w.kind === 'text' ? w.text : w.kind === 'image' && w.assetId ? <img draggable={false} src={`/assets/${w.assetId}`} alt={w.name} /> : <span>{w.name}</span>}
