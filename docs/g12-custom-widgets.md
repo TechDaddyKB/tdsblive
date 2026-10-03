@@ -130,6 +130,7 @@ including native portable/installed EXE recovery, 482 backend tests without skip
 201 frontend tests and the Sonar quality gate (80.7% new-code coverage).
 CodeQL passes. Actual OBS renders owned custom text, persisted state, image and
 playing video; actual host restart/backup restore retain custom code and state.
-Prior OBS state is restored and owned sources/hosts removed. The dispatched
-owned tone still needs operator audible confirmation. G12 remains In progress;
-the implementation plan records the acceptance evidence and remaining gate.
+Prior OBS state is restored and owned sources/hosts removed. The operator confirms the owned OBS tone was heard, closing the sound gate.
+Documentation checkpoint `c86b45d` also passes Windows CI run 37105481853,
+SonarQube and CodeQL. G12 is Complete; the implementation plan records the
+acceptance evidence.
