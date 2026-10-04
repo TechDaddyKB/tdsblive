@@ -42,6 +42,7 @@ Pinned Node 24.21.0/npm 11.19.0/.NET SDK 10.0.401; Linux host and isolated data.
 | Frontend tests | `npm run test:coverage` | 248 passed, 47 files; 90.29% lines, 78.00% branches overall (`57706ba`) |
 | Backend tests | `dotnet test TDSBLive.slnx -c Release` | Core 88 passed; Host 421 passed, 4 Windows-only skips |
 | Release build | `npm run build`; `dotnet build src/ExtensionSuite.Host -c Release` | Passed, zero backend warnings/errors |
+| Control contrast | Browser-computed field/panel colors in both themes | At least 3:1 field boundaries and 4.5:1 text/placeholders; decorative card borders kept separate |
 | Full browser regression | `node tools/browser-qualification/qualify.mjs` | Passed G02/G05/G06, G07, G08, G09, G11, G12, G13 and redesign scenarios |
 | Foundation/restart/contracts | `python tools/qualify_foundation.py` | Passed HTTP shells, schema drift, crash/restart, redaction and isolation |
 | Financial processes | `python tools/qualify_financial.py` | Passed crash/restart, precision, dedupe, reconciliation, conflicts and isolation |
@@ -90,8 +91,12 @@ Current source checkpoint `57706ba654df61b798fcc224fda08e5f64f35501` passes
 all three CodeQL languages in
 [run 37197951540](https://github.com/TechDaddyKB/tdsblive/actions/runs/37197951540).
 Its [Windows run 37197952964](https://github.com/TechDaddyKB/tdsblive/actions/runs/37197952964)
-is still pending at this recording checkpoint; any later documentation commit
-requires its own protected exact-head result before delivery.
+was superseded by documentation checkpoint `586da25`; its
+[Windows run 37198204738](https://github.com/TechDaddyKB/tdsblive/actions/runs/37198204738)
+was still pending when the final contrast fix was prepared. These entries are
+historical checkpoints. The current protected result and exact head are available
+from the draft PR checks; every source or documentation change requires its own
+protected run before delivery.
 
 `npm audit --json` reports two low-severity affected packages (DOMPurify and
 Monaco); the unchanged baseline reports the same two. No dependency/lockfile
@@ -118,7 +123,11 @@ Expanded controls in all ten destinations are checked for document overflow at
 Screenshots in ignored `artifacts/ui-redesign/` were inspected visually. Public
 guide illustrations contain only made-up owned data, not production configuration.
 The toolbar was shortened and alert setup moved ahead of placement settings after
-inspection. Browser assertions are not manual screen-reader or physical-touch
+inspection. A final contrast audit separated control borders from decorative
+card borders and set explicit readable placeholders. Browser checks measure
+actual computed field/parent colors using the relative-luminance formula and
+the [W3C non-text contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
+Browser assertions are not manual screen-reader or physical-touch
 qualification, and 320 CSS pixels is not evidence of native 400% browser zoom.
 
 ## Actual OBS visual check

@@ -78,6 +78,7 @@ export async function qualifyUiRedesign(page, origin, writeHeaders, root) {
   await mkdir(path.join(root, 'artifacts/ui-redesign'), { recursive: true });
   for (const theme of ['light', 'dark']) {
     await page.getByLabel('Application theme').selectOption(theme);
+    await qualifyControlContrast(page, theme);
     for (const [width, height] of [[320,568],[390,844],[768,1024],[1024,768],[1366,768],[1920,1080],[1024,500]]) {
       await page.setViewportSize({ width, height });
       const panels = page.locator('.workspace-tabs');
@@ -159,4 +160,27 @@ async function qualifyDraftIsolationAndTouch(page, origin, writeHeaders, geometr
     }
   } finally { await context.close(); }
 
+}
+
+async function qualifyControlContrast(page, theme) {
+  await page.waitForFunction(value => document.querySelector('.tdsblive-editor')?.getAttribute('data-theme') === value, theme);
+  const colors = await page.locator('[aria-label="Layer name"]').evaluate(input => {
+    const field = getComputedStyle(input), panel = getComputedStyle(input.closest('aside'));
+    return { border: field.borderTopColor, background: field.backgroundColor,
+      surrounding: panel.backgroundColor, text: field.color,
+      placeholder: getComputedStyle(input, '::placeholder').color };
+  });
+  assert.ok(contrastRatio(colors.border, colors.background) >= 3, `${theme}: input border against field ${JSON.stringify(colors)}`);
+  assert.ok(contrastRatio(colors.border, colors.surrounding) >= 3, `${theme}: input border against property panel`);
+  assert.ok(contrastRatio(colors.text, colors.background) >= 4.5, `${theme}: input text`);
+  assert.ok(contrastRatio(colors.placeholder, colors.background) >= 4.5, `${theme}: placeholder text`);
+}
+function contrastRatio(first, second) {
+  const luminance = color => {
+    const channels = color.match(/\d+/g).slice(0, 3).map(value => Number(value) / 255)
+      .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  };
+  const values = [luminance(first), luminance(second)].sort((a, b) => a - b);
+  return (values[1] + 0.05) / (values[0] + 0.05);
 }
