@@ -9,6 +9,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "dompurify": "3.4.16",
     "monaco-editor": "0.57.0"
   }
 }

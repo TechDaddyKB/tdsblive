@@ -12,6 +12,11 @@
     "npm": "11.19.0"
   },
   "packageManager": "npm@11.19.0",
+  "overrides": {
+    "monaco-editor": {
+      "dompurify": "3.4.16"
+    }
+  },
   "scripts": {
     "lint": "eslint frontend vitest.config.ts",
     "typecheck": "tsc --noEmit",
