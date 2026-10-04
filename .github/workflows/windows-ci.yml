@@ -81,6 +81,14 @@ jobs:
           npm ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Read application release version
+        shell: pwsh
+        run: |
+          [xml]$properties = Get-Content Directory.Build.props -Raw
+          $releaseVersion = [string]$properties.Project.PropertyGroup.Version
+          if ($releaseVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid application release version' }
+          "TDSBLIVE_VERSION=$releaseVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Begin trusted SonarQube analysis
         if: env.RUN_SONAR == 'true'
         shell: pwsh
@@ -88,7 +96,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           if (-not $env:SONAR_TOKEN) { throw 'SONAR_TOKEN must be configured for trusted analysis' }
-          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"1.0.0" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**,**/wwwroot/editor/**,**/wwwroot/runtime/**,frontend/**/generated/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,frontend/**/*.test.ts,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
+          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"$env:TDSBLIVE_VERSION" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**,**/wwwroot/editor/**,**/wwwroot/runtime/**,frontend/**/generated/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,frontend/**/*.test.ts,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Lint and type-check frontend
@@ -116,6 +124,12 @@ jobs:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
+
+      - name: Qualify actual isolated desktop control lifecycle
+        shell: pwsh
+        run: |
+          python tools/qualify_desktop_control.py --dotnet (Join-Path $env:DOTNET_ROOT 'dotnet.exe') --assembly src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Test frontend with LCOV
         run: npm run test:coverage
@@ -190,14 +204,14 @@ jobs:
           if ((Get-FileHash $download -Algorithm SHA256).Hash.ToLowerInvariant() -ne '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732') { throw 'Inno Setup checksum mismatch' }
           $installed = Start-Process $download -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$innoRoot`"" -Wait -PassThru
           if ($installed.ExitCode -ne 0) { throw 'Inno Setup installation failed' }
-          ./tools/build_windows_package.ps1 -Version '1.0.0' -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
+          ./tools/build_windows_package.ps1 -Version $env:TDSBLIVE_VERSION -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
 
       - name: Qualify native Windows packages
         env:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
-        run: ./tools/qualify_windows_package.ps1 -Version '1.0.0'
+        run: ./tools/qualify_windows_package.ps1 -Version $env:TDSBLIVE_VERSION
 
       - name: Qualify packaged guide without network access
         env:

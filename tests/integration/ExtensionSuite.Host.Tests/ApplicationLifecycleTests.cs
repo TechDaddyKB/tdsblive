@@ -81,6 +81,18 @@ public sealed class ApplicationLifecycleTests
     }
 
     [Fact]
+    public void RelaunchPreservesLaunchModeAndRuntimeArgumentsWhileRetainingTheProfile()
+    {
+        ProcessStartInfo? captured = null;
+        Assert.True(ApplicationRelauncher.TryStart("TDSBLive.exe", "app.dll", "data with spaces", false,
+            info => { captured = info; return new Process(); },
+            new[] { "--TDSBLive:DesktopMode=off", "--environment", "Owned qualification" }));
+        Assert.NotNull(captured);
+        Assert.Equal(new[] { "--TDSBLive:DesktopMode=off", "--environment", "Owned qualification", "--TDSBLive:DataDirectory",
+            "data with spaces", "--TDSBLive:OpenEditor=false" }, captured.ArgumentList);
+    }
+
+    [Fact]
     public void RelaunchReportsMissingProcessAndLaunchFailures()
     {
         Assert.False(ApplicationRelauncher.TryStart("missing", "app.dll", "data", true, _ => null));

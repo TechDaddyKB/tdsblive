@@ -36,7 +36,7 @@ a future fully native Linux application remain possible.
 
 ## G22 — Desktop controls and Windows tray
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G21 and merged 1.0 source
 Requirements: TR-R01–TR-R06, TR-R10
 
@@ -182,3 +182,29 @@ paid-platform, human-usability and native Windows streaming-PC performance limit
 2026-10-04: plan saved as the first implementation deliverable. Protected main
 baseline is `670c48caf50e20dcd163fa6b40321b0425c30285`. Public releases currently
 contain only v0.1.0; v1.0.0 is not published. Implementation goal is active.
+
+G22 initial checkpoint (2026-10-04): shared bounded, authenticated loopback
+transport and native Avalonia companion compile. Session credentials are sent
+only over parent/child stdin and record formatting redacts them. The host keeps
+its existing HTTP/CSRF boundaries, graceful checkpoint and restore owner; external
+mode only reports restart-ready after successful post-shutdown work. An exclusive
+profile lease and nonsensitive open-request marker prevent duplicate ownership.
+31 focused control/lifecycle/browser tests and five headless confirmation tests
+pass (Cancel initially focused, Enter cancels, Escape/close cancel, explicit
+confirmation admits the named operation). The actual isolated managed host
+passes `tools/qualify_desktop_control.py`: nondefault URL, duplicate launch,
+tray and browser restart, browser backup restore, quit, retained spaced-path
+profile and SQLite integrity. Full local regression passes 435 host tests and 88
+core tests, with four Windows-only host tests explicitly skipped on Linux. This is
+control-channel evidence, not native tray, packaged Windows/Linux or OBS evidence.
+Local builds use the pinned 10.0.401 SDK with `-p:UseSharedCompilation=false`;
+the default shared compilation path exits with SIGBUS and is not a passing build.
+Windows packaging includes a self-contained companion and checks both binary
+versions. Sign-in startup explicitly suppresses browser launch. CI derives version
+from Directory.Build.props and runs managed and packaged control-channel checks;
+existing browser suites explicitly opt out of desktop launch. Explicit LAN
+interface bindings gain a local editor listener while preserving saved addresses,
+OBS routes and existing HTTP authority; desktop diagnostics report missing
+companion heartbeats. Native Windows
+registration/fallback/Explorer behavior, packaged desktop qualification and all
+G23/G24 gates remain outstanding. G22 is not complete.
