@@ -1,70 +1,55 @@
 # Backup and recovery
 
-A backup is a saved copy of your TDSBLive data. Keep one before updating the
-application or making a large change.
+A backup is a saved copy you can return to after an unwanted change or a problem. Make one while the application is working, before you need it.
+
+## Choose the right kind of copy
+
+An **application backup** protects the application's supported saved data, including overlays, assets, history and supporter information. Newer custom-widget builds also include their supported stored widget state. It is the right starting point for recovery or moving your setup.
+
+A **portable overlay or widget package** shares a design. It intentionally leaves out credentials, private user data, revision history and stored widget state. It is not a full recovery backup. Read [Custom widgets and portable packages](Custom-Widgets-and-Portable-Packages.md).
+
+A **connection-settings export** is another separate item. It is not a full application backup. Importing settings applies safe defaults, including disabled imported connections and LAN access; review them afterward.
+
+## 1. Download a backup
+
+1. Open the editor's **Backup and recovery** page.
+2. Choose **Download backup**.
+3. Save the ZIP in a backup folder outside the running program folder.
+4. Rename your saved copy with a useful date and description, without changing its `.zip` extension.
+5. Keep an additional copy on another drive if you want protection against drive failure.
 
 ![Backup and recovery controls](images/backup-recovery.png)
 
-## Save a backup
+The screenshot shows the backup area. Read the result and validation messages when using your own copy.
 
-1. On the computer running TDSBLive, open the editor.
-2. Find **Backup and recovery**.
-3. Click **Download backup**.
-4. Save the ZIP file somewhere you can find later. Keep another copy on a
-   separate drive if possible.
+Backups can contain private chat or supporter information. Keep them private. They do not include connection passwords or credentials, so plan to enter those again after recovery.
 
-The backup includes saved overlays, assets, chat history and supporter records.
-Treat it as private. It does not include your connection passwords. Keep the ZIP
-as it is; do not unpack, edit or rename the files inside it.
+## 2. Validate before restoring
 
-## Restore a backup
+A restore changes your current setup. First download a fresh backup of the current state, even if you intend to replace it.
 
-Restoring replaces the data you have now with the data saved in the backup.
-Newer changes will no longer appear in the restored application.
+1. Choose the backup file in **Backup and recovery**.
+2. Use **Check backup** and read the result.
+3. Review the preview: check that it is the backup you intended and that it is compatible with this version.
+4. Resolve any validation problem before continuing. Do not edit a ZIP to force a rejected restore.
+5. Select **I want to replace my current saved data with this backup**, then choose **Restore checked backup** only after reviewing its effect.
 
-1. Download a fresh backup of your current data first.
-2. Under **Restore a backup**, choose your backup ZIP.
-3. Click **Check backup**. This checks the file without replacing your data.
-4. Read the replacement message. If this is the backup you want, check
-   **I want to replace my current saved data with this backup**.
-5. Click **Restore checked backup**. TDSBLive stops, keeps a safety copy of its
-   current data, restores the checked copy and restarts.
-6. Reopen the editor. Review your connections and automation before enabling
-   them. Restored connections and rules start disabled, and old queued actions
-   are not replayed.
+A backup from a newer application may not work with an older one. Keep the original program version and its backup when updating.
 
-The check expires after 15 minutes. If the restore button reports that the check
-expired, choose **Check backup** again.
+## 3. Reconnect safely afterward
 
-Use a backup made by the same application version. If checking fails, keep your
-original file and try another known-good backup. Your current data has not been
-replaced by the check.
+Restoring returns the application to a safe state. Integrations and automation rules are paused or disabled as required, and previous viewing tokens are revoked. That means a restore can succeed even though chat, speech or an old shared viewing link no longer works immediately.
 
-Passwords already stored on this computer are retained separately. Moving a
-backup to another computer does not move those passwords; enter them locally
-again when setting up your connections.
+Re-enter connection secrets, check the services you use, and enable only the rules you intend to run. Create new viewing links if needed. Check a message and the actual OBS preview before a broadcast.
 
-## Move connection settings
+## 4. Protect a Wine or Proton environment too
 
-**Export connection settings** downloads a smaller JSON file containing only
-the application’s connection settings. It does not contain passwords, overlays,
-assets or supporter records. For those records, use a backup instead.
+On Linux, application data normally lives inside the prefix or bottle. After quitting its applications, copying that entire environment can preserve runner-specific setup in addition to the app's backup. Keep track of which environment contains which application.
 
-To import it, choose the JSON file beside **Connection settings JSON**, click
-**Import connection settings**, then restart TDSBLive. Review and enable the
-connections you need. LAN access and imported connections start disabled.
+A full environment copy can contain credentials and other private data, so treat it as private. Do not upload it as a support attachment. Do not delete an original environment until the destination works.
 
-## Restart or quit
+## Restart and quit controls
 
-**Restart TDSBLive** closes the host and starts it again. Chat and overlays may
-briefly disconnect. Reopen the editor when the host is ready.
+Use the application's own local **Restart TDSBLive** or **Quit TDSBLive** controls when needed. Closing a browser window only closes your view of the app. Remote LAN access deliberately does not expose every local recovery or process-control operation.
 
-**Quit TDSBLive** stops the host. Close the editor tab afterward. Open TDSBLive
-again when you want to use your overlays and integrations.
-
-These controls are available only on the computer running TDSBLive. A remote
-LAN editor cannot download private backups, restore data or stop the host.
-
-## Portable overlays and widgets
-
-Use the visual editor's **Export overlay**, **Export selected widget** and **Import portable package** controls to move layout, settings, custom code and referenced assets. These packages exclude credentials, viewing links and persistent custom-widget state. Import creates fresh identities and disables custom permissions. Full backups retain widget state; preview state stays separate from production state.
+Next: [Everyday use](Everyday-Use.md), or [Troubleshooting](Troubleshooting.md).

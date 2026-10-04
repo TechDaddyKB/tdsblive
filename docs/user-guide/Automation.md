@@ -1,62 +1,43 @@
-# Automation rules
+# Automation: speech and sound rules
 
-A rule watches for an event and asks for an action, such as reading a Ko-fi
-message aloud or playing a sound for Bits. Financial ingestion is independent:
-disabling a rule does not disable supporter accounting.
+An automation rule says, “When this kind of event arrives and matches my conditions, do this action.” Keep rules disabled while you learn what they do. A successful connection test does not mean every rule is safe or useful for your stream.
 
-## Create a speech or sound rule
+## 1. Create one draft rule
 
-1. Open **Automation rules** and choose **New speech rule** or **New sound rule**.
-2. Give it a recognizable **Rule name**.
-3. Review the platform, normalized event type, condition and units. Keep the
-   supplied template values unless you understand the event you want to match.
-4. For speech, set **Voice alias** to a voice configured in Speaker.bot. The
-   current tested setup uses **local english**. Review the speech template.
-5. For sound, choose the intended overlay/canvas and uploaded sound asset.
-6. Review cooldown, queue group, queue policy and queue limit.
-7. Leave **Enable live automation** unchecked while testing, then save.
+Open the automation area and choose **New speech** or **New sound**, depending on what you want. Give the rule a name you will recognize later. Choose its event source and conditions.
 
-This draft uses the tested **local english** voice alias. Live automation stays
-unchecked; filling in the form does not speak or run an action.
+For speech, use a voice alias that exists in **your own Speaker.bot setup**. An example alias in a picture or guide is not a voice automatically installed on your computer. Test that voice in Speaker.bot first.
 
-![Draft Ko-fi speech rule with live automation disabled](images/automation-rules.png)
+For a sound, select the intended media or approved action. Grant only the action permissions you need. Review any imported action before allowing a rule to call it.
 
-For a USD donation, **Native minor units** means cents. With **Minor-unit digits**
-set to `2`, enter `500` for a $5 minimum or `1000` for a $10 minimum. The example
-uses $10, so smaller donations will not match it. For a Bits rule using
-**Quantity**, enter the number of Bits instead. Always simulate an amount below
-and an amount at your chosen minimum before enabling the rule.
+![Automation rules with made-up examples](images/automation-rules.png)
 
-A cooldown limits how frequently the rule can run. A queue waits its turn;
-ignore skips when the group is busy; interrupt requests interruption according
-to the action's supported behavior. Interruption is not a promise that every
-external application can cancel an action already running.
+The example screen illustrates the controls. Choose values for your own show rather than copying all the example settings.
 
-## Simulate first
+## 2. Check amount units before setting a threshold
 
-Use the rule's simulation controls to check its matching and planned actions.
-Simulation does not execute live speech, sounds or Streamer.bot actions by
-default. It also does not add production financial totals.
+**Native minor units** means the smallest ordinary unit of the event's currency. For USD, `500` cents means $5.00 and `1000` means $10.00. Entering `5` in a cents field means five cents, not five dollars.
 
-Then perform a bounded real audio/action test through the actual applications.
-Check OBS rendering and listen to audio. A receipt saying dispatch succeeded
-does not prove the audience can hear it.
+Bits use their event quantity, rather than treating every field as dollars. Unknown monetary values cannot be safely compared as if they were exact cash amounts. Check the field's label and source before choosing a threshold.
 
-Release qualification uses owned examples for Ko-fi speech and Bits sounds in
-separate test data. Actual paid-platform delivery remains unverified. You do
-not need to make a test payment to follow this guide.
+## 3. Decide how repeated events should behave
 
-## Enable live operation
+A **cooldown** is a pause before the rule can fire again. It helps prevent repeated notifications from speaking or playing continuously.
 
-Once filters, assets, permissions and audio routing are reviewed, check
-**Enable live automation** and save. Monitor **Execution history** for outcomes.
-Moderation or language-review states need review; failed or uncertain outcomes
-are not successful actions. Avoid resending an uncertain external action until
-you know whether it already happened.
+A **queue** holds events to process later. **Ignore** drops an event in the situation described by the control. **Interrupt** can stop an ongoing action to handle another one. Choose intentionally; a busy chat can behave very differently from one quiet test.
 
-Streamer.bot remains the action authority. VTube Studio work is on hold; use
-Streamer.bot's built-in integration for that service. Its presence in legacy
-rule controls does not establish TDSBLive VTube Studio qualification.
+## 4. Simulate before enabling
 
-After restoring a backup, rules start disabled and old queued actions are
-suppressed. Review each rule before enabling it again.
+Use the rule's simulation or test view to inspect what would match. Simulation does not prove an action actually ran, does not prove the audio reached your speakers, and is not a real financial event.
+
+Check the selected source, amount units, text, voice alias, cooldown and queue behavior. Then perform a bounded local playback check if you intend the rule to speak or play sound. Listen at a comfortable volume.
+
+Enable the rule only after its behavior is what you want. Review the enabled rules before a broadcast. You can leave all rules disabled while using chat and overlays.
+
+## 5. Avoid accidental repeats after recovery
+
+Restored rules are disabled for safety. Review and enable only the ones you want after a restore. Do not replay an uncertain event simply because you are unsure whether an earlier action ran; it may have already produced its effect.
+
+If an action appears twice, inspect duplicate forwarding and trigger registrations before changing unrelated audio settings.
+
+Next: [Backup and recovery](Backup-and-Recovery.md).

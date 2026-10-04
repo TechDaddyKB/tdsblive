@@ -1,121 +1,91 @@
-# Troubleshooting and everyday checks
+# Troubleshooting: start with the smallest check
 
-Before a stream, start TDSBLive and the bots you use. Open the editor, check
-their status, send a new chat message and check OBS. Listen to a short alert or
-speech test through your actual audio routing. Keep a recent backup.
+Work through the section that matches what you see. Change one thing at a time, then check again. Keep your working program folder and backup while investigating.
 
-## The editor will not open
+## The editor says “site cannot be reached”
 
-Keep TDSBLive running and try `http://127.0.0.1:17474/editor` on the same
-computer. Use your chosen port if it differs. Avoid opening several copies;
-another copy or another application can occupy the port.
+1. Check that TDSBLive is running. Opening an offline guide does not launch it.
+2. Use [http://127.0.0.1:17474/editor](http://127.0.0.1:17474/editor) on the same computer. If you saved another port, use that port.
+3. Check for an error in the launch terminal or application output. Another process using the port can prevent startup.
+4. Do not launch repeated extra copies. Quit the unwanted copy before starting another.
+5. If you are using another computer, follow [LAN access](LAN-Access.md). Its own `127.0.0.1` is not your host computer.
 
-For a remote computer, use the streaming computer's allowed LAN address and
-sign in. `127.0.0.1` always means the computer opening the URL. See
-[LAN access](LAN-Access.md) for network setup.
+A local HTTP page does not need an HTTPS certificate. Changing the address to HTTPS is not a fix for an application that has not started.
 
-## A bot is disconnected
+## The EXE will not launch
 
-Start that bot and enable its WebSocket server. Compare its address and port
-with the saved TDSBLive settings. Restart TDSBLive after changing connection
-settings. If Streamer.bot requires authentication, supply its password locally.
-Session-only passwords must be entered again after host restart.
+On Windows, confirm that you downloaded the application rather than Source code, and extracted the complete ZIP. The EXE needs its neighboring files. Try a local writable folder rather than a cloud-synced location.
 
-Connected status proves a connection, not that every action or trigger works.
-Refresh discovery when actions change. Verify custom-trigger registration
-before using Rumble forwarding. Platform accounts are connected in Streamer.bot.
+On Linux, check that your Wine or UMU command exists and that its quoted EXE path matches the actual extracted folder. Note the exact error. Follow the chosen [Wine](Install-on-Linux-Wine.md) or [Proton](Install-on-Linux-Proton.md) path consistently; do not mix random commands from both.
 
-## Rumble says awaiting baseline
+Bottles Flatpak may need access to the application folder. Follow its folder-access instructions rather than granting access to the whole filesystem. The TDSBLive package includes its runtime; other bots have separate requirements.
 
-Check the private Live API URL and the API's availability. Wait for the poll
-cycle. A baseline records what was already present; those historical messages
-do not generate fresh alerts. Resetting the baseline intentionally repeats that
-suppression. Session-only URLs must be entered again after restart.
+## My settings look like they vanished after a Linux launch
 
-The Rumble panel shows the last poll, configured interval, measured request
-latency, live viewer total, events accepted during this process, duplicate
-records suppressed and possible snapshot gaps. Duplicate/gap counters survive
-restart in the polling state; baseline suppression is not counted as a duplicate.
-A possible gap means the API window may have missed messages, not that missing
-messages were recovered. Unknown viewer values remain labelled Unknown.
+Check the bottle or `WINEPREFIX` you used. A different environment has a different Windows-style data folder and can look like a fresh installation.
 
-For developer inspection, search the Event inspector for `rumble.snapshot` and
-choose **Inspect sample**. It includes the last stored private snapshot and
-observed/unknown/changed field types. Subscriber and gift shapes still need live
-evidence before authoritative support processing. **Save sanitized shape** strips
-values and replaces unknown field names for structural tests. Ordinary copied
-samples and private fixtures can contain personal messages; keep them private.
+Quit the current copy and use the original launcher, bottle or prefix. Do not delete either environment while investigating. If you really moved data, use a validated [backup](Backup-and-Recovery.md).
 
-## Sharing diagnostics
+## A bot connection test fails
 
-In **Backup and recovery**, choose **Export sanitized diagnostics**. This file
-contains aggregate event/delivery counts and basic application metadata, without
-messages, supporter records, configuration or logs. Review it before sharing.
-Backups and ordinary log downloads remain private. Developers can use the
-[online utility guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g13-compatibility.md) to generate owned samples or sanitize log
-structure without copying original messages.
+Check that the bot is running **and its WebSocket server is started**. Match the address, port and authentication on both sides. Save TDSBLive's settings before testing and restart if requested.
 
-## Migrating a custom widget
+A common Streamer.bot port is 8080 and a common Speaker.bot port is 7680, but your actual settings take priority. Session-only secrets must be entered again after restarting.
 
-The [online local compatibility guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g13-compatibility.md) explains the optional
-StreamElements lifecycle/store shim. It supports simple owned widgets within
-TDSBLive's sandbox. Cloud counters, remote account storage, full session totals
-and browser-library imports are unavailable. Review source and grant permissions
-explicitly; a descriptive unsupported-call error means that call needs migration.
+A successful test means the connection is reachable. You still need the relevant account connection, events or permissions for a particular feature.
 
-In the widget JavaScript, opt in with `const SE_API = SBX.enableStreamElements();`
-and register the usual `onWidgetLoad`, `onEventReceived` and `onSessionUpdate`
-listeners. Define local fields, event subscriptions and permissions in the custom
-widget settings. `fieldData` comes from those local settings. Chat uses the
-`message` listener with a canonical TDSBLive event; adapt code that expects the
-original remote message shape. Grant storage permission before using
-`SE_API.store.get(key)` or `SE_API.store.set(key, value)`. Keys hold JSON objects
-for this widget instance and survive restart/backup restore; they do not synchronize
-with a StreamElements account.
+## Chat is connected but messages are missing or duplicated
 
-## Chat appears in the browser but not OBS
+Send a fresh message after the connection is ready. Rumble's initial baseline intentionally avoids treating old data as new activity. Check the selected chat sources and filters.
 
-Check the Browser Source URL and size. Use the transparent overlay URL for the
-source and the streamer chat URL for your reading dock. Refresh the source
-after a change, then send a new message. Check platform filters, ignored users,
-bot filters and maximum message settings.
+For duplicates, inspect whether the same event arrives directly over WebSocket and through an explicit forwarding action. Do not attach the bundled forwarder to every chat event when direct delivery already exists.
 
-Badges and emotes depend on the message metadata and available provider media.
-Use a fresh message to check a media fix. GIFs use recognized supported payloads;
-plain text that resembles a GIF label is not enough evidence of GIF delivery.
+## The browser shows the overlay but OBS does not
 
-## An alert is silent
+Check the active scene and source visibility. Confirm the source is not covered by another source. In the Browser Source, turn **Local file** off and paste the live overlay URL from the editor.
 
-Check the selected media, OBS audio routing, mute state and monitoring. In the
-editor preview, enable preview audio. For speech, check Speaker.bot and the
-configured voice alias. The current setup uses **local english**.
+Match width and height to the intended canvas, then refresh the source if needed. Keep TDSBLive running. Check a new event in the actual OBS preview.
 
-A successful dispatch receipt does not prove sound reached OBS or your audience.
-Listen and check the meter. Do not repeatedly dispatch an uncertain live action
-until you know whether it already happened.
+If the Browser Source option itself is missing on Linux, check your distribution's OBS browser-component package. This is an OBS installation issue, rather than a widget setting.
 
-## Supporter totals look unexpected
+## The preview is silent, or OBS audio is silent
 
-Check the selected period, timezone, stream start and ledger state. Review
-exact, nominal and unknown valuations, foreign-currency conversion and linked
-identities. Preview events do not change production totals. Unverified event
-shapes stay gated. See [Supporter totals](Supporter-Totals.md).
+Check the selected media, audio permission for a custom widget, preview-audio control and volume. A browser preview and an OBS source have different playback and monitoring paths.
 
-## A saved change is missing
+In OBS, check the relevant meter, source audio settings and monitoring route. Listen to a short local test. A play indicator alone is not proof of audible output.
 
-Check the editor save status before refreshing. A conflict can mean another
-editor changed the same item. Reload the saved version or review revision
-history rather than assuming the last visible edit was stored. Keep backups
-before major changes.
+For speech, verify that your chosen voice alias works in Speaker.bot and that the rule is enabled. Simulation only shows intended rule behavior; it does not establish actual playback.
 
-## Ask for help
+## A total or threshold looks wrong
 
-Record the application version, the operation you tried, the expected result
-and the actual result. Include whether you use Windows or Wine/Proton and which
-bot/OBS versions are involved. The editor's Diagnostics link provides local
-health information for investigation.
+Check the selected period, stream start time, financial time zone and currency. Check whether an amount is exact, estimated or unknown.
 
-Keep credentials, Rumble URLs, private viewing links, raw chat captures and
-backup archives out of public issues. Review diagnostic material before sharing.
-Use made-up examples when possible. Report problems through the
-[project issue tracker](https://github.com/TechDaddyKB/tdsblive/issues).
+A USD threshold in minor units uses cents: 500 means $5.00. Bits use their event quantity. Read [Supporter totals](Supporter-Totals.md) and [Automation](Automation.md) before changing values.
+
+## An advanced button is missing
+
+Check your version first. The published v0.1.0 MVP predates the newer advanced editor, custom-widget packages and local compatibility work. See [Before you begin](Before-You-Begin.md). A missing newer control is not a reason to erase your current setup.
+
+## A custom widget is blank or stops
+
+Start with [Custom widgets](Custom-Widgets-and-Portable-Packages.md). Check the saved source, Settings JSON, subscriptions and individually enabled permissions. A portable import turns permissions off until you review them.
+
+Use a minimal widget to check the local APIs before adding more code. External network access is restricted to approved HTTPS domains. Parent-page access, arbitrary navigation and external script imports are not supported ways around the sandbox.
+
+For a migrated widget, [local compatibility](Local-StreamElements-Compatibility.md) supports a limited set of behaviors, not the full hosted StreamElements service.
+
+## A restore succeeded but things are disconnected
+
+That can be expected: restored integrations and rules return to safe states, secrets need re-entry, and earlier viewing tokens are revoked. Review connections, rules and links using [Backup and recovery](Backup-and-Recovery.md), then perform a local message test.
+
+## The Linux computer gets too busy
+
+Live compatibility checks have exceeded CPU targets. Watch load during a local rehearsal, including OBS and the bots you use. Test a smaller layout, fewer active custom widgets or less media, then compare the actual result.
+
+Do not assume a green Windows CI run proves performance on your Linux streaming computer. Keep the working runner version while trying changes separately.
+
+## Ask for help with useful, private-safe information
+
+Include the application version or source revision, operating system, Wine or Proton runner version if applicable, what you tried, the exact symptom, and whether it happens in the browser, OBS or both.
+
+Remove passwords, tokens, private URLs, account details and private chat from screenshots or logs. Share a small reproducible example instead of a whole profile, backup or prefix. Use the [project's issue tracker](https://github.com/TechDaddyKB/tdsblive/issues).
