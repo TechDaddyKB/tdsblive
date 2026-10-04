@@ -36,14 +36,14 @@ the local application was blocked; this is not live visual acceptance evidence.
 
 | Goal | Prerequisites | Requirements | Status |
 | --- | --- | --- | --- |
-| G14 Audit functionality and baseline | G13 | UI-R01, UI-R10 | In progress |
-| G15 Design system and navigation | G14 | UI-R01–04, UI-R07, UI-R09 | Not started |
-| G16 Adaptive editor workspace | G15 | UI-R01–04, UI-R07, UI-R09 | Not started |
-| G17 Accurate safe WYSIWYG | G16 | UI-R05, UI-R08 | Not started |
-| G18 Guided triggers and designs | G14, G15; integrate G17 | UI-R02, UI-R06–08 | Not started |
-| G19 Remaining workflows | G15, G18 selectors | UI-R01–04, UI-R07–09 | Not started |
-| G20 Accessibility/usability/compatibility | G16–G19 | UI-R01–10 | Not started |
-| G21 Documentation and delivery | G20 | UI-R10 | Not started |
+| G14 Audit functionality and baseline | G13 | UI-R01, UI-R10 | Complete |
+| G15 Design system and navigation | G14 | UI-R01–04, UI-R07, UI-R09 | In progress |
+| G16 Adaptive editor workspace | G15 | UI-R01–04, UI-R07, UI-R09 | In progress |
+| G17 Accurate safe WYSIWYG | G16 | UI-R05, UI-R08 | In progress |
+| G18 Guided triggers and designs | G14, G15; integrate G17 | UI-R02, UI-R06–08 | In progress |
+| G19 Remaining workflows | G15, G18 selectors | UI-R01–04, UI-R07–09 | In progress |
+| G20 Accessibility/usability/compatibility | G16–G19 | UI-R01–10 | In progress |
+| G21 Documentation and delivery | G20 | UI-R10 | In progress |
 
 Each goal records tested commit, dated commands/results, screenshots, CI links,
 and unresolved evidence. Missing acceptance keeps a goal In progress or Blocked;
@@ -201,5 +201,9 @@ incremental delivery and the mandatory parity checklist.
 ## Current execution evidence
 
 2026-10-04: approved plan saved on `feat/g14-ui-redesign`; workspace initially
-clean on `main`. Deterministic source scans passed before inspection. No goals
-are claimed complete by this planning/documentation checkpoint.
+clean on `main`. Deterministic source scans passed before inspection. The implementation and current evidence are recorded in
+[ui-redesign-qualification.md](ui-redesign-qualification.md). G14 baseline and
+parity inventory are complete; G15–G19 have implemented candidates with local
+regression/browser evidence. They retain In progress until final parity review.
+G20/G21 remain open for participants, manual qualification, native package
+checks and publication; none is closed by mock tests.

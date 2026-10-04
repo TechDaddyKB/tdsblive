@@ -38,12 +38,30 @@ release gates, not claims that the redesigned implementation has passed.
 
 ## Baseline and evidence
 
-- Original source reviewed after deterministic scanning. Existing source screenshot
-  `docs/user-guide/images/visual-editor.png` illustrates historical layout, not a
-  current live qualification.
-- Required fresh baseline screenshots: 1366×768, 768×1024, 390×844. Capture only
-  isolated owned examples; generated screenshots/reports remain ignored artifacts.
-- Record browser timings for load, resize and draft edit at those sizes; compare
-  redesigned head under the same environment.
-- No parity row may be removed to obtain passing qualification. Record test names,
-  results and live evidence separately from historical G00–G13 acceptance.
+Baseline commit: `e590c8eddede11eee9fd037a424b8a8c448b60d8`. A detached,
+scanner-approved checkout was built with the pinned stack. Separate temporary
+hosts and owned text widgets were used for both builds; integrations remained
+disabled. Measurements below are single observations in Chromium 1.63.0's
+Playwright distribution on Linux, not statistical performance claims. Load
+includes navigation and selection of the sample canvas. Draft and resize timings
+include two animation frames; panel opening is included in draft timing.
+
+| Size | Baseline load / draft / resize (ms) | Candidate load / draft / resize (ms) | Horizontal document overflow, baseline → candidate |
+| --- | --- | --- | --- |
+| 1366×768 | 141 / 41 / 33 | 111 / 58 / 35 | No → No |
+| 768×1024 | 24 / 29 / 33 | 24 / 63 / 35 | No → No |
+| 390×844 | 22 / 29 / 33 | 20 / 63 / 35 | Yes → No |
+
+Owned baseline/current captures are ignored local evidence in
+`artifacts/ui-redesign/measure-baseline/` and `measure-current/`. The historical
+baseline visibly uses widget-name placeholders; the candidate renders the draft.
+No browser JavaScript errors occurred in either measurement run. Current source
+commit is `9b00d4b`; documentation/screenshot commit is `df2406e`.
+
+Every row above retains its destination and verification case. The current
+full-browser suite exercises existing G02/G05–G09/G11–G13 assertions plus the
+redesign scenarios; frontend/Core/Host regression tests cover the remaining
+settings, permissions, recovery and data contracts. This does not replace native
+Windows, actual audible output, manual screen-reader/zoom or participant evidence.
+See [the current qualification record](ui-redesign-qualification.md) for exact
+commands, evidence boundaries and the mandatory unresolved release checklist.

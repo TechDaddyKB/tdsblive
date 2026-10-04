@@ -121,3 +121,22 @@ delivery or performance evidence limitation is hidden by a passing unit test.
 - Native streaming-PC performance: blocked by missing evidence. Wine deviations were explicitly accepted in G10 and remain reported as deviations. Current G13 available-environment measurement does not establish native PC performance.
 - G13 delivery: current browser, recovery, privacy, documentation, owned OBS sound/video, native Windows package and SonarQube evidence is recorded. Completion documentation follows protected PR delivery.
 - HTTP: supported without a certificate. LAN authentication does not encrypt HTTP traffic.
+
+## UI redesign requirements (G14–G21 candidate)
+
+Historical source-section verification above does not qualify the redesigned build.
+The [approved UI requirements](ui-redesign-plan.md) and
+[current evidence](ui-redesign-qualification.md) govern the extension goals.
+
+| Requirement | Candidate evidence | Remaining gate |
+| --- | --- | --- |
+| UI-R01 | Mandatory capability inventory; full legacy browser and unit/integration regression | Final packaged parity and observed workflows |
+| UI-R02 | Guided trigger/conditions, ordinary amounts, placeholders and named assets | Three unassisted usability sessions |
+| UI-R03 | Semantic themes, shared controls; both-theme screenshots | Manual contrast/readability review |
+| UI-R04 | Seven sizes, all pages at 320 CSS px, resizing/geometry/panel tests | Native 200%/400% zoom and physical touch |
+| UI-R05 | Shared presentations, direct unsaved draft updates, native OBS alert visuals | Exact package representative visual/audio check |
+| UI-R06 | Shared matching vectors, eligible IDs, first/all sets, custom identity and legacy package tests | Final current-package scenario review |
+| UI-R07 | Autosave/conflicts/history/import/export/backup/restart/HTTP regressions | Native Windows package qualification |
+| UI-R08 | Preview isolation, memory-only custom drafts, denied network, opt-in audio checks | Actual audible OBS confirmation |
+| UI-R09 | Keyboard/focus labels/reduced motion/44px controls and drag alternatives | Manual screen-reader and physical input review |
+| UI-R10 | Source/guide commits, local build/browser/OBS evidence | Protected CI, security, wiki and all open gates |
