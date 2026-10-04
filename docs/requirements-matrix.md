@@ -122,7 +122,7 @@ delivery or performance evidence limitation is hidden by a passing unit test.
 - G13 delivery: current browser, recovery, privacy, documentation, owned OBS sound/video, native Windows package and SonarQube evidence is recorded. Completion documentation follows protected PR delivery.
 - HTTP: supported without a certificate. LAN authentication does not encrypt HTTP traffic.
 
-## UI redesign requirements (G14–G21 candidate)
+## UI redesign requirements (G14–G21)
 
 Historical source-section verification above does not qualify the redesigned build.
 The [approved UI requirements](ui-redesign-plan.md) and
@@ -140,3 +140,17 @@ The [approved UI requirements](ui-redesign-plan.md) and
 | UI-R08 | Preview isolation, memory-only custom drafts, denied network, opt-in audio checks | Actual audible OBS confirmation |
 | UI-R09 | Keyboard/focus labels/reduced motion/44px controls and drag alternatives | Manual screen-reader and physical input review |
 | UI-R10 | Source/guide commits, local build/browser/OBS evidence; protected Windows packages, Sonar and CodeQL on `fa4c6d1` | Documentation-head checks, wiki and all open manual gates |
+
+### Revised UI acceptance method — 2026-10-04
+
+The operator authorized synthetic delivery qualification and explicitly retained
+the current styling/layout. The human-only entries in the earlier UI table are
+optional follow-up observations; they no longer block delivery. Current measured
+coverage includes three fresh-project guided tasks, emulated touch selection/
+move/resize, native 200%/400% browser zoom on all pages in both themes, actual
+accessibility trees, keyboard modal/navigation focus, contrast/reduced motion,
+preview audio signal (muted RMS zero; opt-in nonzero), side-effect isolation and
+current OBS representative visuals/routing. Exact portable/installed executables
+now run the complete browser/parity suite. Its protected result, final inventory
+review and wiki publication remain pending. Human learning, screen-reader speech,
+physical touch and listening are not inferred from these checks.

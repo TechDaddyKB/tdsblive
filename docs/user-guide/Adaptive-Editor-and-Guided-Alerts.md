@@ -1,8 +1,7 @@
 # Adaptive editor and guided alerts
 
-These instructions describe the UI redesign candidate. Usability sessions and
-final release qualification are still outstanding. Older installed releases
-use the earlier editor. Your saved overlay addresses continue to work.
+These instructions apply to the adaptive interface shown below. Older builds
+show settings together on one page. Your saved overlay addresses continue to work.
 
 ## Find your task
 
@@ -111,3 +110,11 @@ build imports both formats. Imports give widgets and sets fresh identities and
 keep custom permissions disabled until you review them.
 
 ![Narrow workspace with the canvas accessible](images/editor-mobile.png)
+
+## What OBS receives
+
+The copied address shows your saved design on a transparent browser source.
+Below is an isolated example with a donation tier, chat, local image/video,
+custom text, event list and progress bar. The example uses sample events.
+
+![Owned sample overlay rendered in OBS](images/overlay-obs-example.png)

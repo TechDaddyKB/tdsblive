@@ -50,6 +50,26 @@ synthetic passes. Screen-reader speech, physical hardware input, observed human
 learning and human listening are not claimed. Fresh-prefix Wine remains
 unqualified and is not inferred from native Windows results.
 
+Current source OBS 32.2.2 / WebSocket 5.7.4 also passes an isolated preview check:
+owned follow, $5 and $10 first-matching tiers; text, image, animated video, custom
+worker text, chat, event list and progress. Saved 1280×720 source captures were
+scanned and visually inspected. Preview remained labeled silent; input audio was
+routed to OBS, monitoring off, volume 1. This records visual/routing evidence,
+not actual listening. Event count remained zero. The program scene stayed
+`TDSBLive G10 qualification`, stream/record remained inactive, Studio Mode was
+restored to false, disposable input/scene removed, host stopped and data removed.
+One owned representative capture is included in the illustrated user guide.
+
+Protected checkpoint `7cbc121` failed before browser/package qualification:
+Core 88 passed, Host 423 passed / 2 failed. A recovery cleanup retained a database
+handle, and an unchanged configuration-save test returned HTTP 500. Inspection
+found drained recovery test hosts were not disposed before replacement or final
+cleanup. Their disposal is now explicit, with the existing bounded Windows-only
+cleanup helper used after targeted pool release. Focused recovery/security tests
+pass locally (7/7). The configuration-write failure is not yet attributed to a
+root cause or declared fixed; the protected full rerun must pass. No production
+persistence behavior or quality threshold was changed for this test repair.
+
 Current completion gates: full updated browser suite, protected current-source
 Windows portable/installed evidence and Sonar/CodeQL, final inventory review,
 current OBS visual/routing verification, wiki publication/rendering and final

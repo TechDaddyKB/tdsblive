@@ -59,7 +59,31 @@ async function taskWalkthrough(page, origin, index, touch) {
   assert.ok(elapsedMs < 600_000, 'Scripted task must finish inside the approved ten-minute ceiling');
   await panel(page, 'Canvas');
   await page.getByLabel('Overlay canvas', { exact: true }).scrollIntoViewIfNeeded();
-  return { scenario: index, viewport: page.viewportSize(), input: touch ? 'emulated touch' : 'pointer', elapsedMs, milestones, internalIdentifiersTyped: false, obsAddressVerified: true };
+  const touchGestures = touch ? await qualifyTouchGestures(page, origin, id) : undefined;
+  return { scenario: index, viewport: page.viewportSize(), input: touch ? 'emulated touch' : 'pointer', elapsedMs, milestones, internalIdentifiersTyped: false, obsAddressVerified: true, touchGestures };
+}
+
+async function qualifyTouchGestures(page, origin, id) {
+  const client = await page.context().newCDPSession(page);
+  const read = async () => (await (await fetch(`${origin}/api/overlays/${id}`)).json()).widgets.find(widget => widget.name === 'Donation thanks');
+  const drag = async (x, y, dx, dy) => {
+    await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1 }] });
+    for (let i = 1; i <= 5; i++) await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + dx * i / 5, y: y + dy * i / 5, id: 1 }] });
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
+  };
+  try {
+    const before = await read();
+    const widget = await page.locator('.canvas-widget.selected').boundingBox(); assert.ok(widget);
+    await drag(widget.x + 2, widget.y + 2, 20, 12);
+    const moved = await read(); assert.notEqual(moved.x, before.x, 'Touch pointer dragging moves the selected widget');
+    const resize = await page.getByRole('button', { name: 'Resize widget', exact: true }).boundingBox(); assert.ok(resize);
+    await drag(resize.x + resize.width / 2, resize.y + resize.height / 2, 12, 8);
+    const resized = await read(); assert.ok(resized.width > moved.width, 'Touch resize changes size through the real pointer handlers');
+    assert.equal(resized.x, moved.x, 'Touch resize preserves the moved position');
+    return { move: true, resize: true };
+  } finally { await client.detach(); }
 }
 
 async function keyboardReach(page, locator) {
