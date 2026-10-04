@@ -176,12 +176,18 @@ all technical capabilities remain in contextual Advanced areas.
   canvas/table two-dimensional scrolling. Follow W3C reflow/drag guidance:
   https://www.w3.org/WAI/WCAG22/Understanding/reflow.html and
   https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html.
-- Three observed nontechnical participants each create two different trigger
-  designs, test them and find OBS handoff within ten minutes without developer
-  help/internal identifiers. Record failures, revise and retest.
+- Delivery gate: three fresh-project synthetic scenarios each create two different
+  trigger designs, test them and find OBS handoff without typing internal
+  identifiers. Record automated milestones, failures and fixes. Exercise actual
+  browser zoom, accessibility trees, keyboard focus, emulated touch and preview
+  silence/opt-in signal alongside the complete parity suite.
+- Optional follow-up: three observed nontechnical participants attempt the same
+  task within ten minutes without assistance; retain the prepared script. These
+  observations remain unavailable and are never reported as synthetic passes.
 
-Acceptance: parity/accessibility/responsive/observed usability pass; missing
-participants or live evidence are outstanding, never synthetic passes.
+Acceptance: full parity, real-browser accessibility/responsive/synthetic tasks
+and current protected package checks pass under the operator revision. Human
+learning, screen-reader speech, physical touch and hearing remain separate.
 
 ## G21 — Document and deliver
 

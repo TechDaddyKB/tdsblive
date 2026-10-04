@@ -263,7 +263,7 @@ export async function qualifyUiAcceptance(origin, root, target = 'managed') {
     const response = await fetch(`${origin}${route}`); assert.equal(response.status, 200); return response.json();
   }));
   const beforeIsolation = await readIsolation();
-  const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--autoplay-policy=no-user-gesture-required'] });
+  const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--mute-audio', '--autoplay-policy=no-user-gesture-required'] });
   const scenarios = [];
   let audio;
   try {

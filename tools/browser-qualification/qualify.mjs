@@ -30,7 +30,13 @@ else {
   assert.equal(process.platform, 'win32', 'Packaged browser qualification requires native Windows');
   const packageRoot = path.resolve(process.env.TDSBLIVE_PACKAGE_CHECK_ROOT);
   assert.match(path.relative(await realpath(process.env.RUNNER_TEMP), packageRoot), /^tdsblive-package-check-[a-f0-9]{32}$/, 'Only the owned Windows package check directory can be used');
-  const candidate = path.join(packageRoot, mode, 'TDSBLive.exe');
+  // CLI input selects a fixed target; it must never become part of an executable path.
+  const packageTargets = new Map([
+    ['portable', path.join(packageRoot, 'portable', 'TDSBLive.exe')],
+    ['installed', path.join(packageRoot, 'installed', 'TDSBLive.exe')],
+  ]);
+  const candidate = packageTargets.get(mode);
+  assert.ok(candidate, 'Choose a named packaged target');
   assert.equal(await realpath(candidate), candidate, 'The shipped executable must not resolve through a symbolic link');
   executable = candidate;
 }

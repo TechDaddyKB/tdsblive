@@ -292,3 +292,29 @@ The human-only checklist above is superseded by the operator-approved synthetic
 acceptance revision at the top of this document. No human observation is claimed.
 The current protected-package, parity, OBS and publication gates still require
 authoritative current evidence before G20/G21 completion.
+
+### Additional saved-runtime and touch assertions
+
+The full local browser suite passes after adding actual touch pointer move/resize
+and a real saved-preview queue check. First-match admits only the large donation
+design. All-matches plays both eligible donation designs; an observational DOM
+collector records both without changing runtime queue state. Existing equal-
+priority queue order remains intact; set order selects eligibility, not playback
+priority. These assertions are included in the next protected checkpoint.
+
+### Protected synthetic checkpoint and command-path repair
+
+`7bc6932` / [Windows run 37215234793](https://github.com/TechDaddyKB/tdsblive/actions/runs/37215234793)
+passes Core 88, Host 425 (no skips), frontend 252, foundation/financial/recovery,
+managed-browser synthetic acceptance and generated contracts. The earlier two
+native test failures did not recur after recovery host disposal; no production
+configuration persistence was changed, and the prior HTTP 500 cause remains
+unattributed. CodeQL passes all languages.
+
+Sonar passes coverage (82.1%), reliability, maintainability, duplication and
+reviewed-hotspot conditions, but flags CLI input entering the package executable
+path (`jssecurity:S8701`). The runner now maps named choices to fixed literal
+portable/installed paths before realpath validation; the argument is never a
+path segment. An invalid `../../tmp/untrusted` choice is rejected before launch.
+The protected rerun must verify this repair and then qualify both exact EXEs;
+there is no exclusion, suppressed finding or changed gate threshold.

@@ -48,13 +48,31 @@ export async function qualifyUiRedesign(page, origin, writeHeaders, root) {
   await editor.getByLabel('Test event type').selectOption({ label: 'Donation / paid support' });
   await editor.getByLabel('Test platform', { exact: true }).selectOption({ label: 'Ko-fi' });
   await editor.getByLabel('Sample amount', { exact: true }).fill('10.00');
+  await editor.getByRole('button', { name: 'Preview', exact: true }).click();
+  const preview = page.frameLocator('iframe[title="Overlay test preview"]');
+  await preview.getByText(/Test preview.*Connected/).waitFor();
   await editor.getByRole('button', { name: 'Send isolated test event', exact: true }).click();
   const results = page.getByLabel('Alert matching results');
   await results.getByText('Big donation: Matches this event', { exact: true }).waitFor();
   assert.ok((await results.innerText()).includes('Donation thanks: An earlier design in this set matched'));
+  await preview.getByText('Big thanks Test viewer!', { exact: true }).waitFor();
+  assert.equal(await preview.getByText('Thank you Test viewer!', { exact: true }).count(), 0, 'First matching admits only the winning design to the real runtime queue');
+  await preview.getByText('Big thanks Test viewer!', { exact: true }).waitFor({ state: 'hidden' });
   await editor.getByLabel('Design selection').selectOption({ label: 'All matching designs' });
+  const runtimeFrame = page.frames().find(frame => frame.url().includes('/overlay/friendly-alerts?preview=1'));
+  assert.ok(runtimeFrame);
+  await runtimeFrame.evaluate(() => {
+    window.uiDesignTexts = new Set();
+    new MutationObserver(() => document.querySelectorAll('.active-alert p').forEach(node => window.uiDesignTexts.add(node.textContent)))
+      .observe(document.body, { childList: true, subtree: true });
+  });
   await editor.getByRole('button', { name: 'Send isolated test event', exact: true }).click();
   await results.getByText('Donation thanks: Matches this event', { exact: true }).waitFor();
+  await runtimeFrame.waitForFunction(() => window.uiDesignTexts.has('Big thanks Test viewer!') && window.uiDesignTexts.has('Thank you Test viewer!'));
+  // Sets select designs; equal-priority playback retains the existing queue order.
+  await preview.getByText('Big thanks Test viewer!', { exact: true }).waitFor({ state: 'hidden' });
+  await preview.getByText('Thank you Test viewer!', { exact: true }).waitFor({ state: 'hidden' });
+  await editor.getByRole('button', { name: 'Preview', exact: true }).click();
   await saved();
   assert.equal(String((await read()).widgets[2].alert.condition.value), '1000');
   assert.equal((await read()).alertSets[0].selection, 'all');
