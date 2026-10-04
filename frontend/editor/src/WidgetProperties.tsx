@@ -1,11 +1,14 @@
+import { AlertEditor } from './AlertEditor';
+import type { AlertSample } from './alertPreview';
+import { FieldGroup } from './ui';
 import { CustomProperties } from './CustomProperties';
 import { AdvancedWidgetProperties } from './AdvancedWidgetProperties';
 import { alertPresets, type Widget } from '../../overlay-runtime/src/scene';
 import { platforms } from '../../overlay-runtime/src/chat';
 import { donorKinds } from '../../overlay-runtime/src/scene';
 import { DonorProperties } from './DonorProperties';
-export interface EditorAsset { id: string; filename: string; mime: string }
-export function WidgetProperties({ widget: w, assets, change }: { widget: Widget; assets: EditorAsset[]; change: (widget: Widget) => void }) {
+export interface EditorAsset { id: string; filename: string; mime: string; size?: number; uploadedAt?: string; license?: string | null; sanitized?: boolean }
+export function WidgetProperties({ widget: w, assets, change, test, testResults }: { widget: Widget; assets: EditorAsset[]; change: (widget: Widget) => void; test?: (sample: AlertSample) => void; testResults?: { id: string; name: string; reason: string | null }[] }) {
   const numeric = (key: 'x' | 'y' | 'width' | 'height' | 'rotation' | 'fontSize', label: string, min: number, max: number) => <label key={key}>{label}<input aria-label={label} type="number" min={min} max={max} value={w[key]} onChange={e => {
     const value = e.currentTarget.valueAsNumber; if (Number.isFinite(value) && (key !== 'fontSize' || Number.isInteger(value)) && value >= min && value <= max) change({ ...w, [key]: value });
   }} /></label>;
@@ -14,29 +17,36 @@ export function WidgetProperties({ widget: w, assets, change }: { widget: Widget
     const value = e.currentTarget.valueAsNumber; if (Number.isInteger(value) && value >= min && value <= max) change({ ...w, alert: { ...w.alert, [key]: value } });
   }} /></label>;
   return <div className="widget-properties"><h3>Properties</h3><label>Layer name<input aria-label="Layer name" maxLength={128} value={w.name} onChange={e => change({ ...w, name: e.target.value })} /></label>
-    {numeric('x', 'X', -7680, 7680)}{numeric('y', 'Y', -7680, 7680)}{numeric('width', 'Width', 1, 7680)}{numeric('height', 'Height', 1, 7680)}{numeric('rotation', 'Rotation', -360, 360)}
+    {w.kind === 'alert' && <AlertEditor key={w.id} widget={w} change={change} test={test} results={testResults} advanced={<><label>Alert preset<select aria-label="Alert preset" value="" onChange={e => { const p = alertPresets[Number(e.target.value)]; if (p) change({ ...w, name: p[0], alert: { ...w.alert, nativeType: null, customTriggerKey: null, eventTypes: [p[1]], platforms: p[1] === 'integration.custom' ? ['general', 'custom'] : [p[2]] } }); }}><option value="">Choose preset…</option>{alertPresets.map((p, i) => <option value={i} key={p[0]}>{p[0]}</option>)}</select></label>
+      <label>Event types<input aria-label="Event types" value={w.alert.eventTypes.join(',')} onChange={e => change({ ...w, alert: { ...w.alert, eventTypes: e.target.value.split(',').map(x => x.trim()).filter(Boolean) } })} /></label>
+      <label>Alert platforms<input aria-label="Alert platforms" value={w.alert.platforms.join(',')} onChange={e => change({ ...w, alert: { ...w.alert, platforms: e.target.value.split(',').map(x => x.trim()).filter(Boolean) } })} /></label>
+      <label>Native incoming type<input value={w.alert.nativeType ?? ''} onChange={e => change({ ...w, alert: { ...w.alert, nativeType: e.target.value || null } })} /></label>
+      <label>Custom incoming identity<input value={w.alert.customTriggerKey ?? ''} onChange={e => change({ ...w, alert: { ...w.alert, customTriggerKey: e.target.value || null } })} /></label>
+    </>} design={<>
+      <label>Alert template<textarea aria-label="Alert template" maxLength={4096} value={w.alert.template} onChange={e => change({ ...w, alert: { ...w.alert, template: e.target.value } })} /></label><p>Placeholders: {'{user}, {type}, {platform}, {message}'}</p>
+      {asset('Alert media', w.alert.mediaAssetId, ['image/', 'video/'], id => change({ ...w, alert: { ...w.alert, mediaAssetId: id } }))}{asset('Alert sound', w.alert.soundAssetId, ['audio/'], id => change({ ...w, alert: { ...w.alert, soundAssetId: id } }))}
+      <div className="placeholder-buttons">{['user', 'type', 'platform', 'message'].map(key => <button key={key} onClick={() => change({ ...w, alert: { ...w.alert, template: w.alert.template + '{' + key + '}' } })}>Insert {key}</button>)}</div>
+      {w.alert.mediaAssetId && assets.find(a => a.id === w.alert.mediaAssetId)?.mime.startsWith('image/') && <img className="asset-thumbnail" src={`/assets/${w.alert.mediaAssetId}`} alt="Selected alert media" />}
+    </>} />}
+    <FieldGroup title="Placement">{numeric('x', 'X', -7680, 7680)}{numeric('y', 'Y', -7680, 7680)}{numeric('width', 'Width', 1, 7680)}{numeric('height', 'Height', 1, 7680)}{numeric('rotation', 'Rotation', -360, 360)}</FieldGroup>
     <label><input type="checkbox" checked={w.locked} onChange={e => change({ ...w, locked: e.target.checked })} />Locked</label><label><input type="checkbox" checked={w.hidden} onChange={e => change({ ...w, hidden: e.target.checked })} />Hidden</label>
-    {(w.kind === 'text' || w.kind === 'alert' || ['event-list', 'goal-bar', 'progress-bar'].includes(w.kind) || donorKinds.includes(w.kind)) && <>{numeric('fontSize', 'Font size', 8, 200)}<label>Text color<input type="color" value={w.color} onChange={e => change({ ...w, color: e.target.value })} /></label></>}
-    {w.kind === 'custom' && <CustomProperties widget={w} assets={assets} change={change} />}
+    <FieldGroup title="Appearance">{(w.kind === 'text' || w.kind === 'alert' || ['event-list', 'goal-bar', 'progress-bar'].includes(w.kind) || donorKinds.includes(w.kind)) && <>{numeric('fontSize', 'Font size', 8, 200)}<label>Text color<input type="color" value={w.color} onChange={e => change({ ...w, color: e.target.value })} /></label></>}
+    </FieldGroup>{w.kind !== 'alert' && <FieldGroup title="Content" open>{w.kind === 'custom' && <CustomProperties widget={w} assets={assets} change={change} />}
     {donorKinds.includes(w.kind) && <DonorProperties widget={w} assets={assets} change={change} />}
     {['event-list', 'goal-bar', 'progress-bar'].includes(w.kind) && <AdvancedWidgetProperties widget={w} assets={assets} change={change} />}
     {w.kind === 'text' && <label>Text<textarea aria-label="Widget text" maxLength={4096} value={w.text} onChange={e => change({ ...w, text: e.target.value })} /></label>}
     {['image', 'video', 'audio'].includes(w.kind) && asset('Media asset', w.assetId, [`${w.kind}/`], id => change({ ...w, assetId: id }))}
-    {['video', 'audio', 'alert'].includes(w.kind) && <label>Volume<input aria-label="Volume" type="range" min={0} max={1} step={.05} value={w.volume} onChange={e => change({ ...w, volume: Number(e.target.value) })} /></label>}
+    </FieldGroup>}<FieldGroup title="Playback">{['video', 'audio', 'alert'].includes(w.kind) && <label>Volume<input aria-label="Volume" type="range" min={0} max={1} step={.05} value={w.volume} onChange={e => change({ ...w, volume: Number(e.target.value) })} /></label>}
     {['video', 'audio'].includes(w.kind) && <><label><input type="checkbox" checked={w.loop} onChange={e => change({ ...w, loop: e.target.checked })} />Loop media</label><label><input type="checkbox" checked={w.muted} onChange={e => change({ ...w, muted: e.target.checked })} />Mute media</label></>}
     {w.kind === 'chat' && <><label>Chat platforms<select multiple aria-label="Chat platforms" value={w.chat.platforms} onChange={e => change({ ...w, chat: { ...w.chat, platforms: Array.from(e.target.selectedOptions, o => o.value as typeof platforms[number]) } })}>{platforms.map(p => <option key={p}>{p}</option>)}</select></label>
       <label>Chat font size<input type="number" min={8} max={120} value={w.chat.fontSize} onChange={e => { const v = e.target.valueAsNumber; if (Number.isInteger(v) && v >= 8 && v <= 120) change({ ...w, chat: { ...w.chat, fontSize: v } }); }} /></label><label><input type="checkbox" checked={w.chat.persistent} onChange={e => change({ ...w, chat: { ...w.chat, persistent: e.target.checked } })} />Persistent chat</label></>}
-    {w.kind === 'alert' && <><label>Alert preset<select aria-label="Alert preset" value="" onChange={e => { const p = alertPresets[Number(e.target.value)]; if (p) change({ ...w, name: p[0], alert: { ...w.alert, eventTypes: [p[1]], platforms: p[1] === 'integration.custom' ? ['general', 'custom'] : [p[2]] } }); }}><option value="">Choose preset…</option>{alertPresets.map((p, i) => <option value={i} key={p[0]}>{p[0]}</option>)}</select></label>
-      <label>Event types<input aria-label="Event types" value={w.alert.eventTypes.join(',')} onChange={e => change({ ...w, alert: { ...w.alert, eventTypes: e.target.value.split(',').map(x => x.trim()).filter(Boolean) } })} /></label>
-      <label>Alert platforms<input aria-label="Alert platforms" value={w.alert.platforms.join(',')} onChange={e => change({ ...w, alert: { ...w.alert, platforms: e.target.value.split(',').map(x => x.trim()).filter(Boolean) } })} /></label>
-      <label>Alert template<textarea aria-label="Alert template" maxLength={4096} value={w.alert.template} onChange={e => change({ ...w, alert: { ...w.alert, template: e.target.value } })} /></label><p>Placeholders: {'{user}, {type}, {platform}, {message}'}</p>
-      {asset('Alert media', w.alert.mediaAssetId, ['image/', 'video/'], id => change({ ...w, alert: { ...w.alert, mediaAssetId: id } }))}{asset('Alert sound', w.alert.soundAssetId, ['audio/'], id => change({ ...w, alert: { ...w.alert, soundAssetId: id } }))}
+    </FieldGroup>{w.kind === 'alert' && <FieldGroup title="Behavior and advanced queue settings">
       <label>Queue group<input aria-label="Queue group" maxLength={64} value={w.alert.group} onChange={e => change({ ...w, alert: { ...w.alert, group: e.target.value } })} /></label>
       {alertNumber('priority', 'Priority', -100, 100)}{alertNumber('durationMs', 'Duration (ms)', 100, 300000)}{alertNumber('cooldownMs', 'Cooldown (ms)', 0, 3600000)}{alertNumber('concurrency', 'Concurrency', 1, 8)}{alertNumber('maximumQueueLength', 'Maximum queue length', 1, 200)}
       <label><input type="checkbox" checked={w.alert.interruptible} onChange={e => change({ ...w, alert: { ...w.alert, interruptible: e.target.checked } })} />Interruptible</label>
       <label>Interrupt policy<select value={w.alert.interruptPolicy} onChange={e => change({ ...w, alert: { ...w.alert, interruptPolicy: e.target.value as Widget['alert']['interruptPolicy'] } })}><option value="never">Never</option><option value="higher-priority">Higher priority</option></select></label>
       <label>Overflow policy<select value={w.alert.overflowPolicy} onChange={e => change({ ...w, alert: { ...w.alert, overflowPolicy: e.target.value as Widget['alert']['overflowPolicy'] } })}><option value="drop-oldest">Drop oldest pending</option><option value="drop-newest">Drop newest</option></select></label>
       <label>Animation<select value={w.alert.animation} onChange={e => change({ ...w, alert: { ...w.alert, animation: e.target.value as Widget['alert']['animation'] } })}><option>none</option><option>fade</option><option>slide</option></select></label>
-    </>}
+    </FieldGroup>}
   </div>;
 }

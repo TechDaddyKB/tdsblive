@@ -1,7 +1,7 @@
 // CI-only fresh-browser qualification; never controls the user's personal browser.
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -14,12 +14,32 @@ import { qualifyDonors } from './donors.mjs';
 import { qualifyAutomation } from './automation.mjs';
 import { qualifyCustomWidgets } from './custom-widgets.mjs';
 import { qualifyAdvancedEditor } from './advanced-editor.mjs';
+import { qualifyUiRedesign } from './ui-redesign.mjs';
+import { qualifyUiAcceptance } from './ui-acceptance.mjs';
 import { qualifyCompatibility } from './compatibility.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
 assert.ok(dotnetRoot && path.isAbsolute(dotnetRoot), 'CI must supply an absolute setup-dotnet installation directory');
-const dotnetExecutable = path.join(dotnetRoot, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+const mode = process.argv[2] ?? 'managed';
+assert.ok(['managed', 'portable', 'installed'].includes(mode), 'Choose managed, portable or installed qualification');
+let executable = path.join(dotnetRoot, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+const launchArguments = [];
+if (mode === 'managed') launchArguments.push(path.join(root, 'src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'));
+else {
+  assert.equal(process.platform, 'win32', 'Packaged browser qualification requires native Windows');
+  const packageRoot = path.resolve(process.env.TDSBLIVE_PACKAGE_CHECK_ROOT);
+  assert.match(path.relative(await realpath(process.env.RUNNER_TEMP), packageRoot), /^tdsblive-package-check-[a-f0-9]{32}$/, 'Only the owned Windows package check directory can be used');
+  // CLI input selects a fixed target; it must never become part of an executable path.
+  const packageTargets = new Map([
+    ['portable', path.join(packageRoot, 'portable', 'TDSBLive.exe')],
+    ['installed', path.join(packageRoot, 'installed', 'TDSBLive.exe')],
+  ]);
+  const candidate = packageTargets.get(mode);
+  assert.ok(candidate, 'Choose a named packaged target');
+  assert.equal(await realpath(candidate), candidate, 'The shipped executable must not resolve through a symbolic link');
+  executable = candidate;
+}
 const directory = await mkdtemp(path.join(tmpdir(), 'tdsblive-browser-test-'));
 const port = await new Promise((resolve, reject) => {
   const server = createServer();
@@ -31,8 +51,7 @@ const port = await new Promise((resolve, reject) => {
 });
 await writeFile(path.join(directory, 'configuration.json'), JSON.stringify({ server: { host: '127.0.0.1', port } }));
 const origin = `http://127.0.0.1:${port}`;
-const host = spawn(dotnetExecutable, [path.join(root, 'src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'),
-  '--TDSBLive:DataDirectory', directory], { stdio: 'ignore' });
+const host = spawn(executable, [...launchArguments, '--TDSBLive:DataDirectory', directory, '--TDSBLive:OpenEditor=false'], { stdio: 'ignore' });
 let spawnFailed = false;
 host.on('error', () => { spawnFailed = true; });
 let browser;
@@ -58,7 +77,7 @@ try {
   const animatedGif = Buffer.from('47494638396101000100800000ff00000000ff21ff0b4e45545343415045322e30030100000021f904000a0000002c000000000100010000020244010021f904000a0000002c00000000010001000002024c01003b', 'hex');
   await page.route(`${origin}/g05-media.gif`, route => route.fulfill({ contentType: 'image/gif', body: animatedGif }));
   let pageErrors = 0;
-  page.on('pageerror', () => { pageErrors++; });
+  page.on('pageerror', error => { pageErrors++; console.error('Isolated browser error:', error.message); });
   assert.equal((await page.goto(`${origin}/editor`)).status(), 200);
   await page.getByRole('heading', { name: 'TDSBLive', exact: true }).waitFor();
   await page.getByText('Host ready. Loopback access only.', { exact: true }).waitFor();
@@ -77,13 +96,16 @@ try {
   assert.equal(setupConfiguration.streamerBot.enabled, false);
   assert.equal(setupConfiguration.speakerBot.enabled, false);
   // Exercise the ordinary release UI against real configuration persistence.
+  await page.goto(`${origin}/editor#connections`);
   await page.getByText('Streamer.bot action permissions', { exact: true }).click();
   await page.getByRole('button', { name: 'Load action permissions', exact: true }).click();
   await page.getByRole('button', { name: 'Save action permissions', exact: true }).waitFor();
   assert.equal(await page.getByLabel('Allow qualified live event forwarding to Streamer.bot', { exact: true }).isChecked(), false);
   await page.getByRole('button', { name: 'Save action permissions', exact: true }).click();
   await page.getByText('Permissions saved. Restart TDSBLive to apply them, then review live rules and trigger bindings.', { exact: true }).waitFor();
+  await page.goto(`${origin}/editor#settings`);
   assert.equal(await page.getByLabel('Enable authenticated LAN access', { exact: true }).isChecked(), false);
+  await page.waitForFunction(expected => Number(document.querySelector('#lan-title')?.parentElement.querySelector('input[type=number]')?.value) === expected, port);
   assert.equal(Number(await page.getByLabel('HTTP port', { exact: true }).inputValue()), port);
   await page.getByRole('button', { name: 'Save access settings', exact: true }).click();
   await page.getByText('Access settings saved. Restart TDSBLive to apply them. Update OBS URLs if you changed the port.', { exact: true }).waitFor();
@@ -185,6 +207,8 @@ try {
   execFileSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(root, 'tools/seed_financial_browser.py'), directory], { stdio: 'pipe' });
   await qualifyFinancial(page, origin);
   await qualifyDonors(page, origin, writeHeaders, root);
+  await qualifyUiRedesign(page, origin, writeHeaders, root);
+  await qualifyUiAcceptance(origin, root, mode);
   assert.equal(pageErrors, 0, 'Rendered pages raised JavaScript errors');
   console.log('G02/G05/G06 fresh-browser qualification passed: HTTP editor/login, transparent escaped four-platform chat, bounded DOM, one socket, reconnect, saved settings and persistent light/dark streamer view');
 } finally {

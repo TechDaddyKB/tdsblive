@@ -31,6 +31,7 @@ public static class OverlayEndpoints
             if (!await store.SaveAsync(restored, ct)) return Results.Conflict();
             var updated = (await store.GetAsync(id, ct))!; hub.UpdateOverlay(updated); return Results.Ok(updated);
         }).Produces<OverlayDefinition>();
+        app.MapGet("/api/alert-triggers", (StreamerBotConnection streamer, EventInspectorStore inspector, StreamerBotEventNormalizer normalizer) => TypedResults.Ok(AlertTriggerCatalog.Build(streamer.Discovery, inspector.Read(limit: 200), normalizer)));
         app.MapPost("/api/overlays/{id}/preview-events", async (string id, PreviewEventRequest request, OverlayStore store,
             EditorEventHub hub, SensitiveValues sensitive, StreamerBotEventNormalizer normalizer, TimeProvider clock, CancellationToken ct) =>
         {
@@ -39,8 +40,10 @@ public static class OverlayEndpoints
                 request.Platform.Length > 64 || request.User.Length > 128 || request.Message.Length > 4096) return Results.BadRequest();
             var now = clock.GetUtcNow();
             var item = new CanonicalEvent { Source = "overlay-preview", Platform = request.Platform, Type = request.Type,
-                NativeType = "SyntheticPreview", OccurredAt = now, ReceivedAt = now, Provenance = EventProvenance.Simulation,
-                DedupeKey = Guid.CreateVersion7().ToString(), User = new(DisplayName: request.User), Message = new(request.Message), Raw = request.Raw };
+                NativeType = request.NativeType ?? "SyntheticPreview", OccurredAt = now, ReceivedAt = now, Provenance = EventProvenance.Simulation,
+                DedupeKey = Guid.CreateVersion7().ToString(), User = new(DisplayName: request.User), Message = new(request.Message), Raw = request.Raw,
+                AlertTriggerKey = request.CustomTriggerKey, Support = request.Quantity is null && request.NativeMoney is null ? null : new SupportDetails(request.Type.Split('.').Last(), request.Quantity ?? 1, request.NativeMoney) };
+            try { item.Support?.Validate(); if (request.CustomTriggerKey is { Length: > 128 } || request.CustomTriggerKey is not null && string.IsNullOrWhiteSpace(request.CustomTriggerKey) || request.NativeType is { Length: > 128 } || request.NativeType is not null && string.IsNullOrWhiteSpace(request.NativeType)) return Results.BadRequest(); } catch (ArgumentException) { return Results.BadRequest(); }
             if (request.Mode == "native")
             {
                 if (request.Raw is null || normalizer.Normalize(request.Raw, now).Event is not { } normalized) return Results.BadRequest();
@@ -145,7 +148,7 @@ public static class OverlayEndpoints
         }
         return true;
     }
-    public static CanonicalEvent PublicChat(CanonicalEvent item) => item with { Raw = null, Monetary = null, Support = null };
+    public static CanonicalEvent PublicChat(CanonicalEvent item) => item with { Raw = null, Monetary = null, Support = null, AlertTriggerKey = null };
     private static IResult Shell(WebApplication app)
     {
         var file = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "runtime", "index.html");
@@ -153,4 +156,4 @@ public static class OverlayEndpoints
     }
 }
 
-public sealed record PreviewEventRequest(string Type, string Platform = "twitch", string User = "Test viewer", string Message = "Test message", System.Text.Json.Nodes.JsonObject? Raw = null, string Mode = "synthetic");
+public sealed record PreviewEventRequest(string Type, string Platform = "twitch", string User = "Test viewer", string Message = "Test message", System.Text.Json.Nodes.JsonObject? Raw = null, string Mode = "synthetic", long? Quantity = null, NativeMoney? NativeMoney = null, string? CustomTriggerKey = null, string? NativeType = null);

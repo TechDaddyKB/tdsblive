@@ -18,7 +18,8 @@ jobs:
   windows:
     name: Windows build and tests
     runs-on: windows-2022
-    timeout-minutes: 30
+    # The full browser/parity suite now runs on managed, portable and installed hosts.
+    timeout-minutes: 45
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
@@ -198,6 +199,17 @@ jobs:
         shell: pwsh
         run: ./tools/qualify_windows_package.ps1 -Version '0.1.0'
 
+      - name: Qualify packaged guide without network access
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
+        shell: pwsh
+        run: |
+          sonar analyze secrets release/portable/guide
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tools/browser-qualification/offline-guide.mjs packaged
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Upload candidate Windows packages
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -224,4 +236,5 @@ jobs:
             artifacts/g05-overlay.png
             artifacts/g05-streamer-chat.png
             artifacts/g06-editor.png
+            artifacts/ui-redesign/**
           if-no-files-found: warn

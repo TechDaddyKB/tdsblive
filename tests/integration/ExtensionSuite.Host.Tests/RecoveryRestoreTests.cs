@@ -99,6 +99,7 @@ public sealed class RecoveryRestoreTests
             // Linux test hosts have no vault loader. Remove the opaque marker before
             // Windows restart; valid DPAPI roundtrips are qualified by vault tests.
             File.Delete(Path.Combine(paths.Secrets, "owned-marker.dpapi"));
+            await app.DisposeAsync();
             app = await StartAsync(root);
             Assert.Equal("disabled", app.Services.GetRequiredService<RumbleIntegration>().Status.State);
             await RecoveryShutdown.DrainAsync(app);
@@ -107,7 +108,7 @@ public sealed class RecoveryRestoreTests
         {
             await app.DisposeAsync();
             ClearPools(paths.Database);
-            if (Directory.Exists(parent)) Directory.Delete(parent, recursive: true);
+            FoundationHostFactory.DeleteTemporaryDirectory(parent);
         }
     }
 
@@ -134,10 +135,11 @@ public sealed class RecoveryRestoreTests
         finally
         {
             await RecoveryShutdown.DrainAsync(live);
+            await live.DisposeAsync();
             await other.DisposeAsync();
             ClearPools(paths.Database);
             ClearPools(otherPaths.Database);
-            Directory.Delete(parent, recursive: true);
+            FoundationHostFactory.DeleteTemporaryDirectory(parent);
         }
     }
 

@@ -667,6 +667,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alert-triggers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AlertTriggerChoice"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/overlays/{id}/preview-events": {
         parameters: {
             query?: never;
@@ -3303,7 +3338,33 @@ export interface components {
         AdminLogin: {
             credential: string;
         };
+        AlertCondition: {
+            /** @default quantity */
+            unit: string;
+            /** @default minimum */
+            operator: string;
+            /**
+             * Format: int64
+             * @default 1
+             */
+            value: number | string;
+            /** Format: int64 */
+            upperExclusive?: null | number | string;
+            currency?: null | string;
+            /** Format: int32 */
+            minorUnitDigits?: null | number | string;
+        };
+        AlertSet: {
+            id: string;
+            name: string;
+            widgetIds: string[];
+            /** @default first */
+            selection: string;
+        };
         AlertSettings: {
+            nativeType?: null | string;
+            customTriggerKey?: null | string;
+            condition?: null | components["schemas"]["AlertCondition"];
             eventTypes?: string[];
             platforms?: string[];
             template?: string;
@@ -3324,6 +3385,17 @@ export interface components {
             animation?: string;
             mediaAssetId?: null | string;
             soundAssetId?: null | string;
+        };
+        AlertTriggerChoice: {
+            id: string;
+            label: string;
+            platform: string;
+            eventType: string;
+            description: string;
+            availability: string;
+            units: string[];
+            nativeType?: null | string;
+            customTriggerKey?: null | string;
         };
         AnonymousTypeOfGuidAndstring: {
             /** Format: uuid */
@@ -3582,6 +3654,7 @@ export interface components {
             type: string;
             nativeType: string;
             nativeId?: null | string;
+            alertTriggerKey?: null | string;
             user?: null | components["schemas"]["EventUser"];
             message?: null | components["schemas"]["EventMessage"];
             monetary?: null | components["schemas"]["EventMoney"];
@@ -3981,6 +4054,7 @@ export interface components {
             /** Format: int32 */
             revisionLimit?: number | string;
             widgets?: components["schemas"]["OverlayWidget"][];
+            alertSets?: components["schemas"]["AlertSet"][];
         };
         OverlayRevision: {
             /** Format: int32 */
@@ -4041,6 +4115,11 @@ export interface components {
             raw?: null | components["schemas"]["JsonObject"];
             /** @default synthetic */
             mode: string;
+            /** Format: int64 */
+            quantity?: null | number | string;
+            nativeMoney?: null | components["schemas"]["NativeMoney"];
+            customTriggerKey?: null | string;
+            nativeType?: null | string;
         };
         ProgressSettings: {
             source?: string;

@@ -121,3 +121,32 @@ delivery or performance evidence limitation is hidden by a passing unit test.
 - Native streaming-PC performance: blocked by missing evidence. Wine deviations were explicitly accepted in G10 and remain reported as deviations. Current G13 available-environment measurement does not establish native PC performance.
 - G13 delivery: current browser, recovery, privacy, documentation, owned OBS sound/video, native Windows package and SonarQube evidence is recorded. Completion documentation follows protected PR delivery.
 - HTTP: supported without a certificate. LAN authentication does not encrypt HTTP traffic.
+
+## UI redesign requirements (G14–G21)
+
+Historical source-section verification above remains unchanged. The
+[approved plan and synthetic acceptance revision](ui-redesign-plan.md),
+[completion audit](ui-redesign-completion-audit.md) and
+[current qualification](ui-redesign-qualification.md) govern this extension.
+The operator explicitly retained the current layout/styling.
+
+| Requirement | Current evidence | Disposition |
+| --- | --- | --- |
+| UI-R01 | All 30 parity groups reviewed; legacy/full browser suites on managed/portable/installed hosts; 252 frontend / 88 Core / 425 Host tests | Verified |
+| UI-R02 | Three fresh-project guided tasks per host variant create distinct follow/donation designs, test and copy OBS without internal identifiers | Verified synthetically |
+| UI-R03 | System/default and retained explicit themes, shared semantic controls, screenshots/computed contrast; operator design opinion incorporated | Verified |
+| UI-R04 | Seven viewports/short window, continuous resizing/Fit/manual geometry, emulated touch move/resize; 40 native 200%/400% zoom checks per host variant | Verified synthetically |
+| UI-R05 | Shared actual unsaved presentation and media/custom samples; saved runtime first/all preview; actual OBS representative visuals and matching packaged runtime bytes | Verified within recorded environment |
+| UI-R06 | Shared matching vectors/conditions, incoming/custom distinction, eligible IDs, first/all sets and legacy behavior, v1/v2/remapping | Verified |
+| UI-R07 | Autosave/conflict/history/revisions/HTTP and native portable/installed backup/restart/restore/startup/uninstall | Verified |
+| UI-R08 | Event/ledger/automation equality, denied draft network, isolated storage/permissions; muted RMS zero, opt-in nonzero, navigation resets | Verified synthetically |
+| UI-R09 | Actual accessibility tree names/landmarks, keyboard modal/navigation focus, contrast/reduced motion, touch targets/drag alternatives | Verified synthetically |
+| UI-R10 | Protected Windows/Sonar/CodeQL on `156ccfa`; exact native package full suites, actual Linux OBS, illustrated/offline guide and published/live-verified wiki `e964fe2` | Verified |
+
+The explicit 2026-10-04 acceptance revision replaces unavailable observed sessions
+and physical-hardware/speech/listening gates with measured synthetic delivery
+checks. Human learning, screen-reader speech, physical touch and hearing are not
+claimed; their scripts remain optional follow-up. Linux OBS and native Windows
+package execution are separate evidence; Windows OBS and Wine are not inferred.
+G00–G13 paid-platform/performance/compatibility limitations remain unchanged.
+Documentation follow-up follows the same protected current-head checks.

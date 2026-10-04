@@ -29,10 +29,10 @@ export class ChatConnection {
       socket.onopen = () => { this.lastReply = Date.now(); socket.send(JSON.stringify({ op: 'subscribe', types: this.canvas && definition.canvasEnabled ? ['*'] : ['chat.message'] })); };
       socket.onmessage = event => {
         try {
-          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition; widgets?: DonorSnapshot[] | CustomDelivery[]; command?: AutomationSoundCommand; executionId?: string };
+          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; alertWidgetIds?: string[]; settings?: OverlayDefinition; widgets?: DonorSnapshot[] | CustomDelivery[]; command?: AutomationSoundCommand; executionId?: string };
           this.lastReply = Date.now();
           if (message.op === 'subscribed') { this.failures = 0; this.status('Connected'); void this.history(); }
-          if (message.op === 'event' && message.event) this.events([message.event], 'socket');
+          if (message.op === 'event' && message.event) this.receiveEvent(message.event, message.alertWidgetIds);
           if (message.op === 'settings' && message.settings) { this.settings(message.settings); void this.history(); }
           if (message.op === 'custom-events' && Array.isArray(message.widgets)) this.custom?.(message.widgets as CustomDelivery[]);
           if (message.op === 'donors' && message.widgets) this.donors?.(message.widgets as DonorSnapshot[]);
@@ -47,6 +47,11 @@ export class ChatConnection {
         else if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ op: 'ping' }));
       }, 15_000);
     } catch { if (!this.abort.signal.aborted) { this.status('Reconnecting'); this.schedule(); } }
+  }
+  private receiveEvent(event: ChatEvent, eligible: unknown): void {
+    const item = { ...event };
+    if (Array.isArray(eligible)) item.alertWidgetIds = eligible;
+    this.events([item], 'socket');
   }
   reportSound(executionId: string, state: AutomationSoundState): void {
     if (this.canvas && !this.preview && this.socket?.readyState === WebSocket.OPEN)

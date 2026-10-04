@@ -6,6 +6,18 @@ function fixture(): Scene {
   return { id: 'test', name: 'Test', width: 1920, height: 1080, background: 'transparent', version: 1, chat: defaultSettings, canvasEnabled: true, revisionLimit: 50,
     widgets: [0, 200, 700].map((x, i) => ({ ...createWidget('text'), x, y: i * 100, width: 100, height: 100 })) };
 }
+it.each(['first', 'all'] as const)('preserves %s alert selection across overlays and gives copies independent identities', mode => {
+  const source = fixture(); source.widgets = source.widgets.map(w => ({ ...w, kind: 'alert' }));
+  const ids = source.widgets.slice(0, 2).map(w => w.id);
+  source.alertSets = [{ id: crypto.randomUUID(), name: 'Owned tiers', selection: mode, widgetIds: [...ids].reverse() }];
+  const target = fixture();
+  const pasted = pasteSelection(target, copySelection(source, ids), structuredClone(source.alertSets));
+  expect(pasted.scene.alertSets).toHaveLength(1); const set = pasted.scene.alertSets![0];
+  expect(set.id).not.toBe(source.alertSets[0].id); expect(set.selection).toBe(mode); expect(set.widgetIds).toEqual([...pasted.ids].reverse());
+  expect(pasted.ids.every(id => !ids.includes(id))).toBe(true);
+  set.widgetIds.reverse(); expect(source.alertSets[0].widgetIds).toEqual([...ids].reverse());
+  expect(pasteSelection(target, copySelection(source, [ids[0]]), source.alertSets).scene.alertSets).toEqual([]);
+});
 it('keeps groups intact through movement, rotation, copying and independent ungrouping', () => {
   const original = fixture(), ids = original.widgets.slice(0, 2).map(w => w.id);
   const grouped = groupSelection(original, ids); expect(selection(grouped, [ids[0]])).toHaveLength(2);

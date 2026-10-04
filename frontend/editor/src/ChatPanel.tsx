@@ -1,3 +1,5 @@
+import { CombinedChat } from '../../overlay-runtime/src/CombinedChat';
+import { sampleEvent } from './DraftWidget';
 import { useEffect, useState } from 'react';
 import { platforms, type ChatSettings, type OverlayDefinition } from '../../overlay-runtime/src/chat';
 
@@ -49,6 +51,7 @@ export function ChatPanel() {
     {token && <button onClick={() => setToken('')}>Hide private links</button>}
     <button onClick={() => { void request<typeof tokens>('/api/overlays/combined-chat/tokens').then(setTokens).catch(() => setStatus('Unable to load viewing links.')); }}>Manage viewing links</button>
     {tokens.map(t => <p key={t.id}>Expires {new Date(t.expiresAt).toLocaleDateString()} · {t.revoked ? 'Revoked' : <button onClick={() => { void revoke(t.id); }}>Revoke viewing link</button>}</p>)}
+    <details><summary>Sample chat preview</summary><p>Sample data only. Changes are shown here before saving.</p><div className="chat-sample-preview"><CombinedChat id="combined-chat" feed={{ definition: overlay, events: [sampleEvent('chat.message')] }} /></div></details>
     <details><summary>Chat appearance and filters</summary>
       <fieldset><legend>Platforms</legend>{platforms.map(platform => <label key={platform}><input type="checkbox" checked={overlay.chat.platforms.includes(platform)} onChange={e => change('platforms', e.target.checked ? [...overlay.chat.platforms, platform] : overlay.chat.platforms.filter(p => p !== platform))} />{platform}</label>)}</fieldset>
       <fieldset><legend>Display</legend>{displayFields.map(key => <label key={key}><input type="checkbox" checked={overlay.chat[key]} onChange={e => change(key, e.target.checked)} />{labels[key]}</label>)}</fieldset>

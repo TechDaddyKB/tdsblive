@@ -68,6 +68,7 @@ public sealed partial record OverlayDefinition
     public bool CanvasEnabled { get; init; }
     public int RevisionLimit { get; init; } = 50;
     public OverlayWidget[] Widgets { get; init; } = [];
+    public AlertSet[] AlertSets { get; init; } = [];
     public static bool ValidId(string id) => IdPattern().IsMatch(id);
     [GeneratedRegex(@"^[a-z0-9][a-z0-9-]{0,63}\z", RegexOptions.NonBacktracking, 100)]
     private static partial Regex IdPattern();
@@ -80,6 +81,12 @@ public sealed partial record OverlayDefinition
             Widgets.Select(w => w.Id).Distinct(StringComparer.Ordinal).Count() != Widgets.Length)
             throw new ArgumentException("Invalid overlay canvas.");
         foreach (var widget in Widgets) widget.Validate();
+        if (AlertSets is null || AlertSets.Length > 100 || AlertSets.Any(s => s is null) || AlertSets.Select(s => s.Id).Distinct().Count() != AlertSets.Length)
+            throw new ArgumentException("Invalid alert sets.");
+        foreach (var set in AlertSets) set.Validate();
+        var members = AlertSets.SelectMany(s => s.WidgetIds).ToArray();
+        if (members.Distinct(StringComparer.Ordinal).Count() != members.Length || members.Any(id => !Widgets.Any(w => w.Id == id && w.Kind == "alert")))
+            throw new ArgumentException("Alert sets require distinct existing alert widgets.");
         var groups = Widgets.Where(w => w.Kind == "alert").GroupBy(w => w.Alert.Group);
         if (groups.Any(g => g.Select(w => (w.Alert.Concurrency, w.Alert.MaximumQueueLength, w.Alert.OverflowPolicy)).Distinct().Count() > 1))
             throw new ArgumentException("Alert widgets in a queue group must share concurrency, queue limit and overflow policy.");

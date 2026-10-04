@@ -39,7 +39,7 @@ export async function qualifyCompatibility(page, origin, writeHeaders) {
     assert.deepEqual(state['se:owned'], { count: 9 });
     const diagnostics = await (await fetch(`${origin}/api/diagnostics/export`)).json();
     assert.equal(diagnostics.includesUserData, false); assert.equal(diagnostics.includesLogs, false);
-    await page.goto(`${origin}/editor`);
+    await page.goto(`${origin}/editor#settings`);
     const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export sanitized diagnostics', exact: true }).click();
     assert.equal((await download).suggestedFilename(), 'TDSBLive-diagnostics.json');
     console.log('G13 rendered local compatibility passed: lifecycle, canonical chat, scoped store/reload, unsupported warning and aggregate diagnostic download');

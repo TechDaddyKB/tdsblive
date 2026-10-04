@@ -25,7 +25,7 @@ export async function qualifyAutomation(page, origin, writeHeaders) {
       'Content-Type': 'audio/wav', 'X-Asset-Filename': `G09-owned-${frequency}.wav` }, body: wave });
     assert.equal(response.status, 200); assets.push(await response.json());
   }
-  await page.goto(`${origin}/editor`);
+  await page.goto(`${origin}/editor#automation`);
   const panel = page.getByRole('region', { name: 'Automation rules', exact: true });
   await panel.getByRole('button', { name: 'New sound rule', exact: true }).click();
   await panel.getByLabel('Rule name', { exact: true }).fill(ruleName);

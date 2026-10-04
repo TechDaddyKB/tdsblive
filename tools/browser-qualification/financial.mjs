@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 export async function qualifyFinancial(page, origin) {
-  await page.goto(`${origin}/editor`);
+  await page.goto(`${origin}/editor#supporters`);
   const panel = page.getByRole('region', { name: 'Financial ledger' });
   await panel.getByText('All nominal values are unconfigured.', { exact: true }).waitFor();
   await panel.getByText('3 contributions; page starting at 1.', { exact: true }).waitFor();

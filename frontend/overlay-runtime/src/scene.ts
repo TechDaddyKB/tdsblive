@@ -1,6 +1,9 @@
 import { defaultCustom, type CustomSettings } from './custom';
 import { defaultSettings, type ChatSettings, type OverlayDefinition } from './chat';
+export interface AlertCondition { unit: string; operator: string; value: string | number; upperExclusive?: string | number | null; currency?: string | null; minorUnitDigits?: number | null }
+export interface AlertSet { id: string; name: string; widgetIds: string[]; selection: 'first' | 'all' }
 export interface AlertSettings {
+  condition?: AlertCondition | null; nativeType?: string | null; customTriggerKey?: string | null;
   eventTypes: string[]; platforms: string[]; template: string; group: string; priority: number; durationMs: number; cooldownMs: number;
   concurrency: number; maximumQueueLength: number; interruptible: boolean; interruptPolicy: 'never' | 'higher-priority';
   overflowPolicy: 'drop-oldest' | 'drop-newest'; animation: 'none' | 'fade' | 'slide'; mediaAssetId: string | null; soundAssetId: string | null;
@@ -22,7 +25,7 @@ export const defaultDonor: DonorSettings = {
   template: '{name} · {amount}', fontFamily: 'sans-serif', animation: 'fade', transitionMs: 300, crownAssetId: null, fontAssetId: null,
 };
 export const donorKinds: Widget['kind'][] = ['donor-crown', 'donor-leaderboard', 'latest-supporter', 'current-stream-leader', 'current-stream-total'];
-export interface Scene extends OverlayDefinition { canvasEnabled: boolean; revisionLimit: number; widgets: Widget[] }
+export interface Scene extends OverlayDefinition { canvasEnabled: boolean; revisionLimit: number; widgets: Widget[]; alertSets?: AlertSet[] }
 export const defaultAlert: AlertSettings = {
   eventTypes: ['community.follow'], platforms: ['twitch', 'youtube', 'kick', 'rumble'], template: '{user} · {type}', group: 'main-alerts', priority: 0,
   durationMs: 5000, cooldownMs: 0, concurrency: 1, maximumQueueLength: 50, interruptible: true, interruptPolicy: 'never',

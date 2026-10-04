@@ -11,6 +11,9 @@ export class AlertQueue {
   dropped = 0; interrupted = 0; completed = 0;
   enqueue(widget: Widget, event: ChatEvent, now: number): void {
     const a = widget.alert;
+    if (event.alertWidgetIds && !event.alertWidgetIds.includes(widget.id)) return;
+    // Enhanced rules require authoritative eligibility; older servers must fail closed.
+    if (!event.alertWidgetIds && (a.condition || a.nativeType || a.customTriggerKey)) return;
     if (widget.hidden || widget.kind !== 'alert' || !(a.eventTypes.includes('*') || a.eventTypes.includes(event.type)) || !a.platforms.includes(event.platform)) return;
     this.signatures.set(widget.id, JSON.stringify(widget));
     const key = `${widget.id}:${event.id}`;

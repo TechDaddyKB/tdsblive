@@ -1,3 +1,4 @@
+import { AmountField, NamedPicker, platformLabels } from './TriggerControls';
 import { defaultDonor, type DonorSettings, type Widget } from '../../overlay-runtime/src/scene';
 import type { EditorAsset } from './WidgetProperties';
 
@@ -14,12 +15,11 @@ export function DonorProperties({ widget, assets, change }: { widget: Widget; as
       <label>End date (exclusive)<input type="date" value={settings.customEndExclusive ?? ''} onChange={e => update({ customEndExclusive: e.target.value || null })} /></label>
     </>}
     <p>Periods use your financial timezone. Current stream requires a saved stream start.</p>
-    <label>Platforms<input aria-label="Donor platforms" value={settings.platforms.join(',')} onChange={e => update({ platforms: e.target.value.split(',').map(p => p.trim()).filter(Boolean) })} /></label>
-    <label>Support kinds<input aria-label="Donor support kinds" value={settings.eventTypes.join(',')} onChange={e => update({ eventTypes: e.target.value.split(',').map(p => p.trim()).filter(Boolean) })} /></label>
-    <p>Leave filters empty for all. Kinds: donation, bits, subscription, membership, gift, rant.</p>
-    <label>Minimum USD cents<input aria-label="Minimum USD cents" inputMode="numeric" value={settings.minimumUsdMinor} onChange={e => {
-      const value = e.target.value; if (/^\d+$/.test(value) && BigInt(value) <= 9223372036854775807n) update({ minimumUsdMinor: value });
-    }} /></label>
+    <NamedPicker label="Platforms" values={settings.platforms} options={platformLabels} change={platforms => update({ platforms })} />
+    <NamedPicker label="Support kinds" values={settings.eventTypes} options={{ donation: 'Donation / paid support', bits: 'Bits', subscription: 'Subscription', membership: 'Membership', gift: 'Gift subscription / membership', rant: 'Rumble Rant' }} change={eventTypes => update({ eventTypes })} />
+    <p>Empty selections include all supported platforms and support kinds.</p>
+    <AmountField label="Minimum supporter amount (USD)" value={settings.minimumUsdMinor} digits={2} change={minimumUsdMinor => update({ minimumUsdMinor })} />
+    <details><summary>Advanced supporter filters</summary><label>Donor platforms<input aria-label="Donor platforms" value={settings.platforms.join(',')} onChange={e => update({ platforms: e.target.value.split(',').map(p => p.trim()).filter(Boolean) })} /></label><label>Donor support kinds<input aria-label="Donor support kinds" value={settings.eventTypes.join(',')} onChange={e => update({ eventTypes: e.target.value.split(',').map(p => p.trim()).filter(Boolean) })} /></label><label>Minimum USD cents<input aria-label="Minimum USD cents" inputMode="numeric" value={settings.minimumUsdMinor} onChange={e => { if (/^\d{1,19}$/.test(e.target.value) && BigInt(e.target.value) <= 9223372036854775807n) update({ minimumUsdMinor: e.target.value }); }} /></label></details>
     {widget.kind === 'donor-leaderboard' && <label>Ranked supporters<input aria-label="Ranked supporters" type="number" min={1} max={25} value={settings.count} onChange={e => {
       const value = e.target.valueAsNumber; if (Number.isInteger(value) && value >= 1 && value <= 25) update({ count: value });
     }} /></label>}

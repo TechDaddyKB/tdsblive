@@ -24,6 +24,7 @@ public sealed record CanonicalEvent
     public required string Type { get; init; }
     public required string NativeType { get; init; }
     public string? NativeId { get; init; }
+    public string? AlertTriggerKey { get; init; }
     public EventUser? User { get; init; }
     public EventMessage? Message { get; init; }
     public EventMoney? Monetary { get; init; }
@@ -39,6 +40,7 @@ public sealed record CanonicalEvent
 
     public void Validate()
     {
+        if (AlertTriggerKey is not null && (string.IsNullOrWhiteSpace(AlertTriggerKey) || AlertTriggerKey.Length > 128)) throw new ArgumentException("Invalid alert trigger identity.");
         if (Id.Version != 7 || OccurredAt.Offset != TimeSpan.Zero || ReceivedAt.Offset != TimeSpan.Zero)
             throw new ArgumentException("Events require UUIDv7 identifiers and UTC timestamps.");
         if (new[] { Source, Platform, Type, NativeType, DedupeKey }.Any(string.IsNullOrWhiteSpace))

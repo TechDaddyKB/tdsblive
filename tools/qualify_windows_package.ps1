@@ -79,11 +79,15 @@ try {
     Test-Application $portable
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') portable
     if ($LASTEXITCODE -ne 0) { throw 'Portable EXE restart/restore qualification failed.' }
+    & node (Join-Path $PSScriptRoot 'browser-qualification/qualify.mjs') portable
+    if ($LASTEXITCODE -ne 0) { throw 'Portable EXE browser/parity/synthetic acceptance failed.' }
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
     if (Test-Path $startupShortcut) { throw 'Login startup must be disabled by default.' }
     Test-Application $installed
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') installed
     if ($LASTEXITCODE -ne 0) { throw 'Installed EXE restart/restore qualification failed.' }
+    & node (Join-Path $PSScriptRoot 'browser-qualification/qualify.mjs') installed
+    if ($LASTEXITCODE -ne 0) { throw 'Installed EXE browser/parity/synthetic acceptance failed.' }
     # A repeated install exercises replacement/upgrade mechanics without inventing a prior release.
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"startup`""
     if (-not (Test-Path $startupShortcut)) { throw 'Opt-in login startup shortcut was not installed.' }

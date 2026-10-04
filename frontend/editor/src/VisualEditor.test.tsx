@@ -23,7 +23,7 @@ function host() {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 it('repeats group transformations, preserves independent copies and saves/reloads advanced widget settings', async () => {
   const api = host(); render(<VisualEditor />); await screen.findByLabelText('Overlay canvas');
-  fireEvent.click(screen.getByText('Add text', { exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add widget' })); fireEvent.click(screen.getByRole('button', { name: 'Add text' }));
   fireEvent.change(screen.getByLabelText('X', { exact: true }), { target: { value: '500' } });
   const layers = () => screen.getAllByRole('listitem').map(li => li.querySelector('button')!);
   fireEvent.click(layers()[1], { shiftKey: true }); expect(screen.getByLabelText('Selected layers')).toHaveTextContent('2 selected');
@@ -41,7 +41,7 @@ it('repeats group transformations, preserves independent copies and saves/reload
   fireEvent.click(screen.getByText('Toggle selection lock', { exact: true }));
   fireEvent.click(screen.getByText('Toggle selection visibility', { exact: true })); expect(document.querySelectorAll('.canvas-widget')).toHaveLength(2);
   fireEvent.click(screen.getByText('Toggle selection visibility', { exact: true }));
-  for (const kind of ['event-list', 'goal-bar', 'progress-bar']) fireEvent.click(screen.getByText(`Add ${kind}`, { exact: true }));
+  for (const kind of ['event-list', 'goal-bar', 'progress-bar']) { fireEvent.click(screen.getByRole('button', { name: 'Add widget' })); fireEvent.click(screen.getByRole('button', { name: `Add ${kind}` })); }
   fireEvent.change(screen.getByLabelText('Current value'), { target: { value: '25' } });
   fireEvent.change(screen.getByLabelText('Target value'), { target: { value: '50' } });
   fireEvent.click(screen.getByText('Save now')); await waitFor(() => expect(api.get().widgets).toHaveLength(7));
@@ -81,8 +81,9 @@ it('preserves keyboard history and layers, saves geometry and switches to a newl
   fireEvent.click(screen.getByText('Redo', { exact: true })); expect(document.querySelectorAll('.canvas-widget')).toHaveLength(2);
   fireEvent.change(screen.getByLabelText('Canvas width', { exact: true }), { target: { value: '1080' } }); fireEvent.change(screen.getByLabelText('Canvas height', { exact: true }), { target: { value: '1920' } });
   fireEvent.click(screen.getByText('Save now')); await waitFor(() => expect(screen.getByLabelText('Editor save status')).toHaveTextContent('saved')); expect(api.get().width).toBe(1080);
+  fireEvent.click(screen.getByRole('button', { name: 'New overlay' }));
   fireEvent.change(screen.getByLabelText('Canvas preset'), { target: { value: 'custom' } }); fireEvent.change(screen.getByLabelText('Custom width'), { target: { value: '900' } }); fireEvent.change(screen.getByLabelText('Custom height'), { target: { value: '1600' } });
-  fireEvent.change(screen.getByLabelText('New overlay ID'), { target: { value: 'custom' } }); fireEvent.click(screen.getByText('Create overlay'));
+  fireEvent.change(screen.getByLabelText('New overlay ID'), { target: { value: 'custom' } }); fireEvent.click(screen.getByRole('button', { name: 'Create overlay' }));
   await waitFor(() => expect(api.get().id).toBe('custom')); expect(api.get().width).toBe(900); expect(api.get().widgets).toEqual([]);
 });
 it('retains conflicting local changes until explicit reload and prevents switching unsaved documents', async () => {
@@ -106,16 +107,16 @@ it('restores a revision as a new save, previews silently and sends native simula
 });
 it('adds every initial widget type, exposes test controls and reports invalid creation', async () => {
   const api = host(); render(<VisualEditor />); await screen.findByLabelText('Overlay canvas');
-  for (const name of ['Add image', 'Add video', 'Add audio', 'Add Combined Chat', 'Add AlertBox']) fireEvent.click(screen.getByText(name, { exact: true }));
+  for (const name of ['Add image', 'Add video', 'Add audio', 'Add Combined Chat', 'Add AlertBox']) { fireEvent.click(screen.getByRole('button', { name: 'Add widget' })); fireEvent.click(screen.getByRole('button', { name })); }
   expect(document.querySelectorAll('.canvas-widget')).toHaveLength(6); fireEvent.click(screen.getByText('Save now')); await waitFor(() => expect(api.get().widgets).toHaveLength(6));
-  fireEvent.change(screen.getByLabelText('New overlay ID'), { target: { value: '../invalid' } }); fireEvent.click(screen.getByText('Create overlay')); await screen.findByText(/Unable to create overlay/);
+  fireEvent.click(screen.getByRole('button', { name: 'New overlay' })); fireEvent.change(screen.getByLabelText('New overlay ID'), { target: { value: '../invalid' } }); fireEvent.click(screen.getByRole('button', { name: 'Create overlay' })); await screen.findByText(/Unable to create overlay/);
 });
 
 it('inherits group queue policies when adding or copying alert boxes after settings change', async () => {
   const api = host(); render(<VisualEditor />); await screen.findByLabelText('Overlay canvas');
-  fireEvent.click(screen.getByText('Add AlertBox', { exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add widget' })); fireEvent.click(screen.getByRole('button', { name: 'Add AlertBox' }));
   for (const [label, value] of [['Concurrency', '2'], ['Maximum queue length', '3'], ['Overflow policy', 'drop-newest']]) fireEvent.change(screen.getByLabelText(label, { exact: true }), { target: { value } });
-  fireEvent.click(screen.getByText('Add AlertBox', { exact: true })); fireEvent.click(screen.getByText('Duplicate', { exact: true })); fireEvent.click(screen.getByText('Save now'));
+  fireEvent.click(screen.getByRole('button', { name: 'Add widget' })); fireEvent.click(screen.getByRole('button', { name: 'Add AlertBox' })); fireEvent.click(screen.getByText('Duplicate', { exact: true })); fireEvent.click(screen.getByText('Save now'));
   await waitFor(() => expect(api.get().widgets.filter(w => w.kind === 'alert')).toHaveLength(3));
   for (const alert of api.get().widgets.filter(w => w.kind === 'alert')) expect(alert.alert).toMatchObject({ concurrency: 2, maximumQueueLength: 3, overflowPolicy: 'drop-newest' });
 });

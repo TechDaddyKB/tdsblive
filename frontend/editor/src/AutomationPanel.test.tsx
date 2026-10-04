@@ -78,7 +78,7 @@ it('keeps a new rule disabled and preserves native integer precision on save', a
   fireEvent.click(screen.getByLabelText('Require manual moderation'));
   fireEvent.change(screen.getByLabelText('Maximum characters'), { target: { value: '120' } });
   fireEvent.change(screen.getByLabelText('Blocked words (one per line)'), { target: { value: 'owned-block\nsecond-word' } });
-  fireEvent.change(screen.getByLabelText('Native amount in minor units'), { target: { value: '9223372036854775807' } });
+  fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '92233720368547758.07' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save automation rule' }));
   await waitFor(() => expect(mocks.save).toHaveBeenCalled());
   const saved = mocks.save.mock.calls[0][0];

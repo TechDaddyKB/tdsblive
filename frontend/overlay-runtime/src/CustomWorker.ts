@@ -9,6 +9,7 @@ const listeners = new Map<string, ((value: unknown) => void)[]>();
 const pending = new Map<number, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
 let sequence = 0; let config: unknown = {}; let session: unknown = {};
 let previous = ''; let initialized = false;
+self.addEventListener('unhandledrejection', event => { event.preventDefault(); postMessage({ op: 'error', error: 'Widget asynchronous operation failed' }); });
 const dispatch = (type: string, value: unknown) => {
   for (const handler of listeners.get(type) ?? []) { try { handler(value); } catch { postMessage({ op: 'error', error: 'Widget event handler failed' }); } }
   virtual.dispatchEvent(new virtual.CustomEvent(type, { detail: value }));
