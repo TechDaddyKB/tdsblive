@@ -43,11 +43,40 @@ Pinned Node 24.21.0/npm 11.19.0/.NET SDK 10.0.401; Linux host and isolated data.
 | Financial processes | `python tools/qualify_financial.py` | Passed crash/restart, precision, dedupe, reconciliation, conflicts and isolation |
 | Compatibility diagnostic utility | `python tools/qualify_compatibility.py` | Passed owned aggregate diagnostic output; not audio evidence |
 | Guide | `node tools/browser-qualification/guide-screenshots.mjs`; `python tools/build_offline_guide.py release/ui-redesign-offline-guide` | 20 chapters built; owned screenshots, scanned before inspection |
+| Offline browser audit | `node tools/browser-qualification/offline-guide.mjs release/ui-redesign-offline-guide` | Passed all 20 chapters, local navigation, loaded images and 390/1366px reflow with network disabled |
+| Recovery process | `node tools/browser-qualification/recovery-process.mjs` | Passed open-browser restart/restore, custom/compatibility state, groups, assets and safety-paused integrations |
+| Replay/tooling regression | `python -m unittest discover -s tests/replay -v` | 33 passed |
 | Sonar CLI quality | `sonar analyze --staged --force --format json` | Secrets passed; Vortex unavailable (403), all quality analysis skipped; not a quality-gate pass |
+| Local dependency analysis | `sonar analyze dependency-risks --format json` | Unavailable on current Sonar connection; not a dependency-security pass |
 
 Logs/reports remain ignored local artifacts. Source baseline timings and capability
 destinations are in [the parity checklist](ui-parity-checklist.md). Protected CI
 and server-side Sonar/CodeQL results are recorded separately below.
+
+| Goal | Acceptance evidence in this candidate | Remaining evidence |
+| --- | --- | --- |
+| G14 | Complete inventory/destinations/scenarios; owned baseline/current captures and timings | No audit blocker; inventory remains a release checklist |
+| G15 | AppWorkflow tests; hash/history, retained forms/conflicts, system/explicit themes and all ten pages in the real browser | Final packaged parity review |
+| G16 | Full advanced-editor assertions; continuous fit/manual resizing, geometry, keyboard/numeric alternatives and touch-style selection | Physical touch/native zoom in G20 |
+| G17 | Shared presentation previews; unsaved edits, custom memory/network isolation, saved-preview sandbox regression and actual OBS alert visuals | Exact-package representative visual/audio review |
+| G18 | Core/Host/shared vectors, guided controls, queue eligibility, first/all tiers, catalog/custom distinction and v1/v2 remapping | Final packaged scenario review |
+| G19 | Existing chat/finance/automation/custom/recovery assertions plus Media/Diagnostics tests and 320px destination checks | Final packaged parity review |
+| G20 | Both themes, seven viewports, focus/keyboard labels/reduced motion and drag alternatives | Participants, manual screen reader, physical input and native zoom |
+| G21 | Scoped commits, draft PR, owned illustrated guide, offline browser audit, prepared wiki diff | Protected exact-head packages/security, published wiki, audible OBS and G20 |
+
+## Protected delivery and documentation preparation
+
+[Draft PR #19](https://github.com/TechDaddyKB/tdsblive/pull/19) preserves the main
+branch protections. Initial head `f1a058e61b5313e9b0df55565c0ff424062e9d54` has
+passing C#, JavaScript/TypeScript and Python CodeQL checks in
+[run 37195659004](https://github.com/TechDaddyKB/tdsblive/actions/runs/37195659004).
+[Windows run 37195660338](https://github.com/TechDaddyKB/tdsblive/actions/runs/37195660338)
+was still in progress when recorded; newer heads require their own results.
+
+`tools/sync_user_guide.py` validated and prepared a separate wiki checkout at
+`/tmp/tdsblive-ui-wiki`: 20 chapters, 11 owned illustrations, candidate guide and
+navigation. The diff has not been published; stable released instructions must
+not be silently replaced by a candidate while usability/package gates are open.
 
 ## Browser and visual evidence
 
@@ -88,8 +117,9 @@ package, audible output or paid-platform evidence.
 - [ ] Audible output and silent-by-default checks in actual OBS with owned media.
 - [ ] Protected Windows build/test/installer/portable/restart checks on exact head,
   Sonar quality gate and required security checks; no bypasses permitted.
-- [ ] Network-disabled offline-guide browser audit, current wiki publication and
-  live navigation/rendering verification.
+- [x] Network-disabled offline-guide browser audit on the candidate source build.
+- [ ] Exact-packaged offline guide, current wiki publication and live
+  navigation/rendering verification.
 - [ ] Final release parity review against every inventory row and any failures
   observed in usability sessions; revised flow must be retested before G20 closes.
 
