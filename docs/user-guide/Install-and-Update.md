@@ -10,7 +10,7 @@ Choose the instructions that match the computer where TDSBLive will run. You can
 
 Wine and Proton run the Windows application. There is no native Linux release implied by these instructions. If you already have a working Wine installation, you do not need to switch runners just because another option exists.
 
-Read [Before you begin](Before-You-Begin.md) to distinguish the published MVP from newer development builds.
+Read [Before you begin](Before-You-Begin.md) to choose the instructions for your installed version.
 
 ## Update without losing your working copy
 

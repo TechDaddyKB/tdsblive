@@ -24,14 +24,14 @@ Follow these steps in order. You can leave the optional features until your basi
 - [Set up speech and sound](Automation.md), then test rules before enabling them.
 - [Make a backup or restore one](Backup-and-Recovery.md).
 - [Use another computer on your home network](LAN-Access.md), if you need to.
-- [Use the adaptive workspace and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) in the redesign candidate.
+- [Use the adaptive workspace and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) in TDSBLive 1.0.
 - [Arrange more complex overlays](Advanced-Editor-and-Widgets.md).
 - [Use custom widgets and share packages](Custom-Widgets-and-Portable-Packages.md).
 - [Try the limited local StreamElements compatibility option](Local-StreamElements-Compatibility.md).
 
 ## Read without the internet
 
-The Windows application download includes a `guide` folder. Open `guide/Home.html` in your browser. Those pages and their pictures work without the internet. Links to downloads and other projects still require an internet connection. Keep the guide folder and its images together. The bundled guide belongs to the build you downloaded; the current wiki may include newer instructions. This reorganization will be included in future packages and does not replace the files inside the already published MVP download.
+The Windows application download includes a `guide` folder. Open `guide/Home.html` in your browser. Those pages and their pictures work without the internet. Links to downloads and other projects still require an internet connection. Keep the guide folder and its images together. The bundled guide belongs to the build you downloaded; the current wiki may include newer instructions. Use the bundled guide for your installed version; older downloads retain their original documentation.
 
 Screenshots in this guide show owned examples. Names, ports and example settings are illustrations; use the values in your own applications. Some pictures show an earlier interface, so use the accompanying instructions if your screen differs slightly.
 

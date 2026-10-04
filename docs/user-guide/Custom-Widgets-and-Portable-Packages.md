@@ -1,6 +1,6 @@
 # Custom widgets and portable packages
 
-**Version requirement:** these features require newer G12/G13 builds. They are newer than the published v0.1.0 MVP. See [Before you begin](Before-You-Begin.md).
+**Version requirement:** TDSBLive 1.0 or newer. These features are absent from the earlier v0.1.0 MVP. See [Before you begin](Before-You-Begin.md).
 
 A custom widget uses HTML for its content, CSS for appearance, JavaScript for behavior and JSON for settings. If you do not write code, you can still import a trusted package and use its exposed settings. You do not need a custom widget to display ordinary chat or basic alerts.
 
