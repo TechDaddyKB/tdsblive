@@ -97,6 +97,18 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G11](#g11) | Complete advanced editor and built-in widgets | G10 | Complete |
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Complete |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Complete |
+| [G14](ui-redesign-plan.md#g14--audit-functionality-and-establish-the-baseline) | Audit UI functionality and baseline | G13 | In progress |
+| [G15](ui-redesign-plan.md#g15--design-system-and-application-navigation) | Build UI design system and navigation | G14 | Not started |
+| [G16](ui-redesign-plan.md#g16--adaptive-editor-workspace) | Build adaptive editor workspace | G15 | Not started |
+| [G17](ui-redesign-plan.md#g17--accurate-and-safe-wysiwyg-previews) | Build accurate safe WYSIWYG previews | G16 | Not started |
+| [G18](ui-redesign-plan.md#g18--guided-triggers-and-conditional-alert-designs) | Build guided triggers and alert designs | G14, G15 | Not started |
+| [G19](ui-redesign-plan.md#g19--remaining-application-workflows) | Redesign remaining workflows | G15, G18 | Not started |
+| [G20](ui-redesign-plan.md#g20--accessibility-usability-and-compatibility) | Qualify UI accessibility, usability and compatibility | G16–G19 | Not started |
+| [G21](ui-redesign-plan.md#g21--document-and-deliver) | Document and deliver UI redesign | G20 | Not started |
+
+The approved [UI redesign plan](ui-redesign-plan.md) defines UI-R01–UI-R10,
+G14–G21, compatibility contracts and the parity/acceptance gates. These extension
+goals do not revise the historical G00–G13 acceptance records or their scope.
 
 <a id="g00"></a>
 
