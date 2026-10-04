@@ -1,6 +1,6 @@
 # Overlays and alerts
 
-> The redesign candidate adds named trigger choices, adaptive panels and conditional designs. See [Adaptive editor and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) for its workflow. Older installed builds keep their existing controls.
+> TDSBLive 1.0 adds named trigger choices, adaptive panels and conditional designs. Start with [Adaptive editor and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) for that workflow. Older installed builds keep their existing controls.
 
 An overlay is a web page OBS places over your video. A widget is one item on that page, such as text, an image, chat or an alert box. Start with one small layout and test it before adding complexity.
 
@@ -54,6 +54,6 @@ If the browser preview works but OBS does not, first check the copied address, s
 
 ## When you want more control
 
-The published MVP provides basic overlay work. Newer builds add [advanced arrangement controls](Advanced-Editor-and-Widgets.md), [custom widgets and portable packages](Custom-Widgets-and-Portable-Packages.md), and [limited local compatibility](Local-StreamElements-Compatibility.md). Each advanced page explains its version requirement.
+TDSBLive 1.0 includes [advanced arrangement controls](Advanced-Editor-and-Widgets.md), [custom widgets and portable packages](Custom-Widgets-and-Portable-Packages.md), and [limited local compatibility](Local-StreamElements-Compatibility.md). The earlier v0.1.0 MVP provides basic overlay work.
 
 Next: [Everyday use](Everyday-Use.md), or make a [backup](Backup-and-Recovery.md) of your working layout.

@@ -26,6 +26,10 @@ function Invoke-Installer([string]$Executable, [string]$Arguments) {
 function Test-Application([string]$Directory) {
     & sonar analyze secrets $Directory
     if ($LASTEXITCODE -ne 0) { throw 'Package secrets scan failed; contents were not inspected.' }
+    $productVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $Directory 'TDSBLive.dll')).ProductVersion
+    if (-not $productVersion -or $productVersion.Split('+')[0] -ne $Version) {
+        throw 'Packaged application version does not match the requested release version.'
+    }
     $runtime = Get-Content (Join-Path $Directory 'TDSBLive.runtimeconfig.json') -Raw | ConvertFrom-Json
     if ($runtime.runtimeOptions.framework -or $runtime.runtimeOptions.frameworks) { throw 'Package requires a separately installed runtime.' }
     foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe', 'guide/Home.html', 'guide/images/guided-setup.png', 'integrations/tdsblive-streamerbot.sb')) {

@@ -1,6 +1,6 @@
 # Adaptive editor and guided alerts
 
-These instructions apply to the adaptive interface shown below. Older builds
+These instructions apply to the TDSBLive 1.0 adaptive interface shown below. Older builds
 show settings together on one page. Your saved overlay addresses continue to work.
 
 ## Find your task

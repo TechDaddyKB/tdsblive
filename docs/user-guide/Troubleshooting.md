@@ -64,7 +64,7 @@ A USD threshold in minor units uses cents: 500 means $5.00. Bits use their event
 
 ## An advanced button is missing
 
-Check your version first. The published v0.1.0 MVP predates the newer advanced editor, custom-widget packages and local compatibility work. See [Before you begin](Before-You-Begin.md). A missing newer control is not a reason to erase your current setup.
+Check your version first. The earlier v0.1.0 MVP predates the TDSBLive 1.0 adaptive editor, custom-widget packages and local compatibility features. See [Before you begin](Before-You-Begin.md). A missing newer control is not a reason to erase your current setup.
 
 ## A custom widget is blank or stops
 

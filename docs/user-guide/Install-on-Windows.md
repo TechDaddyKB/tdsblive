@@ -6,11 +6,11 @@ By the end of this page, TDSBLive should be running and its editor should be ope
 
 Open [the official releases page](https://github.com/TechDaddyKB/tdsblive/releases). Choose the release you want, expand **Assets** if necessary, and download the Windows installer or the Windows application ZIP.
 
-For the current v0.1.0 release, the installer is `TDSBLive-0.1.0-win-x64-setup.exe` and the application ZIP is `TDSBLive-0.1.0-win-x64.zip`. Future releases will use their own version numbers.
+The installer is named `TDSBLive-<version>-win-x64-setup.exe`; the application ZIP is `TDSBLive-<version>-win-x64.zip`. Choose the version you intend to install.
 
 Do not choose the links named **Source code** for an ordinary installation. Source code is for building the application yourself. The application package includes the runtime needed to launch TDSBLive.
 
-Check the release's version and notes. The published v0.1.0 MVP does not contain all the newer advanced features described in this wiki. [Before you begin](Before-You-Begin.md) explains this distinction.
+Check the release's version and notes. These instructions cover TDSBLive 1.0; older versions can have different controls. [Before you begin](Before-You-Begin.md) explains the feature differences.
 
 ## 2A. Install using the installer
 

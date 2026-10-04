@@ -16,13 +16,13 @@ You can think of the arrangement as a short journey: your connected service rece
 
 ## Pick the right version before following feature instructions
 
-The published release is currently **v0.1.0 MVP**. Download it from [GitHub Releases](https://github.com/TechDaddyKB/tdsblive/releases). It is the starting point for a normal installation, and has chat, basic overlays, totals, automation and recovery features.
+Download the version you want from [GitHub Releases](https://github.com/TechDaddyKB/tdsblive/releases). Choose the application installer or ZIP, and read that version's release notes.
 
-The repository also contains newer completed work, identified as G11, G12 and G13. That work adds the advanced editor, custom widgets and portable packages, and limited local StreamElements compatibility. These additions are newer than the published MVP. They have not been issued as a new public release yet.
+**TDSBLive 1.0** includes the adaptive workspace, guided triggers and conditional alert designs, advanced arrangement controls, custom widgets and portable packages, and limited local StreamElements compatibility. These chapters describe that interface. The earlier **v0.1.0 MVP** has basic chat, overlays, totals, automation and recovery; it predates those additions.
 
-**A feature described here may require a newer build.** The advanced chapters say so at the top. If the button they describe is missing from the MVP, that does not mean you installed it incorrectly.
+The guide bundled with your download belongs to that build. The online wiki can contain newer instructions. If a control is missing, check your version before changing your saved setup.
 
-For a newer build, use only an artifact from this project's [GitHub Actions](https://github.com/TechDaddyKB/tdsblive/actions) attached to a successful, reviewed run for the source revision you intend to use. Downloading artifacts may require a GitHub account. A green build is a useful check, but a development artifact is not a newly published release. Keep your working version and backup while trying another build. Do not select a download from an unrelated fork or a failed run.
+Build artifacts from this project's [GitHub Actions](https://github.com/TechDaddyKB/tdsblive/actions) are separate from published releases. Use only a successful, reviewed run for the intended source revision, keep a backup and do not use downloads from unrelated forks or failed runs.
 
 ## Prepare a place for the application and a place for backups
 

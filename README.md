@@ -1,31 +1,121 @@
 # TDSBLive
 
-[![Windows CI](https://github.com/techdaddykb/tdsblive/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/techdaddykb/tdsblive/actions/workflows/windows-ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/TechDaddyKB/tdsblive)](https://github.com/TechDaddyKB/tdsblive/releases/latest)
+[![Windows CI](https://github.com/TechDaddyKB/tdsblive/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/TechDaddyKB/tdsblive/actions/workflows/windows-ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A local-first Streamer.bot companion for Rumble events, combined chat, visual
-overlays, supporter tracking and automation. MIT licensed.
+**Your chat, overlays, alerts and supporter tools—running on your own computer.**
 
-**Local HTTP is supported. HTTPS and certificates are not required.** The host
-defaults to `http://127.0.0.1:17474`. Optional authenticated LAN operation is a
-foundation capability; it is disabled by default and requires Windows DPAPI admin setup.
+TDSBLive is a local-first companion for Streamer.bot, Speaker.bot and OBS Studio.
+Bring incoming events together, create graphics for your stream, track supporters
+and configure speech, sounds and actions from a browser-based editor.
 
-Goals G00–G09 are delivered: Streamer.bot/Speaker.bot connections, reliable Rumble
-ingestion, combined chat, visual editing and alerts, supporter accounting, donor
-widgets and automation. G10 is preparing the Windows ZIP/installer, first-run
-setup, recovery and illustrated documentation. **A completed MVP release has not
-yet been qualified.** Current evidence and limitations are recorded in the
-[implementation plan](docs/implementation-plan.md). VTube Studio work is on hold;
-use Streamer.bot's built-in integration.
+**[Download TDSBLive](https://github.com/TechDaddyKB/tdsblive/releases/latest)** ·
+**[Read the user guide](https://github.com/TechDaddyKB/tdsblive/wiki)** ·
+**[Get help](https://github.com/TechDaddyKB/tdsblive/issues)**
 
-## User guide
+## Download and install
 
-The plain-language [repository guide](docs/user-guide/Home.md) and
-[GitHub wiki](https://github.com/TechDaddyKB/tdsblive/wiki) are being completed with
-G10. Start with [Chat and OBS](docs/user-guide/Chat-and-OBS.md) if you already have
-the app running. The developer commands below are not the intended release
-installation path.
+Official releases provide self-contained **Windows x64** builds. You do not need
+to install .NET separately or build the source code to use them.
+
+| Download | Best for |
+| --- | --- |
+| **Windows installer** — `TDSBLive-<version>-win-x64-setup.exe` | A guided, per-user installation with an application shortcut. |
+| **Application ZIP** — `TDSBLive-<version>-win-x64.zip` | Managing the application folder yourself. Extract the entire ZIP, then run `TDSBLive.exe`. |
+| **`SHA256SUMS.txt`** | Checking that your downloaded files match the release's published checksums. |
+
+Get these files from the [latest release](https://github.com/TechDaddyKB/tdsblive/releases/latest).
+The **Source code** archives are for developers, rather than ordinary installation.
+Each application download includes an offline user guide and the supplied
+Streamer.bot import. Start-at-login is optional and off by default.
+
+See [Windows installation](docs/user-guide/Install-on-Windows.md) for full instructions.
+For Linux compatibility setups, see the [Wine/Bottles guide](docs/user-guide/Install-on-Linux-Wine.md)
+or [Proton/UMU guide](docs/user-guide/Install-on-Linux-Proton.md). These use the
+Windows application; there is no native Linux release.
+
+## Your first stream with TDSBLive
+
+1. Install or extract the application and start **TDSBLive**.
+2. Open **[http://127.0.0.1:17474/editor](http://127.0.0.1:17474/editor)** in your browser.
+3. Follow guided setup and connect only the services you use. Streamer.bot handles
+   its supported platform connections and actions; Speaker.bot is optional for speech.
+4. Configure combined chat or an overlay, then test it with sample events.
+5. Copy its viewing URL into an **OBS Browser Source**. Use the streamer chat page
+   as a browser dock if you want a separate chat view for yourself.
+
+Keep TDSBLive running while using its pages in OBS. Closing the editor tab does
+not quit the application. Local HTTP works without HTTPS certificates.
+
+Start with [First setup](docs/user-guide/First-Setup.md), then
+[Chat and OBS](docs/user-guide/Chat-and-OBS.md) or
+[Overlays and alerts](docs/user-guide/Overlays-and-Alerts.md).
+
+## What you can do
+
+- **Bring chat together:** display combined chat in OBS and use a separate streamer
+  view, with platform indicators, supported badges and emotes.
+- **Create overlays and alerts:** arrange text, images, chat and supporter widgets;
+  customize alert wording, media, timing and playback queues.
+- **Choose different alert designs:** TDSBLive 1.0 provides named triggers,
+  donation/quantity conditions and ordered first/all matching alert sets.
+- **Customize and share designs:** TDSBLive 1.0 adds advanced arrangement,
+  sandboxed custom widgets and portable overlay/widget packages.
+- **Connect Rumble events:** use the Rumble live API with persistent repeat-event
+  protection and connection diagnostics.
+- **Understand your support:** review contributions, linked supporter identities,
+  leaderboards and stream totals, with reported, estimated and unknown values distinguished.
+- **Automate your responses:** configure speech, overlay sounds and selected
+  Streamer.bot actions, with simulations and execution history.
+- **Protect your setup:** recover overlay revisions, export configuration and
+  create or restore application backups.
+
+The repository and wiki can include features newer than the latest packaged
+release, including advanced editing, custom widgets, portable overlay packages
+and guided conditional alert designs. **Release notes and the bundled guide
+describe the version you downloaded.** See [version and feature guidance](docs/user-guide/Before-You-Begin.md)
+before following instructions for a newer feature.
+
+## Guides and updates
+
+The [GitHub wiki](https://github.com/TechDaddyKB/tdsblive/wiki) and
+[repository user guide](docs/user-guide/Home.md) provide illustrated instructions
+for setup, chat, overlays, automation, supporter totals and recovery.
+For offline reading, open **`guide/Home.html`** in your installed or extracted
+application folder; keep the guide's images beside its pages.
+
+Before updating, make an application backup and quit TDSBLive. Run the new
+installer, or extract the new ZIP into a separate folder. Check your connections
+and OBS sources before your next broadcast. Your application data normally lives
+under **`%LOCALAPPDATA%\TDSBLive`** on Windows, separately from the program files.
+
+- [Install, update or remove](docs/user-guide/Install-and-Update.md)
+- [Backup and recovery](docs/user-guide/Backup-and-Recovery.md)
+- [Release history and version-specific notes](https://github.com/TechDaddyKB/tdsblive/releases)
+
+## Help and privacy
+
+Start with [Troubleshooting](docs/user-guide/Troubleshooting.md). If you need to
+[report a problem](https://github.com/TechDaddyKB/tdsblive/issues), include your
+TDSBLive version, operating system, installation method, what you expected and
+the steps that reproduce the issue.
+
+Keep credentials, private Rumble API URLs, access tokens and backups out of
+public issues and screenshots. Optional authenticated LAN access is disabled
+by default; follow the [LAN guide](docs/user-guide/LAN-Access.md) before enabling it.
+HTTP does not encrypt network traffic.
 
 ## Development
+
+Contributions are welcome. See [Contributing](CONTRIBUTING.md),
+[Development](docs/development.md), [Architecture](docs/architecture.md) and
+[Testing](docs/testing.md). Technical requirements and acceptance evidence are
+maintained in the [implementation plan](docs/implementation-plan.md) and
+[requirements matrix](docs/requirements-matrix.md).
+
+<details>
+<summary>Build and test from source</summary>
 
 Use the exact SDK in `global.json`, Node in `.nvmrc`, npm in `package.json`, and
 Python 3.14.7. The SonarQube CLI 1.9.0 is required by evidence tooling's mandatory
@@ -41,35 +131,21 @@ dotnet build TDSBLive.slnx --configuration Release --no-restore
 dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 npm run lint
 npm run typecheck
-npm run build
 npm run test:coverage
 python tools/rumble_evidence.py verify
 python -m unittest discover -s tests/replay -v
 python tools/verify_coverage.py
 ```
 
-Run the foundation host with `dotnet run --project src/ExtensionSuite.Host` and open
-`http://127.0.0.1:17474/editor`. Build assets before the host so they are copied to
-its output. Use `npm run dev --workspace @tdsblive/editor` for frontend development.
-See [foundation API](docs/foundation-api.md) for bootstrap configuration, DPAPI
-credential setup, authenticated LAN and generated contracts.
+Run the host with `dotnet run --project src/ExtensionSuite.Host` and open
+`http://127.0.0.1:17474/editor`. Build frontend assets before the host so they are
+copied to its output. Use `npm run dev --workspace @tdsblive/editor` for frontend
+development. See the [foundation API guide](docs/foundation-api.md) for bootstrap
+configuration, DPAPI credentials, authenticated LAN and generated contracts, and
+the [security guide](docs/security.md) for permission and isolation boundaries.
 
-## Requirements and quality
+</details>
 
-- [Reviewed specification](SPEC.md) and [referenceable goals](docs/implementation-plan.md).
-- [Rumble evidence analysis](docs/rumble-analysis.md), including unknown schemas,
-  snapshot limits and sanitization boundaries.
-- [Architecture](docs/architecture.md), [security](docs/security.md),
-  [development](docs/development.md), [testing](docs/testing.md) and
-  [contributing](CONTRIBUTING.md).
-- [Installation](docs/installation.md), [Rumble](docs/rumble.md),
-  [events](docs/events.md), [overlays](docs/overlays.md), [widgets](docs/widgets.md),
-  [automation](docs/automation.md) and [database/recovery](docs/database.md).
-- [SonarQube Cloud project](https://sonarcloud.io/summary/new_code?id=camarokris_tdsblive).
-- [Local compatibility and developer utilities](docs/g13-compatibility.md), and
-  [all numbered requirements with evidence limits](docs/requirements-matrix.md).
+## License
 
-Original archives, credentials, private captures, user data, generated reports
-and build output are not committed. Public fixtures retain specified date/amount
-metadata but replace direct private strings; they are not a claim of complete
-anonymization. Subscriber/gift behavior remains unverified against live captures.
+TDSBLive is free and open source under the [MIT License](LICENSE).
