@@ -16,7 +16,7 @@ If you already use a launcher with UMU integration, follow that launcher's curre
 
 Open the [UMU launcher project](https://github.com/Open-Wine-Components/umu-launcher) and follow its current installation instructions for your distribution. Use a supported package or the upstream method it documents. Package availability varies, so this guide does not give one installation command for every Linux distribution.
 
-After installation, open a terminal and check:
+After installation, open your application menu and look for **Terminal**. This is a window where you type a command and press Enter. Paste the line below, using Ctrl+Shift+V if your terminal uses that shortcut, then press Enter:
 
 ```bash
 umu-run --help
@@ -37,6 +37,8 @@ A prefix is the runner's Windows-style folder for settings and saved data. This 
 ```bash
 WINEPREFIX="$HOME/.local/share/tdsblive-proton" PROTONPATH=GE-Proton umu-run "$HOME/Applications/TDSBLive/TDSBLive.exe"
 ```
+
+`$HOME` means your home folder, and the quotation marks keep a path with spaces together. Adjust the EXE path if you extracted the files elsewhere. The `WINEPREFIX` portion selects the environment; it is not a second application you must download.
 
 UMU's documented `PROTONPATH=GE-Proton` option obtains a GE-Proton runner. The first run may download both a runner and the runtime, so allow time and an internet connection. Read any errors before repeatedly launching extra copies.
 

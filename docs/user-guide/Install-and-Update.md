@@ -19,7 +19,7 @@ An update replaces program files. Your settings and saved overlays are applicati
 1. Open TDSBLive's **Backup and recovery** page and download a backup ZIP.
 2. Put that ZIP somewhere you can find again. Use a name that includes the date and the version you are leaving.
 3. Stop using the pages in OBS while updating. You do not need to delete the sources.
-4. Use the application's **Quit** control. Closing the editor tab is not the same as quitting the application.
+4. Use the application's **Quit TDSBLive** control. Closing the editor tab is not the same as quitting the application.
 5. For an installer installation, run the new official installer. For a ZIP installation, extract the new version into a new folder; keep the old program folder until the new copy works.
 6. On Linux, start the new copy with the **same Wine or Proton prefix** as before. A different prefix can look like a brand-new installation with no settings.
 7. Open the editor and check your saved overlays, connections and a test message.

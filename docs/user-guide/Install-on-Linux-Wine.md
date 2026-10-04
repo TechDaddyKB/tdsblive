@@ -25,7 +25,7 @@ The example below assumes the EXE is at `~/Applications/TDSBLive/TDSBLive.exe`. 
 
 A **prefix** is Wine's own Windows-style folder. It contains a pretend C: drive, settings and application data. Giving TDSBLive a separate prefix helps you keep its data apart from other Windows programs.
 
-Open a terminal and run:
+Open your application menu and look for **Terminal**. A terminal is a window where you type an instruction and press Enter. Copy the entire line below, paste it into that window, and press Enter. Many Linux terminals use Ctrl+Shift+V to paste.
 
 ```bash
 WINEPREFIX="$HOME/.local/share/tdsblive-wine" wine "$HOME/Applications/TDSBLive/TDSBLive.exe"
@@ -35,7 +35,7 @@ This command tells Wine which environment to use and which program to open. `$HO
 
 Use this **same prefix path** each time you launch or update the app. If you start it without `WINEPREFIX`, Wine may use its default environment instead, making your saved settings appear to be missing.
 
-Leave the terminal open while you are checking the application. Use TDSBLive's **Quit** control when finished. If you later make a launcher shortcut, have it run this same command rather than changing the prefix.
+Leave the terminal open while you are checking the application. Use TDSBLive's **Quit TDSBLive** control when finished. If you later make a launcher shortcut, have it run this same command rather than changing the prefix.
 
 TDSBLive's application package includes its .NET runtime. Do not install `dotnet48` just because this is a Windows application. That dependency belongs to other applications' instructions, such as Streamer.bot's Wine setup.
 

@@ -58,7 +58,7 @@ These files are documentation, not the live editor. Opening `Home.html` does not
 
 ## 5. Stop and start it intentionally
 
-Closing your browser closes your view of the editor; it does not stop TDSBLive. Use the application's **Quit** control in **Backup and recovery** when you want to stop it. Start it again using your shortcut or EXE.
+Closing your browser closes your view of the editor; it does not stop TDSBLive. Use the application's **Quit TDSBLive** control in **Backup and recovery** when you want to stop it. Start it again using your shortcut or EXE.
 
 Do not enable start-at-login until you have checked that one normal launch works. If you use a shortcut for a ZIP installation, keep the target pointing at the full extracted folder's EXE.
 

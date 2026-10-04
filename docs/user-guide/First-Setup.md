@@ -4,7 +4,7 @@ By the end of this page, the editor should show the connections you use, and you
 
 ## 1. Start the application and open guided setup
 
-Start one copy of TDSBLive. Open [the local editor](http://127.0.0.1:17474/editor). Follow the guided setup steps in order. The guide remembers your progress, but a completed step is not proof that a disconnected service is working today.
+Start one copy of TDSBLive. Open [the local editor](http://127.0.0.1:17474/editor). Choose **Open guided setup** if it is closed, then use **Next setup step** to work through it in order. The guide remembers your progress, but a completed step is not proof that a disconnected service is working today.
 
 ![Guided setup with example settings](images/guided-setup.png)
 
@@ -22,12 +22,12 @@ A server is a program waiting for a connection. Starting Streamer.bot alone is n
 
 ## 3. Enter the matching connection in TDSBLive
 
-1. In TDSBLive's connection settings, choose the Streamer.bot connection.
-2. For a bot on the same computer, use the local address. Match the server's port exactly.
+1. In guided setup, go to the bot connections step.
+2. Enter `127.0.0.1` in **Streamer.bot host** for a bot on the same computer, and enter its actual server port in **Streamer.bot port**. The host field takes an address, not a whole `ws://` URL.
 3. If the bot requires authentication, enter the corresponding password or secret.
 4. Choose session-only storage while you are learning. It means the secret is kept for this run and must be entered again after restarting.
-5. Save the settings. If the page requests a restart, restart TDSBLive and enter session-only secrets again.
-6. Use the connection test and read its result.
+5. Choose **Save Streamer.bot connection**. Use **Restart TDSBLive** under **Backup and recovery**, then reopen guided setup and enter session-only secrets again if needed.
+6. Choose **Test Streamer.bot connection** and read its result.
 
 Tests use the active saved connection. Typing a new value without saving it does not test that value. A successful connection test establishes that the service can be reached; it does not prove all accounts, events or actions are configured.
 
@@ -37,7 +37,7 @@ If a test fails, check that the bot server is started, the ports match, and both
 
 Start Speaker.bot and follow [its official installation and setup](https://speaker.bot/get-started/installation). Set up a voice that works there before asking TDSBLive to use it.
 
-Enable its WebSocket server. A common port is `7680`; use the actual port shown in your installation. Enter that connection in TDSBLive, save it, restart when requested and run the connection test.
+Enable its WebSocket server. A common port is `7680`; use the actual port shown in your installation. In guided setup, enter **Speaker.bot host** and **Speaker.bot port**, choose **Save Speaker.bot connection**, restart when requested, then choose **Test Speaker.bot connection**.
 
 A working Speaker.bot connection does not guarantee a particular voice alias exists. Copy the alias from your own Speaker.bot configuration when setting up [Automation](Automation.md). If you are only setting up chat today, leave speech for later.
 

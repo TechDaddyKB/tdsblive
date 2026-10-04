@@ -13,7 +13,7 @@ A **connection-settings export** is another separate item. It is not a full appl
 ## 1. Download a backup
 
 1. Open the editor's **Backup and recovery** page.
-2. Choose the backup download control.
+2. Choose **Download backup**.
 3. Save the ZIP in a backup folder outside the running program folder.
 4. Rename your saved copy with a useful date and description, without changing its `.zip` extension.
 5. Keep an additional copy on another drive if you want protection against drive failure.
@@ -29,10 +29,10 @@ Backups can contain private chat or supporter information. Keep them private. Th
 A restore changes your current setup. First download a fresh backup of the current state, even if you intend to replace it.
 
 1. Choose the backup file in **Backup and recovery**.
-2. Use **Validate** and read the result.
+2. Use **Check backup** and read the result.
 3. Review the preview: check that it is the backup you intended and that it is compatible with this version.
 4. Resolve any validation problem before continuing. Do not edit a ZIP to force a rejected restore.
-5. Confirm the restore only after reviewing its effect.
+5. Select **I want to replace my current saved data with this backup**, then choose **Restore checked backup** only after reviewing its effect.
 
 A backup from a newer application may not work with an older one. Keep the original program version and its backup when updating.
 
@@ -50,6 +50,6 @@ A full environment copy can contain credentials and other private data, so treat
 
 ## Restart and quit controls
 
-Use the application's own local **Restart** or **Quit** controls when needed. Closing a browser window only closes your view of the app. Remote LAN access deliberately does not expose every local recovery or process-control operation.
+Use the application's own local **Restart TDSBLive** or **Quit TDSBLive** controls when needed. Closing a browser window only closes your view of the app. Remote LAN access deliberately does not expose every local recovery or process-control operation.
 
 Next: [Everyday use](Everyday-Use.md), or [Troubleshooting](Troubleshooting.md).
