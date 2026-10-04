@@ -1,4 +1,4 @@
-# UI redesign candidate qualification
+# UI redesign qualification and delivery
 
 ## Current synthetic acceptance revision — 2026-10-04
 
@@ -70,15 +70,14 @@ pass locally (7/7). The configuration-write failure is not yet attributed to a
 root cause or declared fixed; the protected full rerun must pass. No production
 persistence behavior or quality threshold was changed for this test repair.
 
-Current completion gates: full updated browser suite, protected current-source
-Windows portable/installed evidence and Sonar/CodeQL, final inventory review,
-current OBS visual/routing verification, wiki publication/rendering and final
-protected delivery. These remain pending until their actual results are recorded.
+At this earlier checkpoint, protected portable/installed checks and publication
+were pending. The final delivery checkpoint below records their actual results.
 
 Native zoom approach follows the primary [Playwright extension documentation](https://playwright.dev/docs/chrome-extensions)
 and [Chrome tabs zoom API](https://developer.chrome.com/docs/extensions/reference/api/tabs).
 
-2026-10-04. This record concerns the G14–G21 candidate, not a completed release.
+2026-10-04. Historical G14–G21 candidate checkpoints follow; final scoped PR
+delivery is recorded below. No merge or tagged release is claimed.
 Baseline: `e590c8eddede11eee9fd037a424b8a8c448b60d8`. Initial implemented source:
 `9b00d4b`; guide/screenshots: `df2406e`. Guided draft testing was completed in
 `2ace282`, security/accessibility/complexity fixes in `040ff98`, and cross-overlay
@@ -318,3 +317,64 @@ portable/installed paths before realpath validation; the argument is never a
 path segment. An invalid `../../tmp/untrusted` choice is rejected before launch.
 The protected rerun must verify this repair and then qualify both exact EXEs;
 there is no exclusion, suppressed finding or changed gate threshold.
+
+## Final revised-acceptance delivery — 2026-10-04
+
+Delivery source: `156ccfaaf150659bf9df5089de134a12794a7daf`. [Windows run 37216584852](https://github.com/TechDaddyKB/tdsblive/actions/runs/37216584852) succeeds on every
+step. [CodeQL 37216582578](https://github.com/TechDaddyKB/tdsblive/actions/runs/37216582578)
+passes C#, JavaScript/TypeScript and Python. SonarQube gate OK: new coverage
+82.1%, reliability/security/maintainability A, duplication 0.0%, reviewed hotspots
+100%. No suppressed finding, exclusion, threshold/protection change or fork
+credential bypass was used. The earlier S8701 path finding is resolved.
+
+Downloaded TRX confirms Core **88/88**, Host **425/425**, zero failures/skips;
+frontend **252** passes. Complete legacy G02/G05–G09/G11–G13/redesign suites pass
+on managed, portable and installed executables. Both native variants pass
+restart/restore, installer/reinstall, startup defaults/opt-in and uninstall.
+Generated contracts, fixture/foundation/financial/recovery checks also pass.
+
+Downloaded `synthetic-acceptance.json` reports for all three targets confirm:
+
+| Target | Fresh guided tasks | Native zoom/theme/page checks | Touch move/resize | Muted / enabled RMS |
+| --- | --- | --- | --- | --- |
+| Managed | 3 | 40 | Pass | 0 / 0.097712 |
+| Portable EXE | 3 | 40 | Pass | 0 / 0.097042 |
+| Installed EXE | 3 | 40 | Pass | 0 / 0.097042 |
+
+No internal identifier is typed, OBS addresses are verified and observed human
+sessions remain **0**. Accessibility/keyboard/reduced-motion/audio isolation
+checks pass. Event history, ledger and automation receipts remain unchanged.
+The mandatory 30 capability groups have passing mapped verification cases and
+retained destinations; no omission was found. G14–G21 are Complete under the
+explicit synthetic acceptance revision, with the current styling retained.
+
+Downloaded artifacts in ignored `release/ui-redesign-synthetic-156ccfa/` match
+their delivered `SHA256SUMS.txt`:
+
+- ZIP: `5c18a1f17283996929f26fb59950ee29148a294b0c5ab006cc201f440d938b15`.
+- Installer: `94920a98fb9afe6bbd6944cf75c9128951234b4dea5fa37152e1da3cc1006135`.
+
+Extracted content was secrets-scanned before inspection. All three runtime
+JavaScript/CSS files match the actual Linux OBS-qualified source byte-for-byte;
+compressed prebuilt variants in the Windows package are extra distribution
+assets. Source and Windows evidence remain separate; Windows OBS is not inferred.
+Current OBS captures are `obs-current-follow.png`, `obs-current-small.png` and
+`obs-current-large.png` in ignored `artifacts/ui-redesign/`. They were visually
+inspected; one owned example is in the public guide. No stream/record/program
+mutation was performed, and all owned OBS/host objects were removed.
+
+Current/exact-packaged offline guide audits pass with networking disabled:
+**20 chapters, 12 owned images**, navigation and reflow. Wiki publication
+`e964fe287d7cd858b3e1347736865370f5f6fae6` matches remote `master`. Actual Chrome live Home→guide navigation,
+all five guide image decodes and page rendering pass; screenshot:
+`artifacts/ui-redesign/wiki-published.png`. The
+[public guide](https://github.com/TechDaddyKB/tdsblive/wiki/Adaptive-Editor-and-Guided-Alerts)
+retains older-build distinctions and links from Home, sidebar and Overlays.
+
+The [completion audit](ui-redesign-completion-audit.md) closes all ten UI
+requirements and eight goals with exact evidence. Human learning/speech/physical
+input/hearing remain optional observations, not synthetic results. Fresh-prefix
+Wine, paid-platform delivery and historic native performance limits remain
+unqualified. Scoped [PR #19](https://github.com/TechDaddyKB/tdsblive/pull/19)
+delivers the redesign. Completion documentation follows normal protected checks
+on its own head; exact final check links are retained on the PR.

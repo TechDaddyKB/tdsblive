@@ -1,7 +1,7 @@
 # UI redesign parity and acceptance checklist
 
 G14 baseline: source inventory on 2026-10-04, before UI changes. These rows are
-release gates, not claims that the redesigned implementation has passed.
+mandatory release gates. Final dispositions and exact evidence are recorded below.
 
 | Existing capability | Destination | Qualification |
 | --- | --- | --- |
@@ -61,10 +61,8 @@ commit is `9b00d4b`; documentation/screenshot commit is `df2406e`.
 Every row above retains its destination and verification case. The current
 full-browser suite exercises existing G02/G05–G09/G11–G13 assertions plus the
 redesign scenarios; frontend/Core/Host regression tests cover the remaining
-settings, permissions, recovery and data contracts. This does not replace native
-Windows, actual audible output, manual screen-reader/zoom or participant evidence.
-See [the current qualification record](ui-redesign-qualification.md) for exact
-commands, evidence boundaries and the mandatory unresolved release checklist.
+settings, permissions, recovery and data contracts. See [the qualification record](ui-redesign-qualification.md) for exact commands,
+evidence boundaries and the operator-approved synthetic acceptance revision.
 
 ## Final synthetic review method
 
@@ -79,5 +77,10 @@ The current layout/styling was explicitly retained by the operator.
 Current additional coverage: three end-to-end guided task scenarios, native
 200%/400% zoom in both themes across all destinations, browser accessibility
 names/landmarks, keyboard modal/navigation focus and measured preview silence/
-opt-in audio signal. Full portable/installed regression qualification is wired
-into protected CI; its result and final inventory disposition remain pending.
+opt-in audio signal. Full portable/installed regression qualification passes protected Windows run
+[37216584852](https://github.com/TechDaddyKB/tdsblive/actions/runs/37216584852) on
+`156ccfaaf150659bf9df5089de134a12794a7daf` with Core 88 / Host 425 (no skips) and
+frontend 252. Each of the 30 inventory rows has a retained destination and a
+passing browser/unit/integration/recovery verification case. No feature omission
+was found. Existing environment/paid-platform/performance limitations remain
+recorded; optional human observations are not synthetic passes.

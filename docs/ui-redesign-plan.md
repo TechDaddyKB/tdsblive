@@ -61,13 +61,13 @@ historical intent; this section supersedes their use as blocking release gates.
 | Goal | Prerequisites | Requirements | Status |
 | --- | --- | --- | --- |
 | G14 Audit functionality and baseline | G13 | UI-R01, UI-R10 | Complete |
-| G15 Design system and navigation | G14 | UI-R01–04, UI-R07, UI-R09 | In progress |
-| G16 Adaptive editor workspace | G15 | UI-R01–04, UI-R07, UI-R09 | In progress |
-| G17 Accurate safe WYSIWYG | G16 | UI-R05, UI-R08 | In progress |
-| G18 Guided triggers and designs | G14, G15; integrate G17 | UI-R02, UI-R06–08 | In progress |
-| G19 Remaining workflows | G15, G18 selectors | UI-R01–04, UI-R07–09 | In progress |
-| G20 Accessibility/usability/compatibility | G16–G19 | UI-R01–10 | In progress |
-| G21 Documentation and delivery | G20 | UI-R10 | In progress |
+| G15 Design system and navigation | G14 | UI-R01–04, UI-R07, UI-R09 | Complete |
+| G16 Adaptive editor workspace | G15 | UI-R01–04, UI-R07, UI-R09 | Complete |
+| G17 Accurate safe WYSIWYG | G16 | UI-R05, UI-R08 | Complete |
+| G18 Guided triggers and designs | G14, G15; integrate G17 | UI-R02, UI-R06–08 | Complete |
+| G19 Remaining workflows | G15, G18 selectors | UI-R01–04, UI-R07–09 | Complete |
+| G20 Accessibility/usability/compatibility | G16–G19 | UI-R01–10 | Complete |
+| G21 Documentation and delivery | G20 | UI-R10 | Complete |
 
 Each goal records tested commit, dated commands/results, screenshots, CI links,
 and unresolved evidence. Missing acceptance keeps a goal In progress or Blocked;
@@ -232,12 +232,29 @@ incremental delivery and the mandatory parity checklist.
 
 ## Current execution evidence
 
-2026-10-04: approved plan saved on `feat/g14-ui-redesign`; workspace initially
-clean on `main`. Deterministic source scans passed before inspection. The implementation and current evidence are recorded in
-[ui-redesign-qualification.md](ui-redesign-qualification.md). G14 baseline and
-parity inventory are complete; G15–G19 have implemented candidates with local
-regression/browser evidence. They retain In progress until final parity review.
-Protected source `fa4c6d1` passes Windows package/recovery/offline-guide checks,
-Sonar and CodeQL. G20/G21 remain open for participants, manual qualification,
-exact-package OBS/audio and publication. Fresh-prefix Wine attempts remain
-unqualified; none of these remaining gates is closed by mock tests.
+G14–G21 are Complete under the operator's 2026-10-04 synthetic acceptance
+revision. The current layout/styling is retained. G00–G13 remain unchanged.
+
+Delivery source `156ccfaaf150659bf9df5089de134a12794a7daf` passes [protected Windows qualification](https://github.com/TechDaddyKB/tdsblive/actions/runs/37216584852),
+all-language CodeQL and SonarQube (82.1% new-code coverage, A ratings, no new
+duplication, all hotspots reviewed). Core 88 / Host 425 have no failures or skips;
+frontend 252 passes. Full legacy/redesign/synthetic browser suites pass for managed,
+portable and installed hosts. Both exact native executables pass recovery, restart,
+installer/startup/uninstall and network-disabled packaged-guide checks.
+
+The mandatory 30-row parity inventory has been reviewed; no capability is missing.
+Actual isolated OBS visuals/routing pass on Linux; all three runtime JS/CSS assets
+match the downloaded Windows package byte-for-byte. This does not claim Windows
+OBS, paid-platform delivery, observed human learning or physical input/hearing.
+
+[The illustrated wiki guide](https://github.com/TechDaddyKB/tdsblive/wiki/Adaptive-Editor-and-Guided-Alerts)
+is published at `e964fe287d7cd858b3e1347736865370f5f6fae6`. Remote/local heads match; live Home/guide navigation
+and all five dedicated-guide images render. Offline delivery includes 20 chapters
+and 12 owned images. Scoped [PR #19](https://github.com/TechDaddyKB/tdsblive/pull/19)
+retains protected checks; completion documentation follows the same checks.
+
+[Completion audit](ui-redesign-completion-audit.md),
+[qualification history and exact package hashes](ui-redesign-qualification.md),
+[parity checklist](ui-parity-checklist.md) and the requirements matrix record each
+goal/requirement and its evidence boundaries. No approved redesign blocker remains;
+optional human follow-up and fresh-prefix Wine qualification remain distinct.

@@ -124,33 +124,29 @@ delivery or performance evidence limitation is hidden by a passing unit test.
 
 ## UI redesign requirements (G14–G21)
 
-Historical source-section verification above does not qualify the redesigned build.
-The [approved UI requirements](ui-redesign-plan.md) and
-[current evidence](ui-redesign-qualification.md) govern the extension goals.
+Historical source-section verification above remains unchanged. The
+[approved plan and synthetic acceptance revision](ui-redesign-plan.md),
+[completion audit](ui-redesign-completion-audit.md) and
+[current qualification](ui-redesign-qualification.md) govern this extension.
+The operator explicitly retained the current layout/styling.
 
-| Requirement | Candidate evidence | Remaining gate |
+| Requirement | Current evidence | Disposition |
 | --- | --- | --- |
-| UI-R01 | Mandatory capability inventory; full legacy browser and unit/integration regression | Final packaged parity and observed workflows |
-| UI-R02 | Guided trigger/conditions, ordinary amounts, placeholders and named assets | Three unassisted usability sessions |
-| UI-R03 | Semantic themes, shared controls; both-theme screenshots | Manual contrast/readability review |
-| UI-R04 | Seven sizes, all pages at 320 CSS px, resizing/geometry/panel tests | Native 200%/400% zoom and physical touch |
-| UI-R05 | Shared presentations, direct unsaved draft updates, native OBS alert visuals | Exact package representative visual/audio check |
-| UI-R06 | Shared matching vectors, eligible IDs, first/all sets, custom identity and legacy package tests | Final current-package scenario review |
-| UI-R07 | Autosave/conflicts/history/import/export/backup/restart/HTTP regressions; native Windows portable/installed recovery on `fa4c6d1` | Final manual parity review |
-| UI-R08 | Preview isolation, memory-only custom drafts, denied network, opt-in audio checks | Actual audible OBS confirmation |
-| UI-R09 | Keyboard/focus labels/reduced motion/44px controls and drag alternatives | Manual screen-reader and physical input review |
-| UI-R10 | Source/guide commits, local build/browser/OBS evidence; protected Windows packages, Sonar and CodeQL on `fa4c6d1` | Documentation-head checks, wiki and all open manual gates |
+| UI-R01 | All 30 parity groups reviewed; legacy/full browser suites on managed/portable/installed hosts; 252 frontend / 88 Core / 425 Host tests | Verified |
+| UI-R02 | Three fresh-project guided tasks per host variant create distinct follow/donation designs, test and copy OBS without internal identifiers | Verified synthetically |
+| UI-R03 | System/default and retained explicit themes, shared semantic controls, screenshots/computed contrast; operator design opinion incorporated | Verified |
+| UI-R04 | Seven viewports/short window, continuous resizing/Fit/manual geometry, emulated touch move/resize; 40 native 200%/400% zoom checks per host variant | Verified synthetically |
+| UI-R05 | Shared actual unsaved presentation and media/custom samples; saved runtime first/all preview; actual OBS representative visuals and matching packaged runtime bytes | Verified within recorded environment |
+| UI-R06 | Shared matching vectors/conditions, incoming/custom distinction, eligible IDs, first/all sets and legacy behavior, v1/v2/remapping | Verified |
+| UI-R07 | Autosave/conflict/history/revisions/HTTP and native portable/installed backup/restart/restore/startup/uninstall | Verified |
+| UI-R08 | Event/ledger/automation equality, denied draft network, isolated storage/permissions; muted RMS zero, opt-in nonzero, navigation resets | Verified synthetically |
+| UI-R09 | Actual accessibility tree names/landmarks, keyboard modal/navigation focus, contrast/reduced motion, touch targets/drag alternatives | Verified synthetically |
+| UI-R10 | Protected Windows/Sonar/CodeQL on `156ccfa`; exact native package full suites, actual Linux OBS, illustrated/offline guide and published/live-verified wiki `e964fe2` | Verified |
 
-### Revised UI acceptance method — 2026-10-04
-
-The operator authorized synthetic delivery qualification and explicitly retained
-the current styling/layout. The human-only entries in the earlier UI table are
-optional follow-up observations; they no longer block delivery. Current measured
-coverage includes three fresh-project guided tasks, emulated touch selection/
-move/resize, native 200%/400% browser zoom on all pages in both themes, actual
-accessibility trees, keyboard modal/navigation focus, contrast/reduced motion,
-preview audio signal (muted RMS zero; opt-in nonzero), side-effect isolation and
-current OBS representative visuals/routing. Exact portable/installed executables
-now run the complete browser/parity suite. Its protected result, final inventory
-review and wiki publication remain pending. Human learning, screen-reader speech,
-physical touch and listening are not inferred from these checks.
+The explicit 2026-10-04 acceptance revision replaces unavailable observed sessions
+and physical-hardware/speech/listening gates with measured synthetic delivery
+checks. Human learning, screen-reader speech, physical touch and hearing are not
+claimed; their scripts remain optional follow-up. Linux OBS and native Windows
+package execution are separate evidence; Windows OBS and Wine are not inferred.
+G00–G13 paid-platform/performance/compatibility limitations remain unchanged.
+Documentation follow-up follows the same protected current-head checks.

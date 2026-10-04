@@ -98,19 +98,30 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G12](#g12) | Deliver custom-widget platform and portability | G11 | Complete |
 | [G13](#g13) | Complete compatibility and full-spec qualification | G12 | Complete |
 | [G14](ui-redesign-plan.md#g14--audit-functionality-and-establish-the-baseline) | Audit UI functionality and baseline | G13 | Complete |
-| [G15](ui-redesign-plan.md#g15--design-system-and-application-navigation) | Build UI design system and navigation | G14 | In progress |
-| [G16](ui-redesign-plan.md#g16--adaptive-editor-workspace) | Build adaptive editor workspace | G15 | In progress |
-| [G17](ui-redesign-plan.md#g17--accurate-and-safe-wysiwyg-previews) | Build accurate safe WYSIWYG previews | G16 | In progress |
-| [G18](ui-redesign-plan.md#g18--guided-triggers-and-conditional-alert-designs) | Build guided triggers and alert designs | G14, G15 | In progress |
-| [G19](ui-redesign-plan.md#g19--remaining-application-workflows) | Redesign remaining workflows | G15, G18 | In progress |
-| [G20](ui-redesign-plan.md#g20--accessibility-usability-and-compatibility) | Qualify UI accessibility, usability and compatibility | G16–G19 | In progress |
-| [G21](ui-redesign-plan.md#g21--document-and-deliver) | Document and deliver UI redesign | G20 | In progress |
+| [G15](ui-redesign-plan.md#g15--design-system-and-application-navigation) | Build UI design system and navigation | G14 | Complete |
+| [G16](ui-redesign-plan.md#g16--adaptive-editor-workspace) | Build adaptive editor workspace | G15 | Complete |
+| [G17](ui-redesign-plan.md#g17--accurate-and-safe-wysiwyg-previews) | Build accurate safe WYSIWYG previews | G16 | Complete |
+| [G18](ui-redesign-plan.md#g18--guided-triggers-and-conditional-alert-designs) | Build guided triggers and alert designs | G14, G15 | Complete |
+| [G19](ui-redesign-plan.md#g19--remaining-application-workflows) | Redesign remaining workflows | G15, G18 | Complete |
+| [G20](ui-redesign-plan.md#g20--accessibility-usability-and-compatibility) | Qualify UI accessibility, usability and compatibility | G16–G19 | Complete |
+| [G21](ui-redesign-plan.md#g21--document-and-deliver) | Document and deliver UI redesign | G20 | Complete |
 
 The approved [UI redesign plan](ui-redesign-plan.md) defines UI-R01–UI-R10,
 G14–G21, compatibility contracts and the parity/acceptance gates. These extension
 goals do not revise the historical G00–G13 acceptance records or their scope.
-Current candidate evidence and unresolved release gates are in
+Current delivery evidence and recorded limitations are in
 [ui-redesign-qualification.md](ui-redesign-qualification.md).
+
+UI completion (2026-10-04): G14–G21 pass the operator-approved synthetic acceptance
+revision, with the current styling retained and all 30 parity groups reviewed.
+Source `156ccfaaf150659bf9df5089de134a12794a7daf` passes [Windows delivery](https://github.com/TechDaddyKB/tdsblive/actions/runs/37216584852), SonarQube and all-language CodeQL;
+managed/portable/installed full browser suites, native recovery/package checks and
+20-chapter/12-image offline guidance pass. The public wiki guide/navigation is
+published and visually verified at `e964fe287d7cd858b3e1347736865370f5f6fae6`. Actual isolated Linux OBS visuals/
+routing pass; packaged runtime JS/CSS match byte-for-byte. Human learning, speech,
+physical touch/hearing and fresh-prefix Wine are not inferred. See the
+[requirement/goal completion audit](ui-redesign-completion-audit.md). Documentation
+follow-up remains subject to unchanged protected checks on its own head.
 
 <a id="g00"></a>
 
