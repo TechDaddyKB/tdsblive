@@ -205,5 +205,7 @@ clean on `main`. Deterministic source scans passed before inspection. The implem
 [ui-redesign-qualification.md](ui-redesign-qualification.md). G14 baseline and
 parity inventory are complete; G15–G19 have implemented candidates with local
 regression/browser evidence. They retain In progress until final parity review.
-G20/G21 remain open for participants, manual qualification, native package
-checks and publication; none is closed by mock tests.
+Protected source `fa4c6d1` passes Windows package/recovery/offline-guide checks,
+Sonar and CodeQL. G20/G21 remain open for participants, manual qualification,
+exact-package OBS/audio and publication. Fresh-prefix Wine attempts remain
+unqualified; none of these remaining gates is closed by mock tests.

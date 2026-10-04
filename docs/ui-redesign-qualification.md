@@ -114,6 +114,37 @@ and exclusions remain unchanged; its exact-head rerun must pass before packaging
 All languages pass [CodeQL run 37199311062](https://github.com/TechDaddyKB/tdsblive/actions/runs/37199311062)
 on the same production source.
 
+Current protected checkpoint: `fa4c6d16bbef32f564146e0790f2f9eaedbfe43d` passes
+[Windows run 37200780622](https://github.com/TechDaddyKB/tdsblive/actions/runs/37200780622)
+and [all-language CodeQL run 37200779337](https://github.com/TechDaddyKB/tdsblive/actions/runs/37200779337).
+Core 88, Host 425 (no skips), and frontend 251 tests pass. Sonar reports 81.9%
+new-code coverage, zero new bugs/vulnerabilities, zero new duplication and 100%
+reviewed hotspots. Native portable/installer startup, restart/restore,
+reinstall/uninstall, default-off startup and opt-in startup pass. The shipped
+guide passes the network-disabled 20-chapter browser audit.
+
+Downloaded artifacts match `SHA256SUMS.txt` and the extracted portable package
+passes secrets scanning:
+
+| Artifact | SHA256 |
+| --- | --- |
+| `TDSBLive-0.1.0-win-x64.zip` | `51331a733680b221d97d812337e0ec17ed8488de7843960b4a183e7aa87991b3` |
+| `TDSBLive-0.1.0-win-x64-setup.exe` | `55b8a28839de2808cc9bcc69fefd7ad19cf206dd7cfe3219679f6a4d37924d93` |
+
+Additional Wine 11.17/Xvfb smoke attempts in fresh disposable prefixes did not
+reach readiness. Disabling Wine's .NET loader produced a `System.Runtime.dll`
+load error; retaining it still timed out. Software rendering and write-copy
+settings did not produce a pass. The packaged `System.Runtime.dll` and
+`coreclr.dll` match a previous local Wine package byte-for-byte. These observations
+do not establish a root cause or qualify Wine; a prepared-environment check
+remains outstanding. Temporary processes/prefixes/data were removed. The
+existing host at port 17474 and the read-only Streamer.bot health endpoint
+remained responsive. No production configuration was inspected or changed.
+
+This delivery record changes documentation only after the tested source above;
+its own protected PR checks remain required. Participants and the hands-on
+acceptance below still prevent G20/G21 completion.
+
 `npm audit --json` reports two low-severity affected packages (DOMPurify and
 Monaco); the unchanged baseline reports the same two. No dependency/lockfile
 changes were introduced. The registry suggests downgrading the pinned editor;
@@ -170,11 +201,12 @@ for native zoom, screen readers, physical touch, exact packages and audible OBS.
 - [ ] Native browser zoom at 200%/400%, manual screen-reader announcements and
   physical touch input/focus checks on the packaged build.
 - [ ] Audible output and silent-by-default checks in actual OBS with owned media.
-- [ ] Protected Windows build/test/installer/portable/restart checks on exact head,
-  Sonar quality gate and required security checks; no bypasses permitted.
+- [x] Protected Windows build/test/installer/portable/restart checks on source
+  `fa4c6d1`, Sonar quality gate and all-language CodeQL; no bypasses used.
+  Documentation-only follow-up still follows protected checks.
 - [x] Network-disabled offline-guide browser audit on the candidate source build.
-- [ ] Exact-packaged offline guide, current wiki publication and live
-  navigation/rendering verification.
+- [x] Exact-packaged offline guide browser audit (network disabled).
+- [ ] Current wiki publication and live navigation/rendering verification.
 - [ ] Final release parity review against every inventory row and any failures
   observed in usability sessions; revised flow must be retested before G20 closes.
 

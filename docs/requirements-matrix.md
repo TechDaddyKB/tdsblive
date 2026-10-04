@@ -136,7 +136,7 @@ The [approved UI requirements](ui-redesign-plan.md) and
 | UI-R04 | Seven sizes, all pages at 320 CSS px, resizing/geometry/panel tests | Native 200%/400% zoom and physical touch |
 | UI-R05 | Shared presentations, direct unsaved draft updates, native OBS alert visuals | Exact package representative visual/audio check |
 | UI-R06 | Shared matching vectors, eligible IDs, first/all sets, custom identity and legacy package tests | Final current-package scenario review |
-| UI-R07 | Autosave/conflicts/history/import/export/backup/restart/HTTP regressions | Native Windows package qualification |
+| UI-R07 | Autosave/conflicts/history/import/export/backup/restart/HTTP regressions; native Windows portable/installed recovery on `fa4c6d1` | Final manual parity review |
 | UI-R08 | Preview isolation, memory-only custom drafts, denied network, opt-in audio checks | Actual audible OBS confirmation |
 | UI-R09 | Keyboard/focus labels/reduced motion/44px controls and drag alternatives | Manual screen-reader and physical input review |
-| UI-R10 | Source/guide commits, local build/browser/OBS evidence | Protected CI, security, wiki and all open gates |
+| UI-R10 | Source/guide commits, local build/browser/OBS evidence; protected Windows packages, Sonar and CodeQL on `fa4c6d1` | Documentation-head checks, wiki and all open manual gates |
