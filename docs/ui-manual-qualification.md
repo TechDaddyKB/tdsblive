@@ -1,10 +1,13 @@
-# Remaining hands-on UI qualification
+# Optional hands-on UI follow-up
 
 Use an isolated owned sample project and the exact candidate package. Record
 date, tester, Windows/browser/OBS versions, tested commit and package SHA256.
 Each result needs an observation or capture; an unchecked item is outstanding.
-The separate [nontechnical-user script](ui-usability-test.md) requires three
-participants and has not yet been performed.
+The operator authorized synthetic delivery qualification and approved keeping
+the current styling/layout on 2026-10-04. These human procedures remain optional
+follow-up; they are not delivery blockers. Three human sessions have not occurred.
+See [the revised acceptance method](ui-redesign-plan.md#acceptance-revision--2026-10-04)
+and [synthetic scenarios](ui-usability-test.md#synthetic-delivery-qualification).
 
 ## Browser zoom, accessibility and input
 
@@ -62,5 +65,8 @@ participants and has not yet been performed.
 | Preview silence and actual audible output | Outstanding | | |
 | Side-effect isolation and cleanup | Outstanding | | |
 
-Do not close G20/G21 or publish a completed redesign release until failures are
-fixed and these records and participant observations pass on the final build.
+Record actual failures and fix/retest them. G20/G21 completion follows the
+operator-approved synthetic delivery gates, not an inference that these optional
+human observations occurred. A native zoom API result proves browser zoom; an
+accessibility tree does not prove screen-reader speech, and audio signal analysis
+does not prove a person heard it.

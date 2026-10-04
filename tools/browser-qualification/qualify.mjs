@@ -1,7 +1,7 @@
 // CI-only fresh-browser qualification; never controls the user's personal browser.
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -15,12 +15,25 @@ import { qualifyAutomation } from './automation.mjs';
 import { qualifyCustomWidgets } from './custom-widgets.mjs';
 import { qualifyAdvancedEditor } from './advanced-editor.mjs';
 import { qualifyUiRedesign } from './ui-redesign.mjs';
+import { qualifyUiAcceptance } from './ui-acceptance.mjs';
 import { qualifyCompatibility } from './compatibility.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dotnetRoot = process.env.DOTNET_ROOT;
 assert.ok(dotnetRoot && path.isAbsolute(dotnetRoot), 'CI must supply an absolute setup-dotnet installation directory');
-const dotnetExecutable = path.join(dotnetRoot, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+const mode = process.argv[2] ?? 'managed';
+assert.ok(['managed', 'portable', 'installed'].includes(mode), 'Choose managed, portable or installed qualification');
+let executable = path.join(dotnetRoot, process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+const launchArguments = [];
+if (mode === 'managed') launchArguments.push(path.join(root, 'src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'));
+else {
+  assert.equal(process.platform, 'win32', 'Packaged browser qualification requires native Windows');
+  const packageRoot = path.resolve(process.env.TDSBLIVE_PACKAGE_CHECK_ROOT);
+  assert.match(path.relative(await realpath(process.env.RUNNER_TEMP), packageRoot), /^tdsblive-package-check-[a-f0-9]{32}$/, 'Only the owned Windows package check directory can be used');
+  const candidate = path.join(packageRoot, mode, 'TDSBLive.exe');
+  assert.equal(await realpath(candidate), candidate, 'The shipped executable must not resolve through a symbolic link');
+  executable = candidate;
+}
 const directory = await mkdtemp(path.join(tmpdir(), 'tdsblive-browser-test-'));
 const port = await new Promise((resolve, reject) => {
   const server = createServer();
@@ -32,8 +45,7 @@ const port = await new Promise((resolve, reject) => {
 });
 await writeFile(path.join(directory, 'configuration.json'), JSON.stringify({ server: { host: '127.0.0.1', port } }));
 const origin = `http://127.0.0.1:${port}`;
-const host = spawn(dotnetExecutable, [path.join(root, 'src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'),
-  '--TDSBLive:DataDirectory', directory], { stdio: 'ignore' });
+const host = spawn(executable, [...launchArguments, '--TDSBLive:DataDirectory', directory, '--TDSBLive:OpenEditor=false'], { stdio: 'ignore' });
 let spawnFailed = false;
 host.on('error', () => { spawnFailed = true; });
 let browser;
@@ -190,6 +202,7 @@ try {
   await qualifyFinancial(page, origin);
   await qualifyDonors(page, origin, writeHeaders, root);
   await qualifyUiRedesign(page, origin, writeHeaders, root);
+  await qualifyUiAcceptance(origin, root, mode);
   assert.equal(pageErrors, 0, 'Rendered pages raised JavaScript errors');
   console.log('G02/G05/G06 fresh-browser qualification passed: HTTP editor/login, transparent escaped four-platform chat, bounded DOM, one socket, reconnect, saved settings and persistent light/dark streamer view');
 } finally {

@@ -1,8 +1,32 @@
 # Observed UI usability sessions
 
-Status: prepared; participants are not available yet (operator response, 2026-10-04).
-This document does not constitute usability evidence. G20 remains open until
-three nontechnical participants complete observed sessions on the candidate build.
+Status: human script prepared; participants are unavailable (2026-10-04).
+The operator subsequently authorized synthetic qualification in place of these
+sessions. This human script is retained for optional follow-up and is no longer
+a delivery blocker. It does not constitute observed human evidence.
+
+## Synthetic delivery qualification
+
+`tools/browser-qualification/ui-acceptance.mjs` runs three fresh-project scenarios:
+1366×768/light/pointer, 768×1024/dark/pointer and 390×844/light/emulated touch.
+Each starts from Overview, creates an automatically named overlay, adds a named
+Twitch follow design and Ko-fi donation design with different wording, follows
+the guided steps, tests both and verifies the copied OBS address. It uses only
+visible user controls, does not automatically reveal hidden controls through the
+legacy editor test helper, never types internal event identifiers and records
+elapsed time and task milestones. Ten minutes is a regression ceiling, not a
+claim about human learning time. It asserts event/ledger/automation isolation.
+
+The same gate measures native 200%/400% Chromium zoom across all ten pages in both
+themes, accessible control names/main landmarks, keyboard navigation, modal focus
+containment/restoration and reduced-motion selection. The full legacy browser
+suite covers the feature parity inventory. Protected Windows repeats the entire
+suite against the shipped portable and installed executables. Machine-readable
+results and screenshots are ignored test artifacts uploaded by CI.
+
+No automated scenario claims three human participants, assistive-technology
+speech, physical hardware gestures or human hearing. The optional human procedure
+below remains useful after delivery.
 
 ## Setup
 
@@ -60,7 +84,6 @@ it does not replace the mandatory tasks.
 
 All three participants must finish the mandatory tasks within ten minutes,
 without typing internal identifiers or receiving developer assistance. Record
-failures honestly, revise the UI, and repeat the affected flow before G20 is
-complete. Keep consented recordings and detailed notes in private evidence
-storage; publish only anonymized findings and artifact references. Automated
-browser tests, screenshots and developer walkthroughs do not satisfy this gate.
+failures honestly, revise the UI, and repeat the affected flow before accepting those optional human observations. Keep consented recordings and detailed notes in private evidence
+storage; publish only anonymized findings and artifact references. Automated browser tests do not constitute observed human sessions; they satisfy
+the separately authorized synthetic delivery gate above.

@@ -1,5 +1,63 @@
 # UI redesign candidate qualification
 
+## Current synthetic acceptance revision — 2026-10-04
+
+The operator authorized completing the full plan with synthetic testing and
+limited interaction, and chose **Keep the current layout and styling** after
+reviewing desktop/mobile examples. The [plan revision](ui-redesign-plan.md#acceptance-revision--2026-10-04)
+supersedes earlier human-only release gates; it does not reduce functionality or
+weaken protected checks. Earlier checkpoint evidence below remains historical.
+
+Current local evidence for the synthetic qualification changes:
+
+- `npm run lint`, `npm run typecheck`, `npm run test:coverage`: pass, 252 tests,
+  48 files, 90.42% lines / 78.91% branches overall. Meaningful modal tests verify
+  bidirectional Tab wrap, disabled/hidden exclusions, ordinary key behavior and
+  opener restoration. Browser testing exposed the missing wrap; it was fixed.
+- Release host build: zero warnings/errors. The full browser qualifier passes after rebuilding the frontend and host
+  together, including existing G02/G05–G09/G11–G13 and redesign scenarios.
+- `ui-acceptance.mjs`: three independent browser contexts with fresh projects at
+  desktop/tablet/emulated-touch sizes create follow/donation designs, exercise
+  all five guided steps, test matching and verify the copied existing OBS URL.
+  Scripted elapsed times: 1.558 / 1.433 / 1.699 seconds. These are automation
+  timings, never human learning or usability measurements.
+- Native Chromium zoom is controlled through a disposable extension's
+  `chrome.tabs.setZoom`/`getZoom`, using the pinned full Chromium channel.
+  Browser-reported 200%/400% corresponds to 640/320 CSS pixels from 1280px.
+  Forty checks cover all ten destinations in both themes, expanded details,
+  document reflow and named controls/main landmarks in the actual accessibility
+  tree. Saved widget content/geometry is unchanged. Keyboard traversal verifies
+  modal containment/Escape/opener restoration and destination heading focus.
+- A generated owned 440Hz WAV reaches Web Audio through the real media element:
+  muted draft/saved preview RMS **0**, explicitly enabled preview peak RMS
+  **0.09797** in one observation. Leaving/reopening restores disabled audio.
+  Browser autoplay policy is enabled only for this disposable signal test;
+  Chromium's process-wide mute prevents physical speaker output. No human
+  hearing is claimed. Event history, ledger and automation receipts remain equal
+  before and after the synthetic scenarios.
+- `qualify_windows_package.ps1` now repeats the full regression/browser/parity
+  and synthetic acceptance suite using both the actual portable and installed
+  `TDSBLive.exe`. Only named targets inside the runner's owned package directory
+  are allowed. Realpath checks reject unexpected/symlinked executable paths.
+  CI installs pinned full Chromium for the native zoom extension. The job limit
+  is 45 minutes to accommodate three full host variants; quality conditions,
+  protected checks and fork-secret isolation are unchanged.
+
+Evidence: ignored `artifacts/ui-redesign/acceptance-managed/` machine-readable
+results and owned screenshots; CI uploads portable/installed equivalents.
+The original human script and hands-on worksheet remain optional follow-up, not
+synthetic passes. Screen-reader speech, physical hardware input, observed human
+learning and human listening are not claimed. Fresh-prefix Wine remains
+unqualified and is not inferred from native Windows results.
+
+Current completion gates: full updated browser suite, protected current-source
+Windows portable/installed evidence and Sonar/CodeQL, final inventory review,
+current OBS visual/routing verification, wiki publication/rendering and final
+protected delivery. These remain pending until their actual results are recorded.
+
+Native zoom approach follows the primary [Playwright extension documentation](https://playwright.dev/docs/chrome-extensions)
+and [Chrome tabs zoom API](https://developer.chrome.com/docs/extensions/reference/api/tabs).
+
 2026-10-04. This record concerns the G14–G21 candidate, not a completed release.
 Baseline: `e590c8eddede11eee9fd037a424b8a8c448b60d8`. Initial implemented source:
 `9b00d4b`; guide/screenshots: `df2406e`. Guided draft testing was completed in
@@ -194,7 +252,7 @@ package, audible output or paid-platform evidence.
 The [hands-on qualification worksheet](ui-manual-qualification.md) is prepared
 for native zoom, screen readers, physical touch, exact packages and audible OBS.
 
-## Outstanding mandatory acceptance
+## Historical mandatory acceptance before the operator revision
 
 - [ ] Three observed nontechnical sessions. The operator said participants are
   unavailable; [the script and recording sheet](ui-usability-test.md) are ready.
@@ -210,5 +268,7 @@ for native zoom, screen readers, physical touch, exact packages and audible OBS.
 - [ ] Final release parity review against every inventory row and any failures
   observed in usability sessions; revised flow must be retested before G20 closes.
 
-G20/G21 remain In progress until these gates are evidenced. No release, merge or
-claim of complete redesign follows solely from passing local tests.
+The human-only checklist above is superseded by the operator-approved synthetic
+acceptance revision at the top of this document. No human observation is claimed.
+The current protected-package, parity, OBS and publication gates still require
+authoritative current evidence before G20/G21 completion.

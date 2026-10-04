@@ -65,3 +65,19 @@ settings, permissions, recovery and data contracts. This does not replace native
 Windows, actual audible output, manual screen-reader/zoom or participant evidence.
 See [the current qualification record](ui-redesign-qualification.md) for exact
 commands, evidence boundaries and the mandatory unresolved release checklist.
+
+## Final synthetic review method
+
+The 2026-10-04 operator revision authorizes synthetic delivery rather than waiting
+for unavailable participants/physical hardware. Review every inventory row against
+the full legacy Chromium qualifiers (G02/G05–G09/G11–G13), the redesign and new
+acceptance qualifiers, frontend/Core/Host regression cases, actual-process
+recovery and both shipped native Windows executable variants. Do not treat an
+accessible-name check as screen-reader speech or an audio meter as human hearing.
+The current layout/styling was explicitly retained by the operator.
+
+Current additional coverage: three end-to-end guided task scenarios, native
+200%/400% zoom in both themes across all destinations, browser accessibility
+names/landmarks, keyboard modal/navigation focus and measured preview silence/
+opt-in audio signal. Full portable/installed regression qualification is wired
+into protected CI; its result and final inventory disposition remain pending.

@@ -18,7 +18,8 @@ jobs:
   windows:
     name: Windows build and tests
     runs-on: windows-2022
-    timeout-minutes: 30
+    # The full browser/parity suite now runs on managed, portable and installed hosts.
+    timeout-minutes: 45
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"

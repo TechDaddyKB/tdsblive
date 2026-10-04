@@ -17,6 +17,30 @@ name placeholders instead of rendered widgets, vertically stacked narrow-screen
 panels, fixed preview sizing, and a fixed initial zoom. Personal-browser access to
 the local application was blocked; this is not live visual acceptance evidence.
 
+## Acceptance revision — 2026-10-04
+
+The operator subsequently instructed: “complete the ui redesign plan with
+synthetic testing and limited interaction from me except when it comes to getting
+my opinion on the ui/ux design.” This changes the acceptance method, not the
+feature scope, requirement IDs, prerequisites, permission boundaries or protected
+quality gates. The operator reviewed the current desktop/mobile direction and
+chose **Keep the current layout and styling**.
+
+Three fresh-project scripted task scenarios replace the unavailable participant
+sessions as the delivery gate. Native browser zoom is measured through Chromium's
+actual tabs zoom API; accessibility uses browser accessibility trees, keyboard
+navigation, modal focus, contrast and reduced-motion checks; touch uses emulated
+input and numeric/button alternatives. Audio uses decoded/playback signal and
+mute/opt-in assertions, plus actual OBS visual/routing evidence. Human usability,
+spoken screen-reader output, physical touch and listening remain optional
+follow-up observations and must never be reported as passed. Exact native Windows
+portable/installed executables must run the complete browser/parity suite.
+
+G20/G21 can complete under this revised synthetic acceptance once every feature,
+contract, browser/package/OBS scenario, protected check, documentation and wiki
+publication is evidenced. The earlier human-only criteria below are retained as
+historical intent; this section supersedes their use as blocking release gates.
+
 ## Requirements
 
 | ID | Requirement |
@@ -47,7 +71,9 @@ the local application was blocked; this is not live visual acceptance evidence.
 
 Each goal records tested commit, dated commands/results, screenshots, CI links,
 and unresolved evidence. Missing acceptance keeps a goal In progress or Blocked;
-code or mock tests alone cannot close visual, Windows, OBS or usability gates.
+real rendered-browser, native-package and OBS evidence remain required; mocked
+unit tests alone cannot close these gates. Human follow-up is not a delivery gate
+under the acceptance revision above.
 
 ## G14 — Audit functionality and establish the baseline
 
