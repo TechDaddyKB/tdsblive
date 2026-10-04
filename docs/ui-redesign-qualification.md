@@ -1,8 +1,9 @@
 # UI redesign candidate qualification
 
 2026-10-04. This record concerns the G14–G21 candidate, not a completed release.
-Baseline: `e590c8eddede11eee9fd037a424b8a8c448b60d8`. Implemented source:
-`9b00d4b`; guide/screenshots: `df2406e`. The approved plan was committed first in
+Baseline: `e590c8eddede11eee9fd037a424b8a8c448b60d8`. Initial implemented source:
+`9b00d4b`; guide/screenshots: `df2406e`. Guided draft testing was completed in
+`2ace282` and security/accessibility/complexity fixes in `040ff98`. The approved plan was committed first in
 `488246f`, and backend/contracts in `b5d31c2`. Subsequent CI evidence must identify
 the exact tested head and must not inherit older goal passes silently.
 
@@ -35,7 +36,7 @@ Pinned Node 24.21.0/npm 11.19.0/.NET SDK 10.0.401; Linux host and isolated data.
 | --- | --- | --- |
 | Secrets | `sonar analyze secrets` on inspected/changed source, tests, docs and images | Passed; no values exposed |
 | Frontend static checks | `npm run lint`, `npm run typecheck` | Passed |
-| Frontend tests | `npm run test:coverage` | 245 passed, 47 files; 90.35% lines, 77.60% branches overall |
+| Frontend tests | `npm run test:coverage` | 246 passed, 47 files; 90.33% lines, 78.02% branches overall |
 | Backend tests | `dotnet test TDSBLive.slnx -c Release` | Core 88 passed; Host 421 passed, 4 Windows-only skips |
 | Release build | `npm run build`; `dotnet build src/ExtensionSuite.Host -c Release` | Passed, zero backend warnings/errors |
 | Full browser regression | `node tools/browser-qualification/qualify.mjs` | Passed G02/G05/G06, G07, G08, G09, G11, G12, G13 and redesign scenarios |
@@ -43,7 +44,7 @@ Pinned Node 24.21.0/npm 11.19.0/.NET SDK 10.0.401; Linux host and isolated data.
 | Financial processes | `python tools/qualify_financial.py` | Passed crash/restart, precision, dedupe, reconciliation, conflicts and isolation |
 | Compatibility diagnostic utility | `python tools/qualify_compatibility.py` | Passed owned aggregate diagnostic output; not audio evidence |
 | Guide | `node tools/browser-qualification/guide-screenshots.mjs`; `python tools/build_offline_guide.py release/ui-redesign-offline-guide` | 20 chapters built; owned screenshots, scanned before inspection |
-| Offline browser audit | `node tools/browser-qualification/offline-guide.mjs release/ui-redesign-offline-guide` | Passed all 20 chapters, local navigation, loaded images and 390/1366px reflow with network disabled |
+| Offline browser audit | `sonar analyze secrets release/ui-redesign-offline-guide-wizard`; `node tools/browser-qualification/offline-guide.mjs review` | Passed all 20 chapters, local navigation, loaded images and 390/1366px reflow with network disabled |
 | Recovery process | `node tools/browser-qualification/recovery-process.mjs` | Passed open-browser restart/restore, custom/compatibility state, groups, assets and safety-paused integrations |
 | Replay/tooling regression | `python -m unittest discover -s tests/replay -v` | 33 passed |
 | Sonar CLI quality | `sonar analyze --staged --force --format json` | Secrets passed; Vortex unavailable (403), all quality analysis skipped; not a quality-gate pass |
@@ -71,7 +72,23 @@ branch protections. Initial head `f1a058e61b5313e9b0df55565c0ff424062e9d54` has
 passing C#, JavaScript/TypeScript and Python CodeQL checks in
 [run 37195659004](https://github.com/TechDaddyKB/tdsblive/actions/runs/37195659004).
 [Windows run 37195660338](https://github.com/TechDaddyKB/tdsblive/actions/runs/37195660338)
-was still in progress when recorded; newer heads require their own results.
+was superseded/cancelled. On head `8c73fe2`,
+[Windows run 37195852420](https://github.com/TechDaddyKB/tdsblive/actions/runs/37195852420)
+passed all functional/native/browser/recovery checks but failed Sonar reliability
+and security ratings. New-code coverage passed. Findings concerned delegated
+menu click handling and unrestricted filesystem/command arguments in the offline
+audit. `040ff98` removes that DOM click handler, accepts only named fixed guide
+targets, moves the pinned secrets scan into CI and simplifies all seven functions
+reported with critical complexity. The full local regression and offline audit
+pass; invalid directory input is rejected. The protected exact-head rerun remains
+required; no quality condition or branch protection was bypassed.
+
+`npm audit --json` reports two low-severity affected packages (DOMPurify and
+Monaco); the unchanged baseline reports the same two. No dependency/lockfile
+changes were introduced. The registry suggests downgrading the pinned editor;
+that is not accepted as a compatibility fix. There are no open GitHub code-scanning
+alerts in the repository at this checkpoint. The current CodeQL checks must still
+be recorded by exact head.
 
 `tools/sync_user_guide.py` validated and prepared a separate wiki checkout at
 `/tmp/tdsblive-ui-wiki`: 20 chapters, 11 owned illustrations, candidate guide and
@@ -107,6 +124,9 @@ Program scene remained `TDSBLive G10 qualification`; Studio Mode was restored to
 off, disposable OBS objects removed and the temporary host/data cleaned up.
 This verifies native OBS visual selection on Linux only. It is not exact Windows
 package, audible output or paid-platform evidence.
+
+The [hands-on qualification worksheet](ui-manual-qualification.md) is prepared
+for native zoom, screen readers, physical touch, exact packages and audible OBS.
 
 ## Outstanding mandatory acceptance
 
