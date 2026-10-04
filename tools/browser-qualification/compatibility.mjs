@@ -1,4 +1,3 @@
-import { editorUI } from './editor-ui.mjs';
 import assert from 'node:assert/strict';
 
 export async function qualifyCompatibility(page, origin, writeHeaders) {

@@ -100,14 +100,21 @@ export async function qualifyUiRedesign(page, origin, writeHeaders, root) {
   assert.equal(new URL(page.url()).hash, '#overlays');
   await editor.getByRole('button', { name: 'Reload saved version', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('[aria-label="Overlay name"]')?.value === 'Concurrent edit');
+  await qualifyDestinationReflow(page, origin);
+  await qualifyDraftIsolationAndTouch(page, origin, writeHeaders, geometry, read);
+  console.log('UI redesign browser qualification passed: named triggers, ordinary amounts, draft rendering, first/all matching, seven viewports in both themes, fitted/manual zoom, geometry preservation, history navigation and retained conflicts');
+}
+
+async function qualifyDestinationReflow(page, origin) {
   for (const destination of ['overview','overlays','chat','automation','supporters','media','connections','settings','diagnostics','help']) {
     await page.setViewportSize({ width: 320, height: 568 }); await page.goto(`${origin}/editor#${destination}`);
     await page.getByRole('heading', { name: 'TDSBLive', exact: true }).waitFor(); await page.waitForLoadState('networkidle');
     for (const summary of await page.locator('.app-content summary').all()) if (await summary.isVisible() && !await summary.evaluate(n => n.parentElement.open)) await summary.click();
-    if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) console.error('Reflow overflow:', destination, await page.evaluate(() => ({scrollX, width:innerWidth, documentWidth:document.documentElement.scrollWidth, bodyWidth:document.body.scrollWidth})), await page.evaluate(() => Array.from(document.querySelectorAll('body *')).filter(n => n.getBoundingClientRect().right + scrollX > innerWidth && n.getBoundingClientRect().width > 0).map(n => ({tag:n.tagName,label:n.getAttribute('aria-label') ?? n.textContent.slice(0,80),right:n.getBoundingClientRect().right, cls:n.className}))));
-    if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) { console.error('Overflow metrics:', await page.evaluate(() => Array.from(document.querySelectorAll('body *')).filter(n => n.scrollWidth > n.clientWidth + 2 && n.clientWidth > 0).map(n => ({ tag:n.tagName,cls:n.className, width:n.clientWidth,scroll:n.scrollWidth,overflow:getComputedStyle(n).overflowX,text:n.textContent.slice(0,60) })))); await page.screenshot({path:path.join(root,'artifacts/ui-redesign/overflow.png'),fullPage:true}); }
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${destination} must reflow at 320 CSS pixels`);
   }
+
+}
+async function qualifyDraftIsolationAndTouch(page, origin, writeHeaders, geometry, read) {
   // Unsaved custom code uses memory only and cannot inherit network authority.
   const ownedCustom = { id: 'draft-isolation', name: 'Owned draft isolation', canvasEnabled: true, widgets: [{ kind: 'custom', name: 'Owned custom', custom: { permissions: ['storage','network'], networkDomains: ['example.com'],
     html: '<div id="count"></div><div id="network"></div>', javaScript: "SBX.store.get().then(() => SBX.store.set({count:44})).then(() => document.getElementById('count').textContent='Draft memory 44'); fetch('https://example.com/owned-draft').catch(() => document.getElementById('network').textContent='Draft network blocked');" } }] };
@@ -136,5 +143,5 @@ export async function qualifyUiRedesign(page, origin, writeHeaders, root) {
       const doc = await read(); assert.equal(doc.width, width); assert.equal(doc.height, height); assert.deepEqual(doc.widgets.map(w => [w.id,w.x,w.y,w.width,w.height]), geometry);
     }
   } finally { await context.close(); }
-  console.log('UI redesign browser qualification passed: named triggers, ordinary amounts, draft rendering, first/all matching, seven viewports in both themes, fitted/manual zoom, geometry preservation, history navigation and retained conflicts');
+
 }

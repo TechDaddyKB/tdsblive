@@ -65,9 +65,8 @@ public sealed record AlertSettings
     public void Validate()
     {
         Condition?.Validate();
-        if (NativeType is not null && (string.IsNullOrWhiteSpace(NativeType) || NativeType.Length > 128) ||
-            CustomTriggerKey is not null && (string.IsNullOrWhiteSpace(CustomTriggerKey) || CustomTriggerKey.Length > 128) ||
-            EventTypes is null || EventTypes.Length is < 1 or > 64 || EventTypes.Any(t => string.IsNullOrWhiteSpace(t) || t.Length > 128) ||
+        ValidateIncomingSelector(NativeType); ValidateIncomingSelector(CustomTriggerKey);
+        if (EventTypes is null || EventTypes.Length is < 1 or > 64 || EventTypes.Any(t => string.IsNullOrWhiteSpace(t) || t.Length > 128) ||
             Platforms is null || Platforms.Length > 16 || Platforms.Any(p => string.IsNullOrWhiteSpace(p) || p.Length > 64) ||
             Template is null || Template.Length > 4096 || string.IsNullOrWhiteSpace(Group) || Group.Length > 64 ||
             Priority is < -100 or > 100 || DurationMs is < 100 or > 300000 || CooldownMs is < 0 or > 3600000 ||
@@ -75,6 +74,11 @@ public sealed record AlertSettings
             InterruptPolicy is not ("never" or "higher-priority") || OverflowPolicy is not ("drop-oldest" or "drop-newest") ||
             Animation is not ("none" or "fade" or "slide") || MediaAssetId is not null && !AssetIdentity.IsValid(MediaAssetId) ||
             SoundAssetId is not null && !AssetIdentity.IsValid(SoundAssetId)) throw new ArgumentException("Invalid alert settings.");
+    }
+    private static void ValidateIncomingSelector(string? value)
+    {
+        if (value is not null && (string.IsNullOrWhiteSpace(value) || value.Length > 128))
+            throw new ArgumentException("Invalid incoming alert selector.");
     }
 }
 

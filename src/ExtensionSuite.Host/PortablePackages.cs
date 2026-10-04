@@ -39,7 +39,7 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
         foreach (var item in package.Widgets) data.Add("widgets/" + item.Id + ".json", SafeJson(item));
         if (widget is null) data.Add("overlay.json", SafeJson(package));
         var custom = widget?.Custom;
-        data.Add("manifest.json", SafeJson(new PortableManifest(AlertMatching.RequiresV2(package) ? 2 : 1, widget is null ? "overlay" : "widget", custom?.PackageVersion ?? "1.0.0", custom?.Author ?? "", metadata.ToArray())));
+        data.Add("manifest.json", SafeJson(CreateManifest(package, widget, custom, metadata)));
         if (data.Sum(d => (long)d.Value.Length) > MaximumExpandedBytes || data.Count > 512) throw new ArgumentException("Package exceeds limits.");
         using var output = new MemoryStream();
         using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
@@ -51,6 +51,9 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
         if (output.Length > MaximumArchiveBytes) throw new ArgumentException("Package exceeds limits.");
         return output.ToArray();
     }
+
+    private static PortableManifest CreateManifest(OverlayDefinition package, OverlayWidget? widget, CustomWidgetSettings? custom, List<PortableAsset> metadata) =>
+        new(AlertMatching.RequiresV2(package) ? 2 : 1, widget is null ? "overlay" : "widget", custom?.PackageVersion ?? "1.0.0", custom?.Author ?? "", metadata.ToArray());
 
     private byte[] SafeJson<T>(T value)
     {

@@ -1,4 +1,5 @@
 import { Dialog } from './ui';
+import { editorKeyboard } from './editorKeyboard';
 import { navigationGuard } from './navigation';
 import { DraftWidget, sampleEvent } from './DraftWidget';
 import { AlertSets } from './AlertSets';
@@ -58,7 +59,13 @@ export function VisualEditor({ active = true }: { active?: boolean }) {
   useEffect(() => {
     const close = (event: Event) => { if (event instanceof KeyboardEvent && event.key !== 'Escape') return; if (event.type === 'pointerdown' && (event.target as Element)?.closest('.toolbar-menu')) return;
       document.querySelectorAll<HTMLDetailsElement>('.visual-editor .toolbar-menu[open]').forEach(menu => { menu.open = false; if (event instanceof KeyboardEvent) menu.querySelector<HTMLElement>('summary')?.focus(); }); };
-    document.addEventListener('pointerdown', close); document.addEventListener('keydown', close); return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', close); };
+    const finishCommand = (event: MouseEvent) => {
+      const button = (event.target as Element)?.closest('button');
+      const menu = button?.closest<HTMLDetailsElement>('.visual-editor .toolbar-menu');
+      if (menu) menu.open = false;
+    };
+    document.addEventListener('click', finishCommand);
+    document.addEventListener('pointerdown', close); document.addEventListener('keydown', close); return () => { document.removeEventListener('click', finishCommand); document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', close); };
   }, []);
   useEffect(() => { const refresh = () => { void request<EditorAsset[]>('/api/assets').then(setAssets).catch(() => setNotice('Unable to refresh assets.')); }; window.addEventListener('tdsblive:assets-changed', refresh); return () => window.removeEventListener('tdsblive:assets-changed', refresh); }, []);
   const doc = state?.document; const selected = selectedIds[0] ?? ''; const chosen = doc?.widgets.find(w => w.id === selected);
@@ -142,7 +149,7 @@ export function VisualEditor({ active = true }: { active?: boolean }) {
   const visibleWidgets = activeGesture && dragView ? (activeGesture.mode === 'move' ?
     nudgeSelection(activeGesture.scene, activeGesture.ids, dragView.x - activeGesture.widget.x, dragView.y - activeGesture.widget.y) :
     resizeSelection(activeGesture.scene, activeGesture.ids, activeGesture.widget, dragView.width, dragView.height)).widgets : doc?.widgets ?? [];
-  return <section aria-label="Visual overlay editor" className="visual-editor" onClick={e => { if ((e.target as Element).closest('button')) { const menu = (e.target as Element).closest<HTMLDetailsElement>('.toolbar-menu'); if (menu) menu.open = false; } }}><h2>Visual Overlay Editor</h2>
+  return <section aria-label="Visual overlay editor" className="visual-editor"><h2>Visual Overlay Editor</h2>
     <div className="canvas-toolbar"><label>Overlay<select aria-label="Overlay" value={doc?.id ?? ''} onChange={e => { void load(e.target.value); }}><option value="">Choose overlay…</option>{overlays.filter(o => o.canvasEnabled).map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label><button onClick={() => { setIdEdited(false); setCreating(true); }}>New overlay</button></div>
     {!doc && <p>Start with a new overlay, choose its size, and add your first widget.</p>}
     {creating && <Dialog title="Create overlay" close={() => setCreating(false)}><div className="form-grid">
@@ -189,20 +196,14 @@ export function VisualEditor({ active = true }: { active?: boolean }) {
       {state.status === 'conflict' && <p role="alert">Another editor changed this overlay. Your local edits are retained. Reload the saved version to resolve the conflict.</p>}
       <div className="workspace-controls"><div className="workspace-tabs" aria-label="Editor panels"><button aria-pressed={panel === 'layers'} onClick={() => setPanel(panel === 'layers' ? 'canvas' : 'layers')}>Layers</button><button aria-pressed={panel === 'canvas'} onClick={() => setPanel('canvas')}>Canvas</button><button aria-pressed={panel === 'properties'} onClick={() => setPanel(panel === 'properties' ? 'canvas' : 'properties')}>Properties</button></div><label><input type="checkbox" checked={multiSelect} onChange={e => setMultiSelect(e.target.checked)} />Select multiple</label><output aria-label="Selected layers">{selectedWidgets.length} selected</output></div>
       <p className="canvas-sample-notice">Design preview · sample data · silent. Select an alert to see its design; other alerts show their placement.</p>
-      <div className="canvas-workspace" data-panel={panel} onKeyDown={e => {
-        if (e.target instanceof HTMLElement && (e.target.isContentEditable || e.target.closest('.monaco-editor'))) return;
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-        const modifier = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
-        if (modifier && key === 'z') { e.preventDefault(); if (e.shiftKey) session.current?.redo(); else session.current?.undo(); }
-        else if (modifier && key === 'y') { e.preventDefault(); session.current?.redo(); }
-        else if (modifier && key === 'd') { e.preventDefault(); duplicate(); }
-        else if (modifier && key === 'c' && chosen) { e.preventDefault(); setClipboard(copySelection(doc, selectedIds)); }
-        else if (modifier && key === 'v' && clipboard.length) { e.preventDefault(); duplicate(clipboard); }
-        else if (modifier && key === 'a') { e.preventDefault(); setSelectedIds(doc.widgets.map(w => w.id)); }
-        else if (modifier && key === 'g') { e.preventDefault(); edit(groupSelection(doc, selectedIds, e.shiftKey)); }
-        else if (key === 'delete' || key === 'backspace') { e.preventDefault(); remove(); }
-        else if (selectedWidgets.length && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); const n = e.shiftKey ? 10 : 1; edit(nudgeSelection(doc, selectedIds, e.key === 'ArrowRight' ? n : e.key === 'ArrowLeft' ? -n : 0, e.key === 'ArrowDown' ? n : e.key === 'ArrowUp' ? -n : 0)); }
-      }}>
+      <div className="canvas-workspace" role="group" aria-label="Canvas workspace" data-panel={panel} onKeyDown={e => editorKeyboard(e, {
+        undo: () => session.current?.undo(), redo: () => session.current?.redo(), duplicate: () => duplicate(),
+        copy: chosen ? () => setClipboard(copySelection(doc, selectedIds)) : undefined,
+        paste: clipboard.length ? () => duplicate(clipboard) : undefined,
+        selectAll: () => setSelectedIds(doc.widgets.map(w => w.id)),
+        group: ungroup => edit(groupSelection(doc, selectedIds, ungroup)), remove,
+        nudge: selectedWidgets.length ? (x, y) => edit(nudgeSelection(doc, selectedIds, x, y)) : undefined,
+      })}>
         <aside className="layers-panel">          <h3>Layers</h3><ol>{[...doc.widgets].reverse().map(w => <li key={w.id}><button aria-pressed={selectedKeys.has(w.id)} onClick={e => select(w.id, e.shiftKey || e.ctrlKey || e.metaKey || multiSelect)}>{w.name}{w.locked ? ' 🔒' : ''}{w.hidden ? ' (hidden)' : ''}{w.groupId ? ' (group)' : ''}</button></li>)}</ol>
           <button disabled={!chosen} onClick={() => duplicate()}>Duplicate</button><button disabled={!chosen || chosen.locked} onClick={remove}>Delete layer</button><button disabled={!chosen} onClick={() => reorder(1)}>Raise layer</button><button disabled={!chosen} onClick={() => reorder(-1)}>Lower layer</button>
         </aside>

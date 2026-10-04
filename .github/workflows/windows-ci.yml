@@ -202,7 +202,12 @@ jobs:
         env:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
-        run: node tools/browser-qualification/offline-guide.mjs release/portable/guide
+        shell: pwsh
+        run: |
+          sonar analyze secrets release/portable/guide
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tools/browser-qualification/offline-guide.mjs packaged
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload candidate Windows packages
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

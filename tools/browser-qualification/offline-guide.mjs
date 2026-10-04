@@ -1,13 +1,20 @@
 // Audit the generated or packaged guide in an isolated browser with networking denied.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 
-const directory = path.resolve(process.argv[2] ?? 'release/portable/guide');
-execFileSync('sonar', ['analyze', 'secrets', directory], { stdio: 'inherit' });
+// The caller scans generated files first. Accept named, fixed repository targets;
+// CLI arguments must never become scanner options or filesystem paths.
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const targets = new Map([
+  ['packaged', path.join(root, 'release/portable/guide')],
+  ['candidate', path.join(root, 'release/ui-redesign-offline-guide')],
+  ['review', path.join(root, 'release/ui-redesign-offline-guide-wizard')],
+]);
+const directory = targets.get(process.argv[2] ?? 'packaged');
+assert.ok(directory, 'Choose packaged, candidate or review');
 const pages = (await readdir(directory)).filter(name => name.endsWith('.html'));
 assert.ok(pages.includes('Adaptive-Editor-and-Guided-Alerts.html'), 'The candidate guide chapter must be packaged');
 const browser = await chromium.launch({ headless: true });

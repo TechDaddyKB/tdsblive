@@ -45,7 +45,13 @@ export function CurrencyField({ label, currency, digits, value, upper, change }:
   return <label>{label}<input aria-label={label} list={list} value={text} maxLength={3} onChange={e => {
     const code = e.target.value.toUpperCase(); setText(code); setError(''); if (!/^[A-Z]{3}$/.test(code)) { setError('Choose a currency or enter its three-letter code. The previous currency is retained.'); return; }
     const scale = new Intl.NumberFormat('en', { style: 'currency', currency: code }).resolvedOptions().maximumFractionDigits ?? 2;
-    const rescale = (amount: string | number) => decimalToInteger(integerToDecimal(amount, digits).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, ''), scale);
+    const rescale = (amount: string | number) => {
+      if (!/^\d+$/.test(String(amount)) || digits < 0 || digits > 4) return null;
+      const source = 10n ** BigInt(digits), scaled = BigInt(amount) * 10n ** BigInt(scale);
+      if (scaled % source !== 0n) return null;
+      const result = scaled / source;
+      return result <= 9223372036854775807n ? String(result) : null;
+    };
     const amount = rescale(value), maximum = upper == null ? null : rescale(upper);
     if (amount === null || upper != null && maximum === null) { setError(`Enter amounts with up to ${scale} decimal places before choosing ${code}. The previous currency is retained.`); return; }
     change({ currency: code, minorUnitDigits: scale, value: amount, ...(upper !== undefined ? { upperExclusive: maximum } : {}) });
