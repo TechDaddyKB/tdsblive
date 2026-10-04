@@ -1,134 +1,74 @@
-# First setup
+# First setup: connect only what you need
 
-Open TDSBLive, then open
-[the editor](http://127.0.0.1:17474/editor). **Guided setup** appears until you
-finish its review. The guide remembers your step when you restart.
+By the end of this page, the editor should show the connections you use, and you should know how to check them. You can skip an unused service and return later.
 
-![Guided setup welcome screen](images/guided-setup.png)
+## 1. Start the application and open guided setup
 
-## 1. Start the helper applications
+Start one copy of TDSBLive. Open [the local editor](http://127.0.0.1:17474/editor). Follow the guided setup steps in order. The guide remembers your progress, but a completed step is not proof that a disconnected service is working today.
 
-Start Streamer.bot and connect the streaming accounts you use there.
-Streamer.bot supplies Twitch, YouTube and Kick events to TDSBLive and runs your
-actions. Start Speaker.bot too if you want text read aloud.
+![Guided setup with example settings](images/guided-setup.png)
 
-You can skip a service you do not use. Moving to the next step does not
-automatically enable integrations or run actions.
+This picture shows the setup area. Read the descriptions before entering values. Your own bot ports or service details may differ from the examples.
 
-## 2. Connect the bots
+## 2. Prepare Streamer.bot if you use it
 
-1. In Streamer.bot, enable its WebSocket server under Servers/Clients. A
-   WebSocket is the connection that lets these applications exchange events.
-2. In guided setup, enter the same host and port. For applications on this
-   computer, the host is usually **127.0.0.1**. The default Streamer.bot port is
-   **8080**; use the port shown in your own server settings if it differs.
-3. Choose **Save Streamer.bot connection**.
-4. If using Speaker.bot, enable its WebSocket server and save its matching
-   connection. TDSBLive defaults to port **7680**.
-5. Restart TDSBLive using **Backup and recovery → Restart TDSBLive**. Reopen the
-   editor and click **Test Streamer.bot connection** and, if used,
-   **Test Speaker.bot connection**. A passing test says the bot answered.
+Install and start Streamer.bot using [its official instructions](https://docs.streamer.bot/get-started/installation). Extract its entire ZIP to a local folder rather than running it in an archive. Connect your streaming accounts in Streamer.bot using its own account setup instructions.
 
-The tests read information only. They do not speak, clear a queue or run an
-action. Save and restart first: testing uses the active connection, not an
-unsaved address. Older Speaker.bot versions may not support the test request;
-that limitation is shown separately from their connection status. A passing
-connection test does not prove audible speech.
+On Linux, use [Streamer.bot's experimental Linux guide](https://docs.streamer.bot/get-started/installation/linux) first. Its requirements are different from TDSBLive's. The project's integration qualification used Streamer.bot 1.0.7; do not assume every future bot version has already been checked.
 
-If Streamer.bot requires authentication, enter its password in **Streamer.bot
-authentication**. Leave the form unused if authentication is disabled.
-Session-only storage is the default: enter the password after restarting to
-apply connection settings. It is cleared on the next host restart. For the
-Windows application, you can uncheck session-only storage to save it with your
-Windows account's credential protection.
+In Streamer.bot, open **Servers / Clients** and its **WebSocket Server** settings. Enable and start the server. Write down its address, port and whether authentication is enabled. A common local port is `8080`, but use the port your bot actually shows.
 
-Do not paste passwords into public chat or screenshots. The form clears its
-password input after a save attempt.
+A server is a program waiting for a connection. Starting Streamer.bot alone is not enough if its WebSocket server is stopped.
 
-The TDSBLive trigger actions must be imported and registered in Streamer.bot
-before Rumble trigger forwarding is enabled. Follow the extension import
-instructions supplied with your qualified release. The setup guide does not
-automatically prove that those triggers execute.
+## 3. Enter the matching connection in TDSBLive
 
-### Import the supplied actions
+1. In TDSBLive's connection settings, choose the Streamer.bot connection.
+2. For a bot on the same computer, use the local address. Match the server's port exactly.
+3. If the bot requires authentication, enter the corresponding password or secret.
+4. Choose session-only storage while you are learning. It means the secret is kept for this run and must be entered again after restarting.
+5. Save the settings. If the page requests a restart, restart TDSBLive and enter session-only secrets again.
+6. Use the connection test and read its result.
 
-1. Open the TDSBLive application folder. Find
-   **integrations → tdsblive-streamerbot.sb**.
-2. In Streamer.bot, open its **Import** dialog and load that file.
-3. Review the three TDSBLive actions: **TDSBLive bootstrap**, **TDSBLive
-   qualification probe**, and **TDSBLive explicit forwarder**, then import them.
-4. Run **TDSBLive bootstrap** once so its C# initialization registers the custom
-   triggers. Check Streamer.bot's logs if compilation or registration fails.
-5. In TDSBLive, refresh bot discovery and check that the TDSBLive triggers appear.
+Tests use the active saved connection. Typing a new value without saving it does not test that value. A successful connection test establishes that the service can be reached; it does not prove all accounts, events or actions are configured.
 
-The bundle does not bind platform events or start production automation for you.
-The qualification probe is for an isolated test. The explicit forwarder is a
-template for events that require forwarding; do not attach it to every chat
-event when the WebSocket already supplies that event, or you may duplicate it.
-Real import and trigger execution were qualified with Streamer.bot 1.0.7;
-other versions still need their own compatibility checks.
+If a test fails, check that the bot server is started, the ports match, and both sides agree about authentication. Follow [Troubleshooting](Troubleshooting.md) before changing unrelated settings.
 
-### Review action permissions
+## 4. Add Speaker.bot only if you want speech
 
-Open **Bot integrations → Streamer.bot action permissions**, then choose **Load
-action permissions**. Select only the discovered actions you intend TDSBLive to
-run. Disabled actions cannot be newly selected. Remove old permissions for
-actions no longer available, then choose **Save action permissions** and restart.
-Saving permissions does not run an action or enable a rule.
+Start Speaker.bot and follow [its official installation and setup](https://speaker.bot/get-started/installation). Set up a voice that works there before asking TDSBLive to use it.
 
-For Rumble custom triggers, check **Allow qualified live event forwarding to
-Streamer.bot** here and **Forward qualified Rumble events to Streamer.bot** in
-Rumble polling settings. Save both, restart and verify the trigger with an
-isolated probe before attaching production automation.
+Enable its WebSocket server. A common port is `7680`; use the actual port shown in your installation. Enter that connection in TDSBLive, save it, restart when requested and run the connection test.
 
-## 3. Connect Rumble
+A working Speaker.bot connection does not guarantee a particular voice alias exists. Copy the alias from your own Speaker.bot configuration when setting up [Automation](Automation.md). If you are only setting up chat today, leave speech for later.
 
-1. Obtain your private Rumble Live API URL from your Rumble account.
-2. Paste it into **Live API URL** under the Rumble setup step.
-3. Keep **Keep credential only for this session** checked for a temporary test.
-4. Click **Connect Rumble**.
-5. Wait for **Baseline established**. This means TDSBLive has learned the current
-   snapshot. Old chat and support in that snapshot do not create new alerts.
+## 5. Import the bundled Streamer.bot actions if needed
 
-The URL is a credential. Keep it private. With session-only storage, you must
-enter it again after restarting TDSBLive. Persistent storage requires the
-Windows application and uses Windows credential protection.
+The TDSBLive program folder includes `integrations/tdsblive-streamerbot.sb`. Use Streamer.bot's import function to import that file. Review the imported actions before using them.
 
-Subscription and gift behaviors without verified Rumble payload evidence remain
-gated. Do not assume connecting the API proves every event type works.
+Run the bundled bootstrap action once to initialize its integration and register its intended triggers. Refresh action discovery in TDSBLive afterward. The qualification probe is for checking the integration; it is not a reason to run every available action.
 
-## 4. Set supporter periods and valuations
+Grant TDSBLive permission only for actions you intend it to call. Saving the permission list does not execute an action. Do not attach the explicit event forwarder to every chat event if that chat already arrives through WebSocket events; doing both can create duplicate messages.
 
-Choose your financial timezone. **Use browser timezone** fills the timezone
-reported by your browser; check that it is the one you want. Save the financial
-periods. Daily totals use this timezone and weeks start on Monday.
+Rumble trigger forwarding needs the relevant bot action permission and the matching TDSBLive Rumble forwarding setting. Save and restart as instructed. Test with an isolated example before using it in production.
 
-At the start of a stream, use **Use current time** for the stream start and save
-it. That start is shared across platforms for current-stream totals.
+## 6. Connect Rumble only if you use it
 
-Review any nominal valuation rules before using them. A nominal value is your
-chosen estimate, not proof of the money received. Unknown values remain unknown
-until evidence or an explicit valuation is supplied.
+Enter your private Rumble API URL in the Rumble settings. This is a connection credential, not your streaming key. Keep it out of screenshots and public support messages.
 
-## 5. Add chat to OBS
+Choose session-only storage initially, connect, and wait for **Baseline established**. The baseline lets TDSBLive recognize information already present when you connect, so old data is not treated as a new alert.
 
-Follow [Chat and OBS](Chat-and-OBS.md) to add the transparent chat source and
-the reading dock. Send a new message on a connected platform and check that it
-appears once. Use the dock's Light/Dark button to choose your reading theme.
+Use a new test message after the connection is ready. An old message may be intentionally suppressed. Subscriber and gift behavior remains gated where it is unverified; do not assume every Rumble event is supported merely because chat connects.
 
-## 6. Review and protect your setup
+## 7. Set dates and money display deliberately
 
-Check each integration you intend to use. For audio, listen through the actual
-OBS audio path; a successful dispatch message alone does not prove audible
-output. For the current Speaker.bot setup, the voice alias is **local english**.
+Choose the financial time zone. **Use browser time zone** is convenient if the browser and your intended reporting time zone match. Weeks start on Monday. **Use current time** for the stream start sets the boundary for the stream period; do this deliberately when starting a new session.
 
-Review action permissions, automation filters and cooldowns before enabling live
-rules. Preview events are isolated from production totals and live automation.
-VTube Studio work is on hold; use Streamer.bot's built-in integration.
+A displayed supporter amount can be an exact amount, an estimate or an unknown value. It is a record of received events, not a bank balance or a payout statement. [Supporter totals](Supporter-Totals.md) explains the labels.
 
-Choose **Finish setup review** when you finish reading the checklist. This saves
-your review preference, not a claim that every integration passed. You can open
-guided setup again later.
+## 8. Check before moving on
 
-Finally, [download a backup](Backup-and-Recovery.md). Keep it private and store a
-copy away from the application folder.
+The connections you use should be healthy. Unused services can remain disabled. Do not enable automation just to make all indicators green.
+
+On Windows, persistent credentials use Windows credential protection. Compatibility environments can behave differently. If persistent storage is unavailable, use session-only credentials and enter them again after restarting.
+
+Next: [Chat and OBS](Chat-and-OBS.md), where you will check an actual message and display it.

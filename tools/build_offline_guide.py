@@ -6,6 +6,8 @@ import re
 import shutil
 import subprocess
 
+from user_guide_navigation import GROUPS, ordered_pages
+
 ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT / 'docs/user-guide'
 
@@ -30,6 +32,7 @@ def render(text: str) -> str:
     result = []
     paragraph = []
     listing = None
+    code_lines = None
     def flush():
         if paragraph:
             result.append('<p>' + inline(' '.join(paragraph)) + '</p>')
@@ -46,6 +49,17 @@ def render(text: str) -> str:
         else:
             lines.append(line)
     for line in lines:
+        if line.startswith('```'):
+            flush(); close_list()
+            if code_lines is None:
+                code_lines = []
+            else:
+                result.append('<pre><code>' + html.escape('\n'.join(code_lines)) + '</code></pre>')
+                code_lines = None
+            continue
+        if code_lines is not None:
+            code_lines.append(line)
+            continue
         heading = re.match(r'^(#{1,6}) (.+)$', line)
         item = re.match(r'^(?:([-]) |(\d+)\. )(.+)$', line)
         if not line.strip():
@@ -66,6 +80,8 @@ def render(text: str) -> str:
             flush(); close_list(); result.append('<blockquote>' + inline(line.lstrip('> ')) + '</blockquote>')
         else:
             close_list(); paragraph.append(line.strip())
+    if code_lines is not None:
+        raise ValueError('Unclosed guide code block')
     flush(); close_list()
     return '\n'.join(result)
 
@@ -77,20 +93,24 @@ def build(destination: Path):
         raise ValueError('Guide output must be a child of the repository release directory')
     if destination.exists():
         raise ValueError('Choose a fresh guide output directory')
-    pages = sorted(GUIDE.glob('*.md'))
+    pages = ordered_pages(GUIDE)
     images = sorted((GUIDE / 'images').glob('*'))
     for source in pages + images:
         if source.is_symlink() or not source.is_file():
             raise ValueError('Guide sources must be ordinary files')
         subprocess.run(['sonar', 'analyze', 'secrets', str(source)], check=True)
-    navigation = ' · '.join(f'<a href="{page.stem}.html">{html.escape(page.stem.replace("-", " "))}</a>' for page in pages)
+    navigation = ''.join(
+        '<details><summary>' + html.escape(group) + '</summary><ul>' + ''.join(
+            f'<li><a href="{name}.html">{html.escape(label)}</a></li>' for name, label in entries
+        ) + '</ul></details>' for group, entries in GROUPS
+    )
     rendered = {page.stem: render(page.read_text(encoding='utf-8')) for page in pages}
     destination.mkdir(parents=True)
     shutil.copytree(GUIDE / 'images', destination / 'images')
     for name, body in rendered.items():
         document = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         document += f'<title>TDSBLive — {html.escape(name)}</title>'
-        document += '<style>body{font:18px/1.6 system-ui;margin:auto;padding:24px;max-width:960px;color:#17202a;background:white}nav{font-size:15px}img{max-width:100%;height:auto}code{overflow-wrap:anywhere}blockquote{border-left:4px solid #758399;padding-left:16px}a{color:#005cab}li{margin-bottom:8px}</style>'
+        document += '<style>body{font:18px/1.6 system-ui;margin:auto;padding:24px;max-width:960px;color:#17202a;background:white}nav{font-size:16px;border-bottom:1px solid #cbd5e1;padding-bottom:16px}summary{cursor:pointer;font-weight:600}details{margin:8px 0}pre{overflow:auto;padding:16px;background:#f1f5f9;border-radius:6px}pre code{white-space:pre;overflow-wrap:normal}img{max-width:100%;height:auto}code{overflow-wrap:anywhere}blockquote{border-left:4px solid #758399;padding-left:16px}a{color:#005cab}li{margin-bottom:8px}</style>'
         document += f'<nav aria-label="User guide">{navigation}</nav><main>{body}</main></html>'
         (destination / (name + '.html')).write_text(document, encoding='utf-8')
     print(f'Built {len(pages)} offline guide pages')

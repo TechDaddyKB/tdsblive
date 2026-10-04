@@ -1,55 +1,51 @@
-# TDSBLive user guide
+# TDSBLive: start here
 
-TDSBLive brings chat, stream overlays and alerts together on your own computer.
-Streamer.bot connects your streaming accounts and runs your actions.
-Speaker.bot handles speech. OBS displays your stream.
+TDSBLive brings stream chat, on-screen graphics and alerts together on your computer. This guide takes you from downloading the app to using it during a stream. You do not need to know programming to use the ordinary features.
 
-## Start here
+**Already installed?** Start TDSBLive, then open [the editor](http://127.0.0.1:17474/editor) in your web browser. Keep the application running while OBS uses its pages. Closing the browser tab does not quit the application.
 
-If you already have TDSBLive running, open the editor at
-[http://127.0.0.1:17474/editor](http://127.0.0.1:17474/editor).
-Keep TDSBLive running while you use its overlays in OBS.
+## Your first trip through the guide
 
-- [Install and update](Install-and-Update.md): choose an installer or ZIP, update safely and uninstall.
-- [First setup](First-Setup.md): connect the services you use and review them before streaming.
-- [Chat and OBS](Chat-and-OBS.md): show chat on your stream and add a reading dock.
-- [Backup and recovery](Backup-and-Recovery.md): protect saved data and restore a checked copy.
-- [Overlays and alerts](Overlays-and-Alerts.md): build a layout and test it before adding it to OBS.
-- [Supporter totals](Supporter-Totals.md): understand periods, valuations and linked identities.
-- [Automation](Automation.md): configure and review speech and sound rules.
-- [LAN access](LAN-Access.md): optionally use another computer on your network.
-- [Troubleshooting](Troubleshooting.md): everyday checks and help with common problems.
+Follow these steps in order. You can leave the optional features until your basic setup works.
 
-This guide covers installation, first setup, everyday use, connections,
-overlays, alerts, supporter totals, automation, backup, updates and recovery.
-Illustrations use made-up examples so they do not expose your account details.
+1. Read [Before you begin](Before-You-Begin.md). It explains what each application does and which download contains which features.
+2. Install for your computer: [Windows](Install-on-Windows.md), [Linux with Wine](Install-on-Linux-Wine.md), or [Linux with Proton](Install-on-Linux-Proton.md).
+3. Follow [First setup](First-Setup.md) to connect the services you actually use.
+4. Follow [Chat and OBS](Chat-and-OBS.md) to see your first working chat page.
+5. Try [Overlays and alerts](Overlays-and-Alerts.md) when you want graphics or notifications on your stream.
+6. Use [Everyday use](Everyday-Use.md) as your checklist before and after a stream.
 
-Local web pages use **HTTP**. You do not need an HTTPS certificate. Access from
-another computer is optional and requires authenticated LAN setup.
+**Something did not work?** Go to [Troubleshooting](Troubleshooting.md). If a word is unfamiliar, look in the [Glossary](Glossary.md).
 
-## Known limitations
+## Choose what you want to do next
 
-The available live test environment is Wine/Proton. GitHub Actions separately
-tests native Windows builds and packages. These are different kinds of checks:
-a successful Windows build does not prove OBS playback, and a Wine/Proton test
-does not prove performance on a native Windows streaming PC.
+- [Install, update or remove TDSBLive](Install-and-Update.md).
+- [Understand supporter totals](Supporter-Totals.md) and their dates, currencies and estimates.
+- [Set up speech and sound](Automation.md), then test rules before enabling them.
+- [Make a backup or restore one](Backup-and-Recovery.md).
+- [Use another computer on your home network](LAN-Access.md), if you need to.
+- [Arrange more complex overlays](Advanced-Editor-and-Widgets.md).
+- [Use custom widgets and share packages](Custom-Widgets-and-Portable-Packages.md).
+- [Try the limited local StreamElements compatibility option](Local-StreamElements-Compatibility.md).
 
-Native Windows streaming-PC performance testing is explicitly deferred by the
-project owner. Wine/Proton tests exceed the CPU and memory targets; this
-limitation is documented for the MVP release rather than claimed as a pass.
-Your streaming computer may behave differently.
-VTube Studio work is also on hold; use Streamer.bot's built-in integration.
+## Read without the internet
 
-Paid-event checks use made-up, owned examples in separate test data. They check
-supporter totals and local speech/sounds without spending money. Actual paid
-Rumble Rant, Ko-fi donation and Twitch Bits delivery has not been verified.
+The Windows application download includes a `guide` folder. Open `guide/Home.html` in your browser. Those pages and their pictures work without the internet. Links to downloads and other projects still require an internet connection. Keep the guide folder and its images together. The bundled guide belongs to the build you downloaded; the current wiki may include newer instructions. This reorganization will be included in future packages and does not replace the files inside the already published MVP download.
 
-## Project and developer information
+Screenshots in this guide show owned examples. Names, ports and example settings are illustrations; use the values in your own applications. Some pictures show an earlier interface, so use the accompanying instructions if your screen differs slightly.
 
-- [Project repository](https://github.com/TechDaddyKB/tdsblive)
-- [Implementation goals and current evidence](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/implementation-plan.md)
-- [G10 release work](https://github.com/TechDaddyKB/tdsblive/pull/13)
-- [Developer architecture](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/architecture.md)
+## What has been tested, and what remains limited
 
-You do not need the developer documents for ordinary use. They describe how the
-application is built and how its integrations are tested.
+The project has native Windows build, automated test and package checks. It also has live Linux/Wine checks, including local OBS rendering and an audible custom-widget test. These checks do not establish that every Linux distribution, Wine runner or Proton runner behaves the same way.
+
+Linux compatibility testing has exceeded the project's CPU targets. The original MVP also exceeded its memory target in its Wine test. Later managed-host Linux qualification met the memory target, but did not meet the CPU targets; that was a separate workload, not a new Wine performance pass. Native Windows streaming-PC performance testing remains deferred. Check the load on your own streaming computer before relying on it for a show.
+
+Actual paid Rumble Rant, Ko-fi donation and Twitch Bits delivery has not been verified. Local examples test behavior without requiring you to spend money. VTube Studio work is on hold; use Streamer.bot's built-in integration for that application.
+
+## Optional project information
+
+You do not need these technical documents for ordinary use.
+
+- [Project repository](https://github.com/TechDaddyKB/tdsblive).
+- [Implementation goals and current evidence](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/implementation-plan.md).
+- [Developer architecture](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/architecture.md).

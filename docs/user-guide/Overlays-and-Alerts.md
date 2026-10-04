@@ -1,97 +1,57 @@
 # Overlays and alerts
 
-An overlay is a web page OBS places over your video. A widget is one piece of
-that page, such as chat, an image, a donor list or an alert.
+An overlay is a web page OBS places over your video. A widget is one item on that page, such as text, an image, chat or an alert box. Start with one small layout and test it before adding complexity.
 
-## Create an overlay
+## 1. Create a layout
 
-1. Open **Visual Overlay Editor** in the TDSBLive editor.
-2. Enter a **New overlay name** and a **New overlay ID**. Use a short ID without
-   spaces, such as `main-alerts`.
-3. Choose a **Canvas preset** that matches your OBS layout, or choose Custom and
-   enter its width and height.
-4. Click **Create overlay**.
-5. Add the widgets you need from the Widgets list.
+1. Open the overlay area in the editor and create a new overlay.
+2. Give it a name that describes its purpose, such as `Main alerts`.
+3. Choose a canvas preset or size that matches how you intend to use it in OBS. The canvas is the editing area, measured in pixels.
+4. Add a simple widget, such as text or an image.
+5. Select the widget on the canvas or in **Layers**, then adjust its position and size.
+6. Check the save status. Use **Save now** when you want an explicit save before a test.
 
-This example shows a saved text widget. The center is your canvas; its settings
-are on the right. Your overlay starts empty until you add a widget.
+An overlay ID is its internal name used in the page address. Copy the URL from the editor instead of guessing the address from its display name.
 
-![Visual editor with a welcome text widget](images/visual-editor.png)
+![Visual overlay editor with an owned example](images/visual-editor.png)
 
-Choose a widget on the canvas or in Layers. Drag it to position it, use its
-resize handle to change its size, and adjust its properties. Grid snapping
-helps keep positions neat. Raise or lower a layer to change which item appears
-in front. A hidden layer does not appear; a locked layer cannot be dragged.
+The picture shows the canvas and editing controls. The layer list helps you select an item that is hidden behind another item. Later items or layers can cover earlier ones.
 
-Changes save through the editor. Check **Editor save status** and use **Save
-now** before closing. If saving fails or another editor changed the overlay,
-resolve that message before assuming your changes are stored.
+## 2. Add images and other media
 
-## Add it to OBS
+Use the asset controls to upload the file you want, then select it in the widget's settings. The application accepts assets up to 20 MiB each. If an upload is too large, create a smaller copy rather than repeatedly trying the same file.
 
-1. Click **Copy OBS URL** for the selected overlay.
-2. In OBS, add a **Browser Source** and paste that URL.
-3. Match the source width and height to your canvas.
-4. Check the actual source in OBS. Keep TDSBLive running.
+Keep the original media elsewhere as well. A portable overlay package can include its assets, but a custom widget may have additional permission requirements before media can play.
 
-If your browser cannot copy automatically, TDSBLive displays **OBS URL:**
-followed by the link. Select that link and copy it manually, then paste it into
-OBS. Automatic clipboard access is a convenience; HTTP still works without it.
+## 3. Set up an alert box
 
-The URL uses local HTTP and needs no certificate. On another computer,
-`127.0.0.1` means that other computer; it does not point back to your streaming
-PC. Remote viewing requires the separately configured authenticated LAN flow.
+Add an **Alert Box** widget. Choose the supported event types you want it to display, then configure its text and any media. Start with one event type so you can understand the result.
 
-## Set up an alert
+An alert is a brief response to an event. It is different from a chat widget that keeps showing a conversation. A working chat connection does not prove every paid or subscriber event has been verified.
 
-1. Add **AlertBox** to the overlay.
-2. Select it and configure the alert's event, text and media settings.
-3. Upload your own media using **Upload widget media** in Assets, then choose it
-   in the widget settings. Supported types include images, GIFs, audio and
-   video; the upload limit is 20 MiB per file.
-4. Position and resize the alert, then save.
-5. Open **Preview** before sending a test event.
+Use the editor's test or preview controls with a made-up example. The preview is separate from the live OBS page. Its test should not be treated as an actual donation, and previewing does not establish delivery from a paid platform.
 
-For a sound test, turn on **Enable preview audio**. Browser audio rules and OBS
-routing can affect playback. Listen through OBS and check its audio meter before
-depending on a sound during a stream.
+## 4. Check sound deliberately
 
-## Test without changing live totals
+Enable preview audio if you want to hear a preview. Then check your actual OBS source's audio behavior separately. Depending on OBS settings, browser audio may be routed through OBS rather than directly to your speakers.
 
-Under **Test events**, choose the test type and platform, then click **Send
-isolated test event**. The event reaches only this overlay's preview viewers.
-It does not persist, change financial totals or execute external automation.
-Your normal OBS source is a live view, so use the preview to check these events.
+Watch the relevant OBS audio meter and listen using the monitoring route you intend to use. Seeing a play indicator does not prove you heard a sound. Hearing a preview in your browser does not prove the broadcast receives the same audio.
 
-Advanced raw injection is for developer diagnostics. Ordinary alert setup does
-not require it. Preview success does not prove a real platform event reaches
-the application; check that separately for each service you use.
+Keep the test short and at a comfortable volume. Do not start a public broadcast just to find out whether a local source can play sound.
 
-## Undo or restore a layout
+## 5. Add the saved overlay to OBS
 
-Use **Undo** and **Redo** for recent edits. **Revision history** lists retained
-saved versions. Restoring an older version creates a new saved revision rather
-than silently deleting the history. Retained revisions are limited; keep a
-[backup](Backup-and-Recovery.md) for longer-term recovery.
+1. Save the overlay and copy its live URL.
+2. Add an OBS **Browser** source in your chosen scene.
+3. Paste the live URL into **URL**, with **Local file** off.
+4. Set the browser source's width and height to match the overlay canvas.
+5. Confirm and check the actual OBS preview.
+6. Trigger a safe local test, then verify its placement and any intended audio.
 
-## Advanced canvas controls
+If the browser preview works but OBS does not, first check the copied address, scene, source visibility and dimensions. See [Troubleshooting](Troubleshooting.md).
 
-Shift/Ctrl-click layers to select several. Group selection makes them move,
-rotate and resize together; Ungroup selection releases them. Copied groups stay
-independent. Alignment, distribution, selection lock/visibility and front/back
-buttons are above the canvas. Grid visibility is independent from snapping.
-Use Pan canvas or middle-button dragging to move around a zoomed canvas.
+## When you want more control
 
-Add Event List for filtered recent activity. Goal Bar and Progress Bar can use a
-manual value or a supporter total in USD. Ledger bars use your financial period
-and filters; preview shows no production totals. See the online
-[advanced editor guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g11-advanced-editor.md)
-for full controls and limits. Custom-widget authoring belongs to the next milestone.
+The published MVP provides basic overlay work. Newer builds add [advanced arrangement controls](Advanced-Editor-and-Widgets.md), [custom widgets and portable packages](Custom-Widgets-and-Portable-Packages.md), and [limited local compatibility](Local-StreamElements-Compatibility.md). Each advanced page explains its version requirement.
 
-## Custom code widgets
-
-Choose **Add custom** to edit HTML, CSS, JavaScript and Settings JSON in the local Monaco editor. Custom code runs with a virtual DOM in an isolated worker inside its sandboxed iframe. Use `document.getElementById`, DOM text/HTML updates and `SBX.on` for canonical or arbitrary available events. Browser navigation, parent access and real browser Window APIs are unavailable.
-
-Permissions default off. Enable chat, financial, redacted raw data, persistent storage, media/audio or exact HTTPS network domains only after reviewing the code. Silent preview suppresses custom media/audio as well. Declared media assets use asset IDs in `src`; CSS can use `sbx-asset:ASSET_ID`. The full API, schema and limits are in the [custom-widget guide](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/g12-custom-widgets.md).
-
-**Export overlay** and **Export selected widget** download portable `.sbxoverlay` and `.sbxwidget` ZIPs. **Import portable package** creates a new overlay or adds a widget to the selected overlay, remaps identities and disables custom permissions for review. Widget state and access tokens are excluded. Full backup/restore retains custom code and state.
+Next: [Everyday use](Everyday-Use.md), or make a [backup](Backup-and-Recovery.md) of your working layout.

@@ -11,6 +11,8 @@ import re
 import shutil
 import subprocess
 
+from user_guide_navigation import GROUPS, ordered_pages
+
 ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT / "docs" / "user-guide"
 LINK = re.compile(r"(!?)\[([^\]]*)\]\(([^\s)]+)\)")
@@ -20,7 +22,7 @@ def prepare(destination: Path) -> None:
     destination = destination.resolve()
     if not (destination / ".git").is_dir():
         raise ValueError("Choose an existing wiki Git checkout.")
-    pages = sorted(GUIDE.glob("*.md"))
+    pages = ordered_pages(GUIDE)
     images = sorted((GUIDE / "images").glob("*")) if (GUIDE / "images").exists() else []
     sources = pages + images
     for source in sources:
@@ -70,8 +72,10 @@ def prepare(destination: Path) -> None:
             if target.is_symlink():
                 raise ValueError("Wiki image output cannot replace a symbolic link.")
             shutil.copyfile(image, target)
-    sidebar = "## User guide\n\n" + "\n".join(
-        f"- [{page.stem.replace('-', ' ')}]({page.stem})" for page in pages
+    sidebar = "## TDSBLive user guide\n\n" + "\n\n".join(
+        "### " + group + "\n\n" + "\n".join(
+            f"- [{label}]({name})" for name, label in entries
+        ) for group, entries in GROUPS
     ) + "\n"
     sidebar_path = destination / "_Sidebar.md"
     if sidebar_path.is_symlink():
