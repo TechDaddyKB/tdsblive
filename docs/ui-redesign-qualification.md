@@ -23,7 +23,8 @@ the exact tested head and must not inherit older goal passes silently.
   retain all matching behavior. Queue rejection never selects a different tier.
 - Ordinary overlay delivery includes eligible IDs and excludes raw/support money.
   Isolated preview events do not persist or run automation. Draft custom storage
-  is memory-only and network access is denied; saved preview/live scopes remain
+  is memory-only and network access is denied; a visible canvas notice
+  explains draft restrictions and the saved Preview path. Saved preview/live scopes remain
   separate. Preview audio starts off and resets when leaving the editor.
 - Legacy commands, custom code/permissions, reconciliation, configuration,
   LAN/HTTP, restore/revisions and v1 import/export remain reachable. Packages with

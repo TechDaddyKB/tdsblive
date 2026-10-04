@@ -141,6 +141,7 @@ async function qualifyDraftIsolationAndTouch(page, origin, writeHeaders, geometr
     await touch.route('https://example.com/**', route => { external++; return route.fulfill({ body: 'unexpected external access' }); });
     await touch.goto(`${origin}/editor#overlays`); const touchEditor = editorUI(touch);
     await touchEditor.getByLabel('Overlay', { exact: true }).selectOption('draft-isolation');
+    await touch.getByText('Custom widget drafts use sample data and temporary storage. Network access and audio are disabled. Use Preview to test saved permissions; enable preview audio explicitly there.', { exact: true }).waitFor();
     const custom = touch.frameLocator('iframe[title="Owned custom"]'); await custom.locator('#count').getByText('Draft memory 44', { exact: true }).waitFor();
     await custom.locator('#network').getByText('Draft network blocked', { exact: true }).waitFor(); assert.equal(external, 0);
     for (const suffix of ['', '?preview=1']) assert.deepEqual(await (await fetch(`${origin}/api/overlays/draft-isolation/widgets/${draftScene.widgets[0].id}/store${suffix}`)).json(), {}, 'Draft storage must not write either persisted namespace');
