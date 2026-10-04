@@ -1,5 +1,7 @@
 # Overlays and alerts
 
+> The redesign candidate adds named trigger choices, adaptive panels and conditional designs. See [Adaptive editor and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) for its workflow. Older installed builds keep their existing controls.
+
 An overlay is a web page OBS places over your video. A widget is one item on that page, such as text, an image, chat or an alert box. Start with one small layout and test it before adding complexity.
 
 ## 1. Create a layout

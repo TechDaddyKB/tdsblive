@@ -24,6 +24,7 @@ Follow these steps in order. You can leave the optional features until your basi
 - [Set up speech and sound](Automation.md), then test rules before enabling them.
 - [Make a backup or restore one](Backup-and-Recovery.md).
 - [Use another computer on your home network](LAN-Access.md), if you need to.
+- [Use the adaptive workspace and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) in the redesign candidate.
 - [Arrange more complex overlays](Advanced-Editor-and-Widgets.md).
 - [Use custom widgets and share packages](Custom-Widgets-and-Portable-Packages.md).
 - [Try the limited local StreamElements compatibility option](Local-StreamElements-Compatibility.md).
