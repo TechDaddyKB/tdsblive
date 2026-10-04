@@ -25,7 +25,7 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
         var overlay = await overlays.GetAsync(id, ct); if (overlay is null) return null;
         var widget = widgetId is null ? null : overlay.Widgets.SingleOrDefault(w => w.Id == widgetId);
         if (widgetId is not null && widget is null) return null;
-        var package = widget is null ? overlay : overlay with { Widgets = [widget], Chat = new() };
+        var package = widget is null ? overlay : overlay with { Widgets = [widget], Chat = new(), AlertSets = [] };
         var data = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         var metadata = new List<PortableAsset>();
         foreach (var assetId in AssetIds(package))
@@ -39,7 +39,7 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
         foreach (var item in package.Widgets) data.Add("widgets/" + item.Id + ".json", SafeJson(item));
         if (widget is null) data.Add("overlay.json", SafeJson(package));
         var custom = widget?.Custom;
-        data.Add("manifest.json", SafeJson(new PortableManifest(1, widget is null ? "overlay" : "widget", custom?.PackageVersion ?? "1.0.0", custom?.Author ?? "", metadata.ToArray())));
+        data.Add("manifest.json", SafeJson(new PortableManifest(AlertMatching.RequiresV2(package) ? 2 : 1, widget is null ? "overlay" : "widget", custom?.PackageVersion ?? "1.0.0", custom?.Author ?? "", metadata.ToArray())));
         if (data.Sum(d => (long)d.Value.Length) > MaximumExpandedBytes || data.Count > 512) throw new ArgumentException("Package exceeds limits.");
         using var output = new MemoryStream();
         using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
@@ -91,7 +91,7 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
             files[name] = output.ToArray();
         }
         var manifest = Read<PortableManifest>(files, "manifest.json");
-        if (manifest.FormatVersion != 1 || manifest.Kind is not ("overlay" or "widget") || manifest.Assets is null || manifest.Assets.Length > 100 ||
+        if (manifest.FormatVersion is not (1 or 2) || manifest.Kind is not ("overlay" or "widget") || manifest.Assets is null || manifest.Assets.Length > 100 ||
             manifest.Author is null || manifest.Author.Length > 128 || !System.Text.RegularExpressions.Regex.IsMatch(manifest.PackageVersion ?? "", @"^\d{1,6}\.\d{1,6}\.\d{1,6}\z", System.Text.RegularExpressions.RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100))) throw new ArgumentException("Unsupported package manifest.");
         var widgets = files.Keys.Where(k => k.StartsWith("widgets/", StringComparison.Ordinal)).Select(k => Read<OverlayWidget>(files, k)).ToArray();
         if (widgets.Length > 100 || manifest.Kind == "widget" && widgets.Length != 1) throw new ArgumentException("Invalid widget count.");
@@ -104,6 +104,7 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
             if (overlay.Widgets.Length != widgets.Length || overlay.Widgets.Any(w => !widgets.Any(x => x.Id == w.Id && JsonSerializer.Serialize(x, EventStore.JsonOptions) == JsonSerializer.Serialize(w, EventStore.JsonOptions))))
                 throw new ArgumentException("Overlay and widget definitions disagree.");
         }
+        if (manifest.FormatVersion == 1 && AlertMatching.RequiresV2(overlay ?? new OverlayDefinition { Widgets = widgets })) throw new ArgumentException("Alert rules require package format v2.");
         var content = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         foreach (var meta in manifest.Assets)
         {
@@ -143,7 +144,9 @@ public sealed class PortablePackages(OverlayStore overlays, AssetStore assets, S
             groups.TryGetValue(group, out var mapped) ? mapped : groups[group] = Guid.CreateVersion7().ToString() : null }).ToArray();
         if (package.Overlay is { } source)
         {
-            var imported = source with { Id = "import-" + Guid.CreateVersion7().ToString("N"), Version = 1, Widgets = widgets };
+            var identities = package.Widgets.Select((w, i) => (w.Id, NewId: widgets[i].Id)).ToDictionary(p => p.Id, p => p.NewId);
+            var imported = source with { Id = "import-" + Guid.CreateVersion7().ToString("N"), Version = 1, Widgets = widgets,
+                AlertSets = source.AlertSets.Select(s => s with { Id = Guid.CreateVersion7().ToString(), WidgetIds = s.WidgetIds.Select(id => identities[id]).ToArray() }).ToArray() };
             if (!await overlays.CreateAsync(imported, ct)) throw new ArgumentException("Import identity conflict.");
             return imported;
         }

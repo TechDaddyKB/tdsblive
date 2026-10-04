@@ -2,7 +2,9 @@ namespace ExtensionSuite.Core;
 
 /// <summary>Amounts are native minor units, never nominal USD ledger estimates.</summary>
 public sealed record AutomationCondition(string Platform, string EventType, string Unit = "quantity",
-    string Operator = "minimum", long Value = 1, long? UpperExclusive = null,
+    string Operator = "minimum",
+    [property: System.Text.Json.Serialization.JsonNumberHandling(System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.WriteAsString)] long Value = 1,
+    [property: System.Text.Json.Serialization.JsonNumberHandling(System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.WriteAsString)] long? UpperExclusive = null,
     string? Currency = null, int? MinorUnitDigits = null)
 {
     public void Validate()

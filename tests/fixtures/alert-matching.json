@@ -1,0 +1,17 @@
+[
+  { "operator": "exact", "value": "500", "amount": "500", "currency": "USD", "digits": 2, "expected": true },
+  { "operator": "exact", "value": "500", "amount": "501", "currency": "USD", "digits": 2, "expected": false },
+  { "operator": "minimum", "value": "500", "amount": "499", "currency": "USD", "digits": 2, "expected": false },
+  { "operator": "minimum", "value": "500", "amount": "500", "currency": "USD", "digits": 2, "expected": true },
+  { "operator": "range", "value": "500", "upper": "1000", "amount": "999", "currency": "USD", "digits": 2, "expected": true },
+  { "operator": "range", "value": "500", "upper": "1000", "amount": "1000", "currency": "USD", "digits": 2, "expected": false },
+  { "operator": "multiple", "value": "500", "amount": "0", "currency": "USD", "digits": 2, "expected": false },
+  { "operator": "multiple", "value": "500", "amount": "1000", "currency": "USD", "digits": 2, "expected": true },
+  { "operator": "multiple", "value": "500", "amount": "1001", "currency": "USD", "digits": 2, "expected": false },
+  { "operator": "minimum", "value": "500", "amount": "500", "currency": "EUR", "digits": 2, "expected": false },
+  { "operator": "minimum", "value": "500", "amount": "500", "currency": "USD", "digits": 0, "expected": false },
+  { "operator": "minimum", "value": "500", "amount": null, "expected": false },
+  { "operator": "minimum", "value": "500", "amount": "500", "currency": "USD", "digits": 2, "gated": true, "expected": false },
+  { "operator": "minimum", "value": "500", "amount": "500", "currency": "USD", "digits": 2, "giftRole": "recipient", "expected": false },
+  { "operator": "exact", "value": "9223372036854775807", "amount": "9223372036854775807", "currency": "USD", "digits": 2, "expected": true }
+]

@@ -82,6 +82,7 @@ public sealed class StreamerBotEventNormalizer(SensitiveValues sensitive)
         {
             OccurredAt = occurredAt, ReceivedAt = receivedAt.ToUniversalTime(), Source = "streamerbot", Platform = platform,
             Type = type, NativeType = category + "." + nativeType, NativeId = nativeId, DedupeKey = dedupe,
+            AlertTriggerKey = type == "integration.custom" && String(data["tdsbliveAlertTrigger"]) is { Length: > 0 and <= 128 } triggerKey && !string.IsNullOrWhiteSpace(triggerKey) ? triggerKey : null,
             User = eventUser, Message = ChatMediaNormalizer.Normalize(text, data, platform), Monetary = money, Support = support, Raw = raw, Provenance = provenance,
             Automation = support is null ? null : new EventAutomationMetadata(
                 NullableBoolean(data["anonymous"]) ?? NullableBoolean(data["isAnonymous"]),

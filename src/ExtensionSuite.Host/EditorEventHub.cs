@@ -82,17 +82,17 @@ public sealed class EditorEventHub(SensitiveValues sensitive)
         {
             if (subscriber.Accepts(item)) SendCustom(subscriber, item);
             if (subscriber.Accepts(item) && !subscriber.Queue.Writer.TryWrite(subscriber.Overlay is null ? payload :
-                CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = OverlayEndpoints.PublicChat(item) }, EventStore.JsonOptions), sensitive.Snapshot())!.ToJsonString(EventStore.JsonOptions))) subscriber.TryStop();
+                CredentialRedactor.Json(JsonSerializer.SerializeToNode(new { op = "event", @event = OverlayEndpoints.PublicChat(item), alertWidgetIds = AlertMatching.Select(subscriber.Overlay, item) }, EventStore.JsonOptions), sensitive.Snapshot())!.ToJsonString(EventStore.JsonOptions))) subscriber.TryStop();
         }
     }
 
     public void PublishPreview(string overlayId, CanonicalEvent item)
     {
-        var payload = JsonSerializer.Serialize(new { op = "event", @event = OverlayEndpoints.PublicChat(item) }, EventStore.JsonOptions);
         foreach (var subscriber in subscribers.Values.Where(s => s.Preview && !s.Limited && s.Overlay?.Id == overlayId))
         {
             if (!subscriber.Accepts(item)) continue;
             SendCustom(subscriber, item);
+            var payload = JsonSerializer.Serialize(new { op = "event", @event = OverlayEndpoints.PublicChat(item), alertWidgetIds = AlertMatching.Select(subscriber.Overlay!, item) }, EventStore.JsonOptions);
             if (!subscriber.Queue.Writer.TryWrite(payload)) subscriber.TryStop();
         }
     }

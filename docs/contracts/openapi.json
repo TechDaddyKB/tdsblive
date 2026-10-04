@@ -413,6 +413,28 @@
         }
       }
     },
+    "/api/alert-triggers": {
+      "get": {
+        "tags": [
+          "ExtensionSuite.Host"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertTriggerChoice"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/overlays/{id}/preview-events": {
       "post": {
         "tags": [
@@ -2432,9 +2454,105 @@
         },
         "additionalProperties": false
       },
+      "AlertCondition": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "default": "quantity"
+          },
+          "operator": {
+            "type": "string",
+            "default": "minimum"
+          },
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64",
+            "default": 1
+          },
+          "upperExclusive": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minorUnitDigits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AlertSet": {
+        "required": [
+          "id",
+          "name",
+          "widgetIds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "widgetIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "selection": {
+            "type": "string",
+            "default": "first"
+          }
+        },
+        "additionalProperties": false
+      },
       "AlertSettings": {
         "type": "object",
         "properties": {
+          "nativeType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customTriggerKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "condition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AlertCondition"
+              }
+            ]
+          },
           "eventTypes": {
             "type": "array",
             "items": {
@@ -2512,6 +2630,57 @@
             ]
           },
           "soundAssetId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AlertTriggerChoice": {
+        "required": [
+          "id",
+          "label",
+          "platform",
+          "eventType",
+          "description",
+          "availability",
+          "units"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "availability": {
+            "type": "string"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nativeType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customTriggerKey": {
             "type": [
               "null",
               "string"
@@ -3474,6 +3643,12 @@
             "type": "string"
           },
           "nativeId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "alertTriggerKey": {
             "type": [
               "null",
               "string"
@@ -5113,6 +5288,12 @@
             "items": {
               "$ref": "#/components/schemas/OverlayWidget"
             }
+          },
+          "alertSets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertSet"
+            }
           }
         },
         "additionalProperties": false
@@ -5322,6 +5503,37 @@
           "mode": {
             "type": "string",
             "default": "synthetic"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "nativeMoney": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NativeMoney"
+              }
+            ]
+          },
+          "customTriggerKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nativeType": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
