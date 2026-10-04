@@ -40,7 +40,7 @@ Pinned Node 24.21.0/npm 11.19.0/.NET SDK 10.0.401; Linux host and isolated data.
 | --- | --- | --- |
 | Secrets | `sonar analyze secrets` on inspected/changed source, tests, docs and images | Passed; no values exposed |
 | Frontend static checks | `npm run lint`, `npm run typecheck` | Passed |
-| Frontend tests | `npm run test:coverage` | 248 passed, 47 files; 90.29% lines, 78.00% branches overall (`57706ba`) |
+| Frontend tests | `npm run test:coverage` | 251 passed, 47 files; 90.40% lines, 78.90% branches overall (additional draft-safety and guided-input scenarios) |
 | Backend tests | `dotnet test TDSBLive.slnx -c Release` | Core 88 passed; Host 421 passed, 4 Windows-only skips |
 | Release build | `npm run build`; `dotnet build src/ExtensionSuite.Host -c Release` | Passed, zero backend warnings/errors |
 | Control contrast | Browser-computed field/panel colors in both themes | At least 3:1 field boundaries and 4.5:1 text/placeholders; decorative card borders kept separate |
@@ -98,6 +98,21 @@ was still pending when the final contrast fix was prepared. These entries are
 historical checkpoints. The current protected result and exact head are available
 from the draft PR checks; every source or documentation change requires its own
 protected run before delivery.
+
+On production source `3e15a0306f772f96ea18744854b040c6fe37e286`,
+[Windows run 37199312387](https://github.com/TechDaddyKB/tdsblive/actions/runs/37199312387)
+passed Core 88 and Host 425 tests with no skips, frontend 248 tests, process/browser
+qualification, recovery, generated contracts and coverage-report validation.
+The Sonar gate failed solely on 79.9% new-code coverage against 80%; earlier
+reliability/security findings and all critical-complexity findings are resolved.
+The remaining 123 nonblocking findings are style/maintainability items. Packages
+were skipped. Additional tests now cover rejected draft-memory writes, retained
+valid state without server storage, explicit draft silence, stale matching results,
+fractional quantity errors, custom incoming identity and native-money/quantity
+range summaries. Full local coverage passes with 251 tests. The protected gate
+and exclusions remain unchanged; its exact-head rerun must pass before packaging.
+All languages pass [CodeQL run 37199311062](https://github.com/TechDaddyKB/tdsblive/actions/runs/37199311062)
+on the same production source.
 
 `npm audit --json` reports two low-severity affected packages (DOMPurify and
 Monaco); the unchanged baseline reports the same two. No dependency/lockfile

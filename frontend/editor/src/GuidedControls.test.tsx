@@ -16,6 +16,47 @@ it('tests guided amounts with the chosen incoming identity and explains matching
   fireEvent.click(screen.getByRole('button', { name: '4. Test' })); fireEvent.change(screen.getByLabelText('Test amount (USD)'), { target: { value: '4.99' } }); fireEvent.click(screen.getByRole('button', { name: 'Test this design with sample data' }));
   expect(test).toHaveBeenCalledWith({ type: 'support.donation', platform: 'kofi', nativeType: 'Kofi.Donation', customTriggerKey: undefined, quantity: '1', amount: '499', currency: 'USD', digits: 2 }); expect(screen.getByRole('list', { name: 'Guided matching results' })).toHaveTextContent('Donation: Amount or quantity does not match');
 });
+it('clears stale matching results after sample edits or a trigger change and preserves custom incoming identity', () => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+  const widget = createWidget('alert');
+  widget.alert = { ...widget.alert, eventTypes: ['support.gift'], platforms: ['twitch'], condition: { unit: 'quantity', operator: 'minimum', value: '3' } };
+  const test = vi.fn(), change = vi.fn();
+  const results = [{ id: widget.id, name: 'Three gifts', reason: null }];
+  const view = render(<AlertEditor widget={widget} change={change} design={null} advanced={null} test={test} results={results} />);
+  fireEvent.click(screen.getByRole('button', { name: '4. Test' }));
+  expect(screen.getByLabelText('Test quantity')).toHaveValue('3');
+  fireEvent.click(screen.getByRole('button', { name: 'Test this design with sample data' }));
+  expect(test.mock.lastCall![0]).toMatchObject({ type: 'support.gift', quantity: '3' });
+  expect(screen.getByRole('list', { name: 'Guided matching results' })).toHaveTextContent('Three gifts: Matches this event');
+  fireEvent.change(screen.getByLabelText('Test quantity'), { target: { value: '4.5' } });
+  expect(screen.getByRole('alert')).toHaveTextContent('up to 0 decimal places');
+  expect(test).toHaveBeenCalledOnce();
+  fireEvent.change(screen.getByLabelText('Test quantity'), { target: { value: '4' } });
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(screen.getByRole('list', { name: 'Guided matching results' })).toBeEmptyDOMElement();
+  fireEvent.click(screen.getByRole('button', { name: 'Test this design with sample data' }));
+  expect(test.mock.lastCall![0]).toMatchObject({ quantity: '4' });
+  const custom = { ...widget, alert: { ...widget.alert, eventTypes: ['integration.custom'], platforms: ['general'], condition: null, customTriggerKey: 'owned.sparkle' } };
+  view.rerender(<AlertEditor widget={custom} change={change} design={null} advanced={null} test={test} results={results} />);
+  expect(screen.getByRole('list', { name: 'Guided matching results' })).toBeEmptyDOMElement();
+  fireEvent.click(screen.getByRole('button', { name: 'Test this design with sample data' }));
+  expect(test.mock.lastCall![0]).toEqual({ type: 'integration.custom', platform: 'general', nativeType: undefined, customTriggerKey: 'owned.sparkle' });
+  expect(change).not.toHaveBeenCalled();
+});
+it('summarizes quantity and native money ranges in ordinary units while retaining unknown legacy identifiers', () => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+  const widget = createWidget('alert'); widget.alert = { ...widget.alert, eventTypes: ['future.support'], platforms: ['future-platform'], condition: { unit: 'quantity', operator: 'range', value: '3', upperExclusive: '6' } };
+  const change = vi.fn();
+  const view = render(<AlertEditor widget={widget} change={change} design={null} advanced={null} />);
+  fireEvent.click(screen.getByRole('button', { name: '5. Finish' }));
+  expect(screen.getByText('future-platform · future.support')).toBeVisible();
+  expect(screen.getByText(/From 3 items, up to 6 \(excluded\)/)).toBeVisible();
+  view.rerender(<AlertEditor widget={{ ...widget, alert: { ...widget.alert, condition: { unit: 'native-money', operator: 'range', value: '5000', upperExclusive: '10000', currency: 'KWD', minorUnitDigits: 3 } } }} change={change} design={null} advanced={null} />);
+  expect(screen.getByText(/From 5\.000 KWD, up to 10\.000 \(excluded\)/)).toBeVisible();
+  expect(change).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: '4. Test' }));
+  expect(screen.getByRole('button', { name: 'Test this design with sample data' })).toBeDisabled();
+});
 it('chooses currency scale automatically while preserving exact ordinary amounts', () => {
   const change = vi.fn(); const view = render(<CurrencyField label="Currency" currency="USD" digits={2} value="500" change={change} />);
   fireEvent.change(screen.getByLabelText('Currency'), { target: { value: 'JPY' } }); expect(change).toHaveBeenCalledWith({ currency: 'JPY', minorUnitDigits: 0, value: '5' });
