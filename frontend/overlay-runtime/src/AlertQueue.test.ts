@@ -5,6 +5,14 @@ import type { ChatEvent } from './chat';
 const event = (id: string): ChatEvent => ({ id, type: 'community.follow', platform: 'twitch', occurredAt: new Date(0).toISOString(), receivedAt: new Date(0).toISOString(), provenance: 'simulation', user: { displayName: '<Viewer>' } });
 const widget = () => createWidget('alert');
 describe('bounded alert scheduling', () => {
+  it('uses authoritative eligible IDs before queues and never falls through on winner cooldown', () => {
+    const q = new AlertQueue(); const first = widget(), second = widget(); first.alert.cooldownMs = 1000;
+    const eligible = { ...event('one'), alertWidgetIds: [first.id] }; q.enqueue(first, eligible, 0); q.enqueue(second, eligible, 0);
+    q.enqueue(first, { ...eligible, id: 'two' }, 100); q.enqueue(second, { ...eligible, id: 'two' }, 100);
+    expect(q.tick(100).map(j => j.widget.id)).toEqual([first.id]); expect(q.queued).toBe(0); expect(q.dropped).toBe(1);
+    q.clear(); first.alert.condition = { unit: 'quantity', operator: 'minimum', value: '1' }; q.enqueue(first, event('older-server'), 0); expect(q.tick(0)).toEqual([]);
+    q.enqueue(second, event('legacy'), 0); expect(q.tick(0)).toHaveLength(1);
+  });
   it('runs independent groups together and serializes each group by priority then FIFO', () => {
     const q = new AlertQueue(); const a = widget(), b = widget(); b.alert.group = 'sounds';
     q.enqueue(a, event('first'), 0); q.enqueue(a, event('second'), 0);

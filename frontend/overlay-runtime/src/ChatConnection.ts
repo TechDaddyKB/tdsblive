@@ -29,10 +29,10 @@ export class ChatConnection {
       socket.onopen = () => { this.lastReply = Date.now(); socket.send(JSON.stringify({ op: 'subscribe', types: this.canvas && definition.canvasEnabled ? ['*'] : ['chat.message'] })); };
       socket.onmessage = event => {
         try {
-          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; settings?: OverlayDefinition; widgets?: DonorSnapshot[] | CustomDelivery[]; command?: AutomationSoundCommand; executionId?: string };
+          const message = JSON.parse(String(event.data)) as { op: string; event?: ChatEvent; alertWidgetIds?: string[]; settings?: OverlayDefinition; widgets?: DonorSnapshot[] | CustomDelivery[]; command?: AutomationSoundCommand; executionId?: string };
           this.lastReply = Date.now();
           if (message.op === 'subscribed') { this.failures = 0; this.status('Connected'); void this.history(); }
-          if (message.op === 'event' && message.event) this.events([message.event], 'socket');
+          if (message.op === 'event' && message.event) this.events([{ ...message.event, ...(Array.isArray(message.alertWidgetIds) ? { alertWidgetIds: message.alertWidgetIds } : {}) }], 'socket');
           if (message.op === 'settings' && message.settings) { this.settings(message.settings); void this.history(); }
           if (message.op === 'custom-events' && Array.isArray(message.widgets)) this.custom?.(message.widgets as CustomDelivery[]);
           if (message.op === 'donors' && message.widgets) this.donors?.(message.widgets as DonorSnapshot[]);

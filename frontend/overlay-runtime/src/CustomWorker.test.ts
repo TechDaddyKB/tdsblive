@@ -2,9 +2,9 @@ import { afterEach, expect, it, vi } from 'vitest';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); vi.resetModules(); });
 async function worker() {
-  vi.useFakeTimers(); const send = vi.fn(); const scope: { onmessage?: (e: MessageEvent) => void; __SBX_RUN?: (...args: unknown[]) => void } = {};
+  vi.useFakeTimers(); const send = vi.fn(); const rejection = vi.fn(); const scope: { addEventListener: typeof rejection; onmessage?: (e: MessageEvent) => void; __SBX_RUN?: (...args: unknown[]) => void } = { addEventListener: rejection };
   vi.stubGlobal('self', scope); vi.stubGlobal('postMessage', send); await import('./CustomWorker');
-  return { send, receive: (data: unknown) => {
+  return { send, rejection, receive: (data: unknown) => {
     const fixture = data as { op: string; javaScript?: string };
     if (fixture.op === 'init' && fixture.javaScript) {
       // Unit fixtures install a program directly; production programs are
@@ -37,4 +37,10 @@ it('mediates asynchronous storage results and reports code/handler failures safe
 it('reports invalid JavaScript without exposing source or credentials', async () => {
   const { send, receive } = await worker(); receive({ op: 'init', html: '', config: {}, session: {}, javaScript: 'this is invalid JavaScript' });
   expect(send).toHaveBeenCalledWith({ op: 'error', error: 'Widget JavaScript failed' });
+});
+
+it('reports rejected custom operations visibly without leaking exception text', async () => {
+  const { send, rejection } = await worker(); const event = { preventDefault: vi.fn() };
+  expect(rejection).toHaveBeenCalledWith('unhandledrejection', expect.any(Function));
+  rejection.mock.calls[0][1](event); expect(event.preventDefault).toHaveBeenCalledOnce(); expect(send).toHaveBeenLastCalledWith({ op: 'error', error: 'Widget asynchronous operation failed' });
 });

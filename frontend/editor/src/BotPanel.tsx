@@ -12,6 +12,8 @@ export function BotPanel() {
   const [paused, setPaused] = useState(false);
   const [selected, setSelected] = useState<unknown>(null);
   const [notice, setNotice] = useState('');
+  const [enabled, setEnabled] = useState<Record<string, boolean> | null>(null);
+  useEffect(() => { let active = true; void api.configuration().then(c => { if (active) setEnabled({ streamerBot: c.streamerBot?.enabled ?? false, speakerBot: c.speakerBot?.enabled ?? false }); }).catch(() => {}); return () => { active = false; }; }, []);
   useEffect(() => {
     let active = true;
     async function refresh() {
@@ -30,6 +32,7 @@ export function BotPanel() {
       if (!configuration[bot]) throw new Error('Missing integration configuration');
       configuration[bot].enabled = !configuration[bot].enabled;
       await api.saveConfiguration(configuration);
+      setEnabled(old => ({ ...old, [bot]: configuration[bot]!.enabled ?? false }));
       setNotice('Configuration saved. Restart TDSBLive to apply connection changes.');
     } catch { setNotice('Unable to save connection settings.'); }
   }
@@ -78,7 +81,7 @@ export function BotPanel() {
     {(['streamerBot', 'speakerBot'] as const).map(bot => <div key={bot}>
       <ConnectionIndicator integration={bot === 'streamerBot' ? 'Streamer.bot' : 'Speaker.bot'} state={overview?.[bot].state === 'connected' ? 'connected' : overview?.[bot].state === 'authenticationFailed' ? 'error' : ['connecting', 'discovering', 'authenticating', 'reconnecting'].includes(overview?.[bot].state ?? '') ? 'connecting' : 'disconnected'} />
       <p>{bot === 'streamerBot' ? 'Streamer.bot' : 'Speaker.bot'}: {overview?.[bot].state ?? 'loading'} {overview?.[bot].version ?? ''} {overview?.[bot].failureKind ?? ''}</p>
-      <button onClick={() => { void configure(bot); }}>Toggle {bot === 'streamerBot' ? 'Streamer.bot' : 'Speaker.bot'} connection</button>
+      <button disabled={!enabled} onClick={() => { void configure(bot); }}>{enabled?.[bot] ? 'Disconnect' : 'Connect'} {bot === 'streamerBot' ? 'Streamer.bot' : 'Speaker.bot'} connection</button>
     </div>)}
     <p>Use guided setup to change connection addresses. Live execution is opt-in.</p>
     <BotPermissions actions={discovery?.actions ?? []} />

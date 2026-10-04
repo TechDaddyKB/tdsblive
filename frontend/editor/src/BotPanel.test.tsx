@@ -23,7 +23,7 @@ it('shows live state, discovers actions, searches, pauses and resumes', async ()
   await waitFor(() => expect(bots.inspector).toHaveBeenCalledWith('chat'));
   fireEvent.click(screen.getByText('Pause inspector')); expect(screen.getByText('Resume inspector')).toBeVisible();
   fireEvent.click(screen.getByText('Resume inspector'));
-  fireEvent.click(screen.getByText('Toggle Streamer.bot connection'));
+  fireEvent.click(screen.getByText('Connect Streamer.bot connection'));
   expect(await screen.findByText(/Restart TDSBLive/)).toBeVisible();
   expect(api.saveConfiguration).toHaveBeenCalledWith(expect.objectContaining({ streamerBot: expect.objectContaining({ enabled: true }) }));
   fireEvent.click(screen.getByText('Refresh discovery'));
@@ -51,7 +51,7 @@ it('reports errors without exposing remote response bodies', async () => {
   vi.mocked(bots.overview).mockRejectedValue(new Error('private body'));
   render(<BotPanel />); expect(await screen.findByText('Unable to refresh bot connections.')).toBeVisible();
   vi.mocked(api.configuration).mockRejectedValue(new Error('private body'));
-  fireEvent.click(screen.getByText('Toggle Speaker.bot connection'));
+  fireEvent.click(screen.getByText('Connect Speaker.bot connection'));
   expect(await screen.findByText('Unable to save connection settings.')).toBeVisible();
   expect(screen.queryByText('private body')).not.toBeInTheDocument();
   vi.mocked(bots.refreshDiscovery).mockRejectedValue(new Error('private body'));

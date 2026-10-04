@@ -53,6 +53,19 @@ function ActiveAlert({ job, overlay, token, silent }: { job: AlertJob; overlay: 
     <MediaAsset id={w.alert.soundAssetId} overlay={overlay} token={token} volume={w.volume} muted={silent} loop={false} name={w.name} />
   </div>;
 }
+export function WidgetPresentation({ widget: w, scene, events, listEvents = events, now = Date.now(), snapshot, active = [], token = '', preview = false, silent = false, draft = false, customEvents = [], customSession = { connected: false, preview: true } }: {
+  widget: Widget; scene: Scene; events: ChatEvent[]; listEvents?: ChatEvent[]; now?: number; snapshot?: DonorSnapshot; active?: AlertJob[];
+  token?: string; preview?: boolean; silent?: boolean; draft?: boolean; customEvents?: CustomDelivery[]; customSession?: { connected: boolean; preview: boolean };
+}) { return <>
+      {w.kind === 'custom' && <CustomFrame widget={w} overlay={scene.id} token={token} preview={preview} draft={draft} audioEnabled={!silent} deliveries={customEvents} session={customSession} />}
+      {w.kind === 'event-list' && <EventList widget={w} events={listEvents} now={now} />}
+      {['goal-bar', 'progress-bar'].includes(w.kind) && <ProgressWidget widget={w} snapshot={snapshot} />}
+      {w.kind === 'text' && <div className="widget-text">{w.text}</div>}
+      {donorKinds.includes(w.kind) && <DonorWidget widget={w} snapshot={snapshot} overlay={scene.id} token={token} />}
+      {['image', 'video', 'audio'].includes(w.kind) && <MediaAsset id={w.assetId} overlay={scene.id} token={token} volume={w.volume} muted={w.muted || silent} loop={w.loop} name={w.name} />}
+      {w.kind === 'chat' && <EmbeddedChat scene={scene} widget={w} events={events} token={token} />}
+      {w.kind === 'alert' && active.filter(j => j.widget.id === w.id).map(job => <ActiveAlert key={job.key} job={job} overlay={scene.id} token={token} silent={silent} />)}
+  </>; }
 export function CanvasRuntime({ id, token = '', preview = false, previewAudio = false }: { id: string; token?: string; preview?: boolean; previewAudio?: boolean }) {
   const [scene, setScene] = useState<Scene | null>(null); const [events, setEvents] = useState<ChatEvent[]>([]); const [active, setActive] = useState<AlertJob[]>([]);
   const [status, setStatus] = useState('Connecting'); const settings = useRef<Scene | null>(null); const queue = useRef(new AlertQueue());
@@ -60,6 +73,8 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
   const [customEvents, setCustomEvents] = useState<CustomDelivery[]>([]);
   const customSession = useMemo(() => ({ connected: status === 'Connected', preview }), [status, preview]);
   const [donors, setDonors] = useState<DonorSnapshot[]>([]);
+  const [previewSize, setPreviewSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  useEffect(() => { if (!preview) return; const resize = () => setPreviewSize({ width: window.innerWidth, height: window.innerHeight }); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, [preview]);
   useEffect(() => {
     const scheduler = queue.current; scheduler.clear(); setListEvents([]);
     const sound = new AutomationSoundPlayer(id, token, (executionId, state) => connection.reportSound(executionId, state));
@@ -79,20 +94,14 @@ export function CanvasRuntime({ id, token = '', preview = false, previewAudio = 
     return () => { clearInterval(timer); sound.stop(); connection.stop(); scheduler.clear(); };
   }, [id, token, preview]);
   if (!scene) return <output>{status}</output>;
-  return <div className="canvas-runtime" style={{ width: scene.width, height: scene.height }} aria-label="Overlay scene">
+  const scale = preview ? Math.min(previewSize.width / scene.width, previewSize.height / scene.height) : 1;
+  return <div style={{ width: scene.width * scale, height: scene.height * scale, overflow: 'hidden' }}><div className="canvas-runtime" style={{ width: scene.width, height: scene.height, transform: `scale(${scale})`, transformOrigin: 'top left' }} aria-label="Overlay scene">
     {preview && <output className="canvas-preview-label">Test preview · {previewAudio ? 'audio enabled' : 'silent'} · {status}</output>}
     {scene.widgets.filter(w => !w.hidden).map(w => <div className="runtime-widget" key={w.id} data-widget-id={w.id}
       style={{ left: w.x, top: w.y, width: w.width, height: w.height, transform: `rotate(${w.rotation}deg)`, color: w.color, fontSize: w.fontSize }}>
-      {w.kind === 'custom' && <CustomFrame widget={w} overlay={id} token={token} preview={preview} audioEnabled={!preview || previewAudio} deliveries={customEvents} session={customSession} />}
-      {w.kind === 'event-list' && <EventList widget={w} events={listEvents} now={clock} />}
-      {['goal-bar', 'progress-bar'].includes(w.kind) && <ProgressWidget widget={w} snapshot={donors.find(s => s.widgetId === w.id)} />}
-      {w.kind === 'text' && <div className="widget-text">{w.text}</div>}
-      {donorKinds.includes(w.kind) && <DonorWidget widget={w} snapshot={donors.find(s => s.widgetId === w.id)} overlay={id} token={token} />}
-      {['image', 'video', 'audio'].includes(w.kind) && <MediaAsset id={w.assetId} overlay={id} token={token} volume={w.volume} muted={w.muted || preview && !previewAudio} loop={w.loop} name={w.name} />}
-      {w.kind === 'chat' && <EmbeddedChat scene={scene} widget={w} events={events} token={token} />}
-      {w.kind === 'alert' && active.filter(j => j.widget.id === w.id).map(job => <ActiveAlert key={job.key} job={job} overlay={id} token={token} silent={preview && !previewAudio} />)}
+      <WidgetPresentation widget={w} scene={scene} events={events} listEvents={listEvents} now={clock} snapshot={donors.find(s => s.widgetId === w.id)} active={active} token={token} preview={preview} silent={preview && !previewAudio} customEvents={customEvents} customSession={customSession} />
     </div>)}
-  </div>;
+  </div></div>;
 }
 export function OverlayView({ id, token, preview, previewAudio }: { id: string; token: string; preview: boolean; previewAudio: boolean }) {
   const [definition, setDefinition] = useState<OverlayDefinition | null>(null); const [error, setError] = useState('');

@@ -1,3 +1,4 @@
+import { eventLabels, platformLabels } from './TriggerControls';
 import type { EditorAsset } from './WidgetProperties';
 
 export type FieldType = 'text' | 'textarea' | 'number' | 'slider' | 'checkbox' | 'dropdown' | 'multiselect' | 'color' | 'font' | 'image' | 'audio' | 'video' | 'duration' | 'event' | 'action' | 'user' | 'platform' | 'button' | 'hidden' | 'group';
@@ -29,9 +30,9 @@ export function SettingsFields({ fields, values, change, context = {} }: {
       }} /></label>;
     const assetType = ['image', 'audio', 'video'].includes(type);
     const options = assetType ? (context.assets ?? []).filter(a => a.mime.startsWith(`${type}/`)).map(a => ({ value: a.id, label: a.filename })) :
-      type === 'event' ? (context.events ?? []).map(v => ({ value: v, label: v })) :
+      type === 'event' ? (context.events ?? []).map(v => ({ value: v, label: eventLabels[v] ?? v.replace('.', ' · ') })) :
       type === 'action' ? (context.actions ?? []).map(a => ({ value: a.id, label: a.name })) :
-      type === 'platform' ? (context.platforms ?? ['twitch', 'youtube', 'kick', 'rumble', 'kofi', 'general', 'custom']).map(v => ({ value: v, label: v })) :
+      type === 'platform' ? (context.platforms ?? ['twitch', 'youtube', 'kick', 'rumble', 'kofi', 'general', 'custom']).map(v => ({ value: v, label: platformLabels[v] ?? v })) :
       type === 'user' ? (context.users ?? []).map(v => ({ value: v, label: v })) : field.options;
     if (options) {
       const multiple = type === 'multiselect' || field.multiple === true;

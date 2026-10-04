@@ -8,6 +8,7 @@ export interface ChatSettings extends WireChatSettings {
 }
 export interface OverlayDefinition extends WireOverlayDefinition { id: string; name: string; width: number; height: number; background: string; version: number; chat: ChatSettings; canvasEnabled?: boolean }
 export interface ChatEvent {
+  alertWidgetIds?: string[];
   id: string; type: string; platform: Platform; occurredAt: string; receivedAt: string; provenance: 'live' | 'simulation' | 'replay';
   user?: { platformUserId?: string | null; login?: string | null; displayName?: string | null; avatarUrl?: string | null; badges?: string[] | null; isBot?: boolean; badgeDetails?: { name: string; imageUrl?: string | null; version?: string | null }[] | null } | null;
   message?: { text?: string | null; parts?: { kind: string; text: string; imageUrl?: string | null; source?: string | null; zeroWidth?: boolean }[] | null } | null;

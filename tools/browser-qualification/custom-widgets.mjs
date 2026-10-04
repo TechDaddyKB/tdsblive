@@ -1,8 +1,9 @@
+import { editorUI } from './editor-ui.mjs';
 import assert from 'node:assert/strict';
 
 export async function qualifyCustomWidgets(page, origin, writeHeaders) {
-  await page.goto(`${origin}/editor`);
-  const editor = page.getByRole('region', { name: 'Visual overlay editor' });
+  await page.goto(`${origin}/editor#overlays`);
+  const editor = editorUI(page);
   await editor.getByLabel('New overlay ID').fill('g12-browser'); await editor.getByLabel('New overlay name').fill('Custom widget qualification');
   await editor.getByRole('button', { name: 'Create overlay', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('[aria-label="Overlay"]')?.value === 'g12-browser');

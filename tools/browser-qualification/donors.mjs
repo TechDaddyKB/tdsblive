@@ -1,3 +1,4 @@
+import { editorUI } from './editor-ui.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
@@ -43,8 +44,8 @@ export async function qualifyDonors(page, origin, writeHeaders, root) {
   let editorErrors = 0;
   editorPage.on('pageerror', () => { editorErrors++; });
   try {
-    await editorPage.goto(`${origin}/editor`);
-    const editor = editorPage.getByRole('region', { name: 'Visual overlay editor' });
+    await editorPage.goto(`${origin}/editor#overlays`);
+    const editor = editorUI(editorPage);
     await editor.getByLabel('Overlay', { exact: true }).selectOption('donor-qualification');
     await editor.getByRole('listitem').getByRole('button', { name: 'donor-crown', exact: true }).click();
     const before = await (await fetch(`${origin}/api/overlays/donor-qualification`)).json();

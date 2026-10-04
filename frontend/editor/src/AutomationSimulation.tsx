@@ -1,3 +1,5 @@
+import { AmountField } from './TriggerControls';
+import { widgetId } from '../../overlay-runtime/src/scene';
 import { useState } from 'react';
 import { automation, type AutomationRule } from './automationApi';
 
@@ -12,7 +14,7 @@ export function AutomationSimulation({ rule }: Readonly<{ rule: AutomationRule }
       const money = rule.condition.unit === 'native-money';
       const response = await automation.simulate({ rule, anonymous, language: language || null,
         event: { source: 'automation-preview', platform: rule.condition.platform, type: rule.condition.eventType,
-          nativeType: 'OwnedSimulation', dedupeKey: crypto.randomUUID(), occurredAt: new Date().toISOString(),
+          nativeType: 'OwnedSimulation', dedupeKey: widgetId(), occurredAt: new Date().toISOString(),
           user: { displayName: 'Owned test viewer', isBot: false }, message: { text: message },
           automation: { anonymous, messagePublic, language: language || null },
           support: { kind: money ? 'donation' : 'bits', quantity: money ? '1' : amount, tier: '', giftRole: 'none',
@@ -24,7 +26,7 @@ export function AutomationSimulation({ rule }: Readonly<{ rule: AutomationRule }
   }
   return <fieldset disabled={busy}><legend>Safe simulation</legend>
     <p>Evaluates this draft even while disabled. No speech, sounds, actions or financial writes occur. Queue admission and external capabilities are checked during live execution.</p>
-    <label>Test quantity or native minor units <input required inputMode="numeric" pattern="[0-9]+" value={amount} onChange={event => setAmount(event.target.value)} /></label>
+    <AmountField label="Test amount or quantity" value={amount} digits={rule.condition.unit === 'native-money' ? Number(rule.condition.minorUnitDigits ?? 2) : 0} change={setAmount} />
     <label>Test donation message <textarea value={message} onChange={event => setMessage(event.target.value)} /></label>
     <label><input type="checkbox" checked={anonymous} onChange={event => setAnonymous(event.target.checked)} />Anonymous test viewer</label>
     <label><input type="checkbox" checked={messagePublic} onChange={event => setMessagePublic(event.target.checked)} />Public test message</label>

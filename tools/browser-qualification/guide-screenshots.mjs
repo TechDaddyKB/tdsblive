@@ -1,5 +1,6 @@
 // Generates public guide illustrations using a fresh host and made-up chat only.
 // No personal browser profile, bot connection, credential or production data is used.
+import { editorUI } from './editor-ui.mjs';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -100,18 +101,24 @@ try {
   await page.getByRole('button', { name: 'Close guided setup' }).waitFor();
   await page.getByRole('region', { name: 'Guided setup' }).screenshot({ path: path.join(output, 'guided-setup.png') });
   await page.getByRole('button', { name: 'Close guided setup' }).click();
+  await page.goto(`${origin}/editor#settings`);
   await page.getByRole('region', { name: 'Backup and recovery' }).screenshot({ path: path.join(output, 'backup-recovery.png') });
+  await page.goto(`${origin}/editor#chat`);
   const card = page.getByRole('region', { name: 'Combined chat setup' });
   await card.getByText('Chat appearance and filters', { exact: true }).click();
   await card.screenshot({ path: path.join(output, 'chat-settings.png') });
+  await page.goto(`${origin}/editor#supporters`);
   await page.getByRole('region', { name: 'Financial ledger', exact: true }).screenshot({ path: path.join(output, 'supporter-totals.png') });
+  await page.goto(`${origin}/editor#automation`);
   const automation = page.getByRole('region', { name: 'Automation rules', exact: true });
   await automation.getByRole('button', { name: 'New speech rule', exact: true }).click();
   await automation.getByLabel('Rule name', { exact: true }).fill('Read Ko-fi messages');
   await automation.getByLabel('Voice alias', { exact: true }).fill('local english');
   assert.equal(await automation.getByLabel('Enable live automation', { exact: true }).isChecked(), false);
   await automation.screenshot({ path: path.join(output, 'automation-rules.png') });
-  const editor = page.getByRole('region', { name: 'Visual overlay editor', exact: true });
+  await page.setViewportSize({ width: 1600, height: 960 });
+  await page.goto(`${origin}/editor#overlays`);
+  const editor = editorUI(page);
   await editor.getByLabel('New overlay name').fill('My stream overlay');
   await editor.getByLabel('New overlay ID').fill('my-stream-overlay');
   await editor.getByRole('button', { name: 'Create overlay', exact: true }).click();
@@ -119,7 +126,15 @@ try {
   await editor.getByRole('button', { name: 'Add text', exact: true }).click();
   await editor.getByLabel('Widget text').fill('Welcome to the stream!');
   await page.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
-  await editor.screenshot({ path: path.join(output, 'visual-editor.png') });
+  await editor.getByLabel('X', { exact: true }).fill('120'); await editor.getByLabel('Y', { exact: true }).fill('80'); await editor.getByLabel('Width', { exact: true }).fill('1000');
+  await editor.getByRole('button', { name: 'Add AlertBox', exact: true }).click(); await editor.getByLabel('Layer name').fill('Follow greeting');
+  await editor.getByLabel('Choose trigger').selectOption('twitch:community.follow'); await editor.getByLabel('X', { exact: true }).fill('120'); await editor.getByLabel('Y', { exact: true }).fill('320'); await editor.getByLabel('Width', { exact: true }).fill('800');
+  await editor.getByLabel('Alert template').fill('Welcome {user}!');
+  await page.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
+  await page.evaluate(() => window.scrollTo(0,0)); await page.screenshot({ path: path.join(output, 'visual-editor.png') });
+  await editor.getByRole('button', { name: '1. Trigger', exact: true }).click(); await page.evaluate(() => window.scrollTo(0,0)); await page.screenshot({ path: path.join(output, 'guided-alerts.png') });
+  await page.getByLabel('Application theme').selectOption('dark'); await page.screenshot({ path: path.join(output, 'editor-dark.png') });
+  await page.setViewportSize({ width: 390, height: 844 }); await page.locator('.workspace-tabs').getByRole('button', { name: 'Canvas', exact: true }).click(); await editor.getByLabel('Overlay canvas').scrollIntoViewIfNeeded(); await page.screenshot({ path: path.join(output, 'editor-mobile.png') });
   console.log('Guide illustrations generated from owned simulation only; inspect and secrets-scan before publishing.');
 } finally {
   await browser?.close();

@@ -15,5 +15,5 @@ export const visualApi = {
     if (!Number.isSafeInteger(version) || version < 1 || !Number.isSafeInteger(expectedVersion) || expectedVersion < 1) throw new Error('Invalid revision');
     return write<Scene>(`${idPath(id)}/revisions/${version}/restore`, 'POST', { expectedVersion });
   },
-  preview: (id: string, value: { type: string; platform: string; user: string; message: string; raw?: unknown; mode?: 'synthetic' | 'native' }) => write<{ persisted: boolean; liveActionsAllowed: boolean }>(`${idPath(id)}/preview-events`, 'POST', value),
+  preview: (id: string, value: { type: string; platform: string; user: string; message: string; raw?: unknown; mode?: 'synthetic' | 'native'; quantity?: string; nativeMoney?: { amountMinor: string; currency: string; minorUnitDigits: number }; customTriggerKey?: string; nativeType?: string }) => write<{ persisted: boolean; liveActionsAllowed: boolean }>(`${idPath(id)}/preview-events`, 'POST', value),
 };

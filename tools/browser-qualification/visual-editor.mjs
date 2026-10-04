@@ -1,8 +1,9 @@
+import { editorUI } from './editor-ui.mjs';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
-  const editor = page.getByRole('region', { name: 'Visual overlay editor' });
+  const editor = editorUI(page);
   const gif = Buffer.from('47494638396101000100800000ff00000000ff21ff0b4e45545343415045322e30030100000021f904000a0000002c000000000100010000020244010021f904000a0000002c00000000010001000002024c01003b', 'hex');
   const uploaded = await fetch(`${origin}/api/assets`, { method: 'POST', headers: { ...writeHeaders, 'Content-Type': 'image/gif', 'X-Asset-Filename': 'g06-owned.gif' }, body: gif });
   assert.equal(uploaded.status, 200);
@@ -17,11 +18,12 @@ export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
     assert.equal(result.status, 200); return result.json();
   };
   const videoAsset = await upload(video, 'g06-owned.webm', 'video/webm'); const soundAsset = await upload(wave, 'g06-owned.wav', 'audio/wav');
-  await page.goto(`${origin}/editor`);
+  await page.goto(`${origin}/editor#overlays`);
   await editor.getByLabel('New overlay name').fill('Browser qualification');
   await editor.getByLabel('New overlay ID').fill('g06-browser');
   await editor.getByLabel('Canvas preset').selectOption('1080x1920');
   await editor.getByRole('button', { name: 'Create overlay', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[aria-label="Overlay"]')?.value === 'g06-browser');
   await editor.getByLabel('Overlay canvas').waitFor();
   // HTTP LAN browsers may omit Clipboard; URL copying must stay usable without HTTPS.
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined }));
@@ -35,6 +37,7 @@ export async function qualifyVisualEditor(page, origin, writeHeaders, root) {
   assert.equal(document.width, 1080); assert.equal(document.height, 1920);
   const restoreVersion = document.version;
   const widget = editor.locator(`[data-widget-id="${document.widgets[0].id}"]`);
+  await editor.getByLabel('Canvas zoom').fill('0.4');
   const box = await widget.boundingBox(); assert.ok(box);
   await page.mouse.move(box.x + 20, box.y + 20); await page.mouse.down(); await page.mouse.move(box.x + 60, box.y + 40, { steps: 5 }); await page.mouse.up();
   await saved(); assert.equal(await editor.getByLabel('X', { exact: true }).inputValue(), '140'); assert.equal(await editor.getByLabel('Y', { exact: true }).inputValue(), '90');

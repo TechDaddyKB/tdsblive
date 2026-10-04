@@ -14,6 +14,7 @@ import { qualifyDonors } from './donors.mjs';
 import { qualifyAutomation } from './automation.mjs';
 import { qualifyCustomWidgets } from './custom-widgets.mjs';
 import { qualifyAdvancedEditor } from './advanced-editor.mjs';
+import { qualifyUiRedesign } from './ui-redesign.mjs';
 import { qualifyCompatibility } from './compatibility.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -58,7 +59,7 @@ try {
   const animatedGif = Buffer.from('47494638396101000100800000ff00000000ff21ff0b4e45545343415045322e30030100000021f904000a0000002c000000000100010000020244010021f904000a0000002c00000000010001000002024c01003b', 'hex');
   await page.route(`${origin}/g05-media.gif`, route => route.fulfill({ contentType: 'image/gif', body: animatedGif }));
   let pageErrors = 0;
-  page.on('pageerror', () => { pageErrors++; });
+  page.on('pageerror', error => { pageErrors++; console.error('Isolated browser error:', error.message); });
   assert.equal((await page.goto(`${origin}/editor`)).status(), 200);
   await page.getByRole('heading', { name: 'TDSBLive', exact: true }).waitFor();
   await page.getByText('Host ready. Loopback access only.', { exact: true }).waitFor();
@@ -77,13 +78,16 @@ try {
   assert.equal(setupConfiguration.streamerBot.enabled, false);
   assert.equal(setupConfiguration.speakerBot.enabled, false);
   // Exercise the ordinary release UI against real configuration persistence.
+  await page.goto(`${origin}/editor#connections`);
   await page.getByText('Streamer.bot action permissions', { exact: true }).click();
   await page.getByRole('button', { name: 'Load action permissions', exact: true }).click();
   await page.getByRole('button', { name: 'Save action permissions', exact: true }).waitFor();
   assert.equal(await page.getByLabel('Allow qualified live event forwarding to Streamer.bot', { exact: true }).isChecked(), false);
   await page.getByRole('button', { name: 'Save action permissions', exact: true }).click();
   await page.getByText('Permissions saved. Restart TDSBLive to apply them, then review live rules and trigger bindings.', { exact: true }).waitFor();
+  await page.goto(`${origin}/editor#settings`);
   assert.equal(await page.getByLabel('Enable authenticated LAN access', { exact: true }).isChecked(), false);
+  await page.waitForFunction(expected => Number(document.querySelector('#lan-title')?.parentElement.querySelector('input[type=number]')?.value) === expected, port);
   assert.equal(Number(await page.getByLabel('HTTP port', { exact: true }).inputValue()), port);
   await page.getByRole('button', { name: 'Save access settings', exact: true }).click();
   await page.getByText('Access settings saved. Restart TDSBLive to apply them. Update OBS URLs if you changed the port.', { exact: true }).waitFor();
@@ -185,6 +189,7 @@ try {
   execFileSync(process.platform === 'win32' ? 'python' : 'python3', [path.join(root, 'tools/seed_financial_browser.py'), directory], { stdio: 'pipe' });
   await qualifyFinancial(page, origin);
   await qualifyDonors(page, origin, writeHeaders, root);
+  await qualifyUiRedesign(page, origin, writeHeaders, root);
   assert.equal(pageErrors, 0, 'Rendered pages raised JavaScript errors');
   console.log('G02/G05/G06 fresh-browser qualification passed: HTTP editor/login, transparent escaped four-platform chat, bounded DOM, one socket, reconnect, saved settings and persistent light/dark streamer view');
 } finally {

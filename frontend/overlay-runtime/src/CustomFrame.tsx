@@ -8,7 +8,7 @@ import { widgetId, type Widget } from './scene';
 export function frameBootstrap(channel: string, settings: CustomSettings, workerCode: string, assets: Record<string, string>, parentOrigin: string, initialSession: unknown = {}) {
   const program = `${workerCode}\nself.__SBX_RUN = function(SBX, document, window) {\n${settings.javaScript}\n};`;
   const worker = new Worker(URL.createObjectURL(new Blob([program], { type: 'text/javascript' })));
-  worker.onerror = () => parent.postMessage({ op: 'error', channel }, parentOrigin);
+  worker.onerror = event => { event.preventDefault(); parent.postMessage({ op: 'error', channel }, parentOrigin); };
   const root = document.createElement('div'); document.body.append(root);
   const style = document.createElement('style'); style.textContent = settings.css.replace(/sbx-asset:([0-9a-f]{64})/g, (_match, id: string) => assets[id] ?? ''); document.head.append(style);
   const tags = new Set('DIV SPAN P BR BR HR H1 H2 H3 H4 UL OL LI STRONG EM B I SMALL PRE CODE TABLE THEAD TBODY TR TD TH IMG SVG PATH CIRCLE RECT G BUTTON LABEL INPUT SELECT OPTION TEXTAREA VIDEO AUDIO SOURCE'.split(' '));
@@ -77,12 +77,13 @@ export function frameDocument(settings: CustomSettings, worker: string, channel:
   return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"></head><body><script nonce="${channel}">(${frameBootstrap.toString()})(${safeJson(channel)},${safeJson(settings)},${safeJson(worker)},${safeJson(assets)},${safeJson(location.origin)},${safeJson(session)})</script></body></html>`;
 }
 
-export function CustomFrame({ widget, overlay, token, preview, deliveries, session, audioEnabled = true }: {
-  widget: Widget; overlay: string; token: string; preview: boolean; deliveries: CustomDelivery[]; session: unknown; audioEnabled?: boolean;
+export function CustomFrame({ widget, overlay, token, preview, deliveries, session, audioEnabled = true, draft = false }: {
+  widget: Widget; overlay: string; token: string; preview: boolean; deliveries: CustomDelivery[]; session: unknown; audioEnabled?: boolean; draft?: boolean;
 }) {
   const frame = useRef<HTMLIFrameElement>(null); const [source, setSource] = useState(''); const [error, setError] = useState('');
   const channel = useRef(''); const ready = useRef(false);
-  const settings = useMemo(() => audioEnabled ? widget.custom ?? defaultCustom : { ...(widget.custom ?? defaultCustom), permissions: (widget.custom ?? defaultCustom).permissions.filter(p => p !== 'audio') }, [widget.custom, audioEnabled]);
+  const draftStorage = useRef<Record<string, unknown>>({});
+  const settings = useMemo(() => { const base = widget.custom ?? defaultCustom; return { ...base, permissions: base.permissions.filter(p => (audioEnabled || p !== 'audio') && (!draft || p !== 'network')) }; }, [widget.custom, audioEnabled, draft]);
   const publicSession = useMemo(() => ({ connected: !!(session && typeof session === 'object' && 'connected' in session && session.connected), preview, muted: !settings.permissions.includes('audio') }), [session, preview, settings.permissions]);
   const sessionValue = useRef(publicSession); sessionValue.current = publicSession;
   const configValue = useRef(settings.config); configValue.current = settings.config;
@@ -95,12 +96,16 @@ export function CustomFrame({ widget, overlay, token, preview, deliveries, sessi
     const receive = async (event: MessageEvent) => {
       if (!validFrameMessage(event, frame.current?.contentWindow ?? null, capability) || disposed) return;
       const data = event.data;
-      if (data.op === 'ready') { ready.current = true; send({ op: 'session', session: sessionValue.current }); send({ op: 'config', config: configValue.current }); return; }
+      if (data.op === 'ready') { ready.current = true; send({ op: 'session', session: sessionValue.current }); send({ op: 'config', config: configValue.current }); if (draft) for (const delivery of deliveries.filter(d => d.widgetId === widget.id)) send({ op: 'event', event: delivery.event }); return; }
       if (data.op === 'error') { setError('Custom widget JavaScript failed'); return; }
       if (data.op !== 'store' || !Number.isSafeInteger(data.id) || !['get', 'set'].includes(data.method)) return;
       if (!settings.permissions.includes('storage') || requests >= 8) { send({ op: 'store-result', id: data.id, error: 'Storage permission denied or busy' }); return; }
       requests++;
       try {
+        if (draft) {
+          if (data.method === 'set') { if (!data.value || typeof data.value !== 'object' || Array.isArray(data.value) || JSON.stringify(data.value).length > 32768) throw new Error(); draftStorage.current = structuredClone(data.value); }
+          send({ op: 'store-result', id: data.id, value: structuredClone(draftStorage.current) }); return;
+        }
         const url = `/api/overlays/${overlay}/widgets/${widget.id}/store${preview ? '?preview=1' : ''}`;
         if (data.method === 'set') {
           if (!data.value || typeof data.value !== 'object' || Array.isArray(data.value) || JSON.stringify(data.value).length > 32768) throw new Error();
@@ -130,12 +135,12 @@ export function CustomFrame({ widget, overlay, token, preview, deliveries, sessi
       } catch { if (!disposed) setError('Custom widget unavailable'); }
     })();
     return () => { disposed = true; ready.current = false; controller.abort(); removeEventListener('message', receive); };
-  }, [overlay, token, preview, widget.id, executionKey]);
+  }, [overlay, token, preview, widget.id, executionKey, draft]);
   useEffect(() => {
     if (!ready.current) return;
     for (const delivery of deliveries.filter(d => d.widgetId === widget.id)) frame.current?.contentWindow?.postMessage({ op: 'event', event: delivery.event, channel: channel.current }, '*');
   }, [deliveries, widget.id]);
   useEffect(() => { if (ready.current) frame.current?.contentWindow?.postMessage({ op: 'config', config: settings.config, channel: channel.current }, '*'); }, [settings.config]);
   useEffect(() => { if (ready.current) frame.current?.contentWindow?.postMessage({ op: 'session', session: publicSession, channel: channel.current }, '*'); }, [publicSession]);
-  return <>{error && <output>{error}</output>}{source && <iframe ref={frame} title={widget.name} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={source} style={{ border: 0, width: '100%', height: '100%' }} />}</>;
+  return <>{error && <output role="status">{error}{draft ? '. Draft previews use local memory and block network access.' : ''}</output>}{source && <iframe ref={frame} title={widget.name} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={source} style={{ border: 0, width: '100%', height: '100%' }} />}</>;
 }
