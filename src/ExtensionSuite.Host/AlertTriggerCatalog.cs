@@ -33,13 +33,13 @@ public static class AlertTriggerCatalog
     ];
     public static AlertTriggerChoice[] Build(BotDiscovery discovery, InspectorEntry[] observed, StreamerBotEventNormalizer normalizer)
     {
-        var items = Known.Select(k => new AlertTriggerChoice(k.Platform + ":" + k.Type, k.Platform + " · " + k.Label,
+        var items = Known.Select(k => new AlertTriggerChoice(k.Platform + ":" + k.Type, PlatformLabel(k.Platform) + " · " + k.Label,
             k.Platform, k.Type, "Incoming event; platform delivery must be verified separately.",
             k.Label.Contains("unverified") ? "unverified" : "configured", Units(k.Type))).ToList();
         foreach (var k in Maintained)
         {
             var item = normalizer.Normalize(new JsonObject { ["event"] = new JsonObject { ["source"] = k.Source, ["type"] = k.Native }, ["data"] = new JsonObject() }, DateTimeOffset.UtcNow).Event!;
-            items.Add(new("native:" + item.NativeType, k.Source + " · " + k.Label, item.Platform, item.Type,
+            items.Add(new("native:" + item.NativeType, PlatformLabel(item.Platform) + " · " + k.Label, item.Platform, item.Type,
                 "Maintained incoming event identity. Connection and live delivery must be verified separately.", "maintained", Units(item.Type), item.NativeType));
         }
         foreach (var (source, names) in discovery.Events)
@@ -56,4 +56,8 @@ public static class AlertTriggerCatalog
         return items.DistinctBy(c => c.Id).OrderBy(c => c.Label, StringComparer.OrdinalIgnoreCase).ToArray();
     }
     private static string[] Units(string type) => type.StartsWith("support.", StringComparison.Ordinal) ? ["quantity", "native-money"] : [];
+    private static string PlatformLabel(string platform) => platform switch {
+        "twitch" => "Twitch", "youtube" => "YouTube", "kick" => "Kick", "kofi" => "Ko-fi",
+        "rumble" => "Rumble", "general" => "Streamer.bot general", "custom" => "Custom", _ => platform
+    };
 }

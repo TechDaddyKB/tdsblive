@@ -11,7 +11,7 @@ export async function qualifyUiRedesign(page, origin, writeHeaders, root) {
   await page.waitForFunction(() => document.querySelector('[aria-label="Overlay"]')?.value === 'friendly-alerts');
   const saved = () => page.waitForFunction(() => document.querySelector('[aria-label="Editor save status"]')?.textContent === 'saved');
   const read = async () => (await fetch(`${origin}/api/overlays/friendly-alerts`)).json();
-  for (const [name, trigger, template, threshold] of [['Follow greeting', 'twitch · Follow', 'Welcome {user}!', null], ['Donation thanks', 'kofi · Donation', 'Thank you {user}!', null], ['Big donation', 'kofi · Donation', 'Big thanks {user}!', '10.00']]) {
+  for (const [name, trigger, template, threshold] of [['Follow greeting', 'Twitch · Follow', 'Welcome {user}!', null], ['Donation thanks', 'Ko-fi · Donation', 'Thank you {user}!', null], ['Big donation', 'Ko-fi · Donation', 'Big thanks {user}!', '10.00']]) {
     await editor.getByRole('button', { name: 'Add AlertBox', exact: true }).click();
     await editor.getByLabel('Layer name').fill(name);
     await editor.getByLabel('Choose trigger').selectOption({ label: trigger });
@@ -29,6 +29,21 @@ export async function qualifyUiRedesign(page, origin, writeHeaders, root) {
   await editor.getByLabel('Add design').selectOption({ label: 'Donation thanks' });
   await editor.getByLabel('Add design').selectOption({ label: 'Big donation' });
   await editor.getByRole('button', { name: 'Move design 3 up', exact: true }).click();
+  await saved();
+  await editor.getByRole('button', { name: '4. Test', exact: true }).click();
+  await editor.getByLabel('Test amount (USD)').fill('9.99');
+  await editor.getByRole('button', { name: 'Test this design with sample data', exact: true }).click();
+  const guidedResults = page.getByLabel('Guided matching results');
+  await guidedResults.getByText('Big donation: Amount or quantity does not match', { exact: true }).waitFor();
+  await guidedResults.getByText('Donation thanks: Matches this event', { exact: true }).waitFor();
+  await editor.getByLabel('Test amount (USD)').fill('10.00');
+  await editor.getByRole('button', { name: 'Test this design with sample data', exact: true }).click();
+  await guidedResults.getByText('Big donation: Matches this event', { exact: true }).waitFor();
+  await editor.getByLabel('Choose trigger').selectOption('native:Kofi.Donation');
+  await editor.getByRole('button', { name: '4. Test', exact: true }).click();
+  await editor.getByRole('button', { name: 'Test this design with sample data', exact: true }).click();
+  await guidedResults.getByText('Big donation: Matches this event', { exact: true }).waitFor();
+  await editor.getByLabel('Choose trigger').selectOption('kofi:support.donation');
   await saved();
   await editor.getByLabel('Test event type').selectOption({ label: 'Donation / paid support' });
   await editor.getByLabel('Test platform', { exact: true }).selectOption({ label: 'Ko-fi' });

@@ -59,8 +59,10 @@ Add an **Alert Box** for each design, and follow its five steps:
    incompatible support facts never satisfy a condition.
 3. **Design:** change the wording, color and media. Insert a placeholder with
    a button instead of memorizing its spelling. Media choices show filenames.
-4. **Test:** try the selected design with sample data. Use **Test events** to
-   check which designs match a particular trigger or amount.
+4. **Test:** enter a sample quantity or ordinary amount and test the current
+   draft. The chosen incoming identity is filled automatically. Results explain
+   which designs match, including ordered donation tiers. **Test events** below
+   the canvas also compares other triggers/currencies in the saved preview.
 5. **Finish:** review the summary and copy your OBS URL after saving.
 
 ![Named incoming trigger selection](images/guided-alerts.png)

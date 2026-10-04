@@ -9,6 +9,13 @@ import { canNavigate, navigationGuard } from './navigation';
 import { defaultSettings } from '../../overlay-runtime/src/chat';
 import { createWidget, type Scene, type AlertCondition } from '../../overlay-runtime/src/scene';
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+it('tests guided amounts with the chosen incoming identity and explains matching results', () => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+  const widget = createWidget('alert'); widget.alert = { ...widget.alert, eventTypes: ['support.donation'], platforms: ['kofi'], nativeType: 'Kofi.Donation', condition: { unit: 'native-money', operator: 'minimum', value: '500', currency: 'USD', minorUnitDigits: 2 } };
+  const test = vi.fn(); render(<AlertEditor widget={widget} change={vi.fn()} design={null} advanced={null} test={test} results={[{ id: widget.id, name: 'Donation', reason: 'Amount or quantity does not match' }]} />);
+  fireEvent.click(screen.getByRole('button', { name: '4. Test' })); fireEvent.change(screen.getByLabelText('Test amount (USD)'), { target: { value: '4.99' } }); fireEvent.click(screen.getByRole('button', { name: 'Test this design with sample data' }));
+  expect(test).toHaveBeenCalledWith({ type: 'support.donation', platform: 'kofi', nativeType: 'Kofi.Donation', customTriggerKey: undefined, quantity: '1', amount: '499', currency: 'USD', digits: 2 }); expect(screen.getByRole('list', { name: 'Guided matching results' })).toHaveTextContent('Donation: Amount or quantity does not match');
+});
 it('chooses currency scale automatically while preserving exact ordinary amounts', () => {
   const change = vi.fn(); const view = render(<CurrencyField label="Currency" currency="USD" digits={2} value="500" change={change} />);
   fireEvent.change(screen.getByLabelText('Currency'), { target: { value: 'JPY' } }); expect(change).toHaveBeenCalledWith({ currency: 'JPY', minorUnitDigits: 0, value: '5' });

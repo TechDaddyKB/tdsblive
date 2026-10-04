@@ -1,4 +1,5 @@
 import { AlertEditor } from './AlertEditor';
+import type { AlertSample } from './alertPreview';
 import { FieldGroup } from './ui';
 import { CustomProperties } from './CustomProperties';
 import { AdvancedWidgetProperties } from './AdvancedWidgetProperties';
@@ -7,7 +8,7 @@ import { platforms } from '../../overlay-runtime/src/chat';
 import { donorKinds } from '../../overlay-runtime/src/scene';
 import { DonorProperties } from './DonorProperties';
 export interface EditorAsset { id: string; filename: string; mime: string; size?: number; uploadedAt?: string; license?: string | null; sanitized?: boolean }
-export function WidgetProperties({ widget: w, assets, change, test }: { widget: Widget; assets: EditorAsset[]; change: (widget: Widget) => void; test?: () => void }) {
+export function WidgetProperties({ widget: w, assets, change, test, testResults }: { widget: Widget; assets: EditorAsset[]; change: (widget: Widget) => void; test?: (sample: AlertSample) => void; testResults?: { id: string; name: string; reason: string | null }[] }) {
   const numeric = (key: 'x' | 'y' | 'width' | 'height' | 'rotation' | 'fontSize', label: string, min: number, max: number) => <label key={key}>{label}<input aria-label={label} type="number" min={min} max={max} value={w[key]} onChange={e => {
     const value = e.currentTarget.valueAsNumber; if (Number.isFinite(value) && (key !== 'fontSize' || Number.isInteger(value)) && value >= min && value <= max) change({ ...w, [key]: value });
   }} /></label>;
@@ -16,7 +17,7 @@ export function WidgetProperties({ widget: w, assets, change, test }: { widget: 
     const value = e.currentTarget.valueAsNumber; if (Number.isInteger(value) && value >= min && value <= max) change({ ...w, alert: { ...w.alert, [key]: value } });
   }} /></label>;
   return <div className="widget-properties"><h3>Properties</h3><label>Layer name<input aria-label="Layer name" maxLength={128} value={w.name} onChange={e => change({ ...w, name: e.target.value })} /></label>
-    {w.kind === 'alert' && <AlertEditor key={w.id} widget={w} change={change} test={test} advanced={<><label>Alert preset<select aria-label="Alert preset" value="" onChange={e => { const p = alertPresets[Number(e.target.value)]; if (p) change({ ...w, name: p[0], alert: { ...w.alert, eventTypes: [p[1]], platforms: p[1] === 'integration.custom' ? ['general', 'custom'] : [p[2]] } }); }}><option value="">Choose preset…</option>{alertPresets.map((p, i) => <option value={i} key={p[0]}>{p[0]}</option>)}</select></label>
+    {w.kind === 'alert' && <AlertEditor key={w.id} widget={w} change={change} test={test} results={testResults} advanced={<><label>Alert preset<select aria-label="Alert preset" value="" onChange={e => { const p = alertPresets[Number(e.target.value)]; if (p) change({ ...w, name: p[0], alert: { ...w.alert, nativeType: null, customTriggerKey: null, eventTypes: [p[1]], platforms: p[1] === 'integration.custom' ? ['general', 'custom'] : [p[2]] } }); }}><option value="">Choose preset…</option>{alertPresets.map((p, i) => <option value={i} key={p[0]}>{p[0]}</option>)}</select></label>
       <label>Event types<input aria-label="Event types" value={w.alert.eventTypes.join(',')} onChange={e => change({ ...w, alert: { ...w.alert, eventTypes: e.target.value.split(',').map(x => x.trim()).filter(Boolean) } })} /></label>
       <label>Alert platforms<input aria-label="Alert platforms" value={w.alert.platforms.join(',')} onChange={e => change({ ...w, alert: { ...w.alert, platforms: e.target.value.split(',').map(x => x.trim()).filter(Boolean) } })} /></label>
       <label>Native incoming type<input value={w.alert.nativeType ?? ''} onChange={e => change({ ...w, alert: { ...w.alert, nativeType: e.target.value || null } })} /></label>
