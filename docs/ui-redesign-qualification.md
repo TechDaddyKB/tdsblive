@@ -3,7 +3,8 @@
 2026-10-04. This record concerns the G14–G21 candidate, not a completed release.
 Baseline: `e590c8eddede11eee9fd037a424b8a8c448b60d8`. Initial implemented source:
 `9b00d4b`; guide/screenshots: `df2406e`. Guided draft testing was completed in
-`2ace282` and security/accessibility/complexity fixes in `040ff98`. The approved plan was committed first in
+`2ace282`, security/accessibility/complexity fixes in `040ff98`, and cross-overlay
+alert-set clipboard preservation in `57706ba`. The approved plan was committed first in
 `488246f`, and backend/contracts in `b5d31c2`. Subsequent CI evidence must identify
 the exact tested head and must not inherit older goal passes silently.
 
@@ -27,6 +28,8 @@ the exact tested head and must not inherit older goal passes silently.
 - Legacy commands, custom code/permissions, reconciliation, configuration,
   LAN/HTTP, restore/revisions and v1 import/export remain reachable. Packages with
   conditional selection use v2 and remap stable design/set identities on import.
+  Copying a complete alert set into another overlay also remaps its identities
+  and preserves its ordered first/all mode; partial copies remain independent.
 
 ## Current local checks
 
@@ -36,7 +39,7 @@ Pinned Node 24.21.0/npm 11.19.0/.NET SDK 10.0.401; Linux host and isolated data.
 | --- | --- | --- |
 | Secrets | `sonar analyze secrets` on inspected/changed source, tests, docs and images | Passed; no values exposed |
 | Frontend static checks | `npm run lint`, `npm run typecheck` | Passed |
-| Frontend tests | `npm run test:coverage` | 246 passed, 47 files; 90.33% lines, 78.02% branches overall |
+| Frontend tests | `npm run test:coverage` | 248 passed, 47 files; 90.29% lines, 78.00% branches overall (`57706ba`) |
 | Backend tests | `dotnet test TDSBLive.slnx -c Release` | Core 88 passed; Host 421 passed, 4 Windows-only skips |
 | Release build | `npm run build`; `dotnet build src/ExtensionSuite.Host -c Release` | Passed, zero backend warnings/errors |
 | Full browser regression | `node tools/browser-qualification/qualify.mjs` | Passed G02/G05/G06, G07, G08, G09, G11, G12, G13 and redesign scenarios |
@@ -82,6 +85,13 @@ targets, moves the pinned secrets scan into CI and simplifies all seven function
 reported with critical complexity. The full local regression and offline audit
 pass; invalid directory input is rejected. The protected exact-head rerun remains
 required; no quality condition or branch protection was bypassed.
+
+Current source checkpoint `57706ba654df61b798fcc224fda08e5f64f35501` passes
+all three CodeQL languages in
+[run 37197951540](https://github.com/TechDaddyKB/tdsblive/actions/runs/37197951540).
+Its [Windows run 37197952964](https://github.com/TechDaddyKB/tdsblive/actions/runs/37197952964)
+is still pending at this recording checkpoint; any later documentation commit
+requires its own protected exact-head result before delivery.
 
 `npm audit --json` reports two low-severity affected packages (DOMPurify and
 Monaco); the unchanged baseline reports the same two. No dependency/lockfile
