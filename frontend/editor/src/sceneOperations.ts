@@ -26,7 +26,7 @@ export function groupSelection(scene: Scene, ids: string[], ungroup = false): Sc
   return transformSelection(scene, ids, w => ({ ...w, groupId }));
 }
 export function copySelection(scene: Scene, ids: string[]): Widget[] { return structuredClone(selection(scene, ids)); }
-export function pasteSelection(scene: Scene, copied: Widget[]): { scene: Scene; ids: string[] } {
+export function pasteSelection(scene: Scene, copied: Widget[], sourceSets = scene.alertSets ?? []): { scene: Scene; ids: string[] } {
   if (!copied.length || scene.widgets.length + copied.length > 100) return { scene, ids: [] };
   const groups = new Map<string, string>();
   const widgets = copied.map(w => {
@@ -35,7 +35,7 @@ export function pasteSelection(scene: Scene, copied: Widget[]): { scene: Scene; 
       x: Math.min(7680, w.x + 20), y: Math.min(7680, w.y + 20), locked: false };
   });
   const identities = new Map(copied.map((w, i) => [w.id, widgets[i].id]));
-  const sets = (scene.alertSets ?? []).filter(s => s.widgetIds.every(id => identities.has(id))).map(s => ({ ...s, id: widgetId(), name: (s.name + ' copy').slice(0, 128), widgetIds: s.widgetIds.map(id => identities.get(id)!) }));
+  const sets = sourceSets.filter(s => s.widgetIds.every(id => identities.has(id))).map(s => ({ ...s, id: widgetId(), name: (s.name + ' copy').slice(0, 128), widgetIds: s.widgetIds.map(id => identities.get(id)!) }));
   return { scene: { ...scene, widgets: [...scene.widgets, ...widgets], alertSets: [...scene.alertSets ?? [], ...sets] }, ids: widgets.map(w => w.id) };
 }
 export function alignSelection(scene: Scene, ids: string[], alignment: Alignment): Scene {

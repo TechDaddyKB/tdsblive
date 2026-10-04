@@ -36,6 +36,7 @@ export function VisualEditor({ active = true }: { active?: boolean }) {
   const [nativeInjection, setNativeInjection] = useState(false);
   useEffect(() => { if (!active) setPreviewAudio(false); }, [active]);
   const [dragView, setDragView] = useState<Widget | null>(null); const [clipboard, setClipboard] = useState<Widget[]>([]);
+  const [clipboardSets, setClipboardSets] = useState<NonNullable<Scene['alertSets']>>([]);
   const session = useRef<EditorSession | null>(null); const unsubscribe = useRef<(() => void) | undefined>(undefined);
   const gesture = useRef<{ widget: Widget; mode: 'move' | 'resize'; x: number; y: number; latest: Widget; ids: string[]; scene: Scene } | null>(null);
   const mounted = useRef(true);
@@ -116,7 +117,7 @@ export function VisualEditor({ active = true }: { active?: boolean }) {
   };
   const add = (kind: Widget['kind']) => { if (!doc || doc.widgets.length >= 100) return; const w = inheritGroupSettings(createWidget(kind), doc.widgets); edit({ ...doc, widgets: [...doc.widgets, w] }); setSelected(w.id); setPanel('properties'); setAdding(false); };
   const remove = () => { if (doc && selectedWidgets.length && !selectedWidgets.some(w => w.locked)) { edit({ ...doc, widgets: doc.widgets.filter(w => !selectedKeys.has(w.id)), alertSets: (doc.alertSets ?? []).map(s => ({ ...s, widgetIds: s.widgetIds.filter(id => !selectedKeys.has(id)) })).filter(s => s.widgetIds.length) }); setSelected(''); } };
-  const duplicate = (copied?: Widget[]) => { if (!doc) return; const result = pasteSelection(doc, copied ?? copySelection(doc, selectedIds)); if (!result.ids.length) return;
+  const duplicate = (copied?: Widget[]) => { if (!doc) return; const result = pasteSelection(doc, copied ?? copySelection(doc, selectedIds), copied ? clipboardSets : doc.alertSets); if (!result.ids.length) return;
     edit({ ...result.scene, widgets: result.scene.widgets.map(w => inheritGroupSettings(w, result.scene.widgets)) }); setSelectedIds(result.ids); };
   const begin = (e: ReactPointerEvent<HTMLElement>, widget: Widget, mode: 'move' | 'resize') => {
     if (!doc || panMode || e.button === 1) return;
@@ -139,7 +140,9 @@ export function VisualEditor({ active = true }: { active?: boolean }) {
     try { const parsed: unknown = JSON.parse(raw); if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid raw object');
       const sample = { type: testType, platform: testPlatform, quantity: testQuantity, amount: decimalToInteger(testAmount, testDigits) ?? undefined, currency: testCurrency, digits: testDigits, customTriggerKey: testCustomKey || undefined, nativeType: testNativeType || undefined };
       const results = selectAlertDesigns(doc, sample); setTestResults(results); setDraftEvent(sampleEvent(testType, testPlatform));
-      if (!nativeInjection && (sample.amount === undefined || !/^\d+$/.test(testQuantity) || BigInt(testQuantity) > 9223372036854775807n)) throw new Error('Invalid amount');
+      if (!nativeInjection && testType.startsWith('support.') && (sample.amount === undefined || !/^\d+$/.test(testQuantity) || BigInt(testQuantity) > 9223372036854775807n)) {
+        setNotice('Enter a valid nonnegative sample amount and whole-number quantity. Your designs have not changed.'); return;
+      }
       if (!await session.current?.flush()) { setNotice('Draft designs tested locally. Resolve saving before sending a saved-preview test.'); return; }
       const result = await visualApi.preview(doc.id, { type: testType, platform: testPlatform, user: 'Test viewer', message: 'Synthetic test message', raw: parsed, mode: nativeInjection ? 'native' : 'synthetic', ...(testType.startsWith('support.') ? { quantity: testQuantity, nativeMoney: { amountMinor: sample.amount!, currency: testCurrency, minorUnitDigits: testDigits } } : {}), customTriggerKey: testCustomKey || undefined, nativeType: testNativeType || undefined });
       setNotice(`Test delivered only to this overlay’s preview. Persisted: ${result.persisted}. Live actions: ${result.liveActionsAllowed}.`);
@@ -198,7 +201,7 @@ export function VisualEditor({ active = true }: { active?: boolean }) {
       <p className="canvas-sample-notice">Design preview · sample data · silent. Select an alert to see its design; other alerts show their placement.</p>
       <div className="canvas-workspace" role="group" aria-label="Canvas workspace" data-panel={panel} onKeyDown={e => editorKeyboard(e, {
         undo: () => session.current?.undo(), redo: () => session.current?.redo(), duplicate: () => duplicate(),
-        copy: chosen ? () => setClipboard(copySelection(doc, selectedIds)) : undefined,
+        copy: chosen ? () => { setClipboard(copySelection(doc, selectedIds)); setClipboardSets(structuredClone(doc.alertSets ?? [])); } : undefined,
         paste: clipboard.length ? () => duplicate(clipboard) : undefined,
         selectAll: () => setSelectedIds(doc.widgets.map(w => w.id)),
         group: ungroup => edit(groupSelection(doc, selectedIds, ungroup)), remove,

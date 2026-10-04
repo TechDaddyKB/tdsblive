@@ -59,6 +59,21 @@ export async function qualifyUiRedesign(page, origin, writeHeaders, root) {
   assert.equal(String((await read()).widgets[2].alert.condition.value), '1000');
   assert.equal((await read()).alertSets[0].selection, 'all');
   await editor.getByLabel('Design selection').selectOption({ label: 'First matching design' }); await saved();
+  await editor.getByLabel('Overlay canvas').focus();
+  await page.keyboard.press('Control+a'); await page.keyboard.press('Control+c');
+  await editor.getByLabel('New overlay name').fill('Copied alert tiers');
+  await editor.getByRole('button', { name: 'Create overlay', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[aria-label="Overlay"]')?.value === 'copied-alert-tiers');
+  await editor.getByLabel('Overlay canvas').focus(); await page.keyboard.press('Control+v'); await saved();
+  const copied = await (await fetch(`${origin}/api/overlays/copied-alert-tiers`)).json();
+  assert.equal(copied.widgets.length, 3); assert.equal(copied.alertSets.length, 1);
+  assert.equal(copied.alertSets[0].selection, 'first');
+  assert.deepEqual(copied.alertSets[0].widgetIds.map(id => copied.widgets.find(w => w.id === id).name), ['Follow greeting', 'Big donation', 'Donation thanks']);
+  const original = await read();
+  assert.ok(copied.widgets.every(w => !original.widgets.some(old => old.id === w.id)));
+  await editor.getByLabel('Overlay', { exact: true }).selectOption('friendly-alerts');
+  await page.waitForFunction(() => document.querySelector('[aria-label="Overlay"]')?.value === 'friendly-alerts');
+  await editor.getByRole('button', { name: 'Big donation', exact: true }).click();
   const geometry = (await read()).widgets.map(w => [w.id, w.x, w.y, w.width, w.height]);
   await mkdir(path.join(root, 'artifacts/ui-redesign'), { recursive: true });
   for (const theme of ['light', 'dark']) {
