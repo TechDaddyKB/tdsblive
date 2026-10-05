@@ -53,8 +53,9 @@ def capture(window, env, target):
              '-frames:v', '1', '-update', '1', '-threads', '1', str(target)], env)
 
 
-def qualify(application, evidence):
-    application, evidence = owned_path(application), owned_path(evidence)
+def qualify(application):
+    application = owned_path(application)
+    evidence = owned_path(ROOT / 'release' / 'linux-native-evidence')
     if evidence.exists():
         raise ValueError('Use a fresh qualification evidence directory')
     scan(application)
@@ -120,6 +121,5 @@ def qualify(application, evidence):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--application-directory', type=Path, required=True)
-    parser.add_argument('--evidence', type=Path, required=True)
     arguments = parser.parse_args()
-    qualify(arguments.application_directory, arguments.evidence)
+    qualify(arguments.application_directory)

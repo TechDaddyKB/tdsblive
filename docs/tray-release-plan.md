@@ -1021,3 +1021,25 @@ Windows executable path alone does not resolve it. UMU backend/tray support is
 not qualified. Runner/pipe behavior is under investigation while retaining
 TR-R06: session tokens must remain in redirected process pipes, not arguments,
 environment variables, files, logs or configuration.
+
+### G23 packaging security repair — 2026-10-05
+
+Protected run [37320076790](https://github.com/TechDaddyKB/tdsblive/actions/runs/37320076790)
+at `1af6d24` passes the Linux tests, native Windows tray probe and functional
+Windows/browser/recovery tests, then fails the Sonar security gate. Release
+package production is skipped. Findings concern tar member names, a caller-chosen
+build executable and a caller-chosen qualification evidence path.
+
+The repair validates every tar member before creating the archive, rejects links
+and special files, constructs headers from permitted relative names, and opens
+regular files without following links. Package builds use the pinned CI SDK via
+the fixed dotnet command; qualification writes only to its fixed owned release
+evidence directory. Seven Python package cases pass, including unsafe tar names,
+links and FIFOs; workflow YAML parsing and diff checks pass. A new protected
+analysis is required before these findings can be considered resolved.
+
+G23 remains **In progress**. Actual UMU startup currently also fails: an owned
+private-output bootstrap experiment is rejected by the Windows output-pipe
+guard. That separate, uncommitted experiment is not included in this packaging
+repair. No UMU acceptance or 1.0.1 publication is claimed; G24 remains
+**Not started**.

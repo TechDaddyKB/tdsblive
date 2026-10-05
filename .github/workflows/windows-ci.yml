@@ -418,7 +418,7 @@ jobs:
           shopt -s nullglob
           applications=(release/linux-candidate/TDSBLive-*-linux-x64-wine)
           test "${#applications[@]}" -eq 1
-          python tools/qualify_linux_package.py --application-directory "${applications[0]}" --evidence release/linux-native-evidence
+          python tools/qualify_linux_package.py --application-directory "${applications[0]}"
 
       - name: Upload Linux companion candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

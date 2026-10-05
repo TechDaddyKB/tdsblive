@@ -138,6 +138,33 @@ class LinuxPackageTests(unittest.TestCase):
                 self.assertTrue(item.isfile())
                 self.assertFalse(any(member.name.startswith('/') or '..' in Path(member.name).parts for member in archive_file))
 
+    @unittest.skipUnless(sys.platform == 'linux', 'Linux filesystem link and special-file policy')
+    def test_tar_rejects_links_unsafe_member_names_and_special_files_before_creating_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'TDSBLive-1.0.1-linux-x64-wine'
+            source.mkdir()
+            output = root / 'candidate.tar.gz'
+            outside = root / 'owned-outside'
+            outside.write_text('owned fixture')
+            unsafe = source / 'link'
+            unsafe.symlink_to(outside)
+            with self.assertRaises(ValueError):
+                write_archive(source, output, 123456)
+            self.assertFalse(output.exists())
+            unsafe.unlink()
+            unsafe = source / 'unsafe:member'
+            unsafe.touch()
+            with self.assertRaises(ValueError):
+                write_archive(source, output, 123456)
+            self.assertFalse(output.exists())
+            unsafe.unlink()
+            import os
+            os.mkfifo(source / 'fifo')
+            with self.assertRaises(ValueError):
+                write_archive(source, output, 123456)
+            self.assertFalse(output.exists())
+
 
 if __name__ == '__main__':
     unittest.main()

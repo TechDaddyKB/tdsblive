@@ -120,24 +120,44 @@ def validate_bundle(directory):
 
 
 def write_archive(directory, destination, timestamp):
+    directory = directory.resolve()
+    if not re.fullmatch(r'TDSBLive-\d+\.\d+\.\d+-linux-x64-wine', directory.name):
+        raise ValueError('Use the canonical Linux package directory name')
+    members = []
+    for path in [directory, *sorted(directory.rglob('*'))]:
+        if path.is_symlink() or not path.resolve().is_relative_to(directory):
+            raise ValueError('Archive source must stay inside the owned package without links')
+        name = (PurePosixPath(directory.name) / path.relative_to(directory)).as_posix()
+        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+-]*(/[A-Za-z0-9][A-Za-z0-9._+-]*)*', name):
+            raise ValueError('Unsafe Linux archive member name')
+        attributes = path.stat(follow_symlinks=False)
+        if not (stat.S_ISDIR(attributes.st_mode) or stat.S_ISREG(attributes.st_mode)):
+            raise ValueError('Archive source contains a special file')
+        info = tarfile.TarInfo(name=name)
+        info.type = tarfile.DIRTYPE if stat.S_ISDIR(attributes.st_mode) else tarfile.REGTYPE
+        info.size = attributes.st_size if info.isfile() else 0
+        info.mode = stat.S_IMODE(attributes.st_mode)
+        info.uid = info.gid = 0
+        info.uname = info.gname = ''
+        info.mtime = timestamp
+        members.append((path, info))
+    # Validate every member before creating a publishable archive.
     with destination.open('xb') as output:
         with gzip.GzipFile(filename='', mode='wb', fileobj=output, mtime=timestamp) as compressed:
             with tarfile.open(fileobj=compressed, mode='w') as archive:
-                for path in [directory, *sorted(directory.rglob('*'))]:
-                    info = archive.gettarinfo(str(path), str(Path(directory.name) / path.relative_to(directory)))
-                    info.uid = info.gid = 0
-                    info.uname = info.gname = ''
-                    info.mtime = timestamp
+                for path, info in members:
                     if info.isfile():
-                        with path.open('rb') as source:
+                        with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW), 'rb') as source:
                             archive.addfile(info, source)
                     else:
                         archive.addfile(info)
 
 
-def build(archive, checksums, output, dotnet):
+def build(archive, checksums, output):
     if sys.platform != 'linux':
         raise ValueError('Build Linux packages on Linux')
+    if not output.is_relative_to(ROOT / 'release'):
+        raise ValueError('Build candidates inside the ignored release directory')
     version = ET.fromstring(safe_read(ROOT / 'Directory.Build.props')).findtext('.//Version')
     if not version or not re.fullmatch(r'\d+\.\d+\.\d+', version):
         raise ValueError('Invalid single-source release version')
@@ -155,9 +175,9 @@ def build(archive, checksums, output, dotnet):
     extract_windows(archive, bundle / 'backend')
     verify_backend(bundle / 'backend', version, commit)
     project = ROOT / 'src/ExtensionSuite.Desktop/ExtensionSuite.Desktop.csproj'
-    subprocess.run([dotnet, 'restore', str(project), '--runtime', 'linux-x64', '--locked-mode',
+    subprocess.run(['dotnet', 'restore', str(project), '--runtime', 'linux-x64', '--locked-mode',
                     '-p:SelfContained=true', '-p:NuGetLockFilePath=packages.linux-x64.lock.json'], cwd=ROOT, check=True)
-    subprocess.run([dotnet, 'publish', str(project), '--configuration', 'Release', '--no-restore',
+    subprocess.run(['dotnet', 'publish', str(project), '--configuration', 'Release', '--no-restore',
                     '--runtime', 'linux-x64', '--self-contained', 'true', '-p:NuGetLockFilePath=packages.linux-x64.lock.json',
                     '-p:PublishSingleFile=false', '-p:PublishTrimmed=false', '-p:DebugType=none', '-p:DebugSymbols=false',
                     '--output', str(bundle)], cwd=ROOT, check=True)
@@ -189,6 +209,5 @@ if __name__ == '__main__':
     parser.add_argument('--windows-archive', type=Path, required=True)
     parser.add_argument('--checksums', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--dotnet', default='dotnet')
     args = parser.parse_args()
-    build(args.windows_archive.resolve(), args.checksums.resolve(), args.output.resolve(), args.dotnet)
+    build(args.windows_archive.resolve(), args.checksums.resolve(), args.output.resolve())
