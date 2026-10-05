@@ -3,6 +3,8 @@
     <Content Update="wwwroot/**/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="ExtensionSuite.Host.Tests" />
+    <ProjectReference Include="../ExtensionSuite.DesktopControl/ExtensionSuite.DesktopControl.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <ProjectReference Include="../ExtensionSuite.Core/ExtensionSuite.Core.csproj" />
     <ProjectReference Include="../ExtensionSuite.Data/ExtensionSuite.Data.csproj" />

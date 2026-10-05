@@ -510,54 +510,58 @@
       "extensionsuite.data": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )",
-          "ExtensionSuite.Rumble": "[0.1.0, )",
+          "ExtensionSuite.Core": "[1.0.0, )",
+          "ExtensionSuite.Rumble": "[1.0.0, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )",
           "System.Security.Cryptography.ProtectedData": "[10.0.12, )"
         }
       },
+      "extensionsuite.desktopcontrol": {
+        "type": "Project"
+      },
       "extensionsuite.finance": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )",
-          "ExtensionSuite.Data": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )",
+          "ExtensionSuite.Data": "[1.0.0, )"
         }
       },
       "extensionsuite.host": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )",
-          "ExtensionSuite.Data": "[0.1.0, )",
-          "ExtensionSuite.Finance": "[0.1.0, )",
-          "ExtensionSuite.Overlays": "[0.1.0, )",
-          "ExtensionSuite.Rumble": "[0.1.0, )",
-          "ExtensionSuite.StreamerBot": "[0.1.0, )",
-          "ExtensionSuite.Web": "[0.1.0, )",
+          "ExtensionSuite.Core": "[1.0.0, )",
+          "ExtensionSuite.Data": "[1.0.0, )",
+          "ExtensionSuite.DesktopControl": "[1.0.0, )",
+          "ExtensionSuite.Finance": "[1.0.0, )",
+          "ExtensionSuite.Overlays": "[1.0.0, )",
+          "ExtensionSuite.Rumble": "[1.0.0, )",
+          "ExtensionSuite.StreamerBot": "[1.0.0, )",
+          "ExtensionSuite.Web": "[1.0.0, )",
           "Microsoft.AspNetCore.OpenApi": "[10.0.12, )"
         }
       },
       "extensionsuite.overlays": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "extensionsuite.rumble": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "extensionsuite.streamerbot": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "extensionsuite.web": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "Microsoft.AspNetCore.OpenApi": {

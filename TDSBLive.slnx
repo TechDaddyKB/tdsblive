@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="src/ExtensionSuite.DesktopControl/ExtensionSuite.DesktopControl.csproj" />
+  <Project Path="src/ExtensionSuite.Desktop/ExtensionSuite.Desktop.csproj" />
   <Project Path="src/ExtensionSuite.Core/ExtensionSuite.Core.csproj" />
   <Project Path="src/ExtensionSuite.Data/ExtensionSuite.Data.csproj" />
   <Project Path="src/ExtensionSuite.StreamerBot/ExtensionSuite.StreamerBot.csproj" />
@@ -8,5 +10,6 @@
   <Project Path="src/ExtensionSuite.Web/ExtensionSuite.Web.csproj" />
   <Project Path="src/ExtensionSuite.Host/ExtensionSuite.Host.csproj" />
   <Project Path="tests/unit/ExtensionSuite.Core.Tests/ExtensionSuite.Core.Tests.csproj" />
+  <Project Path="tests/unit/ExtensionSuite.Desktop.Tests/ExtensionSuite.Desktop.Tests.csproj" />
   <Project Path="tests/integration/ExtensionSuite.Host.Tests/ExtensionSuite.Host.Tests.csproj" />
 </Solution>

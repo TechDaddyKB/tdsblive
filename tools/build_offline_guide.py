@@ -110,7 +110,7 @@ def build(destination: Path):
     for name, body in rendered.items():
         document = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         document += f'<title>TDSBLive — {html.escape(name)}</title>'
-        document += '<style>body{font:18px/1.6 system-ui;margin:auto;padding:24px;max-width:960px;color:#17202a;background:white}nav{font-size:16px;border-bottom:1px solid #cbd5e1;padding-bottom:16px}summary{cursor:pointer;font-weight:600}details{margin:8px 0}pre{overflow:auto;padding:16px;background:#f1f5f9;border-radius:6px}pre code{white-space:pre;overflow-wrap:normal}img{max-width:100%;height:auto}code{overflow-wrap:anywhere}blockquote{border-left:4px solid #758399;padding-left:16px}a{color:#005cab}li{margin-bottom:8px}</style>'
+        document += '<style>body{font:18px/1.6 system-ui;margin:auto;padding:24px;max-width:960px;color:#17202a;background:white}nav{font-size:16px;border-bottom:1px solid #cbd5e1;padding-bottom:16px}summary{cursor:pointer;font-weight:600}details{margin:8px 0}pre{overflow:auto;padding:16px;background:#f1f5f9;border-radius:6px}pre code{white-space:pre;overflow-wrap:normal}img{max-width:100%;height:auto}code{overflow-wrap:anywhere}blockquote{border-left:4px solid #758399;padding-left:16px}a{color:#005cab;overflow-wrap:anywhere}li{margin-bottom:8px}</style>'
         document += f'<nav aria-label="User guide">{navigation}</nav><main>{body}</main></html>'
         (destination / (name + '.html')).write_text(document, encoding='utf-8')
     print(f'Built {len(pages)} offline guide pages')

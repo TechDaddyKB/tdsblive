@@ -20,6 +20,7 @@ Follow these steps in order. You can leave the optional features until your basi
 ## Choose what you want to do next
 
 - [Install, update or remove TDSBLive](Install-and-Update.md).
+- [Find TDSBLive and use its tray controls](Tray-and-Desktop-Controls.md) in the 1.0.1 candidate.
 - [Understand supporter totals](Supporter-Totals.md) and their dates, currencies and estimates.
 - [Set up speech and sound](Automation.md), then test rules before enabling them.
 - [Make a backup or restore one](Backup-and-Recovery.md).

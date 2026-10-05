@@ -81,6 +81,14 @@ jobs:
           npm ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Read application release version
+        shell: pwsh
+        run: |
+          [xml]$properties = Get-Content Directory.Build.props -Raw
+          $releaseVersion = [string]$properties.Project.PropertyGroup.Version
+          if ($releaseVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid application release version' }
+          "TDSBLIVE_VERSION=$releaseVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Begin trusted SonarQube analysis
         if: env.RUN_SONAR == 'true'
         shell: pwsh
@@ -88,7 +96,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           if (-not $env:SONAR_TOKEN) { throw 'SONAR_TOKEN must be configured for trusted analysis' }
-          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"1.0.0" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**,**/wwwroot/editor/**,**/wwwroot/runtime/**,frontend/**/generated/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,frontend/**/*.test.ts,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
+          dotnet sonarscanner begin /k:"camarokris_tdsblive" /o:"camarokris" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:SONAR_TOKEN" /v:"$env:TDSBLIVE_VERSION" /d:sonar.projectBaseDir="$pwd" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" /d:sonar.javascript.lcov.reportPaths="coverage/lcov.info" /d:sonar.exclusions="**/node_modules/**,**/obj/**,**/bin/**,**/dist/**,**/coverage/**,TestResults/**,tests/fixtures/**,references/**,**/wwwroot/editor/**,**/wwwroot/runtime/**,frontend/**/generated/**" /d:sonar.test.inclusions="frontend/**/*.test.tsx,frontend/**/*.test.ts,tests/**" /d:sonar.coverage.exclusions="tests/**,tools/**,frontend/test-setup.ts,frontend/**/vite.config.ts,vitest.config.ts,eslint.config.mjs" /d:sonar.qualitygate.wait="true"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Lint and type-check frontend
@@ -116,6 +124,12 @@ jobs:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
+
+      - name: Qualify actual isolated desktop control lifecycle
+        shell: pwsh
+        run: |
+          python tools/qualify_desktop_control.py --dotnet (Join-Path $env:DOTNET_ROOT 'dotnet.exe') --assembly src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Test frontend with LCOV
         run: npm run test:coverage
@@ -190,14 +204,14 @@ jobs:
           if ((Get-FileHash $download -Algorithm SHA256).Hash.ToLowerInvariant() -ne '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732') { throw 'Inno Setup checksum mismatch' }
           $installed = Start-Process $download -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$innoRoot`"" -Wait -PassThru
           if ($installed.ExitCode -ne 0) { throw 'Inno Setup installation failed' }
-          ./tools/build_windows_package.ps1 -Version '1.0.0' -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
+          ./tools/build_windows_package.ps1 -Version $env:TDSBLIVE_VERSION -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
 
       - name: Qualify native Windows packages
         env:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         shell: pwsh
-        run: ./tools/qualify_windows_package.ps1 -Version '1.0.0'
+        run: ./tools/qualify_windows_package.ps1 -Version $env:TDSBLIVE_VERSION
 
       - name: Qualify packaged guide without network access
         env:
@@ -237,4 +251,183 @@ jobs:
             artifacts/g05-streamer-chat.png
             artifacts/g06-editor.png
             artifacts/ui-redesign/**
+            artifacts/windows-tray/**
           if-no-files-found: warn
+
+  native-tray-probe:
+    name: Windows native tray probe
+    # Run actual portable desktop interactions promptly, independently of the
+    # longer regression/Sonar pipeline. This never replaces its required check
+    # or supplies release-publication artifacts.
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - name: Check out trusted source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned deterministic secrets scanner
+        shell: pwsh
+        run: |
+          $toolDirectory = Join-Path $env:RUNNER_TEMP 'tdsblive-sonar-cli'
+          New-Item -ItemType Directory -Force $toolDirectory | Out-Null
+          $binary = Join-Path $toolDirectory 'sonar.exe'
+          Invoke-WebRequest 'https://binaries.sonarsource.com/Distribution/sonarqube-cli/1.9.0.15656/windows/sonarqube-cli-1.9.0.15656-windows-x86-64.exe' -OutFile $binary
+          if ((Get-FileHash $binary -Algorithm SHA256).Hash.ToLowerInvariant() -ne '338d0c3817fb09338416d9b3ac6110d96a2a1038d354ae6f1f3dede1a062e12f') { throw 'Sonar CLI checksum mismatch' }
+          $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Scan tracked source before execution
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
+        shell: pwsh
+        run: |
+          $trackedFiles = @(git ls-files)
+          & sonar analyze secrets @trackedFiles
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Set up pinned .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Set up pinned Node LTS
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          package-manager-cache: false
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.7'
+
+      - name: Build current frontend
+        shell: pwsh
+        run: |
+          npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build diagnostic Windows packages
+        id: packages
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
+        shell: pwsh
+        run: |
+          [xml]$properties = Get-Content Directory.Build.props -Raw
+          $version = [string]$properties.Project.PropertyGroup.Version
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid application version' }
+          $innoRoot = Join-Path $env:RUNNER_TEMP 'tdsblive-inno-6.7.3'
+          $download = Join-Path $env:RUNNER_TEMP 'innosetup-6.7.3.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe' -OutFile $download
+          if ((Get-FileHash $download -Algorithm SHA256).Hash.ToLowerInvariant() -ne '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732') { throw 'Inno Setup checksum mismatch' }
+          $installed = Start-Process $download -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$innoRoot`"" -Wait -PassThru
+          if ($installed.ExitCode -ne 0) { throw 'Inno Setup installation failed' }
+          ./tools/build_windows_package.ps1 -Version $version -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          @{ purpose = 'Diagnostic packages only; not approved for release';
+             checkout = (git rev-parse HEAD); source = '${{ github.event.pull_request.head.sha || github.sha }}';
+             run = '${{ github.run_id }}'; version = $version } |
+            ConvertTo-Json | Set-Content release/native-diagnostic-build.json -Encoding utf8NoBOM
+
+      - name: Exercise actual portable tray and confirmations
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
+        shell: pwsh
+        run: |
+          $ownedPackage = Join-Path $env:RUNNER_TEMP ('tdsblive-native-probe-' + [Guid]::NewGuid().ToString('N'))
+          $archives = @(Get-ChildItem release/TDSBLive-*-win-x64.zip)
+          if ($archives.Count -ne 1) { throw 'Expected exactly one current diagnostic ZIP' }
+          Expand-Archive $archives[0].FullName $ownedPackage
+          $nativePowerShell = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+          try {
+            & $nativePowerShell -NoProfile -File tools/qualify_windows_tray.ps1 -ApplicationDirectory $ownedPackage -EvidenceDirectory artifacts/windows-tray/probe
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally { Remove-Item $ownedPackage -Recurse -Force }
+
+      - name: Scan diagnostic artifacts before upload
+        id: scanned
+        if: always() && steps.packages.outcome == 'success'
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
+        shell: pwsh
+        run: |
+          sonar analyze secrets release/portable release/native-diagnostic-build.json release/SHA256SUMS.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (Test-Path artifacts/windows-tray/probe) {
+            sonar analyze secrets artifacts/windows-tray/probe
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Upload scanned diagnostic packages and native evidence
+        if: always() && steps.scanned.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-native-diagnostics
+          retention-days: 14
+          path: |
+            release/TDSBLive-*-win-x64.zip
+            release/TDSBLive-*-win-x64-setup.exe
+            release/SHA256SUMS.txt
+            release/native-diagnostic-build.json
+            artifacts/windows-tray/probe/**
+          if-no-files-found: error
+
+  desktop-inventory:
+    name: Windows desktop inventory
+    # Read-only OS-control discovery on a separate disposable CI machine. This
+    # job never replaces or satisfies the required Windows build/test check.
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - name: Check out trusted source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned deterministic secrets scanner
+        shell: pwsh
+        run: |
+          $toolDirectory = Join-Path $env:RUNNER_TEMP 'tdsblive-sonar-cli'
+          New-Item -ItemType Directory -Force $toolDirectory | Out-Null
+          $binary = Join-Path $toolDirectory 'sonar.exe'
+          Invoke-WebRequest 'https://binaries.sonarsource.com/Distribution/sonarqube-cli/1.9.0.15656/windows/sonarqube-cli-1.9.0.15656-windows-x86-64.exe' -OutFile $binary
+          if ((Get-FileHash $binary -Algorithm SHA256).Hash.ToLowerInvariant() -ne '338d0c3817fb09338416d9b3ac6110d96a2a1038d354ae6f1f3dede1a062e12f') { throw 'Sonar CLI checksum mismatch' }
+          $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Scan source and inspect owned display controls
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
+        shell: pwsh
+        run: |
+          $trackedFiles = @(git ls-files)
+          & sonar analyze secrets @trackedFiles
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $nativePowerShell = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+          & $nativePowerShell -NoProfile -File tools/inspect_windows_display.ps1 -EvidenceDirectory artifacts/windows-display
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          sonar analyze secrets artifacts/windows-display
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload scanned display inventory
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-display-inventory
+          retention-days: 14
+          path: artifacts/windows-display/display-inventory.json
+          if-no-files-found: error

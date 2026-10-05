@@ -17,6 +17,11 @@ try {
     & dotnet publish src/ExtensionSuite.Host/ExtensionSuite.Host.csproj --configuration Release --no-restore `
         -p:PublishProfile=WindowsPortable "-p:Version=$Version" --output $publish
     if ($LASTEXITCODE -ne 0) { throw 'Windows publish failed.' }
+    & dotnet restore src/ExtensionSuite.Desktop/ExtensionSuite.Desktop.csproj --runtime win-x64 --locked-mode -p:NuGetLockFilePath=packages.win-x64.lock.json
+    if ($LASTEXITCODE -ne 0) { throw 'Locked Windows desktop restore failed.' }
+    & dotnet publish src/ExtensionSuite.Desktop/ExtensionSuite.Desktop.csproj --configuration Release --no-restore `
+        --runtime win-x64 --self-contained true -p:NuGetLockFilePath=packages.win-x64.lock.json "-p:Version=$Version" --output (Join-Path $publish 'desktop')
+    if ($LASTEXITCODE -ne 0) { throw 'Windows desktop publish failed.' }
     & python tools/build_offline_guide.py (Join-Path $publish 'guide')
     if ($LASTEXITCODE -ne 0) { throw 'Offline user guide generation failed.' }
     $importBundle = Join-Path $repository 'artifacts/tdsblive-streamerbot.sb'
@@ -25,7 +30,7 @@ try {
     $integrations = Join-Path $publish 'integrations'
     New-Item -ItemType Directory -Path $integrations | Out-Null
     Copy-Item $importBundle (Join-Path $integrations 'tdsblive-streamerbot.sb')
-    foreach ($required in @('TDSBLive.exe', 'TDSBLive.dll', 'TDSBLive.runtimeconfig.json', 'wwwroot/editor/index.html', 'wwwroot/runtime/index.html')) {
+    foreach ($required in @('TDSBLive.exe', 'TDSBLive.dll', 'TDSBLive.runtimeconfig.json', 'desktop/TDSBLive.Desktop.exe', 'desktop/TDSBLive.Desktop.runtimeconfig.json', 'wwwroot/editor/index.html', 'wwwroot/runtime/index.html')) {
         if (-not (Test-Path (Join-Path $publish $required))) { throw "Published package is missing $required" }
     }
     $privateFiles = Get-ChildItem $publish -Recurse -File | Where-Object {

@@ -31,7 +31,7 @@ if (mode !== 'managed') {
   assert.equal(await realpath(candidate), candidate, 'Packaged executable must not resolve through a symbolic link');
   executable = candidate;
 }
-const argumentsList = ['--TDSBLive:DataDirectory', data, '--TDSBLive:OpenEditor=false'];
+const argumentsList = ['--TDSBLive:DataDirectory', data, '--TDSBLive:OpenEditor=false', '--TDSBLive:DesktopMode=off'];
 if (mode === 'managed') argumentsList.unshift(path.resolve('src/ExtensionSuite.Host/bin/Release/net10.0/ExtensionSuite.Host.dll'));
 const child = spawn(executable, argumentsList, { stdio: 'ignore' });
 let launchError = false;

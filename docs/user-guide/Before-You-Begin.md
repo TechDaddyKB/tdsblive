@@ -18,7 +18,17 @@ You can think of the arrangement as a short journey: your connected service rece
 
 Download the version you want from [GitHub Releases](https://github.com/TechDaddyKB/tdsblive/releases). Choose the application installer or ZIP, and read that version's release notes.
 
-**TDSBLive 1.0** includes the adaptive workspace, guided triggers and conditional alert designs, advanced arrangement controls, custom widgets and portable packages, and limited local StreamElements compatibility. These chapters describe that interface. The earlier **v0.1.0 MVP** has basic chat, overlays, totals, automation and recovery; it predates those additions.
+The latest public download is currently **v0.1.0 MVP**. It has basic chat,
+overlays, totals, automation and recovery. It predates the newer interface in
+many of these chapters.
+
+Newer source builds include the adaptive workspace, guided triggers and
+conditional alert designs, advanced arrangement, custom widgets and portable
+packages, and limited local StreamElements compatibility. These features are
+planned for the cumulative **v1.0.1** release, together with desktop tray
+controls. **v1.0.1 is still being tested and has not been published.** There is
+no published v1.0.0 download to find. The [tray guide](Tray-and-Desktop-Controls.md)
+clearly marks the Windows candidate and the pending native Linux companion.
 
 The guide bundled with your download belongs to that build. The online wiki can contain newer instructions. If a control is missing, check your version before changing your saved setup.
 

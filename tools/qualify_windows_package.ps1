@@ -30,9 +30,15 @@ function Test-Application([string]$Directory) {
     if (-not $productVersion -or $productVersion.Split('+')[0] -ne $Version) {
         throw 'Packaged application version does not match the requested release version.'
     }
+    $desktopVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $Directory 'desktop/TDSBLive.Desktop.dll')).ProductVersion
+    if (-not $desktopVersion -or $desktopVersion.Split('+')[0] -ne $Version) {
+        throw 'Packaged desktop controls version does not match the requested release version.'
+    }
     $runtime = Get-Content (Join-Path $Directory 'TDSBLive.runtimeconfig.json') -Raw | ConvertFrom-Json
     if ($runtime.runtimeOptions.framework -or $runtime.runtimeOptions.frameworks) { throw 'Package requires a separately installed runtime.' }
-    foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe', 'guide/Home.html', 'guide/images/guided-setup.png', 'integrations/tdsblive-streamerbot.sb')) {
+    $desktopRuntime = Get-Content (Join-Path $Directory 'desktop/TDSBLive.Desktop.runtimeconfig.json') -Raw | ConvertFrom-Json
+    if ($desktopRuntime.runtimeOptions.framework -or $desktopRuntime.runtimeOptions.frameworks) { throw 'Desktop controls require a separately installed runtime.' }
+    foreach ($required in @('coreclr.dll', 'hostfxr.dll', 'Microsoft.AspNetCore.dll', 'TDSBLive.exe', 'desktop/TDSBLive.Desktop.exe', 'desktop/coreclr.dll', 'guide/Home.html', 'guide/images/guided-setup.png', 'integrations/tdsblive-streamerbot.sb')) {
         if (-not (Test-Path (Join-Path $Directory $required))) { throw "Self-contained package is missing $required" }
     }
     $guide = Join-Path $Directory 'guide'
@@ -53,7 +59,7 @@ function Test-Application([string]$Directory) {
         ConvertTo-Json -Depth 5 | Set-Content (Join-Path $data 'configuration.json')
     # Start the shipped EXE directly, not dotnet. No live integrations or browser launch.
     $script:process = Start-Process (Join-Path $Directory 'TDSBLive.exe') `
-        -ArgumentList "--TDSBLive:DataDirectory=`"$data`"" -PassThru `
+        -ArgumentList "--TDSBLive:DataDirectory=`"$data`" --TDSBLive:DesktopMode=off --TDSBLive:OpenEditor=false" -PassThru `
         -RedirectStandardOutput (Join-Path $root 'host.stdout') -RedirectStandardError (Join-Path $root 'host.stderr')
     try {
         $ready = $false
@@ -81,6 +87,12 @@ try {
     $portable = Join-Path $root 'portable'
     Expand-Archive (Join-Path $package "TDSBLive-$Version-win-x64.zip") $portable
     Test-Application $portable
+    $nativePowerShell = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+    & $nativePowerShell -NoProfile -File (Join-Path $PSScriptRoot 'qualify_windows_tray.ps1') -ApplicationDirectory $portable `
+        -EvidenceDirectory (Join-Path $PSScriptRoot '../artifacts/windows-tray/portable')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual portable Windows tray qualification failed.' }
+    & python (Join-Path $PSScriptRoot 'qualify_desktop_control.py') --executable (Join-Path $portable 'TDSBLive.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Portable EXE desktop control lifecycle qualification failed.' }
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') portable
     if ($LASTEXITCODE -ne 0) { throw 'Portable EXE restart/restore qualification failed.' }
     & node (Join-Path $PSScriptRoot 'browser-qualification/qualify.mjs') portable
@@ -88,6 +100,11 @@ try {
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
     if (Test-Path $startupShortcut) { throw 'Login startup must be disabled by default.' }
     Test-Application $installed
+    & $nativePowerShell -NoProfile -File (Join-Path $PSScriptRoot 'qualify_windows_tray.ps1') -ApplicationDirectory $installed `
+        -EvidenceDirectory (Join-Path $PSScriptRoot '../artifacts/windows-tray/installed')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual installed Windows tray qualification failed.' }
+    & python (Join-Path $PSScriptRoot 'qualify_desktop_control.py') --executable (Join-Path $installed 'TDSBLive.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Installed EXE desktop control lifecycle qualification failed.' }
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') installed
     if ($LASTEXITCODE -ne 0) { throw 'Installed EXE restart/restore qualification failed.' }
     & node (Join-Path $PSScriptRoot 'browser-qualification/qualify.mjs') installed
@@ -96,7 +113,7 @@ try {
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"startup`""
     if (-not (Test-Path $startupShortcut)) { throw 'Opt-in login startup shortcut was not installed.' }
     $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($startupShortcut)
-    if ($shortcut.TargetPath -ne (Join-Path $installed 'TDSBLive.exe') -or $shortcut.Arguments) {
+    if ($shortcut.TargetPath -ne (Join-Path $installed 'TDSBLive.exe') -or $shortcut.Arguments -ne '--TDSBLive:OpenEditor=false') {
         throw 'Startup shortcut must target only the installed executable without opening an editor.'
     }
     Test-Application $installed

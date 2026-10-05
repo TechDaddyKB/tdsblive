@@ -51,7 +51,7 @@ const port = await new Promise((resolve, reject) => {
 });
 await writeFile(path.join(directory, 'configuration.json'), JSON.stringify({ server: { host: '127.0.0.1', port } }));
 const origin = `http://127.0.0.1:${port}`;
-const host = spawn(executable, [...launchArguments, '--TDSBLive:DataDirectory', directory, '--TDSBLive:OpenEditor=false'], { stdio: 'ignore' });
+const host = spawn(executable, [...launchArguments, '--TDSBLive:DataDirectory', directory, '--TDSBLive:OpenEditor=false', '--TDSBLive:DesktopMode=off'], { stdio: 'ignore' });
 let spawnFailed = false;
 host.on('error', () => { spawnFailed = true; });
 let browser;

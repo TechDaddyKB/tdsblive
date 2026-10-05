@@ -6,7 +6,9 @@ Once setup works, you do not need to repeat the installation. Use a short routin
 
 1. Start Streamer.bot and Speaker.bot if you use them. Check that their WebSocket servers are running.
 2. Start **one** copy of TDSBLive. On Linux, use the same bottle or prefix that contains your working settings.
-3. Open [the editor](http://127.0.0.1:17474/editor).
+3. Open [the editor](http://127.0.0.1:17474/editor). In the 1.0.1 tray build,
+   a manual start opens it for you; choose **Open editor** from the tray to return
+   later. A quiet sign-in start waits for you to open it.
 4. Enter any session-only secrets again. Check the connections you actually use.
 5. If you track a stream-period total, deliberately set its start time for this session. Do not reset totals just because you opened the editor.
 6. Open OBS and select the scene you intend to use.
@@ -21,7 +23,10 @@ TDSBLive does not need your editor tab to remain open, but the background applic
 
 Use the private reading dock for chat, and the editor for adjustments. Watch the save status before assuming a change has been stored. Make small changes so you can see what each one does.
 
-If a source disconnects, check its connection status first. Repeatedly launching another TDSBLive copy can create a port conflict. If chat appears twice, check whether you enabled both direct WebSocket delivery and a duplicate forwarding action.
+If a source disconnects, check its connection status first. Use **Open editor**
+to return to a running tray build. Older builds can create a port conflict if
+you launch extra copies. If chat appears twice, check whether you enabled both
+direct WebSocket delivery and a duplicate forwarding action.
 
 Supporter totals reflect the events and date range the application knows about. They do not confirm a payout or prove every paid event arrived.
 
@@ -30,10 +35,19 @@ Supporter totals reflect the events and date range the application knows about. 
 1. End the broadcast using OBS's normal controls.
 2. Save any final layout changes.
 3. Download a backup after meaningful changes, especially before an update or runner change.
-4. Quit TDSBLive through **Backup and recovery** if you want it to stop.
+4. In the 1.0.1 tray build, choose **Quit** from the tray and confirm **Quit**.
+   You can also choose **Quit TDSBLive** in **Backup and recovery**.
 5. Close the bots if you no longer need them.
 
 Closing the browser tab alone does not quit TDSBLive. Session-only credentials are cleared when the application restarts, so plan to enter them again next time.
+
+The tray build is still a release candidate. See
+[Find TDSBLive, open the editor and quit](Tray-and-Desktop-Controls.md) for its
+current availability, Windows screenshots and missing-icon help. The confirmation
+starts on **Cancel**, so Enter cancels before you change the selection. Escape
+or closing the confirmation also keeps the app running. Tray controls
+do not save unfinished editor forms, and quitting TDSBLive does not quit OBS
+or the other applications you started.
 
 ## When something changes
 

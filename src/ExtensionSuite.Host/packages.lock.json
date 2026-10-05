@@ -100,41 +100,44 @@
       "extensionsuite.data": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )",
-          "ExtensionSuite.Rumble": "[0.1.0, )",
+          "ExtensionSuite.Core": "[1.0.0, )",
+          "ExtensionSuite.Rumble": "[1.0.0, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.12, )",
           "System.Security.Cryptography.ProtectedData": "[10.0.12, )"
         }
       },
+      "extensionsuite.desktopcontrol": {
+        "type": "Project"
+      },
       "extensionsuite.finance": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )",
-          "ExtensionSuite.Data": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )",
+          "ExtensionSuite.Data": "[1.0.0, )"
         }
       },
       "extensionsuite.overlays": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "extensionsuite.rumble": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "extensionsuite.streamerbot": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "extensionsuite.web": {
         "type": "Project",
         "dependencies": {
-          "ExtensionSuite.Core": "[0.1.0, )"
+          "ExtensionSuite.Core": "[1.0.0, )"
         }
       },
       "Microsoft.EntityFrameworkCore.Sqlite": {
