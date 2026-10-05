@@ -107,7 +107,7 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G21](ui-redesign-plan.md#g21--document-and-deliver) | Document and deliver UI redesign | G20 | Complete |
 | [G22](tray-release-plan.md#g22--desktop-controls-and-windows-tray) | Desktop controls and Windows tray | G21, merged 1.0 source | Complete |
 | [G23](tray-release-plan.md#g23--native-linux-tray-companion) | Native Linux tray companion | G22 | Complete with accepted limitations |
-| [G24](tray-release-plan.md#g24--documentation-qualification-and-publication) | Documentation, qualification and v1.0.1 publication | G22–G23 | In progress |
+| [G24](tray-release-plan.md#g24--documentation-qualification-and-publication) | Documentation, qualification and v1.0.1 publication | G22–G23 | Complete |
 
 The approved [tray and 1.0.1 release plan](tray-release-plan.md) defines
 TR-R01–TR-R10 and G22–G24. Its active implementation goal preserves all earlier
@@ -783,3 +783,18 @@ performance or live-delivery claims. G00–G13 are Complete within that scope.
 - [Frankfurter](https://frankfurter.dev/)
 
 Recheck version-sensitive protocols and dependencies during their owning goal. Observed capture shapes take priority over guessed Rumble structures; official examples supplement unobserved cases without replacing evidence.
+
+
+## G22–G24 release delivery — 2026-10-05
+
+G22–G24 are complete under the recorded operator acceptance of remaining limits.
+Protected PR #22 delivered source `77c642ce721335f6d7169ef914c0a241e2778bf0`;
+exact-main qualification [37384546952](https://github.com/TechDaddyKB/tdsblive/actions/runs/37384546952)
+and publication [37388415088](https://github.com/TechDaddyKB/tdsblive/actions/runs/37388415088)
+passed. [1.0.1 is published as Latest](https://github.com/TechDaddyKB/tdsblive/releases/tag/v1.0.1)
+with three verified application files and checksums. The complete beginner wiki
+is published at `72e23c8aaa7c6f1b85ed7fb935c67a65a2597767`. See the
+[final tray delivery record](tray-release-plan.md#g24-final-delivery--2026-10-05)
+for exact artifacts, actual OBS evidence, public anonymous verification and
+accepted future investigation. Historical candidate statements remain provenance;
+this record supersedes their release-pending status.

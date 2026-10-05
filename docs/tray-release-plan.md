@@ -139,7 +139,7 @@ pending for the investigated Python examples.
 
 ## G24 — Documentation, qualification and publication
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G22–G23
 Requirements: TR-R08–TR-R10 and cumulative regression coverage of TR-R01–TR-R07
 
@@ -1891,3 +1891,73 @@ exception is added. The full pinned Linux desktop suite passes **124**, with
 activation, aliases and release/reacquisition remain covered. Ignored local
 evidence: `artifacts/tray-safehandle-tests/`. New protected checks and final main
 packages are required; v1.0.1 and the prepared wiki are not yet published.
+
+
+### G24 final delivery — 2026-10-05
+
+G24 is **Complete** under the operator's explicit acceptance of the recorded
+memory, KDE and representative qualification limits. This delivery covers
+TR-R08–TR-R10 and final cumulative TR-R01–TR-R07 regression evidence. Earlier
+candidate checkpoints above are historical; this final record supersedes their
+publication and documentation-pending statements.
+
+- Protected [PR #22](https://github.com/TechDaddyKB/tdsblive/pull/22) merged the
+  cumulative release at `77c642ce721335f6d7169ef914c0a241e2778bf0`.
+  [Exact-main Windows CI 37384546952](https://github.com/TechDaddyKB/tdsblive/actions/runs/37384546952)
+  passed all five jobs: Windows native tray, Windows display inventory, Linux
+  desktop/coverage, full Windows build/tests, and Linux companion packaging.
+  SonarQube quality gate and all three CodeQL languages passed for this source.
+  Native portable/installed tray actions, confirmations, Explorer recovery,
+  duplicate ownership, restart/restore, install/update/uninstall/profile retention,
+  browser/replay/finance/crash/HTTP regressions and packaged offline guide passed.
+  Linux archive admission, executable modes and actual packaged first-run
+  rendering/Cancel passed. No branch protections or scanning rules were bypassed.
+- The earlier exact-main run 37381699084 retained a failed Explorer-recovery
+  screenshot capture after 13 successful native captures. The screenshot gate
+  remained enforced; a fresh full run passed both portable and installed checks.
+  The capture failure's cause was not established. Its scanned evidence remains
+  in ignored `artifacts/v1.0.1-main-failed-native-evidence/` for future diagnosis.
+- The exact shipping Windows ZIP was downloaded, scanned after extraction and
+  run through isolated Wine with a fresh owned profile. Native Linux OBS 32.2.2
+  kept one Browser Source open across restart and restore. Actual screenshots
+  showed progress/state `25/1`, then `75/2`, retained `75/2` after restart and
+  returned `25/1` after backup restore. Settled captures were 1000×600 with alpha
+  0–255 and a transparent empty corner. A capture taken during reconnect was
+  transiently incomplete; the settled source was visually checked.
+  Actual post-volume/mute meters passed silent/tone/silent: baseline 114 frames,
+  peak 0; tone 259 frames, 18 signal frames, peak 0.0799901187; after 159 frames,
+  peak 0. Physical hearing and native Windows OBS are not inferred. The original
+  OBS scene was restored, owned scene/input removed, host exited cleanly and
+  temporary profile removed; streaming and recording stayed inactive.
+  Scanned ignored evidence: `artifacts/v1.0.1-final-77c642c/obs/`.
+- [Publish release 37388415088](https://github.com/TechDaddyKB/tdsblive/actions/runs/37388415088)
+  **passed**. The publisher admitted only successful same-source main artifacts,
+  verified Windows/Linux source markers and checksums, created immutable tag
+  `v1.0.1` at the exact SHA above, re-downloaded and verified draft assets, then
+  published Latest with `draft=false` and `prerelease=false`. Fresh anonymous
+  HTTPS downloads of all four files matched their hashes. The live public page
+  showed Latest and the tested commit. There is no separate v1.0.0 release.
+  [Download 1.0.1](https://github.com/TechDaddyKB/tdsblive/releases/tag/v1.0.1).
+- The complete canonical **21-chapter / 18-screenshot** beginner guide and sidebar
+  were synchronized using `tools/sync_user_guide.py`. After publication, the wiki
+  was pushed as `72e23c8aaa7c6f1b85ed7fb935c67a65a2597767`; `git ls-remote`
+  matched. Live Chrome verified Home, tray navigation, Linux setup instructions
+  and loaded native illustrations. The packaged guide passed network-disabled
+  browser qualification; prior all-chapter checks at 320/390/1366 pixels passed.
+  The [documentation audit](tray-documentation-audit.md) covers every current
+  repository page; historical contracts and evidence remain intact.
+
+Published SHA-256 values:
+
+| File | SHA-256 |
+| --- | --- |
+| `TDSBLive-1.0.1-win-x64-setup.exe` | `335bbc6a3612d63fb08f304109966533e711176088c9db698994ad3f9ecee7c4` |
+| `TDSBLive-1.0.1-win-x64.zip` | `7cdeedd8a5aaea890d0c20b1611206627e7265307a2656dbfeeccf0e3db3e967` |
+| `TDSBLive-1.0.1-linux-x64-wine.tar.gz` | `4ed0b817c819271a126b509c044c96558d0ceec37b3646ba32915db8074fb676` |
+| `SHA256SUMS.txt` | `9a408eb3a17f9b30c62342408d1bec82f054bf307e917090e424d22a2ca72d10` |
+
+No release blocker remains under the accepted scope. [Known issues](known-issues.md)
+retain memory/CPU investigation, KDE panel-only fallback, desktop/runner matrix,
+paid-platform, human/physical and native Windows streaming-PC/OBS limits. They
+are accepted follow-up work, not new passes. A fully native Linux backend remains
+deferred. Later documentation evidence commits do not move the release tag.
