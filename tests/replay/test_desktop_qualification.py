@@ -1,6 +1,7 @@
 """Check executable admission without executing any test application."""
 
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,7 +36,7 @@ class DesktopQualificationTests(unittest.TestCase):
                 with self.subTest(command=command), self.assertRaises((ValueError, FileNotFoundError)):
                     checked_command(command)
 
-    @patch("tools.qualify_desktop_control.sys.platform", "linux")
+    @unittest.skipUnless(sys.platform == "linux", "Owned Wine prefixes require Linux drive symlinks")
     def test_wine_uses_owned_prefix_and_individual_arguments_without_changing_global_environment(self):
         with tempfile.TemporaryDirectory(prefix="tdsblive-command-") as directory:
             root = Path(directory) / "path with spaces"
@@ -61,7 +62,7 @@ class DesktopQualificationTests(unittest.TestCase):
                 with self.assertRaises(FileExistsError):
                     OwnedWine(str(root / "wine"), root)
 
-    @patch("tools.qualify_desktop_control.sys.platform", "linux")
+    @unittest.skipUnless(sys.platform == "linux", "Owned Wine prefixes require Linux drive symlinks")
     def test_wine_cleanup_waits_only_for_the_owned_prefix_and_never_kills_a_server(self):
         with tempfile.TemporaryDirectory(prefix="tdsblive-command-") as directory:
             root = Path(directory)

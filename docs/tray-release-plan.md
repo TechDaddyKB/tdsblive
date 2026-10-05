@@ -479,3 +479,27 @@ The harness now uses that name. This is a qualification bug fix, not new native
 acceptance; updated portable/installed tray execution remains required. The
 independent scanned display inventory now discovers enabled real controls and
 the 100%/125% choices; it still does not establish high-DPI tray behavior.
+
+Further documentation preparation adds version-aware Windows startup, tray
+handoff, quiet sign-in, safe quit, updates and recovery instructions to six
+existing guide chapters, retaining browser controls for older downloads.
+The unpublished v1.0.1 status is explicit. The refreshed offline guide passes
+network-disabled links/images and all 21 chapters at 320/390/1366 pixels.
+That broader check found two unwrapped viewing URL links in the chat chapter;
+offline link styling now wraps them without changing the destinations. Final
+packaged/wiki documentation and G24 acceptance remain outstanding.
+
+Source `dc7e173` stops before native packaging in
+[run 37260439684](https://github.com/TechDaddyKB/tdsblive/actions/runs/37260439684):
+two new Wine fixture tests attempted Linux drive symlinks on Windows after
+mocking the platform. They now run only on actual Linux; the explicit rejection
+of a Windows platform still runs everywhere. All five pass locally on Linux.
+No existing Windows qualification is skipped or weakened.
+
+An additional trusted Windows job builds the same current package and runs the
+actual portable tray harness in parallel with the full regression pipeline.
+Its scanned artifacts are explicitly labeled diagnostic builds and cannot
+replace the required build/Sonar checks, installed-package qualification or
+release-candidate artifacts. This allows native desktop issues and owned OBS
+preparation to be investigated without waiting for unrelated suites each time.
+The new job itself remains unverified until its actual Windows execution.
