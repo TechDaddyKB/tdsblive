@@ -6,6 +6,7 @@ Session capabilities are kept in memory and pipes and are never printed.
 
 import argparse
 import concurrent.futures
+import contextlib
 import http.cookiejar
 import json
 import queue
@@ -172,7 +173,9 @@ def qualify(command):
             if process.poll() is None:
                 process.terminate()
                 process.wait(timeout=15)
-        with sqlite3.connect(profile / "tdsblive.db") as database:
+        # sqlite3's own context manager commits/rolls back but does not close.
+        # Release this owned inspection handle before Windows removes the profile.
+        with contextlib.closing(sqlite3.connect(profile / "tdsblive.db")) as database:
             assert database.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert json.loads((profile / "configuration.json").read_text(encoding="utf-8"))["displayName"] == config["displayName"]
         assert not (profile / "tdsblive.db-wal").exists() or (profile / "tdsblive.db-wal").stat().st_size == 0

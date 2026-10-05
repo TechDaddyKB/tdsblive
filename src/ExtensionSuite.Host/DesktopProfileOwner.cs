@@ -37,8 +37,16 @@ public sealed class DesktopProfileOwner : IAsyncDisposable, IDisposable
         {
             // This marker only requests a browser window. It grants no control
             // authority and contains no token, configuration or private data.
-            File.WriteAllText(requestPath, Guid.NewGuid().ToString());
-            if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(requestPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            // Set permissions at creation: the owner may consume and delete
+            // this empty marker immediately, including before this handle closes.
+            var options = new FileStreamOptions
+            {
+                Mode = FileMode.OpenOrCreate,
+                Access = FileAccess.Write,
+                Share = FileShare.ReadWrite | FileShare.Delete
+            };
+            if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            using var request = new FileStream(requestPath, options);
             return null;
         }
     }

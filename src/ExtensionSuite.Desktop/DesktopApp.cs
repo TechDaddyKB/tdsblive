@@ -30,6 +30,7 @@ public sealed class DesktopApp : Application
     private int openRequests;
     private bool trayUnavailable;
     private bool exiting;
+    private string statusLabel = "Starting TDSBLive…";
 
     public override void Initialize() => Styles.Add(new FluentTheme());
 
@@ -58,6 +59,7 @@ public sealed class DesktopApp : Application
 
     private async Task StartAsync()
     {
+        Task? waiting = null;
         try
         {
             if (!Program.Arguments.SequenceEqual(new[] { "--attach" }) || !Console.IsInputRedirected)
@@ -67,14 +69,19 @@ public sealed class DesktopApp : Application
             }
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             bootstrap = await DesktopProtocol.ReadAsync<DesktopBootstrap>(Console.OpenStandardInput(), timeout.Token);
-            var waiting = WaitForCompletionAsync();
+            waiting = WaitForCompletionAsync();
             while (!stopping.IsCancellationRequested)
             {
                 using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
                 deadline.CancelAfter(TimeSpan.FromSeconds(3));
                 var reply = await DesktopProtocol.SendAsync(bootstrap, "status", deadline.Token);
                 editorUrl = reply.EditorUrl;
-                SetState(reply.State == "running" ? "TDSBLive is running" : "TDSBLive is starting or stopping…", reply.State == "running");
+                SetState(reply.State switch
+                {
+                    "running" => "TDSBLive is running", "restarting" => "Restarting TDSBLive…",
+                    "stopping" => "Stopping TDSBLive…", "starting" => "Starting TDSBLive…",
+                    _ => "TDSBLive needs attention"
+                }, reply.State == "running");
                 if (running && reply.OpenRequests != openRequests)
                 {
                     openRequests = reply.OpenRequests;
@@ -96,6 +103,13 @@ public sealed class DesktopApp : Application
                 ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise open TDSBLive again.");
             }
         }
+        finally
+        {
+            // A connection failure can end polling before the completion waiter
+            // settles. Observe its fault without killing or restarting the host.
+            if (waiting is not null)
+                _ = waiting.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
+        }
     }
 
     private async Task WaitForCompletionAsync()
@@ -103,6 +117,11 @@ public sealed class DesktopApp : Application
         if (bootstrap is null) return;
         var result = await DesktopProtocol.SendAsync(bootstrap, "wait", stopping.Token);
         if (result.State is "quit" or "relaunched") ExitCompanion();
+        else if (result.State == "port-conflict")
+        {
+            SetState("Could not start TDSBLive", false);
+            ShowControls("Another app may be using TDSBLive's address. Close the other app or choose a different port. TDSBLive has not stopped or taken control of the other app.");
+        }
         else
         {
             SetState("Stopped unexpectedly", false);
@@ -150,9 +169,11 @@ public sealed class DesktopApp : Application
 
     private void SetState(string text, bool isRunning)
     {
+        statusLabel = text;
         running = isRunning;
-        if (tray is not null) tray.ToolTipText = "TDSBLive — " + text;
+        if (tray is not null) tray.ToolTipText = "TDSBLive — " + (text == "TDSBLive is running" ? "Running" : text);
         if (statusText is not null) statusText.Text = text;
+        if (controls is not null) controls.Title = running ? "TDSBLive is running" : "TDSBLive needs attention";
         UpdateCommands();
     }
 
@@ -176,7 +197,7 @@ public sealed class DesktopApp : Application
             openButton.Click += (_, _) => OpenEditor();
             restartButton.Click += async (_, _) => await RequestAsync("restart");
             quitButton.Click += async (_, _) => await RequestAsync("quit");
-            controls = new Window { Title = "TDSBLive is running", Width = 440, MinWidth = 320,
+            controls = new Window { Title = running ? "TDSBLive is running" : "TDSBLive needs attention", Width = 440, MinWidth = 320,
                 SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterScreen, Icon = CreateIcon() };
             controls.Closing += (_, eventArgs) =>
             {
@@ -202,7 +223,7 @@ public sealed class DesktopApp : Application
         }
         else panel.Children.Add(new TextBlock { Text = "Closing this window keeps TDSBLive running. Choose Quit when you finish streaming.", TextWrapping = TextWrapping.Wrap });
         controls.Content = panel;
-        statusText!.Text = running ? "TDSBLive is running" : "TDSBLive needs attention";
+        statusText!.Text = statusLabel;
         UpdateCommands();
         if (!controls.IsVisible) controls.Show();
     }

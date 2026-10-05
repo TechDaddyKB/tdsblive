@@ -238,7 +238,7 @@ try {
     $ownedBackend = @(Owned-Hosts)[0]
     Stop-Process -Id $ownedBackend.ProcessId -Force
     Wait-For { @(Owned-Hosts).Count -eq 0 } 'The owned backend did not stop.' | Out-Null
-    $notice = Wait-For { Element $desktop.Id 'TDSBLive is running' ([System.Windows.Automation.ControlType]::Window) } 'Backend failure did not expose desktop recovery guidance.'
+    $notice = Wait-For { Element $desktop.Id 'TDSBLive needs attention' ([System.Windows.Automation.ControlType]::Window) } 'Backend failure did not expose desktop recovery guidance.'
     Screenshot $notice 'backend-stopped.png'
     Invoke-Element (Wait-For { Element $desktop.Id 'Close desktop controls' ([System.Windows.Automation.ControlType]::Button) } 'Recovery guidance had no way to close desktop controls.')
     Wait-For { -not (Get-Process -Id $desktop.Id -ErrorAction SilentlyContinue) } 'Closing stopped desktop controls did not exit the companion.' | Out-Null

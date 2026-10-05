@@ -35,9 +35,11 @@ if (desktop?.External != true && (desktop?.OpenEditor ?? builder.Configuration.G
 var lifecycle = app.Services.GetRequiredService<ApplicationLifecycle>();
 var paths = app.Services.GetRequiredService<ApplicationPaths>();
 var restore = app.Services.GetRequiredService<RecoveryRestore>();
+var started = false;
 try
 {
     await app.StartAsync();
+    started = true;
     desktop?.SetReady();
     profileOwner?.Watch(() =>
     {
@@ -80,7 +82,13 @@ try
 }
 catch (IOException)
 {
-    Console.Error.WriteLine("TDSBLive could not bind its configured HTTP address. Check for a port conflict and change server.port in configuration.json.");
+    Console.Error.WriteLine(started ? "TDSBLive could not close its local data safely. Reopen it and check local recovery information." :
+        "TDSBLive could not bind its configured HTTP address. Check for a port conflict and change server.port in configuration.json.");
     Environment.ExitCode = 1;
+    if (desktop is not null)
+    {
+        await desktop.StopMonitoringAsync();
+        await desktop.CompleteAsync(started ? "failed" : "port-conflict");
+    }
 }
 finally { await app.DisposeAsync(); }

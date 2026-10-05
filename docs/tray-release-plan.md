@@ -223,3 +223,19 @@ UI, browser handoff, Cancel focus, Explorer/fallback, crash isolation, diagnosti
 restart/quit and screenshot qualification to both portable and installed packages.
 It has not yet run on Windows. It requires an interactive CI desktop and rejects
 blank screenshot evidence. Light/dark, high-DPI and final OBS gates remain explicit.
+
+Second Windows checkpoint: `b3027899a75e89adcfb4c84a406fbc808cb5c144` passes
+Windows .NET tests in
+[run 37245914924](https://github.com/TechDaddyKB/tdsblive/actions/runs/37245914924).
+Actual desktop-control lifecycle reaches final database inspection, but cleanup
+fails because Python's SQLite context manager does not close its connection.
+The qualification script now explicitly closes that owned inspection handle.
+Local full regression also exposed a duplicate-launch race: the owner consumed
+the open-request marker before the duplicate applied Unix file permissions.
+Permissions are now applied atomically at creation, with deletion sharing and
+no post-creation path operation. After these fixes, local full regression passes
+436 host tests (four Windows-only skips), 88 core tests and five confirmation
+tests. Actual isolated process qualification passes restart, restore, quit and
+profile integrity. Status text now distinguishes restart, stop and startup,
+and a failed address bind reports a separate recovery outcome. Windows native
+UI, both Linux runners, OBS and publication remain outstanding.

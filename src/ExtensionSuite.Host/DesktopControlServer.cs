@@ -88,7 +88,8 @@ public sealed class DesktopControlServer : IAsyncDisposable
                         break;
                     case "status":
                         reply = completed.Task.IsCompletedSuccessfully ? completed.Task.Result :
-                            new(lifecycle.Operation is not null ? "stopping" : ready ? "running" : "starting", editorUrl,
+                            new(lifecycle.Operation?.Kind is "restart" or "restore" ? "restarting" :
+                                lifecycle.Operation is not null ? "stopping" : ready ? "running" : "starting", editorUrl,
                                 OpenRequests: Volatile.Read(ref openRequests));
                         break;
                     case "restart" or "quit":
