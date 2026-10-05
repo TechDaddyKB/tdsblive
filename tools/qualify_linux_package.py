@@ -35,7 +35,7 @@ def find_window(app, env):
     for _ in range(100):
         if app.poll() is not None:
             raise ValueError('Native app exited before showing setup')
-        result = subprocess.run(['xdotool', 'search', '--onlyvisible', '--pid', str(app.pid),
+        result = subprocess.run(['xdotool', 'search', '--all', '--onlyvisible', '--pid', str(app.pid),
                                  '--name', '^Set up TDSBLive on Linux$'],
                                 env=env, capture_output=True, text=True, timeout=5)
         if result.returncode == 0 and result.stdout.strip():
