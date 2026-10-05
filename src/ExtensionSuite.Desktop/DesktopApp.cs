@@ -39,9 +39,12 @@ public sealed class DesktopApp : Application, IDisposable
     private readonly Func<TrayIcon?, bool> trayRegistered;
     private readonly Action<TrayIcon?> restoreTray;
     private readonly Func<string, Task<bool>> confirmation;
+    private readonly bool probeLinuxTray;
+    private DateTimeOffset nextLinuxTrayRetry = DateTimeOffset.UtcNow.AddSeconds(3);
     internal Window? Controls => controls;
 
-    public DesktopApp() : this(LaunchBrowser, IsTrayRegistered, ConfirmAsync) { }
+    public DesktopApp() : this(LaunchBrowser, IsTrayRegistered, ConfirmAsync)
+        => probeLinuxTray = OperatingSystem.IsLinux();
 
     internal DesktopApp(Action<Uri> launchBrowser, Func<TrayIcon?, bool> trayRegistered,
         Func<string, Task<bool>> confirmation, Action<TrayIcon?>? restoreTray = null)
@@ -221,7 +224,20 @@ public sealed class DesktopApp : Application, IDisposable
                     OpenEditor();
                 }
                 var available = trayRegistered(tray);
-                if (!available)
+                if (probeLinuxTray)
+                {
+                    var registration = await LinuxTrayRegistration.ReadAsync(stopped);
+                    stopped.ThrowIfCancellationRequested();
+                    available = registration.Registered;
+                    if (!available && registration.HostAvailable && DateTimeOffset.UtcNow >= nextLinuxTrayRetry)
+                    {
+                        // Avalonia already watches owner changes. A bounded retry
+                        // also covers a failed registration while that owner stays.
+                        restoreTray(tray);
+                        nextLinuxTrayRetry = DateTimeOffset.UtcNow.AddSeconds(10);
+                    }
+                }
+                else if (!available)
                 {
                     restoreTray(tray);
                     available = trayRegistered(tray);
@@ -255,15 +271,15 @@ public sealed class DesktopApp : Application, IDisposable
     }
 
     private static bool IsTrayRegistered(TrayIcon? icon) => OperatingSystem.IsWindows()
-        ? WindowsTrayRegistration.IsAvailable() : false; // Linux uses fallback until actual SNI registration is verified.
+        ? WindowsTrayRegistration.IsAvailable() : false; // Linux registration is read asynchronously from its watcher.
 
     private static void RestoreTray(TrayIcon? icon)
     {
-        if (!OperatingSystem.IsWindows() || icon is null || !WindowsTrayRegistration.IsShellAvailable()) return;
-        // Explorer can disappear between Avalonia's TaskbarCreated notification
-        // and its registration attempt. Re-add the same icon once the shell is
-        // available; tooltip updates alone only issue NIM_MODIFY in the pinned
-        // implementation. Keep the existing menu, session and icon identity.
+        if (icon is null || !(OperatingSystem.IsWindows() || OperatingSystem.IsLinux())) return;
+        if (OperatingSystem.IsWindows() && !WindowsTrayRegistration.IsShellAvailable()) return;
+        // Retry the same icon without replacing its menu or backend session.
+        // Windows tooltip updates only modify an existing registration. Linux
+        // keeps its service identity and awaits any pending name release.
         icon.IsVisible = false;
         icon.IsVisible = true;
     }
