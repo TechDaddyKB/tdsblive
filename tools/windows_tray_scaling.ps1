@@ -75,7 +75,7 @@ function Qualify-WindowsScaling($Desktop) {
             $offered = @($available.choices | ForEach-Object { $_.name })
         } finally { $available.expand.Collapse() }
         $changed = $true
-        $script:scalingEvidence = @{ original = $original; targetPercent = $target.percent; offeredScales = $offered; restored = $false }
+        $script:scalingEvidence = @{ original = $original; targetPercent = $target.percent; offeredScales = $offered; restored = $false; dialogs = @{} }
         Set-DisplayScale $settings $target.name
         Close-DisplaySettings $settings
         $settings = $null
@@ -86,17 +86,26 @@ function Qualify-WindowsScaling($Desktop) {
                 $window = Element $Desktop.Id "$action TDSBLive?" ([System.Windows.Automation.ControlType]::Window)
                 if ($window -and [TdsTrayDesktop]::GetDpiForWindow([IntPtr]$window.Current.NativeWindowHandle) -eq $expectedDpi) { return $window }
             } "The actual $action window did not receive $expectedDpi DPI after Windows scaling."
-            $cancel = Element $Desktop.Id 'Cancel' ([System.Windows.Automation.ControlType]::Button)
-            $accept = Element $Desktop.Id $action ([System.Windows.Automation.ControlType]::Button)
+            $cancel = Dialog-Button $dialog 'Cancel'
+            $accept = Dialog-Button $dialog $action
             if (-not $cancel -or -not $accept -or -not $cancel.Current.HasKeyboardFocus) { throw 'The scaled confirmation lost its controls or Cancel-first focus.' }
-            $bounds = $dialog.Current.BoundingRectangle
-            foreach ($button in @($cancel, $accept)) {
-                $rectangle = $button.Current.BoundingRectangle
-                if ($button.Current.IsOffscreen -or -not $button.Current.IsEnabled -or -not $bounds.Contains($rectangle) -or
-                    $rectangle.Height -lt (44 * $target.percent / 100 - 1)) {
-                    throw 'A scaled confirmation button is clipped, disabled or smaller than its touch target.'
+            # Capture even a failing layout, and wait for real layout to settle
+            # rather than treating an initial automation frame as final geometry.
+            Screenshot $dialog "scale-$($target.percent)-$($action.ToLowerInvariant()).png"
+            Wait-For {
+                $bounds = $dialog.Current.BoundingRectangle
+                $minimumHeight = 44 * $target.percent / 100 - 1
+                $checks = @()
+                foreach ($button in @($cancel, $accept)) {
+                    $rectangle = $button.Current.BoundingRectangle
+                    $checks += @{ name = $button.Current.Name; enabled = $button.Current.IsEnabled; offscreen = $button.Current.IsOffscreen
+                        insideDialog = $bounds.Contains($rectangle); height = $rectangle.Height; minimumHeight = $minimumHeight
+                        bounds = @{ x = $rectangle.X; y = $rectangle.Y; width = $rectangle.Width; height = $rectangle.Height } }
                 }
-            }
+                $script:scalingEvidence.dialogs[$action] = @{ windowDpi = [TdsTrayDesktop]::GetDpiForWindow([IntPtr]$dialog.Current.NativeWindowHandle)
+                    bounds = @{ x = $bounds.X; y = $bounds.Y; width = $bounds.Width; height = $bounds.Height }; buttons = $checks }
+                if (-not ($checks | Where-Object { $_.offscreen -or -not $_.enabled -or -not $_.insideDialog -or $_.height -lt $_.minimumHeight })) { return $true }
+            } 'A scaled confirmation button is clipped, disabled or smaller than its touch target after layout settled.' | Out-Null
             Screenshot $dialog "scale-$($target.percent)-$($action.ToLowerInvariant()).png"
             Send-OwnedKey $cancel '{ENTER}'
             Wait-For { -not (Element $Desktop.Id "$action TDSBLive?" ([System.Windows.Automation.ControlType]::Window)) } 'Keyboard Cancel failed in the scaled confirmation.' | Out-Null

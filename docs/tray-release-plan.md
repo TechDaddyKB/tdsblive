@@ -503,3 +503,16 @@ replace the required build/Sonar checks, installed-package qualification or
 release-candidate artifacts. This allows native desktop issues and owned OBS
 preparation to be investigated without waiting for unrelated suites each time.
 The new job itself remains unverified until its actual Windows execution.
+
+Source `5cecbf0` builds diagnostic ZIP/installer artifacts and reaches actual
+125% Windows display scaling in both native jobs in
+[run 37261243100](https://github.com/TechDaddyKB/tdsblive/actions/runs/37261243100).
+Regression, SonarCloud, CodeQL and desktop inventory pass; portable native
+qualification fails the scaled confirmation-button geometry check. The scanned
+diagnostics show the fallback and confirmation windows open together. The
+harness searched the whole process for **Restart**, allowing it to select the
+fallback's disabled button. Confirmation buttons now resolve within their owned
+dialog. Scaling checks retain enabled, visible, contained and 44-pixel minimum
+requirements; screenshots and per-button geometry are recorded before failure.
+Both modified scripts pass actual PowerShell parsing. This correction still
+requires native execution; installed qualification and G22 remain outstanding.

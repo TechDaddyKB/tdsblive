@@ -126,6 +126,16 @@ function Element([int]$ProcessId, [string]$Name, $Type = $null) {
     $condition = [System.Windows.Automation.AndCondition]::new($conditions.ToArray())
     return [System.Windows.Automation.AutomationElement]::RootElement.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
 }
+function Dialog-Button($Dialog, [string]$Name) {
+    # The fallback window has Restart/Quit buttons with the same labels. Scope
+    # confirmation actions to their actual dialog, never the entire process.
+    $condition = [System.Windows.Automation.AndCondition]::new(@(
+        [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty, $Name),
+        [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)))
+    $button = $Dialog.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+    if ($button -and $button.Current.ProcessId -ne $Dialog.Current.ProcessId) { throw 'Confirmation button ownership did not match its dialog.' }
+    return $button
+}
 function Invoke-Element($Target) {
     if (-not $Target.Current.IsEnabled) { throw 'The native desktop action was not enabled.' }
     $pattern = $null
@@ -249,10 +259,10 @@ function Confirm-Action($Desktop, [string]$Action, [bool]$Accept, [string]$Scree
     [ValidateSet('button', 'enter', 'escape', 'close')][string]$CancelMethod = 'button') {
     Menu-Action $Desktop $Action
     $dialog = Wait-For { Element $Desktop.Id "$Action TDSBLive?" ([System.Windows.Automation.ControlType]::Window) } 'Native confirmation did not open.'
-    $cancel = Wait-For { Element $Desktop.Id 'Cancel' ([System.Windows.Automation.ControlType]::Button) } 'Confirmation had no accessible Cancel button.'
+    $cancel = Wait-For { Dialog-Button $dialog 'Cancel' } 'Confirmation had no accessible Cancel button.'
     if (-not $cancel.Current.HasKeyboardFocus) { throw 'Confirmation did not initially focus Cancel.' }
     Screenshot $dialog $ScreenshotName
-    if ($Accept) { Invoke-Element (Element $Desktop.Id $Action ([System.Windows.Automation.ControlType]::Button)) }
+    if ($Accept) { Invoke-Element (Dialog-Button $dialog $Action) }
     elseif ($CancelMethod -eq 'enter') { Send-OwnedKey $cancel '{ENTER}' }
     elseif ($CancelMethod -eq 'escape') { Send-OwnedKey $cancel '{ESC}' }
     elseif ($CancelMethod -eq 'close') { $dialog.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close() }
