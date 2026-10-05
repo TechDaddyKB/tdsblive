@@ -44,7 +44,13 @@ public static class TdsTrayDesktop {
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindow(string name, string title);
     [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
     [DllImport("shell32.dll")] public static extern int Shell_NotifyIconGetRect(ref IconIdentifier identifier, out Rect rectangle);
+    [DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")] public static extern bool Shell_NotifyIconW(uint message, ref NotifyIconProbe data);
     [StructLayout(LayoutKind.Sequential)] public struct IconIdentifier { public uint Size; public IntPtr Window; public uint Id; public Guid Guid; }
+    [StructLayout(LayoutKind.Explicit, Size = 976)] public struct NotifyIconProbe {
+        [FieldOffset(0)] public uint Size;
+        [FieldOffset(8)] public IntPtr Window;
+        [FieldOffset(16)] public uint Id;
+    }
     [StructLayout(LayoutKind.Sequential)] public struct Rect { public int Left, Top, Right, Bottom; }
     [StructLayout(LayoutKind.Sequential)] public struct Point { public int X, Y; }
     public static Rect ClientRectangle(IntPtr window) {
@@ -70,7 +76,17 @@ public static class TdsTrayDesktop {
         if (window == IntPtr.Zero) return false;
         var identifier = new IconIdentifier { Size = (uint)Marshal.SizeOf(typeof(IconIdentifier)), Window = window, Id = 1 };
         Rect rectangle;
-        return Shell_NotifyIconGetRect(ref identifier, out rectangle) == 0;
+        if (Shell_NotifyIconGetRect(ref identifier, out rectangle) == 0) return true;
+        if (IntPtr.Size != 8) throw new InvalidOperationException("Native package qualification requires Windows x64.");
+        var probe = new NotifyIconProbe { Size = 976, Window = window, Id = 1 };
+        return Shell_NotifyIconW(1, ref probe); // Only probe this owned icon; no fields change.
+    }
+    public static int RegistrationRectangleResult(int pid) {
+        var window = MessageWindow(pid);
+        if (window == IntPtr.Zero) return unchecked((int)0x80070006);
+        var identifier = new IconIdentifier { Size = (uint)Marshal.SizeOf(typeof(IconIdentifier)), Window = window, Id = 1 };
+        Rect rectangle;
+        return Shell_NotifyIconGetRect(ref identifier, out rectangle);
     }
     public static void OpenMenu(int pid) {
         var window = MessageWindow(pid);
@@ -434,6 +450,8 @@ try {
             shellWindowAvailable = [TdsTrayDesktop]::FindWindow('Shell_TrayWnd', $null) -ne [IntPtr]::Zero
             session = $session; desktopAlive = [bool](Get-Process -Id $desktop.Id -ErrorAction SilentlyContinue)
             backendReady = [bool](Ready)
+            rectangleResult = [TdsTrayDesktop]::RegistrationRectangleResult($desktop.Id)
+            registeredIconAcknowledged = [TdsTrayDesktop]::Registered($desktop.Id)
             ownedExplorer = @(Get-Process explorer -ErrorAction SilentlyContinue | Where-Object { $_.SessionId -eq $session } |
                 Select-Object Id, SessionId)
         } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $EvidenceDirectory 'explorer-recovery-failure.json') -Encoding UTF8

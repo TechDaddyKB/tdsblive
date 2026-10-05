@@ -324,12 +324,12 @@ rejects local execution before inspecting or changing the desktop.
 | Acceptance area | Current evidence | Required follow-up |
 | --- | --- | --- |
 | Authenticated control, bounded messages and one admitted command | Host/control tests and actual owned-process qualification | Exact-head protected Windows checks |
-| Profile ownership, spaced paths, nondefault port, safe restart/restore, SQLite integrity | Actual owned-process checks; successful earlier Windows regression steps | Exact-head packaged checks; native browser lifecycle |
-| Native icon, menu, confirmations, Explorer recovery and crash isolation | Native icon/menu and Open editor activation verified; Edge first-run screen blocks browser-close progress | Run corrected native harness on portable and installed packages; inspect screenshots |
+| Profile ownership, spaced paths, nondefault port, safe restart/restore, SQLite integrity | Managed-process checks and actual diagnostic Windows package under direct Wine pass owned restart/restore, saved state and clean shutdown | Exact-head Windows packaged checks; native browser lifecycle |
+| Native icon, menu, confirmations, Explorer recovery and crash isolation | Actual portable Windows editor handoff/close, duplicate launch and Cancel via button/Enter/Escape/close pass before scaling; Edge first-run issue is resolved | Complete portable/installed native runs, accepted Restart/Quit, Explorer recovery and crash checks |
 | Manual/quiet startup and saved credentials through lifecycle | Native quiet startup and initial owned DPAPI storage verified; individual startup/vault tests pass | Complete actual-package manual startup and credential retention through lifecycle |
-| Light/dark appearance, keyboard access and high DPI | Actual theme variant and keyboard behavior in headless tests | Real Windows screenshots and interactions in both themes and at high DPI |
+| Light/dark appearance, keyboard access and high DPI | Actual portable Windows light/dark confirmations and Cancel keyboard alternatives pass; source e70a948 passes 125% physical geometry/focus checks | Complete installed-package appearance/scaling checks and final source qualification |
 | Installer, optional startup, update/reinstall, uninstall and data retention | Packages build; inherited native package harness preserves these checks | Successful exact-head package qualification |
-| Existing OBS addresses, rendering/audio and reconnect | Historical OBS evidence remains preserved | Actual current-package isolated OBS verification |
+| Existing OBS addresses, rendering/audio and reconnect | Owned diagnostic Windows package under direct Wine renders in native OBS and reconnects after restart/restore, with sample state and transparency verified | Final-package OBS checks, Windows desktop lifecycle and audio acceptance |
 
 G22 remains **In progress**. G23 and G24 retain their prerequisites and remain
 **Not started**; neither native Linux delivery nor release publication is claimed.
@@ -578,3 +578,33 @@ mismatched coordinates still fail. PowerShell parsing and compilation of the
 actual native helper pass locally; no Windows APIs are invoked by those checks.
 This follows Microsoft's [UI Automation scaling guidance](https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-screenscaling).
 Native execution is required to verify the correction; no DPI acceptance is claimed.
+
+Source `e70a948` passes actual portable Windows 125% scaling in
+[run 37265069796](https://github.com/TechDaddyKB/tdsblive/actions/runs/37265069796):
+both dialogs report 120 DPI, 55-pixel buttons, Cancel focus, enabled/visible
+controls, and automation bounds identical to independent native client bounds.
+Keyboard Cancel works and the original scale is restored. The probe then fails
+Explorer recovery: the owned shell, companion and backend are alive, but the
+icon rectangle cannot be obtained. Missing-service controls were shown and
+closing them kept the backend running. Installed and full final native checks
+remain pending.
+
+The registration adapter and native harness now supplement the rectangle query
+with a flags-zero `NIM_MODIFY` probe of the same owned HWND/ID. No icon fields
+are valid for modification, so the request adds no icon and changes no tooltip,
+image, message or visibility setting. This follows the documented x64
+[NOTIFYICONDATAW layout](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-notifyicondataw)
+and [Shell_NotifyIconW result contract](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shell_notifyiconw).
+The purpose is to distinguish registration from availability of a screen position;
+the cause of the Explorer failure and success of this correction still require
+actual Windows evidence. No recovery pass is inferred from the change.
+
+Local validation of the registration change uses the pinned SDK: the desktop
+suite passes 24 cases, with both native Windows tests explicitly skipped on
+Linux. The new native test creates only a hidden, uniquely named owned message
+window with no icon and verifies that repeated registration probes remain false.
+It destroys that window and unregisters its class afterward. Actual Windows
+execution of that test remains required. The modified PowerShell harness parses,
+its actual C# helper compiles, and the x64 probe layout measures 976 bytes.
+Scanned `e70a948` Restart/Quit high-DPI and missing-tray screenshots are visually
+inspected; their wording, spacing and Cancel-first controls are readable.

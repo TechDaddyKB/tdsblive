@@ -15,6 +15,9 @@ internal static partial class WindowsTrayRegistration
 
     public static bool IsAvailable()
     {
+        // Published Windows packages are x64; the flags-zero probe below uses
+        // the documented x64 NOTIFYICONDATAW layout.
+        if (IntPtr.Size != 8) return false;
         var available = false;
         EnumWindows((window, parameter) =>
         {
@@ -25,6 +28,14 @@ internal static partial class WindowsTrayRegistration
             if (!name.ToString().StartsWith("AvaloniaMessageWindow ", StringComparison.Ordinal)) return true;
             var identifier = new IconIdentifier { Size = (uint)Marshal.SizeOf<IconIdentifier>(), Window = window, Id = 1 };
             available = Shell_NotifyIconGetRect(ref identifier, out _) == 0;
+            if (!available)
+            {
+                // A location query is not a registration query. Ask Explorer
+                // to acknowledge this existing HWND/ID with no valid fields
+                // to change. This cannot add an icon or alter its appearance.
+                var probe = new NotifyIconProbe { Size = 976, Window = window, Id = 1 };
+                available = Shell_NotifyIconW(1, ref probe); // NIM_MODIFY, uFlags=0.
+            }
             return !available;
         }, IntPtr.Zero);
         return available;
@@ -41,6 +52,14 @@ internal static partial class WindowsTrayRegistration
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Rectangle { public int Left, Top, Right, Bottom; }
+    [StructLayout(LayoutKind.Explicit, Size = 976)]
+    private struct NotifyIconProbe
+    {
+        [FieldOffset(0)] public uint Size;
+        [FieldOffset(8)] public IntPtr Window;
+        [FieldOffset(16)] public uint Id;
+        // uFlags at offset 20 and all remaining bytes stay zero.
+    }
     private delegate bool WindowVisitor(IntPtr window, IntPtr parameter);
 
     [LibraryImport("user32.dll")]
@@ -54,4 +73,7 @@ internal static partial class WindowsTrayRegistration
     private static extern IntPtr FindWindow(string className, string? windowName);
     [LibraryImport("shell32.dll")]
     private static partial int Shell_NotifyIconGetRect(ref IconIdentifier identifier, out Rectangle rectangle);
+    [LibraryImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool Shell_NotifyIconW(uint message, ref NotifyIconProbe data);
 }
