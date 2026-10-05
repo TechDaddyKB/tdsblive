@@ -136,6 +136,38 @@ public sealed class DesktopWorkspaceTests
         app.Controls!.Close();
     });
 
+    [Fact]
+    public Task ReturningTrayRetriesRegistrationWithoutReplacingSessionOrReopeningHiddenControls() => RunAsync(async () =>
+    {
+        await using var host = new OwnedControlHost();
+        var available = false;
+        var shellReturned = false;
+        var attempts = new List<TrayIcon?>();
+        using var app = new DesktopApp(_ => throw new InvalidOperationException("No browser should open."),
+            _ => available, _ => Task.FromResult(false), icon =>
+            {
+                attempts.Add(icon);
+                if (shellReturned) available = true;
+            });
+        app.InitializeTray();
+        var attached = app.AttachAsync(host.Bootstrap);
+        await UntilAsync(() => app.Controls?.IsVisible == true && Button(app, "Quit").IsEnabled);
+        var initialIcon = Assert.Single(attempts);
+        Assert.NotNull(initialIcon);
+        app.Controls!.Close();
+        shellReturned = true;
+        await UntilAsync(() => available);
+        Assert.False(app.Controls.IsVisible);
+        Assert.All(attempts, icon => Assert.Same(initialIcon, icon));
+        var count = attempts.Count;
+        await Task.Delay(1200);
+        Assert.Equal(count, attempts.Count);
+        Assert.Empty(host.Commands);
+        host.Complete("quit");
+        await attached;
+        app.Controls.Close();
+    });
+
     [Theory]
     [InlineData("port-conflict", "Another app may be using")]
     [InlineData("failed", "safety copy is retained")]

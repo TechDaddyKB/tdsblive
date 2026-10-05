@@ -11,6 +11,8 @@ namespace ExtensionSuite.Desktop;
 [SupportedOSPlatform("windows")]
 internal static partial class WindowsTrayRegistration
 {
+    public static bool IsShellAvailable() => FindWindow("Shell_TrayWnd", null) != IntPtr.Zero;
+
     public static bool IsAvailable()
     {
         var available = false;
@@ -48,6 +50,8 @@ internal static partial class WindowsTrayRegistration
     private static partial uint GetWindowThreadProcessId(IntPtr window, out uint processId);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetClassName(IntPtr window, StringBuilder name, int maximum);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr FindWindow(string className, string? windowName);
     [LibraryImport("shell32.dll")]
     private static partial int Shell_NotifyIconGetRect(ref IconIdentifier identifier, out Rectangle rectangle);
 }

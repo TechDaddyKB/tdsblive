@@ -385,7 +385,18 @@ try {
     $fallback.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
     if ((Ready) -ne $generation) { throw 'Closing desktop controls stopped the backend.' }
     Start-Process explorer.exe | Out-Null
-    Wait-For { [TdsTrayDesktop]::Registered($desktop.Id) } 'The notification icon did not recover after Explorer restarted.' | Out-Null
+    try {
+        Wait-For { [TdsTrayDesktop]::Registered($desktop.Id) } 'The notification icon did not recover after Explorer restarted.' | Out-Null
+    } catch {
+        @{
+            shellWindowAvailable = [TdsTrayDesktop]::FindWindow('Shell_TrayWnd', $null) -ne [IntPtr]::Zero
+            session = $session; desktopAlive = [bool](Get-Process -Id $desktop.Id -ErrorAction SilentlyContinue)
+            backendReady = [bool](Ready)
+            ownedExplorer = @(Get-Process explorer -ErrorAction SilentlyContinue | Where-Object { $_.SessionId -eq $session } |
+                Select-Object Id, SessionId)
+        } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $EvidenceDirectory 'explorer-recovery-failure.json') -Encoding UTF8
+        throw
+    }
     $shellRestarted = $false
 
     Confirm-Action $desktop 'Restart' $true 'restart-confirm.png'

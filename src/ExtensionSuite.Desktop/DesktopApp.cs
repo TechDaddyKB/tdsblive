@@ -36,16 +36,18 @@ public sealed class DesktopApp : Application, IDisposable
     private string statusLabel = "Starting TDSBLive…";
     private readonly Action<Uri> launchBrowser;
     private readonly Func<TrayIcon?, bool> trayRegistered;
+    private readonly Action<TrayIcon?> restoreTray;
     private readonly Func<string, Task<bool>> confirmation;
     internal Window? Controls => controls;
 
     public DesktopApp() : this(LaunchBrowser, IsTrayRegistered, ConfirmAsync) { }
 
     internal DesktopApp(Action<Uri> launchBrowser, Func<TrayIcon?, bool> trayRegistered,
-        Func<string, Task<bool>> confirmation)
+        Func<string, Task<bool>> confirmation, Action<TrayIcon?>? restoreTray = null)
     {
         stopped = stopping.Token;
         (this.launchBrowser, this.trayRegistered, this.confirmation) = (launchBrowser, trayRegistered, confirmation);
+        this.restoreTray = restoreTray ?? RestoreTray;
     }
 
     public override void Initialize() => Styles.Add(new FluentTheme());
@@ -124,6 +126,11 @@ public sealed class DesktopApp : Application, IDisposable
                     OpenEditor();
                 }
                 var available = trayRegistered(tray);
+                if (!available)
+                {
+                    restoreTray(tray);
+                    available = trayRegistered(tray);
+                }
                 if (!available && !trayUnavailable)
                     ShowControls("TDSBLive is running. Use these controls while your desktop tray is unavailable.");
                 trayUnavailable = !available;
@@ -152,6 +159,17 @@ public sealed class DesktopApp : Application, IDisposable
 
     private static bool IsTrayRegistered(TrayIcon? icon) => OperatingSystem.IsWindows()
         ? WindowsTrayRegistration.IsAvailable() : icon?.NativeMenuExporter is not null;
+
+    private static void RestoreTray(TrayIcon? icon)
+    {
+        if (!OperatingSystem.IsWindows() || icon is null || !WindowsTrayRegistration.IsShellAvailable()) return;
+        // Explorer can disappear between Avalonia's TaskbarCreated notification
+        // and its registration attempt. Re-add the same icon once the shell is
+        // available; tooltip updates alone only issue NIM_MODIFY in the pinned
+        // implementation. Keep the existing menu, session and icon identity.
+        icon.IsVisible = false;
+        icon.IsVisible = true;
+    }
 
     private static void LaunchBrowser(Uri address)
     {

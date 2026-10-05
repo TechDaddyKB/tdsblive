@@ -123,6 +123,7 @@ Requirements: TR-R08–TR-R10 and cumulative regression coverage of TR-R01–TR-
 - Audit all repository documentation (baseline: 76 files, 20 guide chapters and
   12 images). Update affected chapters and record the audit of remaining pages.
   Preserve historical goal/evidence records and clearly identify older screenshots.
+  Track every page in the [documentation audit](tray-documentation-audit.md).
 - README flow: download → install → start → find tray → open editor → finish
   stream → quit. Add an illustrated tray guide with Windows hidden-icons arrow,
   Linux panel, actions, confirmations, fallback and missing-icon troubleshooting.
@@ -384,3 +385,29 @@ block restores and verifies the original selection, then closes the owned
 Settings window. It does not change resolution or synthesize DPI messages.
 Secret scanning, PowerShell parsing and the non-CI guard pass locally. Actual
 Windows execution remains pending; this preparation is not high-DPI acceptance.
+
+Source `199f79facb308b6c3cdbc02a6f7b006c94d62e5b` completes regression,
+Sonar and Windows packaging in
+[run 37254730781](https://github.com/TechDaddyKB/tdsblive/actions/runs/37254730781),
+then fails native Explorer re-registration. Downloaded/decompressed evidence
+passes scanning. Actual screenshots now show the editor content, readable
+light/dark confirmations and the missing-tray control window. These establish
+the earlier browser/theme scenarios, not a complete portable/installed pass.
+The companion now retries registration of its existing icon when the shell
+returns but the actual registration probe still fails. This keeps the menu,
+session and backend intact; pinned Avalonia tooltip updates alone use MODIFY
+and cannot recover a failed ADD. A regression case covers recovery without
+replacing the icon/session or reopening a hidden fallback. The native failure
+path also records shell availability and owned process state. Current-build
+native recovery and scaling evidence remain required.
+Local pinned .NET desktop qualification passes **24 tests**, with the one
+Windows-only ownership test explicitly skipped on Linux. It runs under the
+owned temporary-directory mount with `--configuration Release --no-restore
+-m:1 -p:UseSharedCompilation=false --settings coverage.runsettings
+--collect:"XPlat Code Coverage"`; OpenCover/TRX remain ignored local evidence.
+
+Documentation preparation inventories all 76 tracked Markdown files after
+scanning, with per-page review/update destinations in the documentation audit.
+All 76 audit links resolve. Plain-language tray, desktop companion and start-at-
+login definitions are prepared. Final documentation, offline/wiki publication,
+Linux delivery and OBS qualification remain outstanding.
