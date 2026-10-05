@@ -772,3 +772,42 @@ actual desktop rendering. The window is not yet wired into production startup.
 Backend ownership/pipe/lifecycle, actual tray registration, application-menu
 installation, packages and runner/desktop/resource evidence remain outstanding.
 G23 remains **In progress**; G24 remains **Not started**.
+
+### G23 native backend bridge checkpoint — 2026-10-05
+
+Source `5843c49` connects the native first-run window and saved launcher choices
+to external backend startup. A fresh control capability travels only through
+redirected stdin; stdout/stderr are discarded with bounded buffers, retaining
+only the nonsensitive control-port marker. Incompatible/incomplete older app
+folders fail before launch. New direct-Wine prefixes are initialized before .NET
+startup without precreating Wine drive mappings or terminating prefix servers.
+
+The native lifecycle loop requires both `restart-ready` and a zero process exit
+before replacement. Failed/stopped outcomes or lost control connections show
+recovery guidance without automatic relaunch. Disposing desktop controls closes
+owned handles without killing the backend. Saved choices are written only after
+the host reaches Running; a settings-write failure keeps current controls usable.
+Manual starts use the native browser handoff. Windows attachment behavior remains
+covered by the complete desktop regression suite.
+
+Pinned local desktop tests pass **72 cases with two Windows-only skips** (74
+total), including external completion/re-attachment, failure recovery, malformed
+port markers, large private output and reader-error redaction. An ignored owned
+native .NET probe additionally runs this actual process/pipe bridge against the
+downloaded full-run Windows package from `ec699fb` under direct Wine 11.17. It
+uses a separate prefix, Xvfb display, nondefault HTTP port and explicitly disabled
+integrations/LAN. Startup, authenticated graceful restart, a fresh capability,
+the same existing profile/configuration, authenticated graceful Quit and zero
+process exits pass. The scanned owned SQLite database passes `integrity_check`.
+Only the owned Wine server is waited on; the temporary profile/prefix/display
+are cleaned up. No OBS settings, production profiles or broadcasting are changed.
+
+This probe exercises `LinuxBackendProcess` directly, not the complete native
+desktop lifecycle loop or an actual tray/menu. Its first prefix is prepared by
+the established owned Wine fixture, so the new-user initialization branch is not
+yet qualified by this evidence. Actual browser/dialog/menu operation, prefix
+alias ownership, StatusNotifierItem registration/recovery, UMU, named desktops,
+per-user app-menu installation, resources and final packaging remain outstanding.
+Until registration probing is implemented, Linux conservatively offers fallback
+controls rather than treating an Avalonia exporter as proof of a working tray.
+G23 remains **In progress**; G24 remains **Not started**.
