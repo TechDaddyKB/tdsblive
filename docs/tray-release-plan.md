@@ -883,3 +883,61 @@ launcher installation, resource comparison and final Linux packaging remain
 outstanding. G24's full documentation and cumulative release publication remain
 unfinished. These are implementation/qualification tasks; no new user approval
 is required to continue the authorized work.
+
+### G23 alias and applications-menu checkpoint — 2026-10-05
+
+Source `eca8553` resolves Linux directory links before selecting the Windows
+data-directory argument. Wine's normal user name and Proton's steamuser alias,
+prefix aliases and profile links under mapped drives select the same physical
+profile. Saved runner, prefix and selected data-folder strings remain unchanged.
+Discovery shows one entry for aliases of one setup while retaining distinct
+setups. Four new actual-filesystem cases pass, including new destinations beneath
+existing linked parents and bounded rejection of link cycles.
+
+Existing C: links to an external setup remain usable even in a custom prefix
+without Z:. Their original reference is retained when no canonical drive mapping
+exists. Exclusive ownership across multiple such fallback aliases is not claimed;
+that compatibility case and actual runner/restore ownership evidence remain open.
+
+Source `80edb78` offers **Add TDSBLive to my applications menu**, unchecked by
+default in native setup. It writes a per-user desktop entry with a packaged icon
+and an explicit Change Linux setup action. No root installation or sign-in
+startup is added. Installation runs only after an explicit checkbox choice and
+before backend admission; failure keeps the form editable and allows starting
+with the box unchecked. The app folder must stay in place.
+
+The desktop entry uses GNU env's directory argument to execute the fixed native
+app name directly. It does not invoke a shell or include runner choices, Windows
+settings, credentials or session capabilities. String and argument quoting follow
+the [desktop-entry specification](https://specifications.freedesktop.org/desktop-entry/latest/exec-variables.html).
+An actual owned GIO launch passes with spaces, Unicode, dollar/percent signs,
+quotes, backslashes, apostrophes, ampersands, parentheses and equals signs in the
+app folder. Five installer/launch cases and three UI opt-in/failure cases pass.
+Atomic replacement replaces a shortcut link without changing its unrelated
+target. These are owned launcher tests; panel visibility on the named desktops
+and launching the final packaged application remain outstanding.
+
+The current Release desktop suite passes **104 cases with two Windows-only
+skips** (106 total), with locked normal restore retained. The actual production
+setup is also rerun on its owned Xvfb display. Scanned wide, narrow and scrolled
+shortcut-section screenshots are inspected; the option is visible and unchecked,
+the footer remains available, and Escape exits without creating a prefix or
+launcher settings. The existing desktop watcher is not restarted or altered.
+
+Hosted [run 37309907328](https://github.com/TechDaddyKB/tdsblive/actions/runs/37309907328)
+at `f7dd60d` proves successful Linux tests and same-commit coverage import:
+Sonar's new-code coverage is **90.3%**, above the unchanged 80% threshold. The
+overall run still fails. Sonar flags the download command's unrestricted redirect
+protocol (githubactions:S6506); `80edb78` restricts initial requests and redirects
+to HTTPS. That restriction concerns CI downloads only; TDSBLive's existing HTTP
+support remains available. The native Windows package probe independently fails
+NU1004 because its runtime-specific lockfile lacked the explicit pinned Inter and
+D-Bus references. Source `541d0c8` updates that lockfile without upgrading package
+versions, and actual locked win-x64 restore passes locally.
+
+Current hosted qualification after those corrections is still required. G23
+remains **In progress**. Native menus/dialogs/browser, Wine/UMU and desktop
+matrices, fresh-prefix initialization, crash/restore/service recovery, alias
+ownership, resources and packaged Linux installation remain unfinished.
+G24 remains **Not started**, with final beginner guidance, wiki/offline
+synchronization and public cumulative v1.0.1 assets still required.
