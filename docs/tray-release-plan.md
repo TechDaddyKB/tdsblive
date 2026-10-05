@@ -749,3 +749,26 @@ G23 remains **In progress**. Native first-run UI, backend lifecycle ownership,
 actual StatusNotifierItem registration, per-user app-menu installation, packaging,
 both runners/desktops and resource qualification remain outstanding. The native
 Linux application is not yet delivered or claimed usable. G24 remains **Not started**.
+
+### G23 first-run window checkpoint — 2026-10-05
+
+Source `50ccdfd` adds a native Avalonia first-run window with named Wine/UMU
+choices, local file/folder pickers, existing-profile selection and an explicit
+new-setup checkbox. Switching runners remembers each custom program path.
+Multiple discovered profiles require a choice; a missing existing profile never
+becomes a new profile implicitly. Validation and start failures keep selections
+available, and an in-flight start cannot be duplicated or dismissed midway.
+
+The header and fields scroll together while Start/Cancel remain outside the
+scroller. Nine headless form cases pass, including light/dark layouts at
+320×360 and 640×700, accessible names and 44-pixel buttons. The complete pinned
+desktop test suite passes **55 cases with two Windows-only skips** (57 total):
+`dotnet test tests/unit/ExtensionSuite.Desktop.Tests/ExtensionSuite.Desktop.Tests.csproj
+--no-restore -m:1 -p:UseSharedCompilation=false`, using SDK 10.0.401 and an owned
+isolated temporary directory. Secrets scanning and staged diff checks pass.
+
+These cases exercise form behavior with owned files, not Wine/UMU execution or
+actual desktop rendering. The window is not yet wired into production startup.
+Backend ownership/pipe/lifecycle, actual tray registration, application-menu
+installation, packages and runner/desktop/resource evidence remain outstanding.
+G23 remains **In progress**; G24 remains **Not started**.
