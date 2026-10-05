@@ -39,6 +39,13 @@ try {
     }
     if ($privateFiles) { throw 'Published package contains forbidden runtime/private content.' }
     Copy-Item (Join-Path $repository 'LICENSE') (Join-Path $publish 'LICENSE.txt')
+    $licenseDirectory = Join-Path $publish 'licenses'
+    New-Item -ItemType Directory -Force $licenseDirectory | Out-Null
+    Copy-Item (Join-Path $repository 'packaging/third-party/*') $licenseDirectory
+    $sourceCommit = (& git rev-parse HEAD).Trim()
+    if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw 'Cannot identify package source commit.' }
+    @{ formatVersion = 1; version = $Version; sourceCommit = $sourceCommit; target = 'win-x64' } |
+        ConvertTo-Json | Set-Content (Join-Path $publish 'TDSBLive.package.json') -Encoding utf8NoBOM
     $archive = Join-Path $output "TDSBLive-$Version-win-x64.zip"
     Compress-Archive -Path (Join-Path $publish '*') -DestinationPath $archive
     & $CompilerPath "/DAppVersion=$Version" "/DPublishDirectory=$publish" "/DOutputDirectory=$output" `

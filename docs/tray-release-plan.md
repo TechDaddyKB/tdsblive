@@ -960,3 +960,39 @@ two Windows-only registration cases skipped on Linux (106 total, zero failures).
 The six Linux package admission tests also pass. The corrected commit still
 requires hosted analysis; these local results do not clear that gate or qualify
 a release package. G23 remains **In progress** and G24 remains **Not started**.
+
+### G23 Linux distribution pipeline checkpoint — 2026-10-05
+
+The Linux bundle producer now combines a self-contained native x64 companion
+with the complete Windows application from the same source commit. Windows
+packaging includes a version/commit/target manifest; the Linux producer rejects
+a mismatched manifest or checksum rather than relabeling an older backend.
+Linux runtime lockfiles retain Avalonia 12.1.3 and the existing dependency pins.
+The native publish includes Microsoft.NETCore.App **10.0.12**, selected by the
+pinned 10.0.401 SDK, so users do not need a separate .NET installation.
+
+Archive admission rejects traversal, links, encrypted entries, duplicate paths,
+oversized expansion and private/runtime content. Extraction is scanned before
+provenance inspection. The tar preserves executable permissions, fixes ownership
+and timestamps, and carries the starter instructions, complete offline guide,
+application license and Inter/Avalonia notices. The Inter notice corresponds to
+the bundled font's 3.019 metadata and source commit
+`0a5106e0bde18df09374066bf3a7998e3546307d`. Other dependency notice auditing remains
+part of G24; these two notices do not establish a complete licensing audit.
+
+The six package admission tests pass locally. Workflow YAML parses and the new
+Linux package job depends on successful Windows qualification, downloads only
+that run's Windows candidate, checks the exact checkout commit, builds the
+bundle and exercises its native setup on an isolated X11 display/session bus.
+It uploads candidates, not a GitHub release. Actual same-run bundle production
+and the new hosted native package qualifier remain unverified until CI executes.
+
+Separately, an actual self-contained native publish from `86237ef` passes owned
+Xvfb first-run rendering at 640x700 and 320x360, registration of its own SNI item
+with the existing Omarchy watcher, exported menu metadata, and Escape with exit
+0. Cancel creates neither a Wine prefix nor saved choices. The narrow screenshot
+shows wrapped introductory text, a reachable runner selector, contained scrolling
+and visible Cancel/Start buttons. This is production native rendering evidence,
+not headless UI assertions, a displayed tray-menu interaction, or a complete
+bundle/Wine/UMU qualification. G23 remains **In progress**; its other acceptance
+requirements and G24 publication remain outstanding.
