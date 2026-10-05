@@ -163,6 +163,14 @@ public sealed class LinuxSetupWindowTests
             viewer => viewer.Content is StackPanel panel && panel.Children.OfType<CheckBox>().Any());
         Assert.Equal(ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
         Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+        Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + 1);
+        foreach (var text in scroll.GetLogicalDescendants().OfType<TextBlock>())
+        {
+            var position = text.TranslatePoint(default, scroll);
+            Assert.NotNull(position);
+            Assert.True(position.Value.X >= 0);
+            Assert.True(position.Value.X + text.Bounds.Width <= scroll.Viewport.Width + 1);
+        }
         foreach (var id in new[] { "Start", "Cancel" })
         {
             var button = Field<Button>(window, id);

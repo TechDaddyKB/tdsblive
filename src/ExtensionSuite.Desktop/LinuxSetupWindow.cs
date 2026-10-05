@@ -20,7 +20,8 @@ public sealed class LinuxSetupWindow : Window
     private readonly TextBox proton = new() { MinHeight = 44 };
     private readonly TextBox data = new() { MinHeight = 44 };
     private readonly ComboBox profiles = new() { MinHeight = 44 };
-    private readonly CheckBox newSetup = new() { Content = "Start a new empty TDSBLive setup", MinHeight = 44 };
+    private readonly CheckBox newSetup = new() { Content = new TextBlock
+        { Text = "Start a new empty TDSBLive setup", TextWrapping = TextWrapping.Wrap }, MinHeight = 44 };
     private readonly TextBlock destination = new() { TextWrapping = TextWrapping.Wrap };
     private readonly TextBlock feedback = new() { TextWrapping = TextWrapping.Wrap };
     private readonly Button launch = new() { Content = "Start TDSBLive", MinHeight = 44, MinWidth = 132 };
@@ -86,6 +87,13 @@ public sealed class LinuxSetupWindow : Window
             "The Linux download includes the current Windows app. Keep all of its files together; use TDSBLive.exe from that folder."));
         var scroll = new ScrollViewer { Content = fields, Margin = new Thickness(24, 20, 24, 0),
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        scroll.PropertyChanged += (_, change) =>
+        {
+            // Long paths and checkbox captions must not expand the vertical form
+            // past its viewport when a native window shrinks.
+            if (change.Property == ScrollViewer.ViewportProperty && scroll.Viewport.Width > 0)
+                fields.Width = scroll.Viewport.Width;
+        };
         var footer = new StackPanel { Margin = new Thickness(24, 12, 24, 20), Spacing = 12 };
         footer.Children.Add(feedback);
         var actions = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 12 };

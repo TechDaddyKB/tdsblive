@@ -11,6 +11,6 @@ internal static class Program
     {
         Arguments = args;
         // Stable X11 on Linux, including XWayland; no native Wayland opt-in.
-        return AppBuilder.Configure<DesktopApp>().UsePlatformDetect().StartWithClassicDesktopLifetime(args);
+        return AppBuilder.Configure<DesktopApp>().UsePlatformDetect().WithInterFont().StartWithClassicDesktopLifetime(args);
     }
 }
