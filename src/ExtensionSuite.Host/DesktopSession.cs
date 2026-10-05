@@ -125,6 +125,24 @@ public sealed class DesktopSession : IAsyncDisposable
         internal struct DeviceInformation { internal uint Type; internal uint Characteristics; }
     }
 
+    internal static Task AcknowledgeExistingProfileAsync(IConfiguration configuration) =>
+        AcknowledgeExistingProfileAsync(configuration, Console.OpenStandardInput(), Console.IsInputRedirected,
+            Console.Out, IsOutputPipe());
+
+    internal static async Task AcknowledgeExistingProfileAsync(IConfiguration configuration,
+        Stream input, bool redirected, TextWriter output, bool outputIsPipe)
+    {
+        if (configuration["TDSBLive:DesktopMode"] != "external") return;
+        var bootstrapMode = configuration["TDSBLive:DesktopBootstrap"] ?? "input";
+        if (bootstrapMode is not ("input" or "output") || bootstrapMode == "output" && !outputIsPipe)
+            throw new ArgumentException("Existing-profile acknowledgement needs a launcher pipe.");
+        // Consume the input frame before exiting so the launcher cannot race a
+        // closed pipe. No capability or existing session authority is returned.
+        if (bootstrapMode == "input") _ = await ReadExternalTokenAsync(input, redirected);
+        await output.WriteLineAsync(DesktopProtocol.AlreadyRunningMarker);
+        await output.FlushAsync();
+    }
+
     private static async Task<string> ReadExternalTokenAsync(Stream input, bool redirected)
     {
         if (!redirected) throw new ArgumentException("External desktop mode needs a launcher pipe.");

@@ -29,6 +29,9 @@ if sys.argv[1:] == ['wineboot.exe', '--init']:
 
 output_bootstrap = '--TDSBLive:DesktopBootstrap=output' in sys.argv[1:]
 bootstrap = {'SessionToken': secrets.token_hex(32)} if output_bootstrap else json.loads(sys.stdin.readline())
+if mode in ('already-running', 'already-running-fails'):
+    print('TDSBLIVE-DESKTOP-ALREADY-RUNNING', flush=True)
+    sys.exit(23 if mode == 'already-running-fails' else 0)
 (root / 'started').touch()
 if mode == 'no-marker':
     time.sleep(30)

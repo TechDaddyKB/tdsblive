@@ -121,7 +121,13 @@ public sealed class DesktopApp : Application, IDisposable
 
     private async Task StartLinuxBackendAsync(LinuxLauncherSettings settings, bool isNew, LinuxLauncherSettingsStore store)
     {
-        var session = await LinuxBackendProcess.StartAsync(settings, isNew, stopped);
+        LinuxBackendProcess session;
+        try { session = await LinuxBackendProcess.StartAsync(settings, isNew, stopped); }
+        catch (LinuxBackendAlreadyRunningException)
+        {
+            ExitCompanion();
+            return;
+        }
         DesktopReply ready;
         try { ready = await session.WaitUntilRunningAsync(stopped); }
         catch { session.Dispose(); throw; }

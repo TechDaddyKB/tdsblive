@@ -123,7 +123,7 @@ final cumulative-package qualification):
 | New and retained prefixes | Production selection/startup tests; representative actual retained owned prefix | Actual production new-prefix initialization and alias/exclusive-ownership scenarios |
 | Missing/reappearing tray | Transport watcher replacement tests; actual KDE Wayland watcher loss shows fallback, full service restoration recovers menu | Final-package repeat; panel-only loss retains KDE stale-host limitation documented in guide |
 | Browser restart/restore and crashed hosts | Earlier actual owned backend protocol checks | Current native GUI/package recovery, duplicates and no unintended relaunch |
-| Applications-menu shortcut | Owned GIO/installation tests | Final packaged shortcut installation and launch |
+| Applications-menu shortcut | Actual optional checkbox installs the shortcut; GIO reopens the retained owned profile; repeated Wine/UMU launches keep one native companion/backend after the acknowledgement repair | Final packaged repetition |
 | Window sizes, themes and keyboard | First-run rendering/resize and KDE X11 native cancellation evidence | Complete Linux short/narrow/DPI/theme and Wayland keyboard scenarios |
 | Resource use | Owned ten-second idle sample: companion/backend combined 472,338,432 bytes RSS, 3.9% of one core | Compare equivalent backend-only baseline and investigate material regressions |
 | Protected current-source package | Head `a507b1e` passes full Windows/Linux/SonarQube/package run and CodeQL; downloaded Linux native/backend markers both identify protected PR merge `7b58702` | Final protected main build and cumulative artifact qualification |
@@ -1596,3 +1596,62 @@ owned desktop entry. Evidence is retained in ignored
 This uses local repaired native source with the protected `7b58702` backend;
 a new protected bundle and final shortcut-launch qualification are still required.
 G23 stays **In progress**.
+
+### G23 applications-menu and duplicate-launch investigation — 2026-10-05
+
+The actual optional shortcut installed by the repaired first-run window is opened
+through GIO on the owned Hyprland compositor. After the companion quits, the
+shortcut starts the retained owned setup, its real Running tray menu and its
+Linux browser at port 17474. Evidence is retained in ignored
+`artifacts/tray-hyprland-native/wine-retained-shortcut-9c54648-v2/`.
+An earlier external GIO attempt had inherited display credentials and no valid
+owned XWayland display; that failed fixture is not an application defect or a
+shortcut qualification pass. The successful GIO action runs inside the fixture's
+sanitized display environment.
+
+Opening the shortcut again while that native companion is running does request
+the existing editor and preserves the single backend. However, the duplicate
+native process remains with a misleading **Set up TDSBLive on Linux** window.
+Actual process metadata and a scanned screenshot confirm the defect: companion
+`2022649` retains backend child `2022681`, while duplicate `2024519` has no child
+and displays setup. Owned processes and the compositor were stopped afterward;
+production Quickshell remains untouched.
+
+The repair adds an exact, bounded existing-profile acknowledgement to the
+external launch pipe. The input handshake is consumed before acknowledging,
+and output mode requires a pipe. No capability or port is returned. The native
+launcher recognizes the acknowledgement only with child exit 0 and exits the
+second companion; failed exits still report startup failure. Ordinary automatic
+Windows duplicate launch retains its existing behavior. No new control authority,
+HTTP endpoint or stored credential is introduced.
+
+The local desktop suite passes **119 tests**, with **2 Windows-only skips**
+(121 total), including both runner modes and rejection of unsuccessful duplicate
+exits. **35 host desktop/session/ownership tests** pass with no skips, including
+bounded acknowledgement, invalid-pipe rejection and no ordinary-launch frames.
+Results reside in ignored `artifacts/tray-duplicate-profile-tests/`.
+The new native/Windows diagnostic builds use pinned toolchains, tracked RID
+lockfiles and production publish profiles. Actual repaired Wine GUI repetition now passes: the production setup window
+retains the owned prefix/profile and installs its shortcut through the optional
+checkbox. Opening that real desktop entry with GIO while companion `2049559`
+is running requests another actual editor window. Process inspection afterward
+finds exactly that one companion with original backend `2052294`, and compositor
+window inspection finds no second setup window. Browser handoff count increases
+from 5 to 6. Confirmed tray Quit exits 0 and the owned fixture stops cleanly.
+Ignored evidence is in `artifacts/tray-hyprland-native/wine-duplicate-repaired-gui/`.
+The actual retained-prefix UMU repetition passes with the production NLS default:
+companion `2069811` retains runner child `2072738`, the second native launch exits,
+and the existing owner opens another browser window (handoff count 7→8).
+After the duplicate child exits, actual process inspection finds only the original
+companion and runner child, and compositor inspection finds no second setup window.
+Ignored evidence is in
+`artifacts/tray-hyprland-native/umu-duplicate-repaired-gui-v3/`.
+Two earlier fixture attempts fail before qualification because of XWayland
+readiness/overlapping display setup and an existing owned runtime-cache link;
+neither is counted as an application failure or pass. The final repetition checks
+XWayland readiness and validates the existing cache target before starting the app.
+An extra menu toggle prevents its subsequent Quit-dialog repeat from activating;
+that additional dialog case is not claimed. The fixture uses the authenticated
+owned-browser Quit during cleanup. Both native processes are absent afterward;
+retained UMU runner/prefix/profile choices and read-only SQLite integrity pass.
+A new protected package remains required. G23 stays **In progress**.

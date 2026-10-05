@@ -11,6 +11,24 @@ namespace ExtensionSuite.Desktop.Tests;
 public sealed class LinuxBackendLifecycleTests
 {
     [OwnedRunnerFact]
+    public async Task ExistingProfileAcknowledgementRequiresSuccessfulChildExitAndGrantsNoSession()
+    {
+        foreach (var kind in new[] { LinuxRunnerKind.Wine, LinuxRunnerKind.Umu })
+        {
+            using (var duplicate = new OwnedRunner("already-running", kind: kind))
+            {
+                await Assert.ThrowsAsync<LinuxBackendAlreadyRunningException>(() =>
+                    LinuxBackendProcess.StartAsync(duplicate.Settings, false, CancellationToken.None));
+                Assert.False(File.Exists(Path.Combine(duplicate.Root, "started")));
+            }
+            using var failed = new OwnedRunner("already-running-fails", kind: kind);
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                LinuxBackendProcess.StartAsync(failed.Settings, false, CancellationToken.None));
+            Assert.False(File.Exists(Path.Combine(failed.Root, "started")));
+        }
+    }
+
+    [OwnedRunnerFact]
     public async Task LaunchUsesPrivateBootstrapAndRetainsSelectedProfileAcrossRestart()
     {
         using var runner = new OwnedRunner();

@@ -10,7 +10,11 @@ if (await DeveloperCommands.RunAsync(args) is { } utilityExitCode)
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = AppContext.BaseDirectory });
 var desktopEnabled = DesktopSession.IsEnabled(builder.Configuration);
 await using var profileOwner = desktopEnabled ? DesktopProfileOwner.AcquireOrRequestOpen(new ApplicationPaths(builder.Configuration).Root) : null;
-if (desktopEnabled && profileOwner is null) return;
+if (desktopEnabled && profileOwner is null)
+{
+    await DesktopSession.AcknowledgeExistingProfileAsync(builder.Configuration);
+    return;
+}
 builder.AddFoundation();
 builder.Services.AddSingleton<IEditorBrowserLauncher, EditorBrowserLauncher>();
 var app = builder.Build();

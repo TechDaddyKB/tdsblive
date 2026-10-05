@@ -51,6 +51,17 @@ public sealed class LinuxBackendProcess : IDisposable
             owned.Bootstrap = await ready.Task.WaitAsync(deadline.Token);
             return owned;
         }
+        catch (LinuxBackendAlreadyRunningException)
+        {
+            try
+            {
+                await process.WaitForExitAsync(deadline.Token);
+                if (process.ExitCode != 0)
+                    throw new InvalidOperationException("The existing-profile request did not complete successfully.");
+            }
+            finally { owned.Dispose(); }
+            throw;
+        }
         catch { owned.Dispose(); throw; }
     }
 
@@ -110,6 +121,7 @@ public sealed class LinuxBackendProcess : IDisposable
         Observe(port.Task);
         var reading = ReadOutputAsync(reader, port, cancellationToken);
         try { ready.TrySetResult(new(await port.Task, capability)); }
+        catch (LinuxBackendAlreadyRunningException) { ready.TrySetException(new LinuxBackendAlreadyRunningException()); }
         catch (IOException) { ready.TrySetException(new IOException("The Windows app's desktop pipe is unavailable.")); }
         await reading;
     }
@@ -118,6 +130,8 @@ public sealed class LinuxBackendProcess : IDisposable
         ReadLinesAsync(reader, 128, line =>
         {
             var span = line.Span;
+            if (span.SequenceEqual(DesktopProtocol.AlreadyRunningMarker))
+                ready.TrySetException(new LinuxBackendAlreadyRunningException());
             if (span.StartsWith(DesktopProtocol.ReadyPrefix, StringComparison.Ordinal) &&
                 int.TryParse(span[DesktopProtocol.ReadyPrefix.Length..], NumberStyles.None, CultureInfo.InvariantCulture,
                     out var port) && port is >= 1 and <= 65535)
@@ -129,6 +143,8 @@ public sealed class LinuxBackendProcess : IDisposable
         ReadLinesAsync(reader, DesktopProtocol.MaximumFrameBytes + DesktopProtocol.BootstrapPrefix.Length, line =>
         {
             var span = line.Span;
+            if (span.SequenceEqual(DesktopProtocol.AlreadyRunningMarker))
+                ready.TrySetException(new LinuxBackendAlreadyRunningException());
             if (!span.StartsWith(DesktopProtocol.BootstrapPrefix, StringComparison.Ordinal)) return;
             var payload = span[DesktopProtocol.BootstrapPrefix.Length..];
             if (Encoding.UTF8.GetByteCount(payload) >= DesktopProtocol.MaximumFrameBytes) return;
@@ -195,4 +211,9 @@ public sealed class LinuxBackendProcess : IDisposable
         Observe(output); Observe(errors);
         readers.Dispose();
     }
+}
+
+internal sealed class LinuxBackendAlreadyRunningException : IOException
+{
+    public LinuxBackendAlreadyRunningException() : base("The existing TDSBLive profile was asked to open its editor.") { }
 }

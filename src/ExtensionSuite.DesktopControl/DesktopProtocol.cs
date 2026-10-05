@@ -21,6 +21,7 @@ public sealed record DesktopReply(string State, string? EditorUrl = null, bool A
 public static class DesktopProtocol
 {
     public const string ReadyPrefix = "TDSBLIVE-DESKTOP ";
+    public const string AlreadyRunningMarker = "TDSBLIVE-DESKTOP-ALREADY-RUNNING";
     // Private redirected stdout only. Never write this frame through logging.
     public const string BootstrapPrefix = "TDSBLIVE-DESKTOP-BOOTSTRAP ";
     public const int MaximumFrameBytes = 4096;

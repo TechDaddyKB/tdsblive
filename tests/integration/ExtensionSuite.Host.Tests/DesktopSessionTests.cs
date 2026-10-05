@@ -12,6 +12,55 @@ namespace ExtensionSuite.Host.Tests;
 public sealed class DesktopSessionTests
 {
     [Theory]
+    [InlineData("input")]
+    [InlineData("output")]
+    public async Task ExistingProfileAcknowledgementIsBoundedAndReturnsNoCapability(string mode)
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["TDSBLive:DesktopMode"] = "external", ["TDSBLive:DesktopBootstrap"] = mode
+        }).Build();
+        using var input = new MemoryStream();
+        var token = DesktopProtocol.NewSessionToken();
+        if (mode == "input")
+        {
+            await DesktopProtocol.WriteAsync(input, new DesktopBootstrap(0, token), CancellationToken.None);
+            input.Position = 0;
+        }
+        using var output = new StringWriter();
+        await DesktopSession.AcknowledgeExistingProfileAsync(configuration, input, mode == "input", output, true);
+        Assert.Equal(DesktopProtocol.AlreadyRunningMarker + Environment.NewLine, output.ToString());
+        Assert.DoesNotContain(token, output.ToString());
+        Assert.Equal(input.Length, input.Position);
+    }
+
+    [Theory]
+    [InlineData("input")]
+    [InlineData("output")]
+    [InlineData("invalid")]
+    public async Task ExistingProfileAcknowledgementRejectsInvalidLauncherPipes(string mode)
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["TDSBLive:DesktopMode"] = "external", ["TDSBLive:DesktopBootstrap"] = mode
+        }).Build();
+        using var input = new MemoryStream();
+        using var output = new StringWriter();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            DesktopSession.AcknowledgeExistingProfileAsync(configuration, input, false, output, false));
+        Assert.Empty(output.ToString());
+    }
+
+    [Fact]
+    public async Task OrdinaryDuplicateLaunchDoesNotReadOrWriteLauncherFrames()
+    {
+        using var input = new MemoryStream();
+        using var output = new StringWriter();
+        await DesktopSession.AcknowledgeExistingProfileAsync(Configuration("automatic"), input, false, output, false);
+        Assert.Empty(output.ToString());
+    }
+
+    [Theory]
     [InlineData(false, "restart", true, "failed")]
     [InlineData(false, "restore", true, "failed")]
     [InlineData(true, "restart", true, "restart-ready")]

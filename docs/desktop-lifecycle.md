@@ -80,6 +80,14 @@ open-request marker inside the profile and exits. Its owner consumes that marker
 and opens the editor. Unix permissions are applied at marker creation, so immediate
 consumption cannot race a later permission operation.
 
+For an externally managed Linux launch, that duplicate child also returns the
+bounded `TDSBLIVE-DESKTOP-ALREADY-RUNNING` acknowledgement through its launcher
+pipe. Input mode consumes the private bootstrap before exiting; output mode
+requires a pipe. The acknowledgement contains no port or capability. Only the
+exact marker followed by child exit 0 lets the second native companion exit;
+a failed child remains an error and cannot attach to an existing control session.
+This prevents a successful editor-open request from leaving another setup window.
+
 The host shuts down subscriptions and integrations, checkpoints the database,
 then applies any prepared recovery. The lease remains held through replacement
 and is released before a successor is started. Only an explicitly successful
