@@ -361,3 +361,26 @@ browser address/title. TDSBLive application code does not set browser policies.
 The first-run screenshot is environmental evidence, not a passing editor visual.
 The updated native harness, appearance phase and display inventory still need
 exact-head Windows execution. G22 remains incomplete.
+
+Display discovery source `199f79facb308b6c3cdbc02a6f7b006c94d62e5b`:
+the separate desktop inventory job passes in
+[run 37254730781](https://github.com/TechDaddyKB/tdsblive/actions/runs/37254730781).
+Its downloaded, decompressed metadata passes scanning. Actual UISettings is
+available with a white background, and the display page exposes enabled
+`SystemSettings_Display_Scaling_ItemSizeOverride_ComboBox`, named
+**Change the size of text, apps, and other items**, with **100% (Recommended)**
+and **125%** options. The resolution selector is also enabled. Discovery changes
+no settings. This identifies a safe native scaling control for the next actual
+application check; it is not a passing high-DPI result. The main Windows job
+for this source remains active at this checkpoint.
+
+Prepared native scaling qualification uses that observed selector on the owned
+CI desktop. It saves the selected scale, chooses the highest offered scale up to
+200%, and requires the packaged Restart/Quit windows to report the corresponding
+actual `GetDpiForWindow` value. Both buttons must remain visible, enabled,
+unclipped and at least 44 logical pixels tall; Cancel must retain initial focus
+and work with Enter. Screenshots record actual physical dimensions/DPI. A finally
+block restores and verifies the original selection, then closes the owned
+Settings window. It does not change resolution or synthesize DPI messages.
+Secret scanning, PowerShell parsing and the non-CI guard pass locally. Actual
+Windows execution remains pending; this preparation is not high-DPI acceptance.

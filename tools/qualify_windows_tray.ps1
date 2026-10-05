@@ -310,6 +310,10 @@ $appearanceHelper = Join-Path $PSScriptRoot 'windows_tray_appearance.ps1'
 & sonar analyze secrets $appearanceHelper | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Appearance helper secret scan failed; it was not read.' }
 . $appearanceHelper
+$scalingHelper = Join-Path $PSScriptRoot 'windows_tray_scaling.ps1'
+& sonar analyze secrets $scalingHelper | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Native scaling helper secret scan failed.' }
+. $scalingHelper
 
 try {
     $browserPolicy = Prepare-CiBrowser
@@ -360,6 +364,8 @@ try {
 
     $themes = Qualify-WindowsThemes $desktop
     if ((Ready) -ne $generation) { throw 'Changing native appearance unexpectedly changed the backend generation.' }
+    $scaling = Qualify-WindowsScaling $desktop
+    if ((Ready) -ne $generation) { throw 'Changing display scale unexpectedly changed the backend generation.' }
 
     # Explorer restart is isolated to this CI session; never restart an operator's shell.
     $explorers = @(Get-Process explorer | Where-Object { $_.SessionId -eq $session })
@@ -459,12 +465,13 @@ try {
     Wait-For { -not (Get-Process -Id $desktop.Id -ErrorAction SilentlyContinue) } 'Quit left a stale tray process running.' | Out-Null
     if (-not (Test-Path (Join-Path $data 'tdsblive.db'))) { throw 'Quit discarded the owned profile.' }
     Assert-OwnedCredential $credentialHash
-    $remaining = @('actual high-DPI desktop checks', 'actual final-package OBS checks')
+    $remaining = @('actual final-package OBS checks')
     if (-not $themes.passed) { $remaining += 'actual light/dark appearance unavailable on this CI image' }
     @{
         passed = $true; evidence = 'actual packaged native Windows UI'; package = [IO.Path]::GetFileName($application)
         screenshots = @($screenshotMetrics.Values)
         themes = $themes
+        scaling = $scaling
         scenarios = @('native icon registration', 'quiet startup', 'normal manual startup opens editor',
             'Open editor native browser handoff', 'browser close leaves host running',
             'duplicate launch', 'accessible Restart and Quit', 'Cancel-first focus',
