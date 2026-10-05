@@ -38,6 +38,13 @@ applications-menu shortcut opens it when you choose that shortcut.
 This Linux picture uses an isolated example panel and sample setup. Your desktop
 panel can place the icon elsewhere; the three action names remain the same.
 
+On KDE Plasma, hold your pointer over the icon to see whether TDSBLive is running.
+
+![TDSBLive's Running tooltip beside the clock in KDE Plasma](images/tray-linux-kde-tooltip.png)
+
+This picture shows the release candidate with sample settings on an isolated KDE
+desktop. The blue **T** beside the clock is TDSBLive's icon.
+
 ## Choose a tray action
 
 Right-click the TDSBLive icon to open its menu.
@@ -89,6 +96,9 @@ panel's tray area. GNOME may need its AppIndicator extension to show tray icons;
 you can use the control window without adding an extension. When the tray is
 unavailable, TDSBLive offers a small **TDSBLive is running** window with the same
 three buttons.
+
+If your Linux panel closes and no control window appears, use the editor's
+**Backup and recovery** controls to restart or quit TDSBLive.
 
 ![The actual control window used when the desktop tray is unavailable](images/tray-windows-fallback.png)
 

@@ -111,6 +111,24 @@ duplicate backend/tray. Measure companion plus backend resource use against the
 baseline; investigate material regressions. Historical accepted Wine performance
 deviations are limitations, not passing performance evidence.
 
+Current acceptance map (2026-10-05; representative evidence does not replace
+final cumulative-package qualification):
+
+| Required scenario | Current evidence | Remaining work |
+| --- | --- | --- |
+| KDE X11 native menu, tooltip, browser, restart and quit | Native `2989331` with protected `5ff394f9` backend under Wine; actual interactions, retained profile, replaced backend, exit 0 and SQLite integrity | Repeat on final cumulative package |
+| KDE Wayland/XWayland | Actual menu, tooltip, editor and native dialog render; browser Quit exits 0 | Resolve fixture input/activation and prove tray actions, cancellation and lifecycle |
+| Hyprland/Omarchy Wayland | Earlier isolated Quickshell panel evidence; not a complete compositor qualification | Actual owned compositor/session interactions with current exporter |
+| Direct Wine and UMU native companion | Owned actual Wine GUI evidence; owned UMU backend bootstrap/lifecycle evidence | Full native GUI flow under UMU and desktop/runner matrix |
+| New and retained prefixes | Production selection/startup tests; representative actual retained owned prefix | Actual production new-prefix initialization and alias/exclusive-ownership scenarios |
+| Missing/reappearing tray | Transport watcher replacement tests; actual KDE panel menu/tooltip recovery | Current exporter service-loss fallback and KDE stale-host limitation resolution/qualification |
+| Browser restart/restore and crashed hosts | Earlier actual owned backend protocol checks | Current native GUI/package recovery, duplicates and no unintended relaunch |
+| Applications-menu shortcut | Owned GIO/installation tests | Final packaged shortcut installation and launch |
+| Window sizes, themes and keyboard | First-run rendering/resize and KDE X11 native cancellation evidence | Complete Linux short/narrow/DPI/theme and Wayland keyboard scenarios |
+| Resource use | Historical backend baselines retained | Measure companion plus backend versus baseline |
+| Protected current-source package | Earlier `6c717cc` full protected build passes; `2989331` desktop probes/tests pass but a host regression test times out | Protected full run after test repair, then inspect current artifacts |
+| Documentation and public release | Candidate Linux/Windows guide preparation, screenshots and offline checks | G24 full audit/wiki/final OBS and package qualification, then publish v1.0.1 |
+
 ### Blockers
 
 Actual X11/Wayland and both named desktop/runner evidence remain required.
@@ -1275,3 +1293,60 @@ the desktop/runner matrix. Protected qualification of this repair and the
 remaining G23 scenarios are next. G23 remains **In progress**; G24's final
 documentation, qualification and public release remain outstanding. There is
 still no published v1.0.1 release.
+
+### G23 KDE lifecycle and protected test repair — 2026-10-05
+
+An owned KDE Plasma X11 session exercises native publish `2989331` with the
+protected merge `5ff394f9` Windows backend, direct Wine 11.17 and a private
+sample profile. Actual captures under
+`artifacts/tray-linux-native-2989331-evidence/` show the Running tooltip, three
+menu actions and Restart/Quit confirmations. The observed actions cover native
+browser opening, Enter cancellation for Restart and Quit, Escape cancellation
+for Quit, explicit Restart and explicit Quit. Restart preserves companion PID
+`1498260` while replacing its backend child `1503461` with `1522646`; the owned
+profile, disabled integrations and disabled LAN remain unchanged. Confirmed Quit
+returns native exit code 0, the owned fixture cleans up, and a read-only SQLite
+integrity check returns `ok`.
+
+Stopping and restarting only the owned Plasma panel restores the tooltip and
+menu without changing the backend. However, KDE's watcher continues reporting
+`IsStatusNotifierHostRegistered=true` while that panel is absent, and no fallback
+window appears in that case. This is a recorded recovery limitation, not a
+fallback acceptance pass. The beginner tray guide now explains using the
+editor's Backup and recovery controls in this situation and includes a scanned,
+visually checked actual KDE tooltip screenshot.
+
+A separate owned KDE Wayland/XWayland session starts the same native publish and
+backend and visibly renders the tray menu, tooltip, editor and native Restart
+dialog. Its synthetic keyboard/pointer confirmation interactions do not prove
+restart or cancellation: the dialog remains open. Browser-initiated Quit does
+stop the app with native exit code 0 and all owned processes are cleaned up.
+Evidence is under `artifacts/tray-linux-wayland-2989331-evidence/`. Wayland
+interaction and lifecycle qualification remain explicitly incomplete.
+
+Protected run
+[37341966066](https://github.com/TechDaddyKB/tdsblive/actions/runs/37341966066)
+finishes with a failure in the existing Rumble late-registration test while
+waiting for acknowledgement. Linux desktop coverage, Windows native tray probe
+and Windows desktop inventory pass; Linux packaging is skipped after the failed
+host test. No passing full-run or package claim is made for this source.
+
+The late-registration test now observes all **65** unavailable events parked,
+checks that none executed, introduces the owned trigger, advances an injected
+discovery clock past the refresh interval, and verifies exactly one canonical
+execution/acknowledgement and the **64** still-parked viewer events. It retains
+its 60-second cancellation deadline, crash/cleanup handling and SQLite reopen
+assertions. This removes its real-time refresh wait without weakening the
+acceptance conditions. All **33 RumbleReplayTests** pass locally with coverage
+in **12 seconds**, with no skips or failures; scanned ignored evidence is under
+`artifacts/tray-discovery-clock-tests/`. Protected Windows confirmation is next.
+
+The Linux package qualifier also now uses `xdotool search --all`, requiring the
+owned PID and expected window title together. Its **9 distribution/isolation
+tests** pass; actual current-source packaged-window verification remains part of
+the next protected run. G23 remains **In progress**, and G24 remains outstanding.
+
+The regenerated beginner offline guide also passes its network-disabled browser
+audit: **21 chapters, 18 images**, local navigation and reflow at
+**320/390/1366 pixels**. This includes the new actual KDE illustration and
+recovery guidance. Full wiki and final-package acceptance are still pending.

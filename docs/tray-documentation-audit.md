@@ -139,3 +139,14 @@ or final-release wording; it does not complete the page-by-page acceptance audit
 ## Native launcher documentation checkpoint — 2026-10-05
 
 README, tray controls, installation/update, Wine and UMU chapters now explain the native Linux candidate while retaining older manual workflows. The packaged setup screenshot is from protected run 37327204777 at tested merge 5ff394f9. The updated 21-page offline guide passes networking-disabled browser checks for local links/navigation, loaded images and reflow at 320/390/1366 pixels. These are preparation checks: the full page audit, public wiki synchronization, final packaged guide and public v1.0.1 availability remain outstanding.
+
+## KDE illustration and recovery guidance — 2026-10-05
+
+The tray guide adds an actual KDE Plasma Running-tooltip screenshot from native
+source `2989331` with the protected `5ff394f9` Windows backend and owned sample
+settings. It also explains using the editor's Backup and recovery controls if a
+Linux panel closes without showing the fallback window. The generated guide now
+contains **21 chapters and 18 images**. A fresh network-disabled browser run
+passes local navigation, all screenshots and every chapter at 320/390/1366
+pixels. The full page audit, wiki publication and final-package qualification
+remain pending; this preparation evidence does not complete their rows.
