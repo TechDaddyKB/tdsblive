@@ -55,7 +55,11 @@ def capture(window, env, target):
 
 def qualify(application):
     application = owned_path(application)
-    evidence = owned_path(ROOT / 'release' / 'linux-native-evidence')
+    evidence = ROOT / 'release' / 'linux-native-evidence'
+    # This fixed output location is independent of the caller's package path.
+    # Reject aliases instead of resolving a symlink to a different destination.
+    if evidence.resolve() != evidence:
+        raise ValueError('The qualification evidence directory must not use links')
     if evidence.exists():
         raise ValueError('Use a fresh qualification evidence directory')
     scan(application)
@@ -67,7 +71,7 @@ def qualify(application):
     for name in ('Xvfb', 'xdotool', 'ffmpeg', 'dbus-daemon'):
         if shutil.which(name) is None:
             raise ValueError('Missing qualification prerequisite: ' + name)
-    evidence.mkdir(parents=True)
+    evidence.mkdir(mode=0o700, parents=True)
     with tempfile.TemporaryDirectory(prefix='tdsblive-linux-package-') as temporary:
         root = Path(temporary)
         runtime = root / 'runtime'
@@ -88,7 +92,7 @@ def qualify(application):
                        XDG_RUNTIME_DIR=str(runtime), XDG_CONFIG_HOME=str(root / 'choices'),
                        XDG_DATA_HOME=str(root / 'applications'), WINEPREFIX=str(root / 'unstarted-prefix'))
             env.pop('XDO_DEBUG', None)
-            with (evidence / 'native-app.log').open('w') as log:
+            with (evidence / 'native-app.log').open('x') as log:
                 app = subprocess.Popen([str(application / 'TDSBLive')], cwd=application, env=env,
                                        stdin=subprocess.DEVNULL, stdout=log, stderr=log)
                 window = find_window(app, env)
@@ -108,7 +112,9 @@ def qualify(application):
                                  'no created Wine prefix', 'no saved launcher choices'],
                       'limitations': ['Xvfb with private session bus; no desktop tray host',
                                       'No Wine/UMU backend started; desktop/runner lifecycle remains separate']}
-            (evidence / 'qualification.json').write_text(json.dumps(result, indent=2) + '\n')
+            with (evidence / 'qualification.json').open('x', encoding='utf-8') as output:
+                json.dump(result, output, indent=2)
+                output.write('\n')
             scan(evidence)
             print('Packaged native first-run rendering, resize and isolated cancellation passed.')
         finally:

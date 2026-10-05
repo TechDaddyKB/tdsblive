@@ -13,6 +13,7 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
 from build_linux_package import archive_members, extract_windows, verify_backend, verify_checksum, write_archive
+import qualify_linux_package
 
 
 def archive(*entries):
@@ -30,6 +31,44 @@ def archive(*entries):
 
 
 class LinuxPackageTests(unittest.TestCase):
+    def test_native_qualification_refuses_existing_evidence_before_reading_or_starting_the_package(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            application = root / 'release' / 'candidate'
+            application.mkdir(parents=True)
+            evidence = root / 'release' / 'linux-native-evidence'
+            evidence.mkdir()
+            retained = evidence / 'qualification.json'
+            retained.write_text('owned prior evidence')
+            with patch.object(qualify_linux_package, 'ROOT', root), \
+                 patch.object(qualify_linux_package, 'scan') as scan, \
+                 patch.object(qualify_linux_package.subprocess, 'Popen') as launch:
+                with self.assertRaises(ValueError):
+                    qualify_linux_package.qualify(application)
+                scan.assert_not_called()
+                launch.assert_not_called()
+            self.assertEqual('owned prior evidence', retained.read_text())
+
+    @unittest.skipUnless(sys.platform == 'linux', 'Linux qualification path policy')
+    def test_native_qualification_rejects_evidence_directory_links_inside_or_outside_release(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            application = root / 'release' / 'candidate'
+            application.mkdir(parents=True)
+            evidence = root / 'release' / 'linux-native-evidence'
+            for target in (root / 'release' / 'other', root / 'outside'):
+                target.mkdir()
+                evidence.symlink_to(target, target_is_directory=True)
+                with patch.object(qualify_linux_package, 'ROOT', root), \
+                     patch.object(qualify_linux_package, 'scan') as scan, \
+                     patch.object(qualify_linux_package.subprocess, 'Popen') as launch:
+                    with self.assertRaises(ValueError):
+                        qualify_linux_package.qualify(application)
+                    scan.assert_not_called()
+                    launch.assert_not_called()
+                self.assertFalse(list(target.iterdir()))
+                evidence.unlink()
+
     def test_archive_paths_cannot_escape_or_collide_and_private_content_is_rejected(self):
         for name in ('../outside', '/outside', 'C:/outside', 'folder\\outside', '.git/config',
                      'private/.secrets/key', 'node_modules/file', 'configuration.json', 'tdsblive.db',

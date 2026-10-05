@@ -1087,3 +1087,23 @@ This resolves the observed UMU backend handshake failure. It does not establish
 native tray-menu interaction, the named desktop/session matrix, browser restore,
 final-package OBS behavior or release publication. G23 remains **In progress**
 and G24 remains **Not started** until their remaining acceptance evidence exists.
+
+### G23 security follow-up and committed protocol evidence — 2026-10-05
+
+Run 37324678416 at a614f8a is terminal **Failure** at the Sonar security gate.
+The four archive/build-executable findings are no longer open; one S2083 finding
+remains on the qualification evidence write. Functional Windows/browser tests,
+Linux tests and the native Windows probe pass, but package production is skipped.
+The evidence location now uses a fixed path independent of the caller's package
+path, rejects directory aliases, creates a private directory and exclusively
+creates its log and JSON files. Nine package cases pass, including preservation
+of existing evidence and refusal of links both inside and outside release.
+New hosted analysis must confirm the remaining finding is resolved.
+
+The protocol source checkpoint is cfe7143. A Windows diagnostic publish built
+from that committed source passes the actual UMU lifecycle probe again. An owned
+metadata probe invokes the production host guard directly: it returns true for
+the actual UMU pipe and false for actual file and terminal output. These probes
+do not emit a credential while testing rejected destinations. Current-build
+protected Windows/Linux package qualification remains required; the goal is
+active, G23 is **In progress** and G24 is **Not started**.
