@@ -12,6 +12,8 @@
 
 **Credential:** a password, token or private connection URL that gives access to a service.
 
+**Desktop companion:** the small part of TDSBLive that shows its tray icon and desktop controls. The background application provides your chat and overlay pages.
+
 **Dock:** a panel inside OBS that you use while working. It does not automatically appear in the broadcast.
 
 **Event:** something the application receives, such as a new chat message or a supporter notification.
@@ -46,7 +48,11 @@
 
 **Session-only:** a secret kept for the current run and cleared when the application restarts.
 
+**Start at login:** an optional setting that starts TDSBLive when you sign in to Windows. It does not start an OBS broadcast.
+
 **Token:** a secret value used to grant access. Treat a viewing link containing one as private.
+
+**Tray / notification area:** the part of your desktop's taskbar or panel containing small icons for running applications. On Windows, some icons are inside the up-arrow menu beside the clock.
 
 **WebSocket:** a connection that stays open so new messages can arrive without repeatedly requesting the whole page.
 

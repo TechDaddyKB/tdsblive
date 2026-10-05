@@ -102,6 +102,14 @@ It must never restart Explorer on a user's production desktop. The Windows
 registration adapter queries the actual shell notification icon and is tied to
 the pinned Avalonia implementation; requalify it when updating Avalonia.
 
+The guarded appearance helper changes only the disposable CI user's theme,
+observes Windows UISettings and captures actual light/dark confirmations. The
+scaling helper selects an ordinary scale from Windows' display Settings, checks
+actual native window DPI, visible button bounds and keyboard Cancel, then restores
+the original scale in finally. It neither changes resolution nor injects simulated
+DPI notifications. Script parsing and safety guards are preparation evidence;
+the actual packaged Windows run must pass these phases.
+
 Headless UI tests cover controls and connection behavior. They run serially
 because Avalonia's platform registrations are process-wide. Coverage includes
 both `ExtensionSuite.*` assemblies and `TDSBLive.Desktop`; handwritten desktop
