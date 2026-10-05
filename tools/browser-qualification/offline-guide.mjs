@@ -13,9 +13,10 @@ const targets = new Map([
   ['candidate', path.join(root, 'release/ui-redesign-offline-guide')],
   ['review', path.join(root, 'release/ui-redesign-offline-guide-wizard')],
   ['tray', path.join(root, 'release/tray-guide-preparation')],
+  ['tray-native', path.join(root, 'release/tray-guide-native-launcher-review')],
 ]);
 const directory = targets.get(process.argv[2] ?? 'packaged');
-assert.ok(directory, 'Choose packaged, candidate, review or tray');
+assert.ok(directory, 'Choose packaged, candidate, review, tray or tray-native');
 const pages = (await readdir(directory)).filter(name => name.endsWith('.html'));
 assert.ok(pages.includes('Adaptive-Editor-and-Guided-Alerts.html'), 'The candidate guide chapter must be packaged');
 const browser = await chromium.launch({ headless: true });
@@ -49,7 +50,14 @@ try {
     await page.getByText('Everyday use', { exact: true }).click();
     await page.getByRole('link', { name: 'Find the app and quit', exact: true }).first().click();
     await page.getByRole('heading', { name: 'Find TDSBLive, open the editor and quit', exact: true }).waitFor();
-    assert.equal(await page.locator('img').count(), 3, 'The illustrated tray guide must retain its screenshots');
+    for (const name of ['tray-windows-menu.png', 'tray-windows-restart.png', 'tray-windows-fallback.png']) {
+      assert.equal(await page.locator(`img[src="images/${name}"]`).count(), 1,
+        `The tray guide must retain its Windows menu, confirmation and recovery illustrations: ${name}`);
+    }
+    if (process.argv[2] === 'tray-native') {
+      assert.equal(await page.locator('img[src="images/tray-linux-menu.png"]').count(), 1,
+        'Native Linux instructions must illustrate the actual native menu');
+    }
   } else {
     assert.notEqual(process.argv[2], 'tray', 'Tray preparation must include the new chapter');
   }

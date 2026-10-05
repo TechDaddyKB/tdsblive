@@ -8,7 +8,10 @@ Choose the instructions that match the computer where TDSBLive will run. You can
 - **Linux, using Wine:** use [Install on Linux with Wine](Install-on-Linux-Wine.md). This explains both a direct Wine launch and an optional Bottles workflow.
 - **Linux, using Proton:** use [Install on Linux with Proton](Install-on-Linux-Proton.md). This explains a separate Proton environment through UMU.
 
-Wine and Proton run the Windows application. There is no native Linux release implied by these instructions. If you already have a working Wine installation, you do not need to switch runners just because another option exists.
+The 1.0.1 candidate adds a native Linux launcher and tray in the Linux archive.
+Wine or Proton still runs its included Windows backend; a fully native backend
+is deferred. The current public v0.1.0 download uses the Windows ZIP on Linux.
+If your existing runner works, keep it and its prefix when updating.
 
 Read [Before you begin](Before-You-Begin.md) to choose the instructions for your installed version.
 
@@ -23,7 +26,13 @@ An update replaces program files. Your settings and saved overlays are applicati
    confirm **Quit**, or use the editor's **Quit TDSBLive** control. Wait for the
    app to stop before replacing files. Closing the editor tab leaves it running.
 5. For an installer installation, run the new official installer. For a ZIP installation, extract the new version into a new folder; keep the old program folder until the new copy works.
-6. On Linux, start the new copy with the **same Wine or Proton prefix** as before. A different prefix can look like a brand-new installation with no settings.
+6. On Linux, keep the **same Wine or Proton prefix** and saved setup as before.
+   A different prefix can look like a brand-new installation. For the native
+   launcher, open a terminal in the new extracted folder and enter
+   `./TDSBLive --setup`. Choose the new folder's `backend/TDSBLive.exe`, retain
+   your runner/prefix/saved setup, and select **Add TDSBLive to my applications
+   menu** if you want to update that shortcut. Start and check the new copy before
+   removing the old program folder.
 7. Open the editor and check your saved overlays, connections and a test message.
 8. Check OBS before starting a broadcast. A running app does not prove that the correct overlay is on screen.
 

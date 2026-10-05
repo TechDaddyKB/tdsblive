@@ -4,6 +4,56 @@ Proton is a Windows compatibility system built for Linux gaming. It can also be 
 
 This page provides an upstream-supported way to launch GE-Proton outside Steam using **UMU**. The project's live checks do not qualify every UMU or Proton version. Treat a new runner as a setup to test before your next broadcast.
 
+## Use the native Linux launcher in 1.0.1
+
+![Actual Linux setup window; choose Proton (UMU) in the runner selector](images/tray-linux-setup.png)
+
+The **1.0.1 candidate** adds a native Linux tray and setup window. It is not
+published yet. Download **`TDSBLive-1.0.1-linux-x64-wine.tar.gz`** when available.
+That archive supports both direct Wine and **Proton (UMU)**; its name does not
+mean you must choose direct Wine. It includes the Windows backend and .NET runtime.
+A fully native Linux backend remains deferred.
+
+1. Install **UMU** and an **installed GE-Proton runner** using their upstream
+   instructions linked below. The native launcher requires a real local Proton
+   folder, rather than the automatic `GE-Proton` download name.
+2. Extract the complete Linux archive into a folder you will keep. Open its
+   **`TDSBLive`** Linux launcher. If your file manager cannot start it, open a
+   terminal in that folder and enter `./TDSBLive`.
+3. In **Set up TDSBLive on Linux**, choose **Proton (UMU)** under
+   **1. Choose the Windows app runner**.
+4. Use **Runner program** and **Browse…** to choose the installed `umu-run`.
+5. Use **Proton folder** and **Browse…** to choose your installed runner folder.
+   It must contain both `proton` and `toolmanifest.vdf`.
+6. Under **2. Windows settings folder (Wine prefix)**, choose the prefix holding
+   your existing setup. Leave **Start a new empty TDSBLive setup** unchecked and
+   choose the matching **Saved setups found in this folder** entry. Browse for
+   **Existing TDSBLive setup folder** if your data is stored elsewhere.
+7. For your first installation, choose a separate empty prefix and check
+   **Start a new empty TDSBLive setup**. Read the destination shown below it.
+8. Keep **3. TDSBLive Windows application** pointed to the included
+   `backend/TDSBLive.exe`. Optionally check **Add TDSBLive to my applications menu**.
+9. Choose **Start TDSBLive**. Keep the window open while UMU prepares its runtime;
+   the first start can take a few minutes and may need internet access.
+10. Check the editor in your normal Linux browser. Find the blue **T** in your
+    desktop panel and use **Open editor**, **Restart** or **Quit** from its menu.
+
+Save edits before restarting or quitting. **Cancel** is selected first in those
+confirmations. A missing desktop tray opens a control window with the same
+buttons. Closing that window or the browser keeps the backend running. The
+optional application-menu shortcut does not enable automatic sign-in startup.
+
+Keep the same runner, prefix and saved setup after an update. A different prefix
+can look like a new installation. Make a backup before changing runners, and
+check OBS rendering and sound before broadcasting. See
+[Tray and desktop controls](Tray-and-Desktop-Controls.md).
+
+## Optional: launch the Windows ZIP manually
+
+The following instructions retain the separate manual workflow for older
+downloads and existing setups. They do not use the native Linux companion.
+The current public v0.1.0 download uses this Windows ZIP path.
+
 ## 1. Understand the three pieces
 
 **TDSBLive** is the application ZIP you download from this project. **GE-Proton** is the compatibility runner. **UMU** supplies the runtime environment used to launch that runner outside Steam.

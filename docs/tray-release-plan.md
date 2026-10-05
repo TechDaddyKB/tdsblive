@@ -1121,6 +1121,15 @@ candidate artifacts are available from that run. This supersedes the earlier
 outstanding hosted package/security checks, but is not a published release or
 complete acceptance of the Linux desktop matrix.
 
+The downloaded bundle and included Windows backend both identify tested PR
+merge commit `5ff394f9ce5addf6bbccb8b8847e50056761b742`, whose parents are protected
+main `5ee550803cf18fa786e4edc2651fd53ecf035643` and PR head `4314c2c`.
+The workflow head identifies the PR head; the package source marker identifies
+its checked-out merge. The downloaded Linux archive checksum is verified against
+the same-run checksum file. Archive contents are bounded, extracted as regular
+files/directories and secrets-scanned before marker inspection or execution.
+Final public assets still require one immutable protected main source commit.
+
 An isolated actual native companion published from `4314c2c`, using the owned
 direct-Wine profile and the `cfe7143` diagnostic Windows backend, displays the
 Open editor, Restart and Quit menu through a real Quickshell/Qt menu host.
@@ -1145,3 +1154,50 @@ final artifact/OBS verification and public v1.0.1 publication. Earlier delays
 came from UMU bootstrap compatibility and packaging security repairs; neither
 is an outstanding blocker at this checkpoint. No user approval or participant
 availability is required to continue the authorized work.
+
+### G23 protected Linux candidate menu and lifecycle evidence — 2026-10-05
+
+The downloaded Linux bundle from run 37327204777, including its same-source
+Windows backend at merge commit `5ff394f9`, passes actual native GUI checks on an
+owned Xvfb display and private session bus with Quickshell 0.3.1 as the tray host
+and direct Wine 11.17. This does not substitute for KDE/Hyprland session evidence.
+All integration connections and LAN remain disabled; a separate prefix and browser
+profile are used, without changing production output or broadcasting.
+
+Observed cases: native browser launch at the configured nondefault address;
+displayed three-action menu; Open editor handoff; fallback control window after
+owned tray-host removal without backend loss; native icon/menu after tray-host
+restoration; Quit Cancel using both Enter on the initial Cancel button and Escape;
+confirmed Restart retaining profile, address and settings and reopening the
+browser; confirmed Quit with companion exit 0; and retained SQLite integrity.
+Browser handoffs increase from one to two for Open editor, then to three for
+Restart. Cancellation leaves that count and the running backend unchanged.
+Owned fixture processes and Wine server shut down without blanket termination.
+
+The earlier dialog-search helper matched process ID or title. When the fallback
+window was also visible, it could focus that window instead of a confirmation.
+The corrected search requires both the owned process ID and exact dialog title;
+the cancellation and confirmed lifecycle cases above are repeated with that
+condition. The earlier screenshots/assertions using the ambiguous search are
+not relied on for those cases. Native tray availability and readable status are
+observed; the full desktop tooltip and resource/ownership matrix remain required.
+
+Ignored scanned captures are in artifacts/tray-linux-native-actions:
+menu-click-instrumented.png, protected-fallback.png, restart-correct-dialog.png,
+restart-confirmed-package.png, quit-cancel-enter-package.png,
+quit-cancel-escape-package.png and quit-confirmed-package.png. The owned retained
+profile is artifacts/tray-isolated-temp/tdsblive-native-actions-km2rr5yp;
+its SQLite integrity_check returns ok. These contain owned example data only.
+
+Documentation preparation now adds guided native Wine and UMU setup instructions,
+existing-prefix retention, optional launcher shortcut, Linux update instructions,
+README/tray guidance and an actual packaged setup screenshot. Manual Wine,
+Bottles and UMU workflows remain available for older downloads. Public availability
+is still described accurately as v0.1.0; v1.0.1 remains an unpublished candidate.
+The generated offline guide passes network-disabled Chromium qualification:
+21 chapters, local links/navigation, every image loaded, and every chapter
+reflowing at 320, 390 and 1366 CSS pixels. Local browser execution requires the
+owned private /tmp mount; a first launch using the exhausted system /tmp fails
+before any guide is inspected. Wiki synchronization, the complete documentation
+audit and final release evidence remain outstanding. G23 remains In progress;
+G24's final qualification/publication has not started.

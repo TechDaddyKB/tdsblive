@@ -1,7 +1,7 @@
 # Find TDSBLive, open the editor and quit
 
-This page describes the **1.0.1 release candidate**. Publication and native Linux
-instructions are still being completed. Use the guide bundled with your download
+This page describes the **1.0.1 release candidate**. Publication and desktop
+qualification are still being completed. Use the guide bundled with your download
 for that version's controls.
 
 TDSBLive runs in the background while OBS uses its chat and overlay pages. Its
@@ -19,6 +19,24 @@ Closing the editor's browser tab leaves TDSBLive running.
 If you chose **start at login** during installation, signing in starts the app
 quietly. Use **Open editor** from its tray menu when you want the editor. This
 setting does not start an OBS broadcast.
+
+## Start it on Linux
+
+Extract the complete Linux application archive and open its **TDSBLive** launcher.
+On the first launch, follow [Wine setup](Install-on-Linux-Wine.md) or
+[Proton/UMU setup](Install-on-Linux-Proton.md). Keep your existing runner, prefix
+and saved setup if you are updating. Later launches reuse those choices and open
+your normal Linux browser.
+
+Look for the blue **T** in your desktop panel. Right-click it for the same three
+actions shown below. Its position and menu appearance depend on your desktop.
+The Linux launcher does not automatically start when you sign in. Its optional
+applications-menu shortcut opens it when you choose that shortcut.
+
+![Actual native Linux menu in an isolated Quickshell example](images/tray-linux-menu.png)
+
+This Linux picture uses an isolated example panel and sample setup. Your desktop
+panel can place the icon elsewhere; the three action names remain the same.
 
 ## Choose a tray action
 
@@ -66,7 +84,9 @@ shortcut when you next need it.
 
 ## If there is no tray icon
 
-First check Windows' hidden-icons up arrow. When the desktop tray itself is
+On Windows, first check the hidden-icons up arrow. On Linux, check your desktop
+panel's tray area. GNOME may need its AppIndicator extension to show tray icons;
+you can use the control window without adding an extension. When the tray is
 unavailable, TDSBLive offers a small **TDSBLive is running** window with the same
 three buttons.
 
@@ -82,8 +102,9 @@ TDSBLive from your shortcut. See [Troubleshooting](Troubleshooting.md) if it can
 start; do not stop other applications or delete your data to clear an unknown
 port conflict.
 
-For existing Linux installations, continue using the [Wine/Bottles](Install-on-Linux-Wine.md)
-or [Proton/UMU](Install-on-Linux-Proton.md) instructions while the native companion
-is being qualified. A future native Linux backend is a separate project.
+For the older public v0.1.0 download, use the manual sections of the
+[Wine/Bottles](Install-on-Linux-Wine.md) or [Proton/UMU](Install-on-Linux-Proton.md)
+guides. Bottles remains a separate backend workflow; native-companion support
+for Bottles is not qualified. A fully native Linux backend is a separate project.
 
 Next: [Everyday use](Everyday-Use.md), or [Backup and recovery](Backup-and-Recovery.md).

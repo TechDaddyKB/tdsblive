@@ -37,7 +37,11 @@ Streamer.bot import. Start-at-login is optional and off by default.
 See [Windows installation](docs/user-guide/Install-on-Windows.md) for full instructions.
 For Linux compatibility setups, see the [Wine/Bottles guide](docs/user-guide/Install-on-Linux-Wine.md)
 or [Proton/UMU guide](docs/user-guide/Install-on-Linux-Proton.md). These use the
-Windows application; there is no native Linux release.
+Windows backend. The **v1.0.1 Linux candidate** bundles it with a native Linux
+launcher, tray and setup window in `TDSBLive-1.0.1-linux-x64-wine.tar.gz`.
+That candidate supports installed Wine or UMU/Proton and keeps your chosen prefix.
+A fully native Linux backend remains deferred. The Linux bundle is not a public
+release yet.
 
 ## Your first stream with TDSBLive
 
@@ -58,7 +62,8 @@ Start with [First setup](docs/user-guide/First-Setup.md), then
 
 ## Open the editor and finish your stream
 
-The **unreleased v1.0.1 Windows candidate** adds a blue **T** icon near the clock.
+The **unreleased v1.0.1 candidate** adds a blue **T** icon near the Windows clock
+or in the Linux desktop panel.
 Starting it normally opens the editor in your usual browser. Optional start-at-login
 stays quiet; use **Open editor** when you need it.
 
@@ -78,6 +83,13 @@ For screenshots and missing-icon help, read
 [Tray and desktop controls](docs/user-guide/Tray-and-Desktop-Controls.md).
 The current v0.1.0 download uses the editor's application controls; follow its
 bundled guide until v1.0.1 is available.
+
+On Linux, extract the complete Linux archive and open **TDSBLive**. Its first-run
+window lets you choose Wine or Proton (UMU), your existing Windows settings folder
+and your saved setup. Leave **Start a new empty TDSBLive setup** unchecked when
+updating. The optional applications-menu shortcut does not enable automatic
+sign-in startup. See the [Wine guide](docs/user-guide/Install-on-Linux-Wine.md)
+or [UMU guide](docs/user-guide/Install-on-Linux-Proton.md) for each field.
 
 ## What you can do
 

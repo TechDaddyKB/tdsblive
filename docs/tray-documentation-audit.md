@@ -109,8 +109,8 @@ or final-release wording; it does not complete the page-by-page acceptance audit
 | [docs/user-guide/Glossary.md](user-guide/Glossary.md) | Prepared plain-language tray, companion and sign-in definitions | Pending |
 | [docs/user-guide/Home.md](user-guide/Home.md) | Tray guide navigation, downloads and exact qualification limits | Pending |
 | [docs/user-guide/Install-and-Update.md](user-guide/Install-and-Update.md) | Prepared tray quit before file replacement and fallback close behavior; four assets/native launcher remain | Pending |
-| [docs/user-guide/Install-on-Linux-Proton.md](user-guide/Install-on-Linux-Proton.md) | Native UMU launcher, explicit runner/prefix and native browser | Pending |
-| [docs/user-guide/Install-on-Linux-Wine.md](user-guide/Install-on-Linux-Wine.md) | Native first-run launcher, existing prefix, direct Wine and Bottles limit | Pending |
+| [docs/user-guide/Install-on-Linux-Proton.md](user-guide/Install-on-Linux-Proton.md) | Guided native UMU setup, installed runner/prefix retention and native browser; offline render verified; publication review remains | Prepared |
+| [docs/user-guide/Install-on-Linux-Wine.md](user-guide/Install-on-Linux-Wine.md) | Guided native Wine setup, retained prefix, manual/Bottles workflows and packaged setup screenshot; offline render verified; publication review remains | Prepared |
 | [docs/user-guide/Install-on-Windows.md](user-guide/Install-on-Windows.md) | Prepared illustrated automatic editor, hidden tray icons, quiet startup and quit; final native/package review remains | Pending |
 | [docs/user-guide/LAN-Access.md](user-guide/LAN-Access.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Local-StreamElements-Compatibility.md](user-guide/Local-StreamElements-Compatibility.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
@@ -135,3 +135,7 @@ or final-release wording; it does not complete the page-by-page acceptance audit
 - Compare the public wiki with canonical repository content and verify its pushed revision and rendered pages.
 - Verify public Latest and freshly downloaded assets before calling the release available.
 - Record changed/retained pages, exact tested commits and remaining limits here and in the release plan.
+
+## Native launcher documentation checkpoint — 2026-10-05
+
+README, tray controls, installation/update, Wine and UMU chapters now explain the native Linux candidate while retaining older manual workflows. The packaged setup screenshot is from protected run 37327204777 at tested merge 5ff394f9. The updated 21-page offline guide passes networking-disabled browser checks for local links/navigation, loaded images and reflow at 320/390/1366 pixels. These are preparation checks: the full page audit, public wiki synchronization, final packaged guide and public v1.0.1 availability remain outstanding.
