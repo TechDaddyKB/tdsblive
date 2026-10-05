@@ -12,9 +12,10 @@ const targets = new Map([
   ['packaged', path.join(root, 'release/portable/guide')],
   ['candidate', path.join(root, 'release/ui-redesign-offline-guide')],
   ['review', path.join(root, 'release/ui-redesign-offline-guide-wizard')],
+  ['tray', path.join(root, 'release/tray-guide-preparation')],
 ]);
 const directory = targets.get(process.argv[2] ?? 'packaged');
-assert.ok(directory, 'Choose packaged, candidate or review');
+assert.ok(directory, 'Choose packaged, candidate, review or tray');
 const pages = (await readdir(directory)).filter(name => name.endsWith('.html'));
 assert.ok(pages.includes('Adaptive-Editor-and-Guided-Alerts.html'), 'The candidate guide chapter must be packaged');
 const browser = await chromium.launch({ headless: true });
@@ -40,7 +41,15 @@ try {
   await page.getByText('Your first working setup', { exact: true }).click();
   await page.getByRole('link', { name: 'Adaptive editor and guided alerts', exact: true }).first().click();
   await page.getByRole('heading', { name: 'Adaptive editor and guided alerts', exact: true }).waitFor();
-  for (const width of [390, 1366]) {
+  if (pages.includes('Tray-and-Desktop-Controls.html')) {
+    await page.getByText('Everyday use', { exact: true }).click();
+    await page.getByRole('link', { name: 'Find the app and quit', exact: true }).first().click();
+    await page.getByRole('heading', { name: 'Find TDSBLive, open the editor and quit', exact: true }).waitFor();
+    assert.equal(await page.locator('img').count(), 3, 'The illustrated tray guide must retain its screenshots');
+  } else {
+    assert.notEqual(process.argv[2], 'tray', 'Tray preparation must include the new chapter');
+  }
+  for (const width of [320, 390, 1366]) {
     await page.setViewportSize({ width, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Guide reflow at ${width}px`);
   }

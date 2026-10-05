@@ -10,8 +10,19 @@ New chapters, screenshots, offline output and wiki navigation must be included
 in the final audit too. Historical goal records retain their original versions
 and evidence; current guidance must link the new release instead of replacing history.
 
+Preparation adds **Tray-and-Desktop-Controls** to the shared navigation: the guide
+now contains **21 chapters and 15 images**. Three new Windows screenshots come
+from the scanned, visually inspected owned native run of `199f79f`; menu labels,
+confirmation wording and fallback layout are unchanged by the later registration
+fix. The page clearly identifies candidate/publication and Linux qualification
+limits. An initial network-disabled browser check passes all 21 chapters, local
+links/images, tray navigation and mobile/desktop reflow. This is preparation
+evidence; final packaged/offline and public wiki checks still remain.
+
 | File | Review or update required | Final evidence |
 | --- | --- | --- |
+| [docs/tray-documentation-audit.md](tray-documentation-audit.md) | Include new pages/assets and final package/wiki evidence | Pending |
+| [docs/user-guide/Tray-and-Desktop-Controls.md](user-guide/Tray-and-Desktop-Controls.md) | Prepared illustrated Windows controls; Linux instructions and release status still require completion | Pending |
 | [AGENTS.md](../AGENTS.md) | Retain workspace rules; verify release execution follows them | Pending |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [README.md](../README.md) | Download table, tray-first start/quit, Linux companion, published version | Pending |
