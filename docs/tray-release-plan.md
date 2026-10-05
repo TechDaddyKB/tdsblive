@@ -1107,3 +1107,41 @@ the actual UMU pipe and false for actual file and terminal output. These probes
 do not emit a credential while testing rejected destinations. Current-build
 protected Windows/Linux package qualification remains required; the goal is
 active, G23 is **In progress** and G24 is **Not started**.
+
+### G23 successful protected package checkpoint — 2026-10-05
+
+Protected [run 37327204777](https://github.com/TechDaddyKB/tdsblive/actions/runs/37327204777)
+at `4314c2cb9dbce2db107c2d4ccf9c69cb817e90ef` is terminal **Success**.
+Windows desktop inventory, the actual native Windows tray probe, Linux desktop
+tests, the complete Windows build/test/security/package job, and the Linux
+companion package job all pass. SonarQube's required quality gate passes.
+The same-run Windows candidate is used to build the Linux bundle; the packaged
+native first-run rendering and Cancel qualification also pass. Windows and Linux
+candidate artifacts are available from that run. This supersedes the earlier
+outstanding hosted package/security checks, but is not a published release or
+complete acceptance of the Linux desktop matrix.
+
+An isolated actual native companion published from `4314c2c`, using the owned
+direct-Wine profile and the `cfe7143` diagnostic Windows backend, displays the
+Open editor, Restart and Quit menu through a real Quickshell/Qt menu host.
+The Restart confirmation displays its warning and Cancel-first controls.
+Enter on the initial Cancel button and Escape dismiss the confirmation while
+retaining the running backend. Confirmed Restart returns the owned editor at
+its configured address, retains profile/settings and disabled integrations/LAN,
+and increases recorded browser handoffs from one to two. Evidence includes
+artifacts/tray-linux-native-actions/{menu-visible,restart-confirm,restart-returned}.png.
+The first one-shot HTTP assertion ran during the expected restart outage;
+bounded polling confirms recovery. This was a qualification-fixture correction,
+not evidence of a backend restart defect.
+
+The subsequent scripted Quit-dialog lookup times out and the fixture gracefully
+cleans up its owned processes. No native Quit, tray recovery, desktop-matrix or
+final-package OBS pass is inferred from that attempt. The published backend used
+for these local menu checks is diagnostic, not the protected candidate above.
+
+The goal remains active. Remaining delivery work is the outstanding G23 desktop
+and ownership cases, followed by G24 beginner documentation/wiki/offline updates,
+final artifact/OBS verification and public v1.0.1 publication. Earlier delays
+came from UMU bootstrap compatibility and packaging security repairs; neither
+is an outstanding blocker at this checkpoint. No user approval or participant
+availability is required to continue the authorized work.
