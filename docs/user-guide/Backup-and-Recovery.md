@@ -52,7 +52,7 @@ A full environment copy can contain credentials and other private data, so treat
 
 Use the application's own local **Restart TDSBLive** or **Quit TDSBLive** controls when needed. Closing a browser window only closes your view of the app. Remote LAN access deliberately does not expose every local recovery or process-control operation.
 
-The 1.0.1 candidate also offers **Restart** and **Quit** in its desktop tray or
+TDSBLive 1.0.1 also offers **Restart** and **Quit** in its desktop tray or
 fallback control window. Save your changes first: these controls cannot save
 an unfinished browser form. The confirmation starts on **Cancel**; choose the
 matching **Restart** or **Quit** button only when you are ready. Pressing Enter
@@ -62,7 +62,7 @@ confirmation also cancels.
 A successful restart or restore keeps the same application data folder.
 On Linux, keep using the same runner and prefix that hold your working setup.
 Do not switch to an empty prefix to recover a missing icon. The
-[tray guide](Tray-and-Desktop-Controls.md) explains current availability and
+[tray guide](Tray-and-Desktop-Controls.md) explains
 recovery when desktop controls disappear.
 
 Next: [Everyday use](Everyday-Use.md), or [Troubleshooting](Troubleshooting.md).

@@ -1,8 +1,7 @@
 # Find TDSBLive, open the editor and quit
 
-This page describes the **1.0.1 release candidate**. Publication and desktop
-qualification are still being completed. Use the guide bundled with your download
-for that version's controls.
+This page describes **1.0.1**. Use the guide bundled with your download if you
+keep an older version.
 
 TDSBLive runs in the background while OBS uses its chat and overlay pages. Its
 small **tray icon** gives you a way to find it again and stop it when you finish.
@@ -42,7 +41,7 @@ On KDE Plasma, hold your pointer over the icon to see whether TDSBLive is runnin
 
 ![TDSBLive's Running tooltip beside the clock in KDE Plasma](images/tray-linux-kde-tooltip.png)
 
-This picture shows the release candidate with sample settings on an isolated KDE
+This picture shows a qualification build with sample settings on an isolated KDE
 desktop. The blue **T** beside the clock is TDSBLive's icon.
 
 ## Choose a tray action
@@ -120,5 +119,8 @@ For the older public v0.1.0 download, use the manual sections of the
 [Wine/Bottles](Install-on-Linux-Wine.md) or [Proton/UMU](Install-on-Linux-Proton.md)
 guides. Bottles remains a separate backend workflow; native-companion support
 for Bottles is not qualified. A fully native Linux backend is a separate project.
+
+Linux tray memory use and KDE's panel-only disappearance remain accepted issues
+for future investigation. See [release limitations](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/known-issues.md).
 
 Next: [Everyday use](Everyday-Use.md), or [Backup and recovery](Backup-and-Recovery.md).

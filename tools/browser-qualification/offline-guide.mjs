@@ -14,9 +14,10 @@ const targets = new Map([
   ['review', path.join(root, 'release/ui-redesign-offline-guide-wizard')],
   ['tray', path.join(root, 'release/tray-guide-preparation')],
   ['tray-native', path.join(root, 'release/tray-guide-native-launcher-review')],
+  ['release-1.0.1', path.join(root, 'release/guide-1.0.1-final-prepublication')],
 ]);
 const directory = targets.get(process.argv[2] ?? 'packaged');
-assert.ok(directory, 'Choose packaged, candidate, review, tray or tray-native');
+assert.ok(directory, 'Choose a supported packaged or review guide target');
 const pages = (await readdir(directory)).filter(name => name.endsWith('.html'));
 assert.ok(pages.includes('Adaptive-Editor-and-Guided-Alerts.html'), 'The candidate guide chapter must be packaged');
 const browser = await chromium.launch({ headless: true });

@@ -121,6 +121,9 @@ public sealed class DesktopApp : Application, IDisposable
         if (explanation is not null) setup.Feedback.Text = explanation;
         LinuxSetup = setup;
         setup.Closed += (_, _) => LinuxSetup = null;
+        // Constrain the initial native size before the compositor centers it.
+        // Fitting only after Opened can leave a very large scaled window off-screen.
+        LinuxWindowPlacement.Fit(setup);
         setup.Show();
     }
 
@@ -469,7 +472,11 @@ public sealed class DesktopApp : Application, IDisposable
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         statusText!.Text = statusLabel;
         UpdateCommands();
-        if (!controls.IsVisible) controls.Show();
+        if (!controls.IsVisible)
+        {
+            if (OperatingSystem.IsLinux()) LinuxWindowPlacement.Fit(controls);
+            controls.Show();
+        }
     }
 
     private void ExitCompanion()

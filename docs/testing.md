@@ -100,7 +100,17 @@ coverage. Windows-only registration tests are explicitly skipped on Linux.
   rendering, reconnect, transparency and audio-signal observation are separate
   checks; recording, broadcasting and physical listening are not inferred.
 
-The native Linux runner/desktop suite and immutable public-release verification
-remain pending. Keep failed and unavailable evidence explicit. Scan extracted
-packages and captured evidence before inspecting them; publish reviewed source
-and documentation, never private profiles, dependency trees or test artifacts.
+The native Linux suite covers private profile ownership, alias/duplicate launches,
+Wine/UMU argument and process boundaries, registration, dialogs and package
+admission. Actual representative desktop checks and accepted resource/KDE limits
+are recorded in the [tray plan](tray-release-plan.md). Keep unavailable evidence
+explicit. Scan extracted packages and captures before inspection; publish reviewed
+source and documentation, never private profiles or dependency/test output.
+
+`Publish release` is a main-only manual workflow. Supply the successful **Windows
+CI** run ID for the exact current main SHA. `tools/publish_release.py` requires
+the full same-source Windows/Linux/security checks, validates archive markers
+and checksums, creates a draft and immutable tag, verifies all uploaded assets,
+publishes Latest and checks fresh unauthenticated downloads. Conflicting existing
+tags/assets fail rather than being replaced. Release workflow tests reject
+unqualified runs, mismatched source/backend hashes and conflicting assets.

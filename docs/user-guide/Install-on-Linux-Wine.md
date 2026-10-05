@@ -12,10 +12,10 @@ normal browser. Its tested Wine setup runs without those extra installations.
 Keep your existing settings folder; you do not need to delete it to dismiss the
 prompt.
 
-![Actual Linux setup window from the packaged 1.0.1 candidate](images/tray-linux-setup.png)
+![Actual Linux setup window from the packaged 1.0.1 qualification build](images/tray-linux-setup.png)
 
-The **1.0.1 candidate** adds a native Linux tray and setup window. It is not
-published yet. Download **`TDSBLive-1.0.1-linux-x64-wine.tar.gz`** when available.
+The **1.0.1 release** includes a native Linux tray and setup window. Download
+**`TDSBLive-1.0.1-linux-x64-wine.tar.gz`** from the official release page.
 It includes the Linux launcher, the complete Windows backend and .NET runtime.
 A fully native Linux backend remains deferred.
 
@@ -60,7 +60,7 @@ OBS can use the local viewing URLs; check an overlay and sound before broadcasti
 ## Optional: use the Windows ZIP directly
 
 The following manual paths remain available for older downloads and existing
-setups. The current public v0.1.0 release uses the Windows ZIP path. These paths
+setups. The older v0.1.0 release uses the Windows ZIP path. These paths
 do not use the new native Linux launcher. Bottles remains a separate backend
 workflow; native-companion support for Bottles is not qualified.
 

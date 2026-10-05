@@ -41,9 +41,9 @@ Supporter totals reflect the events and date range the application knows about. 
 
 Closing the browser tab alone does not quit TDSBLive. Session-only credentials are cleared when the application restarts, so plan to enter them again next time.
 
-The tray build is still a release candidate. See
+See
 [Find TDSBLive, open the editor and quit](Tray-and-Desktop-Controls.md) for its
-current availability, Windows screenshots and missing-icon help. The confirmation
+Windows and Linux screenshots and missing-icon help. The confirmation
 starts on **Cancel**, so Enter cancels before you change the selection. Escape
 or closing the confirmation also keeps the app running. Tray controls
 do not save unfinished editor forms, and quitting TDSBLive does not quit OBS

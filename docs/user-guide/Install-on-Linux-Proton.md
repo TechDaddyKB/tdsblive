@@ -8,8 +8,8 @@ This page provides an upstream-supported way to launch GE-Proton outside Steam u
 
 ![Actual Linux setup window; choose Proton (UMU) in the runner selector](images/tray-linux-setup.png)
 
-The **1.0.1 candidate** adds a native Linux tray and setup window. It is not
-published yet. Download **`TDSBLive-1.0.1-linux-x64-wine.tar.gz`** when available.
+The **1.0.1 release** includes a native Linux tray and setup window. Download
+**`TDSBLive-1.0.1-linux-x64-wine.tar.gz`** from the official release page.
 That archive supports both direct Wine and **Proton (UMU)**; its name does not
 mean you must choose direct Wine. It includes the Windows backend and .NET runtime.
 A fully native Linux backend remains deferred.
@@ -52,7 +52,7 @@ check OBS rendering and sound before broadcasting. See
 
 The following instructions retain the separate manual workflow for older
 downloads and existing setups. They do not use the native Linux companion.
-The current public v0.1.0 download uses this Windows ZIP path.
+The older v0.1.0 download uses this Windows ZIP path.
 
 ## 1. Understand the three pieces
 

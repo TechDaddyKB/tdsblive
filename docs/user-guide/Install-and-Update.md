@@ -8,9 +8,9 @@ Choose the instructions that match the computer where TDSBLive will run. You can
 - **Linux, using Wine:** use [Install on Linux with Wine](Install-on-Linux-Wine.md). This explains both a direct Wine launch and an optional Bottles workflow.
 - **Linux, using Proton:** use [Install on Linux with Proton](Install-on-Linux-Proton.md). This explains a separate Proton environment through UMU.
 
-The 1.0.1 candidate adds a native Linux launcher and tray in the Linux archive.
+The 1.0.1 release adds a native Linux launcher and tray in the Linux archive.
 Wine or Proton still runs its included Windows backend; a fully native backend
-is deferred. The current public v0.1.0 download uses the Windows ZIP on Linux.
+is deferred. The older v0.1.0 download uses the Windows ZIP on Linux.
 If your existing runner works, keep it and its prefix when updating.
 
 Read [Before you begin](Before-You-Begin.md) to choose the instructions for your installed version.
@@ -43,7 +43,7 @@ Do not run the old and new versions together. They may try to use the same port 
 On Windows, use the normal installed-app removal screen if you used the installer. For a ZIP installation, quit TDSBLive and remove the program folder when you are sure you no longer need it.
 
 The [tray guide](Tray-and-Desktop-Controls.md) shows how to find the running app
-and quit the 1.0.1 candidate. If its small control window appears instead, use
+and quit TDSBLive 1.0.1. If its small control window appears instead, use
 that window's **Quit** button. Closing that window leaves the app running.
 
 Uninstalling the Windows application leaves application data available for recovery. Decide separately whether you want to keep it. Make a backup before deliberately removing the data folder.

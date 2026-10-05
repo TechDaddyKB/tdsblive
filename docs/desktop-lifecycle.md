@@ -1,10 +1,9 @@
 # Desktop controls and application lifecycle
 
-This describes the 1.0.1 implementation candidate. Native Windows desktop,
-packaged application and OBS qualification must pass before release. The native
-Linux launcher remains an implementation candidate pending desktop and package
-qualification; this document does not claim a published Linux release.
-See the [tray release plan](tray-release-plan.md) for acceptance evidence.
+This describes 1.0.1's Windows and native Linux desktop controls. Linux still
+runs the Windows backend through installed Wine or UMU/Proton. See the
+[tray release plan](tray-release-plan.md) for exact acceptance evidence and
+[known issues](known-issues.md) for accepted limits and future investigation.
 
 ## What users do
 

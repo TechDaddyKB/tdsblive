@@ -14,9 +14,10 @@ README checks before submitting a pull request. Treat Windows CI and SonarQube's
 quality gate as merge requirements; do not use coverage exclusions to hide
 handwritten production logic. New-code coverage must be at least 80%.
 
-Fork and Dependabot pull requests run build/tests without Sonar credentials.
-Their SonarQube check may remain pending: a maintainer must inspect the changes
-and promote them to a trusted repository branch for analysis. Never switch to
+Fork and Dependabot pull requests receive no Sonar credentials. The mandatory
+secrets scan fails closed before source execution when those credentials are
+unavailable. A maintainer must inspect the changes and promote them to a trusted
+repository branch for scanning, tests and analysis. Never switch to
 `pull_request_target` to run untrusted changes with secrets. No merge should bypass
 the protected branch's required quality check.
 

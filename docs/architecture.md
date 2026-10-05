@@ -29,7 +29,7 @@ flowchart LR
 - `ExtensionSuite.Host`: composition root, HTTP editor assets, typed configuration,
   DPAPI provisioning, authenticated LAN, diagnostics, OpenAPI and editor WebSockets.
 - `ExtensionSuite.Desktop`: native tray, normal-browser handoff, Cancel-first
-  confirmations and missing-tray controls. In the Windows 1.0.1 candidate, the
+  confirmations and missing-tray controls. On Windows 1.0.1, the
   packaged host starts this companion and owns successful backend relaunch.
   The companion is separate from OBS rendering and production automation.
 - `frontend/editor` and `frontend/overlay-runtime`: separate Vite build targets;
@@ -57,7 +57,8 @@ The [desktop lifecycle contract](desktop-lifecycle.md) describes authenticated
 control, one owner per profile, graceful shutdown and explicit relaunch outcomes.
 Closing a browser or desktop control window leaves a running backend alone.
 Desktop failure also leaves the backend running; backend process death is never
-treated as successful restart intent. The planned native Linux companion will
-own Wine/UMU launch and preserve an explicitly chosen runner and prefix. It is
-not delivered yet; current evidence is recorded in the
-[1.0.1 tray plan](tray-release-plan.md).
+treated as successful restart intent. The native Linux companion owns Wine/UMU
+launch, retains the selected runner/prefix and holds a separate native profile
+lease through backend crashes. Explicit recovery closes the stopped controls
+before reopening the launcher. See [lifecycle](desktop-lifecycle.md),
+[accepted issues](known-issues.md) and [1.0.1 evidence](tray-release-plan.md).

@@ -1,5 +1,9 @@
 # Visual editor and alerts (G06)
 
+Historical goal record: the status and evidence below describe that milestone
+and its original tested commits. Current cumulative release status is in the
+[implementation plan](implementation-plan.md) and [1.0.1 notes](releases/1.0.1.md).
+
 Status: implementation in progress. This document describes implemented contracts and remaining verification; it is not a completion claim.
 
 The editor creates transparent multi-widget overlays at `/editor`. Presets are 1920×1080, 2560×1440, 3840×2160, 1080×1920, and custom dimensions (1–7680 pixels). A canvas has at most 100 widgets. Supported G06 widgets are Text, Image/GIF, Video, Audio, Combined Chat, and AlertBox. Layers use document order, with raise/lower, duplicate/delete, lock/hide, position/size/rotation properties, a 10-pixel grid, zoom and scroll. Keyboard controls include arrows (Shift for ten pixels), Ctrl/Cmd-Z, Shift-Z/Y, D, C/V, and Delete. Advanced multi-selection/grouping/alignment/distribution remain G11; arbitrary HTML/custom widget execution belongs to G12, and TTS/automation policies to G09.

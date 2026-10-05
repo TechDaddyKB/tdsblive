@@ -1,6 +1,6 @@
 # Advanced editor and widgets
 
-**Version requirement:** TDSBLive 1.0 or newer. The earlier v0.1.0 MVP predates these controls. Read [Before you begin](Before-You-Begin.md) if a button is missing.
+**Version requirement:** TDSBLive 1.0.1 or newer. The earlier v0.1.0 MVP predates these controls. Read [Before you begin](Before-You-Begin.md) if a button is missing.
 
 Start with [a basic overlay](Overlays-and-Alerts.md). This chapter helps when you have several items to arrange, or want an event list or goal display. No custom code is needed for these built-in widgets.
 

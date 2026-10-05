@@ -41,7 +41,7 @@ and mediate permissions in G12. Validate files/package traversal and size limits
 
 ## Desktop control boundary
 
-The 1.0.1 candidate's native tray uses a separate authenticated IPv4 loopback
+The 1.0.1 native tray uses a separate authenticated IPv4 loopback
 control channel. It grants status, restart and quit access to the admitted local
 companion; it does not grant integration execution or change HTTP, CSRF, LAN or
 custom-widget permissions. Backup restore remains an authenticated browser task.

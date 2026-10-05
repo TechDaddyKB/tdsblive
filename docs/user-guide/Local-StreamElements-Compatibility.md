@@ -1,6 +1,6 @@
 # Optional: local StreamElements compatibility
 
-**Version requirement:** TDSBLive 1.0 or newer. This optional feature is absent from the earlier v0.1.0 MVP. See [Before you begin](Before-You-Begin.md).
+**Version requirement:** TDSBLive 1.0.1 or newer. This optional feature is absent from the earlier v0.1.0 MVP. See [Before you begin](Before-You-Begin.md).
 
 This feature helps some custom widgets written around StreamElements-style events run locally in TDSBLive. It is a limited compatibility layer, not the whole StreamElements website or its cloud services. You do not need it for TDSBLive's built-in widgets.
 

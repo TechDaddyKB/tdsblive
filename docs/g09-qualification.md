@@ -1,5 +1,9 @@
 # G09 qualification audit
 
+Historical goal record: the status and evidence below describe that milestone
+and its original tested commits. Current cumulative release status is in the
+[implementation plan](implementation-plan.md) and [1.0.1 notes](releases/1.0.1.md).
+
 Status: **Complete under the approved scope; protected delivery of this record remains gated**. The operator placed all VTube Studio-specific work on hold on 2026-10-02, selecting Streamer.bot's built-in integration. That explicit scope change governs the whole plan; deferred model-specific requirements are not verified or active completion gates. Generic action dispatch remains in scope. The OBS source is added and the configured Speaker.bot alias is `local english`; both owned audio paths have now dispatched. The operator confirmed both audible test paths with “Yes I heard it all.” All active implementation acceptance criteria are verified; the documentation-only completion commit must pass protected checks before PR #12 merges.
 
 | Requirement | Inspected evidence | Remaining qualification |

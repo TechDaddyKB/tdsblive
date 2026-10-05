@@ -4,7 +4,9 @@ An automation rule says, “When this kind of event arrives and matches my condi
 
 ## 1. Create one draft rule
 
-Open the automation area and choose **New speech** or **New sound**, depending on what you want. Give the rule a name you will recognize later. Choose its event source and conditions.
+Open **Automation** and choose **New speech rule** or **New sound rule**. Give the rule a
+name you recognize. Choose a named platform and incoming trigger, then the
+condition and action. Keep the rule disabled until its simulation looks right.
 
 For speech, use a voice alias that exists in **your own Speaker.bot setup**. An example alias in a picture or guide is not a voice automatically installed on your computer. Test that voice in Speaker.bot first.
 
@@ -14,11 +16,19 @@ For a sound, select the intended media or approved action. Grant only the action
 
 The example screen illustrates the controls. Choose values for your own show rather than copying all the example settings.
 
-## 2. Check amount units before setting a threshold
+## 2. Choose a money amount or a quantity
 
-**Native minor units** means the smallest ordinary unit of the event's currency. For USD, `500` cents means $5.00 and `1000` means $10.00. Entering `5` in a cents field means five cents, not five dollars.
+Choose **Reported money amount** for an incoming amount of money. Select the
+currency, then enter an ordinary amount: `5.00` in USD means five dollars.
+Choose the comparison you want, such as a minimum or a range. A range's upper
+bound is excluded; an amount equal to that bound does not match.
 
-Bits use their event quantity, rather than treating every field as dollars. Unknown monetary values cannot be safely compared as if they were exact cash amounts. Check the field's label and source before choosing a threshold.
+Choose **Quantity** for a count such as Bits. Missing or incompatible support
+facts do not satisfy a money/quantity condition. Use the simulation's ordinary
+amount field to check one example before enabling the rule. **Advanced currency
+scale** remains available for unusual currencies; ordinary setup needs no cents
+conversion or internal event names. Older builds may show raw minor-unit fields;
+use the guide bundled with that version.
 
 ## 3. Decide how repeated events should behave
 

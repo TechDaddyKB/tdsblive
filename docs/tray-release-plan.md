@@ -78,7 +78,7 @@ the established environment and acceptance dispositions remain explicit.
 
 ## G23 — Native Linux tray companion
 
-Status: **In progress**
+Status: **Complete** (accepted with documented limitations)
 Prerequisites: G22
 Requirements: TR-R01–TR-R07, TR-R10
 
@@ -137,7 +137,7 @@ pending for the investigated Python examples.
 
 ## G24 — Documentation, qualification and publication
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G22–G23
 Requirements: TR-R08–TR-R10 and cumulative regression coverage of TR-R01–TR-R07
 
@@ -1827,3 +1827,46 @@ uncollected allocations. Natural collection/longer observation remains required;
 no leak or steady-state pass is claimed. Both counter exports are scanned before
 numeric analysis. The owned native process remains available for that bounded
 follow-up, with all integrations and LAN disabled.
+
+### Accepted release disposition and final setup fit — 2026-10-05
+
+The operator explicitly requests: accept the current issues, record them for
+future investigation, commit and publish 1.0.1, then update the full wiki from
+this plan. G23 is accepted with limitations; this does not turn incomplete
+matrix repetitions or performance targets into passes. Remaining exact-package
+qualification, protected build/security checks, publication and documentation
+belong to G24. The goal stays active until the release and wiki are delivered.
+[Known issues](known-issues.md) records the memory investigation, KDE stale tray
+host behavior and retained compatibility/qualification boundaries.
+
+At source `48ba8c1`, a controlled private appearance service on a separate owned
+session bus verifies actual native Linux light/dark changes at 125% and 200%.
+The 400% case reveals an initial-placement race: although the resized client is
+1184×708, it opens outside the 1280×900 output. Fitting before Show, as well as
+on Opened, resolves it without changing the editor or backend. A fresh native
+publish of the repaired working source passes actual light/dark setup checks at
+125% (800×840 at 240,30), 200% (1232×804 at 24,48), and 400% (1184×708 at 48,96).
+Native Escape cancels every case with exit 0 and no backend action. Screenshots
+are scanned and visually inspected. Ignored evidence:
+`artifacts/tray-hyprland-native/setup-themes-initial-sizing-48ba8c1/`.
+The pinned full desktop suite passes **124**, with **2 Windows-only skips** and
+no failures; TRX/coverage are under `artifacts/tray-initial-sizing-tests/`.
+
+The second ten-minute numeric counter export records heap 7.04→30.04 MB and
+working set 229.22→229.29 MB (maximum 229.33 MB). The heap decreased from the
+previous observation's 42.00 MB before this interval; no collection event was
+captured inside this interval, so its exact timing is not asserted. After the
+collector exits, three 30-second samples record native RSS 229.29/229.29/229.35
+MB and CPU 0.30/0.27/0.27% of one core. This supports a bounded plateau, not a
+long-term leak or performance pass. Evidence:
+`artifacts/tray-hyprland-native/umu-resource-with-counters-6791cfb/`.
+Owned-browser Quit returns 0 and all tracked fixture processes stop. Production
+Quickshell remains untouched.
+
+Protected run 37370910176 on `48ba8c1` passes Windows native tray and inventory,
+but cannot acquire its Linux hosted runner and skips dependent package jobs.
+The failed/unstarted jobs are retried. GitHub's current Actions incident
+[3q1yb5m7ltvb](https://www.githubstatus.com/incidents/3q1yb5m7ltvb) confirms runner
+assignment delays across configurations. Required checks and secret isolation
+are unchanged. Current repository API checks list no open Dependabot or CodeQL
+alerts. v1.0.1 remains unpublished at this checkpoint; publication is required.

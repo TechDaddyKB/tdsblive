@@ -16,9 +16,9 @@ and configure speech, sounds and actions from a browser-based editor.
 
 ## Download and install
 
-The public download is currently **v0.1.0**. The cumulative **v1.0.1** update is
-being qualified and is not published yet. There is no public v1.0.0 download.
-Check the release notes and bundled guide for the features in your download.
+**v1.0.1** is the cumulative release, including the editor redesign and desktop
+tray controls. There is no separate public v1.0.0 download. Use the application
+files under **Assets** on the release page.
 
 Official releases provide self-contained **Windows x64** builds. You do not need
 to install .NET separately or build the source code to use them.
@@ -27,6 +27,7 @@ to install .NET separately or build the source code to use them.
 | --- | --- |
 | **Windows installer** — `TDSBLive-<version>-win-x64-setup.exe` | A guided, per-user installation with an application shortcut. |
 | **Application ZIP** — `TDSBLive-<version>-win-x64.zip` | Managing the application folder yourself. Extract the entire ZIP, then run `TDSBLive.exe`. |
+| **Linux launcher bundle** — `TDSBLive-1.0.1-linux-x64-wine.tar.gz` | A native Linux tray and setup window with the Windows backend. Install Wine or UMU/Proton, extract everything, then open `TDSBLive`. |
 | **`SHA256SUMS.txt`** | Checking that your downloaded files match the release's published checksums. |
 
 Get these files from the [latest release](https://github.com/TechDaddyKB/tdsblive/releases/latest).
@@ -37,16 +38,16 @@ Streamer.bot import. Start-at-login is optional and off by default.
 See [Windows installation](docs/user-guide/Install-on-Windows.md) for full instructions.
 For Linux compatibility setups, see the [Wine/Bottles guide](docs/user-guide/Install-on-Linux-Wine.md)
 or [Proton/UMU guide](docs/user-guide/Install-on-Linux-Proton.md). These use the
-Windows backend. The **v1.0.1 Linux candidate** bundles it with a native Linux
+Windows backend. The **v1.0.1 Linux download** bundles it with a native Linux
 launcher, tray and setup window in `TDSBLive-1.0.1-linux-x64-wine.tar.gz`.
-That candidate supports installed Wine or UMU/Proton and keeps your chosen prefix.
-A fully native Linux backend remains deferred. The Linux bundle is not a public
-release yet.
+It supports installed Wine or UMU/Proton and keeps your chosen settings folder.
+A fully native Linux backend remains deferred.
 
 ## Your first stream with TDSBLive
 
 1. Install or extract the application and start **TDSBLive**.
-2. Open **[http://127.0.0.1:17474/editor](http://127.0.0.1:17474/editor)** in your browser.
+2. Wait for the editor to open in your normal browser. To return later, choose
+   **Open editor** from the blue **T** tray icon.
 3. Follow guided setup and connect only the services you use. Streamer.bot handles
    its supported platform connections and actions; Speaker.bot is optional for speech.
 4. Configure combined chat or an overlay, then test it with sample events.
@@ -62,12 +63,12 @@ Start with [First setup](docs/user-guide/First-Setup.md), then
 
 ## Open the editor and finish your stream
 
-The **unreleased v1.0.1 candidate** adds a blue **T** icon near the Windows clock
+**v1.0.1** adds a blue **T** icon near the Windows clock
 or in the Linux desktop panel.
 Starting it normally opens the editor in your usual browser. Optional start-at-login
 stays quiet; use **Open editor** when you need it.
 
-![Windows candidate tray menu: Open editor, Restart, Quit](docs/user-guide/images/tray-windows-menu.png)
+![Windows tray menu: Open editor, Restart, Quit](docs/user-guide/images/tray-windows-menu.png)
 
 1. Find the blue **T** near the clock. Click the hidden-icons arrow if it is tucked away.
 2. Right-click it and choose **Open editor**, **Restart**, or **Quit**.
@@ -81,8 +82,8 @@ Tray actions do not save unfinished forms.
 
 For screenshots and missing-icon help, read
 [Tray and desktop controls](docs/user-guide/Tray-and-Desktop-Controls.md).
-The current v0.1.0 download uses the editor's application controls; follow its
-bundled guide until v1.0.1 is available.
+Older v0.1.0 downloads use the editor's application controls; follow their
+bundled guide if you keep an older version.
 
 On Linux, extract the complete Linux archive and open **TDSBLive**. Its first-run
 window lets you choose Wine or Proton (UMU), your existing Windows settings folder
@@ -97,9 +98,9 @@ or [UMU guide](docs/user-guide/Install-on-Linux-Proton.md) for each field.
   view, with platform indicators, supported badges and emotes.
 - **Create overlays and alerts:** arrange text, images, chat and supporter widgets;
   customize alert wording, media, timing and playback queues.
-- **Choose different alert designs:** the v1.0.1 source candidate provides named triggers,
+- **Choose different alert designs:** named triggers,
   donation/quantity conditions and ordered first/all matching alert sets.
-- **Customize and share designs:** the v1.0.1 source candidate adds advanced arrangement,
+- **Customize and share designs:** advanced arrangement,
   sandboxed custom widgets and portable overlay/widget packages.
 - **Connect Rumble events:** use the Rumble live API with persistent repeat-event
   protection and connection diagnostics.
@@ -110,11 +111,14 @@ or [UMU guide](docs/user-guide/Install-on-Linux-Proton.md) for each field.
 - **Protect your setup:** recover overlay revisions, export configuration and
   create or restore application backups.
 
-The repository and wiki can include features newer than the latest packaged
-release, including advanced editing, custom widgets, portable overlay packages
-and guided conditional alert designs. **Release notes and the bundled guide
-describe the version you downloaded.** See [version and feature guidance](docs/user-guide/Before-You-Begin.md)
-before following instructions for a newer feature.
+**Release notes and the bundled guide describe the version you downloaded.**
+The repository can later contain newer work. See [version guidance](docs/user-guide/Before-You-Begin.md)
+if a control is missing from an older build.
+
+Linux memory/CPU overhead and KDE panel recovery have accepted limitations.
+Read [known issues](docs/known-issues.md) and test your setup before a show.
+This is the last planned feature release for a while; bug/security fixes and a
+future fully native Linux backend remain possible.
 
 ## Guides and updates
 
