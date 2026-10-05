@@ -12,6 +12,30 @@ Work through the section that matches what you see. Change one thing at a time, 
 
 A local HTTP page does not need an HTTPS certificate. Changing the address to HTTPS is not a fix for an application that has not started.
 
+## I cannot find the tray icon or stop the app
+
+The tray is part of the 1.0.1 candidate; earlier downloads do not have it. Check
+your version before looking for a missing feature.
+
+On Windows, look near the clock and open the small up arrow for hidden icons.
+The blue **T** menu offers **Open editor**, **Restart** and **Quit**. If you see
+**TDSBLive is running** in a small window, use its matching buttons instead.
+Closing that window hides the controls and keeps the app running.
+
+If the icon disappears but the editor still works, save your edits and use the
+editor's **Restart TDSBLive** or **Quit TDSBLive** control in **Backup and
+recovery**. A desktop-control failure does not mean the backend has stopped.
+If the editor also stops responding, read any startup message before opening
+the app again. The tray does not automatically restart a crashed backend.
+
+For **Restart** or **Quit**, read the confirmation and choose the matching
+button to proceed. The confirmation starts on **Cancel**; pressing Enter at
+that point cancels. Escape or the window's close button also keeps the app
+running. Save your browser edits before proceeding.
+
+See [the illustrated tray guide](Tray-and-Desktop-Controls.md) for screenshots
+and current Linux qualification limits.
+
 ## The EXE will not launch
 
 On Windows, confirm that you downloaded the application rather than Source code, and extracted the complete ZIP. The EXE needs its neighboring files. Try a local writable folder rather than a cloud-synced location.

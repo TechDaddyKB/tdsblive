@@ -19,6 +19,19 @@ limits. An initial network-disabled browser check passes all 21 chapters, local
 links/images, tray navigation and mobile/desktop reflow. This is preparation
 evidence; final packaged/offline and public wiki checks still remain.
 
+Windows lifecycle preparation updates installation, everyday use, updates,
+troubleshooting and recovery to explain **Open editor**, quiet sign-in,
+save-before-restart/quit, Cancel-first confirmations and missing-tray recovery.
+Before-you-begin now explicitly distinguishes the public v0.1.0 download from
+the unpublished cumulative v1.0.1 candidate. These are reviewed candidate
+instructions; final Windows/Linux packages and publication must still verify
+them before any row is marked complete.
+
+The refreshed offline guide passes network-disabled checks of all **21 chapters**,
+their local links and images, and every chapter at **320, 390 and 1366 pixels**.
+Expanding the check beyond the tray page exposed unwrapped local viewing URLs in
+the chat chapter; offline links now wrap without changing their addresses.
+
 | File | Review or update required | Final evidence |
 | --- | --- | --- |
 | [docs/tray-documentation-audit.md](tray-documentation-audit.md) | Include new pages/assets and final package/wiki evidence | Pending |
@@ -73,23 +86,23 @@ evidence; final packaged/offline and public wiki checks still remain.
 | [docs/user-guide/Adaptive-Editor-and-Guided-Alerts.md](user-guide/Adaptive-Editor-and-Guided-Alerts.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Advanced-Editor-and-Widgets.md](user-guide/Advanced-Editor-and-Widgets.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Automation.md](user-guide/Automation.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
-| [docs/user-guide/Backup-and-Recovery.md](user-guide/Backup-and-Recovery.md) | Save before restart/restore; retained desktop ownership | Pending |
-| [docs/user-guide/Before-You-Begin.md](user-guide/Before-You-Begin.md) | Published version, native companion versus Windows backend | Pending |
+| [docs/user-guide/Backup-and-Recovery.md](user-guide/Backup-and-Recovery.md) | Prepared save-before-tray-action and Cancel-first recovery guidance; final Linux/package review remains | Pending |
+| [docs/user-guide/Before-You-Begin.md](user-guide/Before-You-Begin.md) | Prepared explicit public v0.1.0 versus unpublished v1.0.1 guidance; update after publication | Pending |
 | [docs/user-guide/Chat-and-OBS.md](user-guide/Chat-and-OBS.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Custom-Widgets-and-Portable-Packages.md](user-guide/Custom-Widgets-and-Portable-Packages.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
-| [docs/user-guide/Everyday-Use.md](user-guide/Everyday-Use.md) | Manual/quiet launch and safe end-of-stream tray quit | Pending |
+| [docs/user-guide/Everyday-Use.md](user-guide/Everyday-Use.md) | Prepared manual/quiet launch, save and end-of-stream tray quit; final Linux/package review remains | Pending |
 | [docs/user-guide/First-Setup.md](user-guide/First-Setup.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Glossary.md](user-guide/Glossary.md) | Prepared plain-language tray, companion and sign-in definitions | Pending |
 | [docs/user-guide/Home.md](user-guide/Home.md) | Tray guide navigation, downloads and exact qualification limits | Pending |
-| [docs/user-guide/Install-and-Update.md](user-guide/Install-and-Update.md) | Four assets, tray quit, preserved launcher/prefix and uninstall | Pending |
+| [docs/user-guide/Install-and-Update.md](user-guide/Install-and-Update.md) | Prepared tray quit before file replacement and fallback close behavior; four assets/native launcher remain | Pending |
 | [docs/user-guide/Install-on-Linux-Proton.md](user-guide/Install-on-Linux-Proton.md) | Native UMU launcher, explicit runner/prefix and native browser | Pending |
 | [docs/user-guide/Install-on-Linux-Wine.md](user-guide/Install-on-Linux-Wine.md) | Native first-run launcher, existing prefix, direct Wine and Bottles limit | Pending |
-| [docs/user-guide/Install-on-Windows.md](user-guide/Install-on-Windows.md) | Automatic editor, hidden tray icons, quiet startup, restart and quit | Pending |
+| [docs/user-guide/Install-on-Windows.md](user-guide/Install-on-Windows.md) | Prepared illustrated automatic editor, hidden tray icons, quiet startup and quit; final native/package review remains | Pending |
 | [docs/user-guide/LAN-Access.md](user-guide/LAN-Access.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Local-StreamElements-Compatibility.md](user-guide/Local-StreamElements-Compatibility.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Overlays-and-Alerts.md](user-guide/Overlays-and-Alerts.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [docs/user-guide/Supporter-Totals.md](user-guide/Supporter-Totals.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
-| [docs/user-guide/Troubleshooting.md](user-guide/Troubleshooting.md) | Missing tray, stopped companion/backend, display services and recovery | Pending |
+| [docs/user-guide/Troubleshooting.md](user-guide/Troubleshooting.md) | Prepared missing Windows tray, stopped companion/backend and browser recovery guidance; native Linux remains | Pending |
 | [docs/widgets.md](widgets.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [integrations/streamerbot/kofi-forwarding.md](../integrations/streamerbot/kofi-forwarding.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |
 | [streamerbot/bootstrap/README.md](../streamerbot/bootstrap/README.md) | Review unchanged workflow, labels and links; retain applicable guidance | Pending |

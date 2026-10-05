@@ -36,6 +36,10 @@ try {
         assert.ok((await stat(file)).isFile(), `Broken chapter link: ${filename}`);
       }
     }
+    for (const width of [320, 390, 1366]) {
+      await page.setViewportSize({ width, height: 844 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Guide reflow: ${filename} at ${width}px`);
+    }
   }
   await page.goto(pathToFileURL(path.join(directory, 'Home.html')).href);
   await page.getByText('Your first working setup', { exact: true }).click();
@@ -49,10 +53,6 @@ try {
   } else {
     assert.notEqual(process.argv[2], 'tray', 'Tray preparation must include the new chapter');
   }
-  for (const width of [320, 390, 1366]) {
-    await page.setViewportSize({ width, height: 844 });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Guide reflow at ${width}px`);
-  }
   assert.deepEqual(errors, []);
-  console.log(`Network-disabled offline guide passed: ${pages.length} chapters, local navigation, images and candidate reflow`);
+  console.log(`Network-disabled offline guide passed: ${pages.length} chapters, local navigation, images and every chapter at 320/390/1366px`);
 } finally { await browser.close(); }

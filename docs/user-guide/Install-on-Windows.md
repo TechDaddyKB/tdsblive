@@ -10,7 +10,7 @@ The installer is named `TDSBLive-<version>-win-x64-setup.exe`; the application Z
 
 Do not choose the links named **Source code** for an ordinary installation. Source code is for building the application yourself. The application package includes the runtime needed to launch TDSBLive.
 
-Check the release's version and notes. These instructions cover TDSBLive 1.0; older versions can have different controls. [Before you begin](Before-You-Begin.md) explains the feature differences.
+Check the release's version and notes. The tray controls below describe the **1.0.1 candidate**, which is still being tested and has not been published. Older downloads use the editor's own restart and quit controls. [Before you begin](Before-You-Begin.md) explains the feature differences.
 
 ## 2A. Install using the installer
 
@@ -38,9 +38,24 @@ Extract **everything**. Do not drag out only the EXE, and do not run it from the
 
 The ZIP includes the required runtime. Installing a separate .NET runtime is not the first fix for an incomplete extraction.
 
-## 3. Open the editor
+## 3. Find the app and open the editor
 
-With TDSBLive running, open a browser and enter this address into the address bar:
+In the 1.0.1 tray build, starting the app yourself opens the editor in your normal
+browser. Look for the blue **T** near the Windows clock. If it is hidden, select
+the small up arrow beside the clock. Right-click the icon and choose **Open
+editor** to return to the editor later.
+
+![Windows tray menu with Open editor, Restart and Quit](images/tray-windows-menu.png)
+
+The screenshot is from an owned Windows test of the 1.0.1 candidate. The
+[illustrated tray guide](Tray-and-Desktop-Controls.md) explains the icon,
+confirmations and the small control window used when the tray is unavailable.
+
+If you choose optional start-at-login, the app starts quietly when you sign in.
+Use **Open editor** when you are ready; it does not open a browser at every sign-in.
+
+For an older build, or if you need to open the address yourself, enter this in
+your browser's address bar while TDSBLive is running:
 
 [http://127.0.0.1:17474/editor](http://127.0.0.1:17474/editor)
 
@@ -58,7 +73,18 @@ These files are documentation, not the live editor. Opening `Home.html` does not
 
 ## 5. Stop and start it intentionally
 
-Closing your browser closes your view of the editor; it does not stop TDSBLive. Use the application's **Quit TDSBLive** control in **Backup and recovery** when you want to stop it. Start it again using your shortcut or EXE.
+Closing your browser closes your view of the editor; it does not stop TDSBLive.
+In the 1.0.1 tray build:
+
+1. Finish the broadcast in OBS and save your editor changes.
+2. Right-click the blue **T** and choose **Quit**.
+3. Read the confirmation. Choose **Quit** to stop, or **Cancel** to keep running.
+4. The tray icon disappears when the app stops. Your saved setup stays available
+   for the next launch.
+
+You can also use **Quit TDSBLive** in the editor's **Backup and recovery** area.
+That remains available for older builds. Restarting or quitting from the tray
+does not save unfinished browser forms or close OBS and your bots.
 
 Do not enable start-at-login until you have checked that one normal launch works. If you use a shortcut for a ZIP installation, keep the target pointing at the full extracted folder's EXE.
 

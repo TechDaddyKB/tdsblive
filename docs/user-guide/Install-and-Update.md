@@ -19,7 +19,9 @@ An update replaces program files. Your settings and saved overlays are applicati
 1. Open TDSBLive's **Backup and recovery** page and download a backup ZIP.
 2. Put that ZIP somewhere you can find again. Use a name that includes the date and the version you are leaving.
 3. Stop using the pages in OBS while updating. You do not need to delete the sources.
-4. Use the application's **Quit TDSBLive** control. Closing the editor tab is not the same as quitting the application.
+4. Save your editor changes, then use **Quit** from the 1.0.1 tray menu and
+   confirm **Quit**, or use the editor's **Quit TDSBLive** control. Wait for the
+   app to stop before replacing files. Closing the editor tab leaves it running.
 5. For an installer installation, run the new official installer. For a ZIP installation, extract the new version into a new folder; keep the old program folder until the new copy works.
 6. On Linux, start the new copy with the **same Wine or Proton prefix** as before. A different prefix can look like a brand-new installation with no settings.
 7. Open the editor and check your saved overlays, connections and a test message.
@@ -30,6 +32,10 @@ Do not run the old and new versions together. They may try to use the same port 
 ## Remove the application
 
 On Windows, use the normal installed-app removal screen if you used the installer. For a ZIP installation, quit TDSBLive and remove the program folder when you are sure you no longer need it.
+
+The [tray guide](Tray-and-Desktop-Controls.md) shows how to find the running app
+and quit the 1.0.1 candidate. If its small control window appears instead, use
+that window's **Quit** button. Closing that window leaves the app running.
 
 Uninstalling the Windows application leaves application data available for recovery. Decide separately whether you want to keep it. Make a backup before deliberately removing the data folder.
 
