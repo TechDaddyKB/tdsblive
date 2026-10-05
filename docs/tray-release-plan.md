@@ -941,3 +941,22 @@ matrices, fresh-prefix initialization, crash/restore/service recovery, alias
 ownership, resources and packaged Linux installation remain unfinished.
 G24 remains **Not started**, with final beginner guidance, wiki/offline
 synchronization and public cumulative v1.0.1 assets still required.
+
+### G23 hosted gate diagnosis and cancellation repair — 2026-10-05
+
+Hosted [run 37313451253](https://github.com/TechDaddyKB/tdsblive/actions/runs/37313451253)
+at source `37b377d539288b2d938e1b2f42d888d6e8653469` completes the Linux desktop
+tests, native Windows tray probe, CodeQL and all Windows functional checks
+successfully. Sonar's security rating is A, new-code coverage is **90.1%**,
+duplication is 0% and reviewed hotspots are 100%. The overall workflow fails
+the reliability gate on csharpsquid:S8949: the optional Linux applications-menu
+installation task does not explicitly receive cancellation. Windows release
+packaging is consequently skipped. This is a fixable source issue, not a pending
+user approval or a reason to mark the active implementation goal blocked.
+
+The shortcut task now receives the companion's shutdown cancellation token.
+Local pinned-SDK Release desktop qualification passes **104 tests**, with the
+two Windows-only registration cases skipped on Linux (106 total, zero failures).
+The six Linux package admission tests also pass. The corrected commit still
+requires hosted analysis; these local results do not clear that gate or qualify
+a release package. G23 remains **In progress** and G24 remains **Not started**.
