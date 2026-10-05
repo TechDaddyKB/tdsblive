@@ -131,8 +131,10 @@ final cumulative-package qualification):
 
 ### Blockers
 
-Current protected checks, remaining DPI/theme/resource qualification and final
-cumulative desktop/runner package repeats remain required. No user decision is
+G23 is accepted with the documented memory, KDE and representative-matrix
+limitations. Longer resource investigation and the remaining desktop/runner
+matrix are future work. G24 still requires protected current-source checks,
+exact cumulative-package qualification and publication. No user decision is
 pending for the investigated Python examples.
 
 ## G24 — Documentation, qualification and publication
@@ -1870,3 +1872,22 @@ The failed/unstarted jobs are retried. GitHub's current Actions incident
 assignment delays across configurations. Required checks and secret isolation
 are unchanged. Current repository API checks list no open Dependabot or CodeQL
 alerts. v1.0.1 remains unpublished at this checkpoint; publication is required.
+
+### G24 current-source reliability repair — 2026-10-05
+
+Protected run [37374537766](https://github.com/TechDaddyKB/tdsblive/actions/runs/37374537766)
+at `0c7a9fb3d1ccf0ececca7fcc9f36e83ab81ec2d8` passes native Windows tray,
+Linux desktop tests, Windows inventory, .NET/frontend regression tests, replay,
+HTTP/crash/financial recovery, real browser qualification and restart/restore.
+All three CodeQL analyses pass. SonarQube reports security, coverage (86.8%),
+duplication and reviewed hotspots passing, but blocks reliability on S3869:
+the native Linux ownership lease extracted a raw descriptor using
+`SafeHandle.DangerousGetHandle`. Packaging is correctly prevented.
+
+The `flock` P/Invoke now accepts `SafeFileHandle` directly, allowing the runtime
+to hold a safe reference during the native call. No suppression or protection
+exception is added. The full pinned Linux desktop suite passes **124**, with
+**2 Windows-only skips**, zero failures; owned lease acquisition, duplicate
+activation, aliases and release/reacquisition remain covered. Ignored local
+evidence: `artifacts/tray-safehandle-tests/`. New protected checks and final main
+packages are required; v1.0.1 and the prepared wiki are not yet published.

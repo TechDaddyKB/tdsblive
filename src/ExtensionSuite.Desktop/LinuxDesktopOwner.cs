@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 namespace ExtensionSuite.Desktop;
 
@@ -39,7 +40,7 @@ internal sealed class LinuxDesktopOwner : IDisposable
             RequestOpen(requestPath);
             return null;
         }
-        if (Flock(lease.SafeFileHandle.DangerousGetHandle().ToInt32(), 2 | 4) == 0)
+        if (Flock(lease.SafeFileHandle, 2 | 4) == 0)
             return new(lease, requestPath);
         var nativeError = Marshal.GetLastPInvokeError();
         lease.Dispose();
@@ -100,5 +101,5 @@ internal sealed class LinuxDesktopOwner : IDisposable
     }
 
     [DllImport("libc", EntryPoint = "flock", SetLastError = true)]
-    private static extern int Flock(int descriptor, int operation);
+    private static extern int Flock(SafeFileHandle descriptor, int operation);
 }
