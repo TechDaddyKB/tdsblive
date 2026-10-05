@@ -19,7 +19,11 @@ mode = (root / 'mode').read_text().strip()
 if sys.argv[1:] == ['wineboot.exe', '--init']:
     if mode == 'init-fails':
         sys.exit(23)
-    (Path(os.environ['WINEPREFIX']) / 'drive_c').mkdir(parents=True)
+    prefix = Path(os.environ['WINEPREFIX'])
+    # Match Wine: the launcher must prepare the prefix directory before init.
+    if not prefix.is_dir() or (prefix / 'drive_c').exists() or (prefix / 'dosdevices').exists():
+        sys.exit(23)
+    (prefix / 'drive_c').mkdir()
     (root / 'initialized').write_text(os.environ['WINEDLLOVERRIDES'])
     sys.exit(0)
 

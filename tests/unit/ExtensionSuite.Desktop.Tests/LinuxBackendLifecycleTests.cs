@@ -74,6 +74,7 @@ public sealed class LinuxBackendLifecycleTests
     public async Task ExplicitNewPrefixIsInitializedBeforeBackendStartup()
     {
         using var runner = new OwnedRunner(createNew: true);
+        Assert.False(Directory.Exists(Path.GetDirectoryName(runner.Settings.PrefixDirectory)));
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         using var process = await LinuxBackendProcess.StartAsync(runner.Settings, true, deadline.Token);
         Assert.Equal("mscoree,mshtml=", File.ReadAllText(Path.Combine(runner.Root, "initialized")));
@@ -148,7 +149,8 @@ public sealed class LinuxBackendLifecycleTests
             var application = Path.Combine(Root, "TDSBLive.exe");
             File.WriteAllText(application, "Owned transport fixture; never executed.");
             File.WriteAllText(Path.Combine(Root, "ExtensionSuite.DesktopControl.dll"), "Owned completeness marker.");
-            var prefix = Path.Combine(Root, "Windows settings with spaces");
+            var prefix = createNew ? Path.Combine(Root, "new launcher settings", "Windows settings with spaces") :
+                Path.Combine(Root, "Windows settings with spaces");
             string? proton = null;
             if (kind == LinuxRunnerKind.Umu)
             {

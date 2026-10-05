@@ -118,7 +118,7 @@ final cumulative-package qualification):
 | --- | --- | --- |
 | KDE X11 native menu, tooltip, browser, restart and quit | Native `2989331` with protected `5ff394f9` backend under Wine; actual interactions, retained profile, replaced backend, exit 0 and SQLite integrity | Repeat on final cumulative package |
 | KDE Wayland/XWayland | Native `f20fdc8` with protected `5ff394f9` backend under Wine; actual menu/browser, Cancel-first Enter/Escape, confirmed restart/quit and full tray-service recovery | Repeat on final cumulative package; complete UMU matrix |
-| Hyprland/Omarchy Wayland | Earlier isolated Quickshell panel evidence; not a complete compositor qualification | Actual owned compositor/session interactions with current exporter |
+| Hyprland/Omarchy Wayland | Actual owned Hyprland 0.56.2 compositor with Quickshell: Wine representative and protected `7b58702` UMU menus, Cancel-first keyboard, confirmed restart, native browser and tray recovery | Remaining final cumulative qualification |
 | Direct Wine and UMU native companion | Owned Wine GUI evidence; corrected native UMU default starts selected profile and passes KDE Wayland cancellation/restart/browser/quit | Remaining desktop/runner matrix and final exact packages |
 | New and retained prefixes | Production selection/startup tests; representative actual retained owned prefix | Actual production new-prefix initialization and alias/exclusive-ownership scenarios |
 | Missing/reappearing tray | Transport watcher replacement tests; actual KDE Wayland watcher loss shows fallback, full service restoration recovers menu | Final-package repeat; panel-only loss retains KDE stale-host limitation documented in guide |
@@ -126,7 +126,7 @@ final cumulative-package qualification):
 | Applications-menu shortcut | Owned GIO/installation tests | Final packaged shortcut installation and launch |
 | Window sizes, themes and keyboard | First-run rendering/resize and KDE X11 native cancellation evidence | Complete Linux short/narrow/DPI/theme and Wayland keyboard scenarios |
 | Resource use | Owned ten-second idle sample: companion/backend combined 472,338,432 bytes RSS, 3.9% of one core | Compare equivalent backend-only baseline and investigate material regressions |
-| Protected current-source package | `f20fdc8` full protected Windows/Linux/SonarQube/package run and Advanced Security succeed; subsequent UMU repair passes local desktop tests and actual GUI | Protected full run after UMU repair, then final protected main build |
+| Protected current-source package | Head `a507b1e` passes full Windows/Linux/SonarQube/package run and CodeQL; downloaded Linux native/backend markers both identify protected PR merge `7b58702` | Final protected main build and cumulative artifact qualification |
 | Documentation and public release | Candidate Linux/Windows guide preparation, screenshots and offline checks | G24 full audit/wiki/final OBS and package qualification, then publish v1.0.1 |
 
 ### Blockers
@@ -1497,3 +1497,102 @@ A separate run of all **18 LinuxLauncherSettingsTests** with inherited
 compatibility default respects an explicit ICU choice. The full **118-pass**
 desktop suite and actual default-mode GUI evidence remain the relevant repair
 checks. No subsequent functional source changes were made after those checks.
+
+### G23 Hyprland input and protected-package checkpoint — 2026-10-05
+
+Protected [Windows/Linux run 37354024481](https://github.com/TechDaddyKB/tdsblive/actions/runs/37354024481)
+passes every job for head `a507b1e224990bb75b1fb75b561f3c7851786648`:
+Windows inventory, native tray probe, Linux desktop tests/coverage, Windows
+build/tests/SonarQube/regression/packages and scanned Linux bundle. All PR checks,
+including [CodeQL run 37354024126](https://github.com/TechDaddyKB/tdsblive/actions/runs/37354024126),
+pass. The downloaded Linux archive has SHA-256
+`879fbee9280d787d68ba609c00a5ab288af2c9949122e54e85bba135b685c178`.
+Its 1,208 tar entries were bounded and validated before extraction; extracted
+files pass deterministic secrets scanning. Native and backend package metadata
+both identify `7b58702b62478ac958a6848959883b32b1ad83ed`, the protected PR
+merge of main `5ee5508` and head `a507b1e`. The backend archive checksum is
+`5c5001c4b2f3ec46699e94c08707bbc51efd860f58b90c374e1ea7fe101699b7`.
+This candidate is not a published release or a final main build.
+
+Actual isolated Hyprland 0.56.2-2 (commit `efb5099`), Aquamarine 0.15.0-2,
+Quickshell 0.3.1 and XWayland run inside an owned virtual KWin parent on a
+private session bus, private HOME/XDG directories and private network namespace.
+Only the AMD render node is available; physical display card nodes and the
+production Quickshell session are excluded. The real 1280×900 compositor output
+is captured with `grim`, scanned and visually inspected.
+
+Ephemeral keyboard/keymap clients and global XTest did not reliably exercise the
+owned native dialogs. Those fixture attempts are not application acceptance or
+proof of an application defect. The repaired test input keeps a Wayland virtual
+pointer and a static US evdev virtual keyboard connected to the owned seat.
+The helper rejects runtime paths outside `/tmp/h-` and sockets other than the
+owned `wayland-1`. It uses official unstable Wayland protocols and a test-only
+compiler, and is not shipped or added as an application dependency.
+
+With representative native `a507b1e` and protected `9e06170` backend under Wine
+11.17, actual tray pointer actions open the menu and native dialogs. Enter cancels
+Restart without replacing backend `1961213`; Tab then Enter confirms Restart
+and replaces it with `1963830`. Both Enter and Escape cancel Quit. Open editor
+opens the retained loopback address in the owned Linux Chromium profile. Removing
+Quickshell displays the fallback controls; restoring it restores the actual
+three-item menu. Tab then Enter confirms Quit and the companion exits 0. A
+read-only SQLite integrity check passes afterward; sample name, port 47191,
+disabled LAN and disabled integrations remain unchanged. Evidence resides in
+ignored `artifacts/tray-hyprland-native/wine-a507b1e-stable-keyboard/`.
+
+The exact downloaded protected `7b58702` native/backend bundle also starts under
+UMU 1.4.4 and GE-Proton11-6 in the actual Hyprland fixture. No fixture NLS override
+is supplied: the production child default is exercised. Enter cancels Restart
+without replacing child `1969638`; Tab then Enter confirms it and replaces the
+owned runner child with `1972009`, retaining the profile and port 49595. Enter
+and Escape cancel Quit; native browser handoff and missing/reappearing tray
+checks pass. Evidence is in ignored
+`artifacts/tray-hyprland-native/umu-protected-7b58702-exact/`.
+Tab then Enter confirms final UMU Quit; native exit is 0. A read-only SQLite
+integrity check afterward passes, with the sample profile, port 49595 and disabled
+LAN/integrations retained.
+
+The exact protected `7b58702` package also repeats the Hyprland scenarios under
+direct Wine. Enter cancels Restart with child `1979453` retained, then Tab/Enter
+replaces it with `1980777`. Enter/Escape cancel Quit, Open editor adds an actual
+native-browser handoff, and loss/restoration of Quickshell shows fallback/restores
+the menu. Tab/Enter confirms final Quit and native exit is 0. Evidence is retained
+in ignored `artifacts/tray-hyprland-native/wine-protected-7b58702-exact/`.
+Post-shutdown read-only SQLite integrity passes. Sample name, port 60655, disabled LAN and disabled integrations are retained.
+
+The fallback window remains visible after the icon returns. Its close action
+hides the window and leaves the backend running; it does not imply a remaining
+tray failure. The beginner guide now explains that users can close this window
+and use the returned icon. G23 remains **In progress**; G24 remains **Not started**.
+
+### G23 actual new-prefix startup regression — 2026-10-05
+
+The protected `7b58702` package was exercised through its real first-run window
+with no saved launcher settings, no inherited Wine prefix and no existing app
+profile. Choosing **Start a new empty TDSBLive setup**, the suggested folder and
+**Add TDSBLive to my applications menu** installs the owned shortcut, but startup
+fails visibly. The suggested path's launcher-settings parent does not yet exist;
+Wine cannot create that nested prefix. No backend is started or existing profile
+changed. Ignored captures in
+`artifacts/tray-hyprland-native/wine-protected-7b58702-new-prefix/` show the actual
+choice, shortcut selection and failure message. This is a confirmed first-run
+bug, not a runner/runtime false-positive or a passing initialization check.
+
+`LinuxBackendProcess.InitializeWineAsync` now creates the selected prefix directory
+before Wine initialization. Wine still creates `drive_c` and `dosdevices`; the
+launcher does not precreate drive mappings or stop an existing prefix server.
+The owned runner regression now rejects a missing prefix and launcher-created
+drive mappings, and the new-profile scenario uses a missing nested parent. The
+focused regression fails before this repair and passes afterward. The full
+local desktop suite passes **118 tests**, with **2 Windows-only skips** (120 total),
+using pinned .NET 10.0.401; results are retained in ignored
+`artifacts/tray-new-prefix-tests/desktop-tests.trx`. The repaired native diagnostic build then passes the actual first-run checkbox
+flow on the owned Hyprland compositor: production Wine initialization creates
+its own drive mappings, the default loopback editor at port 17474 opens, LAN and
+all integrations remain disabled, and the selected profile is saved under the
+suggested prefix. Selecting the optional applications-menu checkbox creates the
+owned desktop entry. Evidence is retained in ignored
+`artifacts/tray-hyprland-native/wine-new-prefix-repaired-gui/`.
+This uses local repaired native source with the protected `7b58702` backend;
+a new protected bundle and final shortcut-launch qualification are still required.
+G23 stays **In progress**.

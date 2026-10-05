@@ -56,8 +56,10 @@ public sealed class LinuxBackendProcess : IDisposable
 
     private static async Task InitializeWineAsync(LinuxLauncherSettings selected, CancellationToken cancellationToken)
     {
-        // Wine must create its own drive mappings before .NET starts. Never
-        // precreate drive_c/dosdevices or shut down an existing prefix server.
+        // The suggested prefix can have a missing parent on a first launch.
+        // Prepare its directory; Wine must create its own drive mappings.
+        // Never precreate drive_c/dosdevices or stop an existing prefix server.
+        Directory.CreateDirectory(selected.PrefixDirectory);
         var info = selected.CreateStartInfo(createNewProfile: true);
         info.ArgumentList.Clear();
         info.ArgumentList.Add("wineboot.exe");

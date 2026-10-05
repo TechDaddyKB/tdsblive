@@ -102,8 +102,9 @@ If your Linux panel closes and no control window appears, use the editor's
 
 ![The actual control window used when the desktop tray is unavailable](images/tray-windows-fallback.png)
 
-Closing this window leaves the background app running. Choose **Quit** to stop
-it. The editor's **Backup and recovery** controls remain another way to restart
+If the tray icon returns, you can close the control window and use the icon
+again. Closing this window leaves the background app running. Choose **Quit**
+to stop it. The editor's **Backup and recovery** controls remain another way to restart
 or quit when the editor still works.
 
 If desktop controls say TDSBLive stopped unexpectedly, check whether the editor
