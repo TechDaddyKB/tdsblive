@@ -78,7 +78,8 @@ $desktopIds = New-Object 'System.Collections.Generic.HashSet[int]'
 function Wait-For([scriptblock]$Probe, [string]$Failure, [int]$Seconds = 30) {
     $deadline = [DateTime]::UtcNow.AddSeconds($Seconds)
     while ([DateTime]::UtcNow -lt $deadline) {
-        try { $value = & $Probe; if ($value) { return $value } } catch { }
+        try { $value = & $Probe; if ($value) { return $value } }
+        catch { Write-Verbose 'Owned UI is not ready; retrying within the bounded deadline.' }
         Start-Sleep -Milliseconds 150
     }
     throw $Failure

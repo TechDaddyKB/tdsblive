@@ -14,6 +14,7 @@ public sealed class DesktopSession : IAsyncDisposable
     private Task? monitoring;
     public bool External { get; }
     public bool OpenEditor { get; }
+    internal int ControlPort => server.Port;
     public ServerConfiguration EditorServer { get; private init; } = new();
     private DesktopSession(DesktopControlServer server, bool external, bool openEditor)
         => (this.server, External, OpenEditor) = (server, external, openEditor);
@@ -33,23 +34,18 @@ public sealed class DesktopSession : IAsyncDisposable
             ? configured : configured with { Host = "127.0.0.1" };
     }
 
-    public static async Task<DesktopSession?> StartAsync(WebApplication app, IConfiguration configuration)
+    public static Task<DesktopSession?> StartAsync(WebApplication app, IConfiguration configuration) =>
+        StartAsync(app, configuration, Console.OpenStandardInput(), Console.IsInputRedirected);
+
+    internal static async Task<DesktopSession?> StartAsync(WebApplication app, IConfiguration configuration,
+        Stream bootstrapInput, bool redirected)
     {
         var mode = configuration["TDSBLive:DesktopMode"] ?? "automatic";
         if (mode is not ("automatic" or "external" or "off")) throw new ArgumentException("Desktop mode must be automatic, external or off.");
         var companionPath = Path.Combine(AppContext.BaseDirectory, "desktop", "TDSBLive.Desktop.exe");
         var external = mode == "external";
         if (mode == "off" || !external && (!OperatingSystem.IsWindows() || !File.Exists(companionPath))) return null;
-        var sessionToken = DesktopProtocol.NewSessionToken();
-        if (external)
-        {
-            if (!Console.IsInputRedirected) throw new ArgumentException("External desktop mode needs a launcher pipe.");
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var bootstrap = await DesktopProtocol.ReadAsync<DesktopBootstrap>(Console.OpenStandardInput(), timeout.Token);
-            if (!DesktopProtocol.ValidSessionToken(bootstrap.SessionToken) || bootstrap.Port != 0)
-                throw new ArgumentException("Invalid external desktop bootstrap.");
-            sessionToken = bootstrap.SessionToken;
-        }
+        var sessionToken = external ? await ReadExternalTokenAsync(bootstrapInput, redirected) : DesktopProtocol.NewSessionToken();
         var configured = app.Services.GetRequiredService<ApplicationConfiguration>().Server;
         var editorServer = LocalEditorServer(configured);
         // An explicit LAN interface does not also listen on loopback. Add a local
@@ -65,28 +61,40 @@ public sealed class DesktopSession : IAsyncDisposable
         if (external)
         {
             // Port is not a capability. The session credential is never printed.
-            Console.WriteLine(DesktopProtocol.ReadyPrefix + bootstrapInfo.Port);
-            Console.Out.Flush();
+            await Console.Out.WriteLineAsync(DesktopProtocol.ReadyPrefix + bootstrapInfo.Port);
+            await Console.Out.FlushAsync();
         }
-        else
-        {
-            var info = new ProcessStartInfo(companionPath)
-            {
-                UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true
-            };
-            info.ArgumentList.Add("--attach");
-            try
-            {
-                session.companion = Process.Start(info) ?? throw new InvalidOperationException();
-                await DesktopProtocol.WriteAsync(session.companion.StandardInput.BaseStream, bootstrapInfo, CancellationToken.None);
-                session.companion.StandardInput.Close();
-            }
-            catch (Exception error) when (error is Win32Exception or InvalidOperationException or IOException)
-            {
-                Console.Error.WriteLine("Desktop controls could not start. TDSBLive is still running; use Settings in the editor to restart or quit.");
-            }
-        }
+        else await session.StartCompanionAsync(companionPath, bootstrapInfo);
         return session;
+    }
+
+    private static async Task<string> ReadExternalTokenAsync(Stream input, bool redirected)
+    {
+        if (!redirected) throw new ArgumentException("External desktop mode needs a launcher pipe.");
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var bootstrap = await DesktopProtocol.ReadAsync<DesktopBootstrap>(input, timeout.Token);
+        if (!DesktopProtocol.ValidSessionToken(bootstrap.SessionToken) || bootstrap.Port != 0)
+            throw new ArgumentException("Invalid external desktop bootstrap.");
+        return bootstrap.SessionToken;
+    }
+
+    private async Task StartCompanionAsync(string companionPath, DesktopBootstrap bootstrapInfo)
+    {
+        var info = new ProcessStartInfo(companionPath)
+        {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true
+        };
+        info.ArgumentList.Add("--attach");
+        try
+        {
+            companion = Process.Start(info) ?? throw new InvalidOperationException();
+            await DesktopProtocol.WriteAsync(companion.StandardInput.BaseStream, bootstrapInfo, CancellationToken.None);
+            companion.StandardInput.Close();
+        }
+        catch (Exception error) when (error is Win32Exception or InvalidOperationException or IOException)
+        {
+            await Console.Error.WriteLineAsync("Desktop controls could not start. TDSBLive is still running; use Settings in the editor to restart or quit.");
+        }
     }
 
     public void SetReady() => server.SetReady();
@@ -101,20 +109,24 @@ public sealed class DesktopSession : IAsyncDisposable
             while (!monitorStopping.IsCancellationRequested)
             {
                 var missing = DateTimeOffset.UtcNow - (server.LastContact ?? started) > TimeSpan.FromSeconds(12);
-                health.Set("Desktop controls", new(missing ? "degraded" : server.LastContact is null ? "starting" : "running"));
+                var connectedState = server.LastContact is null ? "starting" : "running";
+                health.Set("Desktop controls", new(missing ? "degraded" : connectedState));
                 if (missing && !degraded)
                     logger.LogWarning("Desktop controls are unavailable. TDSBLive remains running; use Settings in the editor to restart or quit, or open the TDSBLive shortcut again.");
                 degraded = missing;
                 await Task.Delay(TimeSpan.FromSeconds(3), monitorStopping.Token);
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+            // Monitoring is canceled before the host's services are disposed.
+        }
         finally { health.Set("Desktop controls", new("stopped")); }
     }
 
     public async Task StopMonitoringAsync()
     {
-        monitorStopping.Cancel();
+        await monitorStopping.CancelAsync();
         if (monitoring is not null) await monitoring;
     }
 

@@ -20,6 +20,27 @@ import time
 import urllib.request
 from pathlib import Path
 
+SETUP_ROUTE = "/api/setup"
+
+
+def checked_file(value, names):
+    """Only run the expected host/SDK files, never a shell, script or CLI flag."""
+    if not value or any(ord(character) < 32 for character in value):
+        raise ValueError("An explicit application file path is required")
+    candidate = Path(value).resolve(strict=True)
+    if not candidate.is_file() or candidate.name.lower() not in names:
+        raise ValueError("The application file does not have an expected name")
+    return str(candidate)
+
+
+def checked_command(command):
+    if len(command) == 1:
+        return [checked_file(command[0], {"tdsblive.exe"})]
+    if len(command) == 2:
+        return [checked_file(command[0], {"dotnet", "dotnet.exe"}),
+                checked_file(command[1], {"extensionsuite.host.dll"})]
+    raise ValueError("Only a packaged host or the pinned SDK plus host assembly is allowed")
+
 
 def free_port():
     with socket.socket() as listener:
@@ -39,6 +60,7 @@ def request(bootstrap, command, timeout=10):
 
 
 def start_host(command, profile):
+    command = checked_command(command)
     process = subprocess.Popen(command + ["--TDSBLive:DataDirectory", str(profile),
                                           "--TDSBLive:DesktopMode=external", "--TDSBLive:OpenEditor=false"],
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -56,26 +78,35 @@ def start_host(command, profile):
     for stream in (process.stdout, process.stderr):
         threading.Thread(target=drain, args=(stream,), daemon=True).start()
     try:
-        deadline = time.monotonic() + 30
-        while time.monotonic() < deadline:
-            if process.poll() is not None:
-                raise RuntimeError("Owned host stopped before desktop readiness")
-            try:
-                line = lines.get(timeout=0.1)
-            except queue.Empty:
-                continue
-            if line.startswith("TDSBLIVE-DESKTOP "):
-                bootstrap = {"Port": int(line.split()[1]), "SessionToken": token}
-                while time.monotonic() < deadline:
-                    if request(bootstrap, "status")["State"] == "running":
-                        return process, bootstrap, captured
-                    time.sleep(0.05)
-                break
-        raise RuntimeError("Owned host readiness timed out")
+        bootstrap = ready(process, lines, token)
+        return process, bootstrap, captured
     except BaseException:
         process.terminate()
         process.wait(timeout=15)
         raise
+
+
+def ready(process, lines, token):
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            raise RuntimeError("Owned host stopped before desktop readiness")
+        try:
+            line = lines.get(timeout=0.1)
+        except queue.Empty:
+            continue
+        if line.startswith("TDSBLIVE-DESKTOP "):
+            bootstrap = {"Port": int(line.split()[1]), "SessionToken": token}
+            return running(bootstrap, deadline)
+    raise RuntimeError("Owned host readiness timed out")
+
+
+def running(bootstrap, deadline):
+    while time.monotonic() < deadline:
+        if request(bootstrap, "status")["State"] == "running":
+            return bootstrap
+        time.sleep(0.05)
+    raise RuntimeError("Owned host readiness timed out")
 
 
 class BrowserClient:
@@ -92,7 +123,9 @@ class BrowserClient:
         if method != "GET":
             headers["X-TDSBLive-CSRF"] = self.csrf
             headers["Content-Type"] = "application/zip" if raw else "application/json"
-        data = body if raw else None if body is None else json.dumps(body).encode()
+        data = None
+        if body is not None:
+            data = body if raw else json.dumps(body).encode()
         if method != "GET" and data is None:
             data = b""
         message = urllib.request.Request(self.origin + route, data=data, headers=headers, method=method)
@@ -106,11 +139,11 @@ def stop_with_browser(command, profile, port, operation):
     try:
         browser = BrowserClient(port)
         if operation == "restore":
-            progress = browser.send("/api/setup")
-            browser.send("/api/setup", {"step": 1, "reviewed": False, "version": progress["version"]}, "PUT")
+            progress = browser.send(SETUP_ROUTE)
+            browser.send(SETUP_ROUTE, {"step": 1, "reviewed": False, "version": progress["version"]}, "PUT")
             backup = browser.send("/api/recovery/backup", method="POST")
-            progress = browser.send("/api/setup")
-            browser.send("/api/setup", {"step": 3, "reviewed": False, "version": progress["version"]}, "PUT")
+            progress = browser.send(SETUP_ROUTE)
+            browser.send(SETUP_ROUTE, {"step": 3, "reviewed": False, "version": progress["version"]}, "PUT")
             checked = browser.send("/api/recovery/validate", backup, "POST", raw=True)
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             outcome = executor.submit(request, bootstrap, "wait", 30)
@@ -128,6 +161,7 @@ def stop_with_browser(command, profile, port, operation):
 
 
 def qualify(command):
+    command = checked_command(command)
     with tempfile.TemporaryDirectory(prefix="tdsblive-desktop-control-") as temporary:
         profile = Path(temporary) / "profile with spaces"
         profile.mkdir()
@@ -162,7 +196,7 @@ def qualify(command):
         # Relaunch is explicitly owned by the external companion, never host death.
         process, bootstrap, captured = start_host(command, profile)
         try:
-            assert BrowserClient(port).send("/api/setup")["step"] == 1
+            assert BrowserClient(port).send(SETUP_ROUTE)["step"] == 1
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 outcome = executor.submit(request, bootstrap, "wait", 30)
                 assert request(bootstrap, "quit")["Accepted"]

@@ -239,3 +239,31 @@ tests. Actual isolated process qualification passes restart, restore, quit and
 profile integrity. Status text now distinguishes restart, stop and startup,
 and a failed address bind reports a separate recovery outcome. Windows native
 UI, both Linux runners, OBS and publication remain outstanding.
+
+Quality checkpoint: `a8ca9c059e7a80da0e96c228638254cadbae13e2` passes the
+Windows actual control lifecycle and existing frontend, capture, recovery,
+finance, rendered-browser and contract checks in
+[run 37246586286](https://github.com/TechDaddyKB/tdsblive/actions/runs/37246586286).
+Sonar rejects that candidate: 45.7% new-code coverage, reliability and security
+findings. Native package qualification therefore has not run. Required checks
+remain enforced. New headless control-window tests exercise Cancel/repeated
+clicks, close-to-hide, tray-service loss/reappearance, both themes, browser URL
+boundaries, pipe validation, connection loss and unsuccessful completion.
+Real loopback host-session tests verify external ownership, local handoff,
+heartbeat diagnostics and explicit shutdown outcomes. The coverage include now
+also names the `TDSBLive.Desktop` assembly. Desktop resources are disposed,
+lifecycle orchestration is separated into focused methods, native-call failures
+are checked, and qualification executable inputs require existing, correctly
+named host/SDK files with no arbitrary flags or scripts.
+
+The updated local solution passes 453 host tests, 88 core tests and 22 desktop
+tests with coverage. Four existing Windows-only host tests and the new native
+notification-area ownership test remain explicitly skipped on Linux. Two Python
+executable-admission tests and the actual owned process lifecycle pass. Local
+coverage initially crashes with SIGBUS while writing the `/tmp/.dotnet/shm`
+named-mutex mapping; a private `/tmp` mount using `bwrap` succeeds without changing
+the system temporary folder. Use that isolated mount plus the pinned SDK and
+`-m:1 -p:UseSharedCompilation=false` for local qualification. This is a local test
+environment workaround, not native desktop acceptance. Requalification of the
+new source on Windows/Sonar, actual native UI, all Linux and final release gates
+remain required.

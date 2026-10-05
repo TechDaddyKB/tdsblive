@@ -9,17 +9,17 @@ namespace ExtensionSuite.Desktop;
 // of a managed TrayIcon as proof that Explorer registered it. Qualification must
 // recheck this adapter when updating Avalonia.
 [SupportedOSPlatform("windows")]
-internal static class WindowsTrayRegistration
+internal static partial class WindowsTrayRegistration
 {
     public static bool IsAvailable()
     {
         var available = false;
         EnumWindows((window, parameter) =>
         {
-            GetWindowThreadProcessId(window, out var processId);
+            if (GetWindowThreadProcessId(window, out var processId) == 0) return true;
             if (processId != (uint)Environment.ProcessId) return true;
             var name = new StringBuilder(256);
-            GetClassName(window, name, name.Capacity);
+            if (GetClassName(window, name, name.Capacity) == 0) return true;
             if (!name.ToString().StartsWith("AvaloniaMessageWindow ", StringComparison.Ordinal)) return true;
             var identifier = new IconIdentifier { Size = (uint)Marshal.SizeOf<IconIdentifier>(), Window = window, Id = 1 };
             available = Shell_NotifyIconGetRect(ref identifier, out _) == 0;
@@ -41,13 +41,13 @@ internal static class WindowsTrayRegistration
     private struct Rectangle { public int Left, Top, Right, Bottom; }
     private delegate bool WindowVisitor(IntPtr window, IntPtr parameter);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool EnumWindows(WindowVisitor visitor, IntPtr parameter);
-    [DllImport("user32.dll")]
-    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+    private static partial bool EnumWindows(WindowVisitor visitor, IntPtr parameter);
+    [LibraryImport("user32.dll")]
+    private static partial uint GetWindowThreadProcessId(IntPtr window, out uint processId);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetClassName(IntPtr window, StringBuilder name, int maximum);
-    [DllImport("shell32.dll")]
-    private static extern int Shell_NotifyIconGetRect(ref IconIdentifier identifier, out Rectangle rectangle);
+    [LibraryImport("shell32.dll")]
+    private static partial int Shell_NotifyIconGetRect(ref IconIdentifier identifier, out Rectangle rectangle);
 }

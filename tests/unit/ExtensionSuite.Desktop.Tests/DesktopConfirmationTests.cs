@@ -16,7 +16,8 @@ public sealed class TestApp : Application
 
 public static class TestAppBuilder
 {
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<TestApp>().UseHeadless(new AvaloniaHeadlessPlatformOptions());
+    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<TestApp>()
+        .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }).UseSkia();
 }
 
 public sealed class DesktopConfirmationTests

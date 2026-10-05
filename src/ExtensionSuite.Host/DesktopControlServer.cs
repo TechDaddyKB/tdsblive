@@ -22,6 +22,7 @@ public sealed class DesktopControlServer : IAsyncDisposable
     private volatile bool ready;
     private int openRequests;
     private long lastContactTicks;
+    internal int Port => ((IPEndPoint)listener.LocalEndpoint).Port;
     public DateTimeOffset? LastContact => Interlocked.Read(ref lastContactTicks) is var ticks && ticks != 0 ? new(ticks, TimeSpan.Zero) : null;
 
     public DesktopControlServer(ApplicationLifecycle lifecycle, IHostApplicationLifetime lifetime, string editorUrl, string sessionToken)
@@ -48,7 +49,7 @@ public sealed class DesktopControlServer : IAsyncDisposable
         completed.TrySetResult(new(state, editorUrl));
         // A connected companion waits for the post-checkpoint/restore outcome.
         // No companion or a failed companion must never hold shutdown indefinitely.
-        await Task.WhenAny(delivered.Task, Task.Delay(TimeSpan.FromSeconds(2)));
+        await Task.WhenAny(delivered.Task, Task.Delay(TimeSpan.FromSeconds(2), CancellationToken.None));
     }
 
     private async Task AcceptAsync()
@@ -58,13 +59,16 @@ public sealed class DesktopControlServer : IAsyncDisposable
             while (!stopping.IsCancellationRequested)
             {
                 var client = await listener.AcceptTcpClientAsync(stopping.Token);
-                if (!clients.Wait(0)) { client.Dispose(); continue; }
+                if (!await clients.WaitAsync(0, stopping.Token)) { client.Dispose(); continue; }
                 var task = ServeAsync(client);
                 lock (connections) connections.Add(task);
                 _ = task.ContinueWith(finished => { lock (connections) connections.Remove(finished); }, TaskScheduler.Default);
             }
         }
-        catch (Exception error) when (error is OperationCanceledException or SocketException or ObjectDisposedException) { }
+        catch (Exception error) when (error is OperationCanceledException or SocketException or ObjectDisposedException)
+        {
+            // Listener closure and cancellation are normal during owned shutdown.
+        }
     }
 
     private async Task ServeAsync(TcpClient client)
@@ -79,27 +83,7 @@ public sealed class DesktopControlServer : IAsyncDisposable
                 var request = await DesktopProtocol.ReadAsync<DesktopRequest>(stream, requestDeadline.Token);
                 if (!DesktopProtocol.Authenticate(sessionToken, request.SessionToken)) return;
                 Interlocked.Exchange(ref lastContactTicks, DateTimeOffset.UtcNow.Ticks);
-                DesktopReply reply;
-                var stopAfterReply = false;
-                switch (request.Command)
-                {
-                    case "wait":
-                        reply = await completed.Task.WaitAsync(stopping.Token);
-                        break;
-                    case "status":
-                        reply = completed.Task.IsCompletedSuccessfully ? completed.Task.Result :
-                            new(lifecycle.Operation?.Kind is "restart" or "restore" ? "restarting" :
-                                lifecycle.Operation is not null ? "stopping" : ready ? "running" : "starting", editorUrl,
-                                OpenRequests: Volatile.Read(ref openRequests));
-                        break;
-                    case "restart" or "quit":
-                        stopAfterReply = ready && !completed.Task.IsCompleted && lifecycle.Request(request.Command);
-                        reply = new(stopAfterReply ? "stopping" : "busy", editorUrl, stopAfterReply);
-                        break;
-                    default:
-                        reply = new("unsupported");
-                        break;
-                }
+                var (reply, stopAfterReply) = await ReplyAsync(request.Command);
                 using var writeDeadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
                 writeDeadline.CancelAfter(TimeSpan.FromSeconds(3));
                 // Once admitted, a lifecycle request stops even if its caller disconnects.
@@ -107,9 +91,37 @@ public sealed class DesktopControlServer : IAsyncDisposable
                 finally { if (stopAfterReply) lifetime.StopApplication(); }
                 if (request.Command == "wait") delivered.TrySetResult();
             }
-            catch (Exception error) when (error is IOException or SocketException or JsonException or OperationCanceledException or ObjectDisposedException) { }
+            catch (Exception error) when (error is IOException or SocketException or JsonException or OperationCanceledException or ObjectDisposedException)
+            {
+                // Reject malformed or disconnected clients without logging capabilities.
+            }
             finally { clients.Release(); }
         }
+    }
+
+    private async Task<(DesktopReply Reply, bool Stop)> ReplyAsync(string command)
+    {
+        switch (command)
+        {
+            case "wait": return (await completed.Task.WaitAsync(stopping.Token), false);
+            case "status": return (Status(), false);
+            case "restart" or "quit":
+                var admitted = ready && !completed.Task.IsCompleted && lifecycle.Request(command);
+                return (new(admitted ? "stopping" : "busy", editorUrl, admitted), admitted);
+            default: return (new("unsupported"), false);
+        }
+    }
+
+    private DesktopReply Status()
+    {
+        if (completed.Task.IsCompletedSuccessfully) return completed.Task.Result;
+        var state = lifecycle.Operation?.Kind switch
+        {
+            "restart" or "restore" => "restarting",
+            "quit" => "stopping",
+            _ => ready ? "running" : "starting"
+        };
+        return new(state, editorUrl, OpenRequests: Volatile.Read(ref openRequests));
     }
 
     public async ValueTask DisposeAsync()

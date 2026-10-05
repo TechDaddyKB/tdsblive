@@ -6,15 +6,15 @@ namespace ExtensionSuite.Host;
 /// <summary>Exclusive profile ownership without storing desktop credentials on disk.</summary>
 public sealed class DesktopProfileOwner : IAsyncDisposable, IDisposable
 {
-    private readonly FileStream lease;
+    private FileStream? lease;
     private readonly string requestPath;
     private readonly CancellationTokenSource stopping = new();
     private Task? watching;
     private bool disposed;
-    public string LeasePath => lease.Name;
+    public string LeasePath { get; }
 
     private DesktopProfileOwner(FileStream lease, string requestPath)
-        => (this.lease, this.requestPath) = (lease, requestPath);
+        => (this.lease, this.requestPath, LeasePath) = (lease, requestPath, lease.Name);
 
     public static DesktopProfileOwner? AcquireOrRequestOpen(string directory)
     {
@@ -69,7 +69,7 @@ public sealed class DesktopProfileOwner : IAsyncDisposable, IDisposable
                 catch (OperationCanceledException) { break; }
                 catch (IOException) { await Task.Delay(500, stopping.Token); }
             }
-        });
+        }, stopping.Token);
     }
 
     public void Dispose()
@@ -77,16 +77,25 @@ public sealed class DesktopProfileOwner : IAsyncDisposable, IDisposable
         if (disposed) return;
         disposed = true;
         stopping.Cancel();
-        lease.Dispose();
+        ReleaseOwnership();
+    }
+
+    public void ReleaseOwnership()
+    {
+        lease?.Dispose();
+        lease = null;
     }
 
     public async Task StopWatchingAsync()
     {
-        stopping.Cancel();
+        await stopping.CancelAsync();
         if (watching is not null)
         {
             try { await watching; }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                // A watcher canceled before its first scheduled iteration is stopped too.
+            }
         }
     }
 

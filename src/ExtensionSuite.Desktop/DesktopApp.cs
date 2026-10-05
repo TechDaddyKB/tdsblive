@@ -13,9 +13,11 @@ using ExtensionSuite.DesktopControl;
 
 namespace ExtensionSuite.Desktop;
 
-public sealed class DesktopApp : Application
+public sealed class DesktopApp : Application, IDisposable
 {
+    private const string RunningLabel = "TDSBLive is running";
     private readonly CancellationTokenSource stopping = new();
+    private readonly CancellationToken stopped;
     private readonly NativeMenuItem open = new("Open editor");
     private readonly NativeMenuItem restart = new("Restart");
     private readonly NativeMenuItem quit = new("Quit");
@@ -31,6 +33,19 @@ public sealed class DesktopApp : Application
     private bool trayUnavailable;
     private bool exiting;
     private string statusLabel = "Starting TDSBLive…";
+    private readonly Action<Uri> launchBrowser;
+    private readonly Func<TrayIcon?, bool> trayRegistered;
+    private readonly Func<string, Task<bool>> confirmation;
+    internal Window? Controls => controls;
+
+    public DesktopApp() : this(LaunchBrowser, IsTrayRegistered, ConfirmAsync) { }
+
+    internal DesktopApp(Action<Uri> launchBrowser, Func<TrayIcon?, bool> trayRegistered,
+        Func<string, Task<bool>> confirmation)
+    {
+        stopped = stopping.Token;
+        (this.launchBrowser, this.trayRegistered, this.confirmation) = (launchBrowser, trayRegistered, confirmation);
+    }
 
     public override void Initialize() => Styles.Add(new FluentTheme());
 
@@ -40,45 +55,65 @@ public sealed class DesktopApp : Application
         {
             lifetime = desktop;
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            desktop.Exit += (_, _) => { stopping.Cancel(); tray?.Dispose(); };
-            var menu = new NativeMenu();
-            menu.Items.Add(open);
-            menu.Items.Add(restart);
-            menu.Items.Add(quit);
-            open.Click += (_, _) => OpenEditor();
-            restart.Click += async (_, _) => await RequestAsync("restart");
-            quit.Click += async (_, _) => await RequestAsync("quit");
-            tray = new TrayIcon { Icon = CreateIcon(), ToolTipText = "TDSBLive — Starting", Menu = menu, IsVisible = true };
-            tray.Clicked += (_, _) => OpenEditor();
-            TrayIcon.SetIcons(this, new TrayIcons { tray });
-            SetState("Starting TDSBLive…", false);
+            desktop.Exit += (_, _) => Dispose();
+            InitializeTray();
             _ = StartAsync();
         }
         base.OnFrameworkInitializationCompleted();
     }
 
-    private async Task StartAsync()
+    private Task StartAsync() => StartAsync(Console.OpenStandardInput(),
+        Program.Arguments.SequenceEqual(new[] { "--attach" }) && Console.IsInputRedirected);
+
+    internal async Task StartAsync(Stream input, bool attached)
     {
-        Task? waiting = null;
         try
         {
-            if (!Program.Arguments.SequenceEqual(new[] { "--attach" }) || !Console.IsInputRedirected)
+            if (!attached)
             {
                 ShowControls("This desktop companion needs to be started by TDSBLive. Open TDSBLive using its shortcut.");
                 return;
             }
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            bootstrap = await DesktopProtocol.ReadAsync<DesktopBootstrap>(Console.OpenStandardInput(), timeout.Token);
-            waiting = WaitForCompletionAsync();
-            while (!stopping.IsCancellationRequested)
+            var session = await DesktopProtocol.ReadAsync<DesktopBootstrap>(input, timeout.Token);
+            await AttachAsync(session);
+        }
+        catch (Exception error) when (error is IOException or OperationCanceledException or ArgumentException or System.Text.Json.JsonException)
+        {
+            ConnectionFailed();
+        }
+    }
+
+    internal void InitializeTray()
+    {
+        var menu = new NativeMenu();
+        menu.Items.Add(open);
+        menu.Items.Add(restart);
+        menu.Items.Add(quit);
+        open.Click += (_, _) => OpenEditor();
+        restart.Click += async (_, _) => await RequestAsync("restart");
+        quit.Click += async (_, _) => await RequestAsync("quit");
+        tray = new TrayIcon { Icon = CreateIcon(), ToolTipText = "TDSBLive — Starting", Menu = menu, IsVisible = true };
+        tray.Clicked += (_, _) => OpenEditor();
+        TrayIcon.SetIcons(this, new TrayIcons { tray });
+        SetState("Starting TDSBLive…", false);
+    }
+
+    internal async Task AttachAsync(DesktopBootstrap session)
+    {
+        bootstrap = session;
+        var waiting = WaitForCompletionAsync();
+        try
+        {
+            while (!stopped.IsCancellationRequested)
             {
-                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopped);
                 deadline.CancelAfter(TimeSpan.FromSeconds(3));
                 var reply = await DesktopProtocol.SendAsync(bootstrap, "status", deadline.Token);
                 editorUrl = reply.EditorUrl;
                 SetState(reply.State switch
                 {
-                    "running" => "TDSBLive is running", "restarting" => "Restarting TDSBLive…",
+                    "running" => RunningLabel, "restarting" => "Restarting TDSBLive…",
                     "stopping" => "Stopping TDSBLive…", "starting" => "Starting TDSBLive…",
                     _ => "TDSBLive needs attention"
                 }, reply.State == "running");
@@ -87,35 +122,45 @@ public sealed class DesktopApp : Application
                     openRequests = reply.OpenRequests;
                     OpenEditor();
                 }
-                var available = OperatingSystem.IsWindows() ? WindowsTrayRegistration.IsAvailable() : tray?.NativeMenuExporter is not null;
+                var available = trayRegistered(tray);
                 if (!available && !trayUnavailable)
                     ShowControls("TDSBLive is running. Use these controls while your desktop tray is unavailable.");
                 trayUnavailable = !available;
-                await Task.Delay(TimeSpan.FromSeconds(1), stopping.Token);
+                await Task.Delay(TimeSpan.FromSeconds(1), stopped);
                 if (waiting.IsCompleted) { await waiting; return; }
             }
         }
         catch (Exception error) when (error is IOException or SocketException or OperationCanceledException or ArgumentException or System.Text.Json.JsonException)
         {
-            if (!stopping.IsCancellationRequested)
-            {
-                SetState("Stopped unexpectedly", false);
-                ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise open TDSBLive again.");
-            }
+            ConnectionFailed();
         }
         finally
         {
             // A connection failure can end polling before the completion waiter
             // settles. Observe its fault without killing or restarting the host.
-            if (waiting is not null)
-                _ = waiting.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
+            _ = waiting.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
         }
+    }
+
+    private void ConnectionFailed()
+    {
+        if (stopped.IsCancellationRequested) return;
+        SetState("Stopped unexpectedly", false);
+        ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise open TDSBLive again.");
+    }
+
+    private static bool IsTrayRegistered(TrayIcon? icon) => OperatingSystem.IsWindows()
+        ? WindowsTrayRegistration.IsAvailable() : icon?.NativeMenuExporter is not null;
+
+    private static void LaunchBrowser(Uri address)
+    {
+        using var browser = Process.Start(new ProcessStartInfo(address.AbsoluteUri) { UseShellExecute = true });
     }
 
     private async Task WaitForCompletionAsync()
     {
         if (bootstrap is null) return;
-        var result = await DesktopProtocol.SendAsync(bootstrap, "wait", stopping.Token);
+        var result = await DesktopProtocol.SendAsync(bootstrap, "wait", stopped);
         if (result.State is "quit" or "relaunched") ExitCompanion();
         else if (result.State == "port-conflict")
         {
@@ -137,7 +182,7 @@ public sealed class DesktopApp : Application
             ShowControls("The editor address is invalid. Open the editor from your TDSBLive shortcut.");
             return;
         }
-        try { using var browser = Process.Start(new ProcessStartInfo(address.AbsoluteUri) { UseShellExecute = true }); }
+        try { launchBrowser(address); }
         catch (Exception error) when (error is Win32Exception or InvalidOperationException)
         {
             ShowControls("Your browser could not open. Enter this address in your browser: " + address.AbsoluteUri);
@@ -151,8 +196,8 @@ public sealed class DesktopApp : Application
         UpdateCommands();
         try
         {
-            if (!await ConfirmAsync(command)) return;
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+            if (!await confirmation(command)) return;
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stopped);
             timeout.CancelAfter(TimeSpan.FromSeconds(5));
             var reply = await DesktopProtocol.SendAsync(bootstrap, command, timeout.Token);
             if (reply.Accepted) SetState(command == "restart" ? "Restarting TDSBLive…" : "Stopping TDSBLive…", false);
@@ -171,9 +216,9 @@ public sealed class DesktopApp : Application
     {
         statusLabel = text;
         running = isRunning;
-        if (tray is not null) tray.ToolTipText = "TDSBLive — " + (text == "TDSBLive is running" ? "Running" : text);
+        if (tray is not null) tray.ToolTipText = "TDSBLive — " + (text == RunningLabel ? "Running" : text);
         if (statusText is not null) statusText.Text = text;
-        if (controls is not null) controls.Title = running ? "TDSBLive is running" : "TDSBLive needs attention";
+        if (controls is not null) controls.Title = running ? RunningLabel : "TDSBLive needs attention";
         UpdateCommands();
     }
 
@@ -197,7 +242,7 @@ public sealed class DesktopApp : Application
             openButton.Click += (_, _) => OpenEditor();
             restartButton.Click += async (_, _) => await RequestAsync("restart");
             quitButton.Click += async (_, _) => await RequestAsync("quit");
-            controls = new Window { Title = running ? "TDSBLive is running" : "TDSBLive needs attention", Width = 440, MinWidth = 320,
+            controls = new Window { Title = running ? RunningLabel : "TDSBLive needs attention", Width = 440, MinWidth = 320,
                 SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterScreen, Icon = CreateIcon() };
             controls.Closing += (_, eventArgs) =>
             {
@@ -235,6 +280,16 @@ public sealed class DesktopApp : Application
         lifetime?.Shutdown();
     }
 
+    private bool disposed;
+    public void Dispose()
+    {
+        if (disposed) return;
+        disposed = true;
+        stopping.Cancel();
+        tray?.Dispose();
+        stopping.Dispose();
+    }
+
     private static WindowIcon CreateIcon()
     {
         using var bitmap = new WriteableBitmap(new PixelSize(32, 32), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
@@ -242,15 +297,8 @@ public sealed class DesktopApp : Application
         {
             var bytes = new byte[frame.RowBytes * 32];
             for (var y = 0; y < 32; y++)
-            for (var x = 0; x < 32; x++)
             {
-                var index = y * frame.RowBytes + x * 4;
-                var visible = Math.Pow(x - 15.5, 2) + Math.Pow(y - 15.5, 2) <= 225;
-                var letter = y is >= 8 and <= 12 && x is >= 7 and <= 24 || x is >= 13 and <= 18 && y is >= 8 and <= 24;
-                bytes[index] = letter ? (byte)255 : (byte)235;
-                bytes[index + 1] = letter ? (byte)255 : (byte)99;
-                bytes[index + 2] = letter ? (byte)255 : (byte)37;
-                bytes[index + 3] = visible ? (byte)255 : (byte)0;
+                for (var x = 0; x < 32; x++) DrawIconPixel(bytes, frame.RowBytes, x, y);
             }
             Marshal.Copy(bytes, 0, frame.Address, bytes.Length);
         }
@@ -258,5 +306,16 @@ public sealed class DesktopApp : Application
         bitmap.Save(image, PngBitmapEncoderOptions.Default);
         image.Position = 0;
         return new WindowIcon(image);
+    }
+
+    private static void DrawIconPixel(byte[] bytes, int rowBytes, int x, int y)
+    {
+        var index = y * rowBytes + x * 4;
+        var visible = Math.Pow(x - 15.5, 2) + Math.Pow(y - 15.5, 2) <= 225;
+        var letter = y is >= 8 and <= 12 && x is >= 7 and <= 24 || x is >= 13 and <= 18 && y is >= 8 and <= 24;
+        bytes[index] = letter ? (byte)255 : (byte)235;
+        bytes[index + 1] = letter ? (byte)255 : (byte)99;
+        bytes[index + 2] = letter ? (byte)255 : (byte)37;
+        bytes[index + 3] = visible ? (byte)255 : (byte)0;
     }
 }
