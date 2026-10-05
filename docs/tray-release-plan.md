@@ -773,6 +773,7 @@ Backend ownership/pipe/lifecycle, actual tray registration, application-menu
 installation, packages and runner/desktop/resource evidence remain outstanding.
 G23 remains **In progress**; G24 remains **Not started**.
 
+
 Additional `5843c49` owned direct-Wine probe: after a separate startup, disposing
 the native process/control reader handles leaves the backend reachable. Desktop
 polling stays absent for 15 seconds, including its degraded-controls warning;
@@ -819,3 +820,66 @@ per-user app-menu installation, resources and final packaging remain outstanding
 Until registration probing is implemented, Linux conservatively offers fallback
 controls rather than treating an Avalonia exporter as proof of a working tray.
 G23 remains **In progress**; G24 remains **Not started**.
+
+### G23 registration, native rendering and lifecycle coverage checkpoint — 2026-10-05
+
+Source `77ce3ce` checks actual Linux StatusNotifierItem ownership through the
+session bus. The watcher must report a host and exactly one active TDSBLive item
+owned by this process. Service aliases are deduplicated; an exported item alone,
+a foreign PID, stale item, duplicate owned item or changing watcher owner does
+not establish a usable tray. Seven real private-D-Bus tests qualify these
+protocol cases without changing the user's desktop watcher.
+
+Source `fba2917` bundles the pinned Inter font and constrains the vertical setup
+form to its viewport, including long paths and wrapped checkbox text. The actual
+production entry point runs on an owned Xvfb display with the existing Omarchy
+watcher. Its single owned item is registered; the exported menu contains Open
+editor, Restart and Quit, disabled before backend startup. Scanned 640 × 700 and
+320 × 360 screenshots are visually inspected. Escape closes setup with exit code
+zero, without starting Wine, creating a prefix or saving launcher choices.
+This is actual setup rendering and registration/menu metadata evidence; it does
+not qualify visible panel/menu interaction, runner startup or service recovery.
+Ignored evidence is retained under `artifacts/tray-linux-native-inventory`.
+
+Source `f0223d8` fixes a recovery defect found by new startup tests: unsupported
+or oversized launcher settings raise InvalidDataException and previously escaped
+the recovery handler. They now show guidance without replacing launcher.json or
+starting a backend. The native setup window and lifecycle task are exposed only
+internally for inspection by the existing test assembly.
+
+The Release desktop suite passes **92 cases with two Windows-only skips** (94
+total). Thirteen new process/startup cases use owned Python transport fixtures,
+not Wine or UMU. They exercise private stdin bootstrap, concurrent bounded output
+draining, fresh restart capabilities, selected profile retention, explicit new
+prefix initialization and failure, incomplete application rejection, malformed
+markers, cancellation, closed companion handles, first-run/forced setup,
+launcher recovery, browser-handoff requests, graceful restart/quit and failed
+process exit without automatic relaunch. Actual Wine initialization, GUI crashes
+and native-browser launching remain separate outstanding acceptance evidence.
+
+Commands include pinned SDK `dotnet restore ... --locked-mode` and `dotnet test
+tests/unit/ExtensionSuite.Desktop.Tests/ExtensionSuite.Desktop.Tests.csproj
+--configuration Release --no-restore --settings coverage.runsettings
+--collect:"XPlat Code Coverage" --logger trx`. Tests run with an isolated temporary
+directory. Five coverage-transfer Python tests pass, and actual local OpenCover
+export/import passes. Secret scans and diff checks pass. Generated reports and
+owned fixtures stay ignored.
+
+The last pushed Windows run at `62c883e`,
+[37275159262](https://github.com/TechDaddyKB/tdsblive/actions/runs/37275159262),
+passes native tray and functional qualification but fails Sonar's new-code
+coverage gate at **64.0% against 80%**. Source `f0223d8` adds a Linux desktop CI
+job and imports its scanned OpenCover evidence into the same run's Windows
+analysis. Import requires the exact checkout commit and changes only source
+paths; measured visits and branches remain unchanged. Windows analysis depends
+on successful Linux tests. The existing quality threshold, coverage exclusions,
+protected checks and fork-secret isolation are retained. Current hosted CI and
+the resulting quality gate are not yet claimed passing.
+
+G23 remains **In progress**. Actual menus/dialogs/browser and tray-service
+recovery on the named desktops, both runners, fresh-prefix Wine initialization,
+crash/restore behavior, canonical profile ownership across aliases, per-user
+launcher installation, resource comparison and final Linux packaging remain
+outstanding. G24's full documentation and cumulative release publication remain
+unfinished. These are implementation/qualification tasks; no new user approval
+is required to continue the authorized work.
