@@ -2,6 +2,14 @@
 
 This is the supplied requirements baseline, reviewed for public publication. The stable goals and approved implementation decisions in [docs/implementation-plan.md](docs/implementation-plan.md) govern sequencing and resolve alternatives in this baseline.
 
+The cumulative 1.0.1 release adds the approved [tray requirements TR-R01–TR-R10](docs/tray-release-plan.md)
+and [adaptive UI requirements](docs/ui-redesign-plan.md). Windows and native Linux
+desktop controls preserve existing backend/integration authority, HTTP, saved
+data and OBS addresses. Linux's backend continues through Wine or UMU/Proton;
+a fully native backend is deferred. [Known issues](docs/known-issues.md) records
+the explicitly accepted limits. These additions preserve the original numbered
+requirements below; [release notes](docs/releases/1.0.1.md) explain the download.
+
 Approved choices: TDSBLive branding; MIT license; .NET 10 LTS and EF Core SQLite; React/TypeScript/Vite; Windows x64 releases; port 17474 to avoid Streamer.bot HTTP conflicts. Local and opt-in authenticated LAN **HTTP are supported; HTTPS is not required**. Original captures/credentials stay private. Public implementation evidence is [Rumble analysis](docs/rumble-analysis.md) and the sanitized fixtures, never the original ZIP. G00 is complete; remaining goals are tracked in the implementation plan. References to supplied/uploaded material below mean this reviewed evidence, not permission to publish raw capture or credential files.
 
 ---

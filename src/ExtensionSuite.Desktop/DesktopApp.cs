@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Platform;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -22,6 +24,7 @@ public sealed class DesktopApp : Application, IDisposable
     private readonly NativeMenuItem restart = new("Restart");
     private readonly NativeMenuItem quit = new("Quit");
     private TrayIcon? tray;
+    private LinuxNativeTray? nativeLinuxTray;
     private Window? controls;
     private TextBlock? statusText;
     private Button? openButton, restartButton, quitButton;
@@ -33,14 +36,21 @@ public sealed class DesktopApp : Application, IDisposable
     private bool trayUnavailable;
     private bool exiting;
     private bool completionReceived;
+    private LinuxBackendProcess? linuxBackend;
+    private LinuxDesktopOwner? linuxOwner;
     private string statusLabel = "Starting TDSBLive…";
     private readonly Action<Uri> launchBrowser;
     private readonly Func<TrayIcon?, bool> trayRegistered;
     private readonly Action<TrayIcon?> restoreTray;
     private readonly Func<string, Task<bool>> confirmation;
+    private readonly bool probeLinuxTray;
+    private DateTimeOffset nextLinuxTrayRetry = DateTimeOffset.UtcNow.AddSeconds(3);
     internal Window? Controls => controls;
+    internal LinuxSetupWindow? LinuxSetup { get; private set; }
+    internal Task? LinuxLifecycle { get; private set; }
 
-    public DesktopApp() : this(LaunchBrowser, IsTrayRegistered, ConfirmAsync) { }
+    public DesktopApp() : this(LaunchBrowser, IsTrayRegistered, ConfirmAsync)
+        => probeLinuxTray = OperatingSystem.IsLinux();
 
     internal DesktopApp(Action<Uri> launchBrowser, Func<TrayIcon?, bool> trayRegistered,
         Func<string, Task<bool>> confirmation, Action<TrayIcon?>? restoreTray = null)
@@ -60,13 +70,140 @@ public sealed class DesktopApp : Application, IDisposable
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             desktop.Exit += (_, _) => Dispose();
             InitializeTray();
-            _ = StartAsync();
+            // A duplicate can finish immediately. Start after the native event
+            // loop begins so its successful shutdown does not precede that loop.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = StartAsync());
         }
         base.OnFrameworkInitializationCompleted();
     }
 
-    private Task StartAsync() => StartAsync(Console.OpenStandardInput(),
-        Program.Arguments.SequenceEqual(new[] { "--attach" }) && Console.IsInputRedirected);
+    private Task StartAsync() => OperatingSystem.IsLinux() &&
+        (Program.Arguments.Length == 0 || Program.Arguments.SequenceEqual(new[] { "--setup" }))
+        ? StartLinuxAsync(Program.Arguments.Length != 0) : StartAsync(Console.OpenStandardInput(),
+            Program.Arguments.SequenceEqual(new[] { "--attach" }) && Console.IsInputRedirected);
+
+    internal async Task StartLinuxAsync(bool showSetup)
+    {
+        var configured = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+        var root = !string.IsNullOrWhiteSpace(configured) && Path.IsPathFullyQualified(configured) ? configured :
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config");
+        var store = new LinuxLauncherSettingsStore(Path.Combine(root, "tdsblive"));
+        LinuxLauncherSettings? selected;
+        try { selected = store.Load(); }
+        catch (Exception error) when (error is IOException or InvalidDataException or ArgumentException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            SetState("Launcher settings need attention", false);
+            ShowControls("Your saved Linux launcher choices could not be loaded. Your Windows setup is unchanged. Keep launcher.json in " +
+                store.DirectoryPath + " and follow the launcher recovery instructions before choosing a setup again.");
+            return;
+        }
+        if (selected is not null && !showSetup)
+        {
+            try { await StartLinuxBackendAsync(selected, false, store); return; }
+            catch (Exception error) when (error is IOException or InvalidOperationException or Win32Exception or
+                OperationCanceledException or ArgumentException or UnauthorizedAccessException or SocketException)
+            {
+                SetState("Could not start TDSBLive", false);
+                ShowLinuxSetup(store, selected, "Your runner could not start TDSBLive. Keep your existing setup selected and check the runner and folders. If the editor is already open, use its Settings controls before trying again.");
+                return;
+            }
+        }
+        ShowLinuxSetup(store, selected);
+    }
+
+    private void ShowLinuxSetup(LinuxLauncherSettingsStore store, LinuxLauncherSettings? selected, string? explanation = null)
+    {
+        var setup = new LinuxSetupWindow(store.DirectoryPath,
+            Path.Combine(AppContext.BaseDirectory, "backend", "TDSBLive.exe"),
+            (settings, isNew) => StartLinuxBackendAsync(settings, isNew, store), ExitCompanion, selected,
+            () => Task.Run(() => LinuxApplicationShortcut.Install(Path.Combine(AppContext.BaseDirectory, "TDSBLive.Desktop"),
+                Path.Combine(AppContext.BaseDirectory, "tdsblive.svg")), stopped)) { Icon = CreateIcon() };
+        if (explanation is not null) setup.Feedback.Text = explanation;
+        LinuxSetup = setup;
+        setup.Closed += (_, _) => LinuxSetup = null;
+        // Constrain the initial native size before the compositor centers it.
+        // Fitting only after Opened can leave a very large scaled window off-screen.
+        LinuxWindowPlacement.Fit(setup);
+        setup.Show();
+    }
+
+    private async Task StartLinuxBackendAsync(LinuxLauncherSettings settings, bool isNew, LinuxLauncherSettingsStore store)
+    {
+        var runtime = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
+        linuxOwner = LinuxDesktopOwner.AcquireOrRequestOpen(settings.DataDirectory,
+            !string.IsNullOrWhiteSpace(runtime) && Path.IsPathFullyQualified(runtime) ? runtime : store.DirectoryPath);
+        if (linuxOwner is null) { ExitCompanion(); return; }
+        linuxOwner.Watch(() => Avalonia.Threading.Dispatcher.UIThread.Post(ActivateLinuxControls));
+        try { await StartOwnedLinuxBackendAsync(settings, isNew, store); }
+        catch { linuxOwner?.Dispose(); linuxOwner = null; throw; }
+    }
+
+    private void ActivateLinuxControls()
+    {
+        if (exiting || stopped.IsCancellationRequested) return;
+        if (running) OpenEditor();
+        else if (LinuxSetup?.IsVisible == true) LinuxSetup.Activate();
+        else
+        {
+            ShowControls("TDSBLive desktop controls are already open for this setup. If the editor still works, use Settings to quit. Otherwise choose Close desktop controls, then open TDSBLive again to keep using this setup.");
+            controls?.Activate();
+        }
+    }
+
+    private async Task StartOwnedLinuxBackendAsync(LinuxLauncherSettings settings, bool isNew, LinuxLauncherSettingsStore store)
+    {
+        LinuxBackendProcess session;
+        try { session = await LinuxBackendProcess.StartAsync(settings, isNew, stopped); }
+        catch (LinuxBackendAlreadyRunningException)
+        {
+            ExitCompanion();
+            return;
+        }
+        DesktopReply ready;
+        try { ready = await session.WaitUntilRunningAsync(stopped); }
+        catch { session.Dispose(); throw; }
+        var saveFailed = false;
+        try { store.Save(settings); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException) { saveFailed = true; }
+        linuxBackend = session;
+        editorUrl = ready.EditorUrl;
+        SetState(RunningLabel, true);
+        LinuxLifecycle = RunLinuxBackendAsync(session, settings);
+        if (saveFailed) ShowControls("TDSBLive is running, but your Linux launcher choices could not be saved. You can use these controls now. Check that your launcher settings folder is writable before your next start.");
+    }
+
+    private async Task RunLinuxBackendAsync(LinuxBackendProcess session, LinuxLauncherSettings settings)
+    {
+        try
+        {
+            while (!stopped.IsCancellationRequested)
+            {
+                var outcome = await AttachAsync(session.Bootstrap, externallyManaged: true);
+                if (outcome is not ("quit" or "restart-ready")) return;
+                using var exitDeadline = CancellationTokenSource.CreateLinkedTokenSource(stopped);
+                exitDeadline.CancelAfter(TimeSpan.FromSeconds(30));
+                if (await session.WaitForExitAsync(exitDeadline.Token) != 0)
+                    throw new InvalidOperationException("The Windows app did not exit successfully.");
+                session.Dispose();
+                if (outcome == "quit") { ExitCompanion(); return; }
+                // A graceful restart/restore outcome and successful process exit
+                // are both required. A crash or missing completion never relaunches.
+                session = await LinuxBackendProcess.StartAsync(settings, false, stopped);
+                linuxBackend = session;
+                await session.WaitUntilRunningAsync(stopped);
+            }
+        }
+        catch (Exception error) when (error is IOException or InvalidOperationException or Win32Exception or
+            OperationCanceledException or ArgumentException or UnauthorizedAccessException or SocketException)
+        {
+            if (!stopped.IsCancellationRequested)
+            {
+                SetState("TDSBLive needs attention", false);
+                ShowControls("TDSBLive could not complete the requested restart or quit. If the editor still works, use Settings to quit. Otherwise choose Close desktop controls, then reopen the Linux launcher and keep your existing setup selected.");
+            }
+        }
+        finally { session.Dispose(); if (ReferenceEquals(linuxBackend, session)) linuxBackend = null; }
+    }
 
     internal async Task StartAsync(Stream input, bool attached)
     {
@@ -96,23 +233,36 @@ public sealed class DesktopApp : Application, IDisposable
         open.Click += (_, _) => OpenEditor();
         restart.Click += async (_, _) => await RequestAsync("restart");
         quit.Click += async (_, _) => await RequestAsync("quit");
-        tray = new TrayIcon { Icon = CreateIcon(), ToolTipText = "TDSBLive — Starting", Menu = menu, IsVisible = true };
-        tray.Clicked += (_, _) => OpenEditor();
-        TrayIcon.SetIcons(this, new TrayIcons { tray });
+        if (probeLinuxTray)
+            nativeLinuxTray = new(command => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (command == "open") OpenEditor();
+                else _ = RequestAsync(command);
+            }), CreateTrayPixmap());
+        else
+        {
+            tray = new TrayIcon { Icon = CreateIcon(), ToolTipText = "TDSBLive — Starting", Menu = menu, IsVisible = true };
+            tray.Clicked += (_, _) => OpenEditor();
+            TrayIcon.SetIcons(this, new TrayIcons { tray });
+        }
         SetState("Starting TDSBLive…", false);
     }
 
-    internal async Task AttachAsync(DesktopBootstrap session)
+    internal async Task<string?> AttachAsync(DesktopBootstrap session, bool externallyManaged = false)
     {
         bootstrap = session;
-        var waiting = WaitForCompletionAsync();
+        completionReceived = false;
+        openRequests = 0;
+        var openOnReady = externallyManaged;
+        var waiting = WaitForCompletionAsync(session, externallyManaged);
         try
         {
             while (!stopped.IsCancellationRequested)
             {
+                if (waiting.IsCompleted) return await waiting;
                 using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopped);
                 deadline.CancelAfter(TimeSpan.FromSeconds(3));
-                var reply = await DesktopProtocol.SendAsync(bootstrap, "status", deadline.Token);
+                var reply = await DesktopProtocol.SendAsync(session, "status", deadline.Token);
                 editorUrl = reply.EditorUrl;
                 SetState(reply.State switch
                 {
@@ -120,13 +270,27 @@ public sealed class DesktopApp : Application, IDisposable
                     "stopping" => "Stopping TDSBLive…", "starting" => "Starting TDSBLive…",
                     _ => "TDSBLive needs attention"
                 }, reply.State == "running");
-                if (running && reply.OpenRequests != openRequests)
+                if (running && (openOnReady || reply.OpenRequests != openRequests))
                 {
+                    openOnReady = false;
                     openRequests = reply.OpenRequests;
                     OpenEditor();
                 }
                 var available = trayRegistered(tray);
-                if (!available)
+                if (probeLinuxTray)
+                {
+                    if (nativeLinuxTray is not null) await nativeLinuxTray.EnsureRegisteredAsync(stopped);
+                    var registration = await LinuxTrayRegistration.ReadAsync(stopped);
+                    stopped.ThrowIfCancellationRequested();
+                    available = registration.Registered;
+                    if (!available && registration.HostAvailable && DateTimeOffset.UtcNow >= nextLinuxTrayRetry)
+                    {
+                        if (nativeLinuxTray is not null) await nativeLinuxTray.EnsureRegisteredAsync(stopped, retry: true);
+                        else restoreTray(tray);
+                        nextLinuxTrayRetry = DateTimeOffset.UtcNow.AddSeconds(10);
+                    }
+                }
+                else if (!available)
                 {
                     restoreTray(tray);
                     available = trayRegistered(tray);
@@ -135,11 +299,12 @@ public sealed class DesktopApp : Application, IDisposable
                     ShowControls("TDSBLive is running. Use these controls while your desktop tray is unavailable.");
                 trayUnavailable = !available;
                 await Task.Delay(TimeSpan.FromSeconds(1), stopped);
-                if (waiting.IsCompleted) { await waiting; return; }
+                if (waiting.IsCompleted) return await waiting;
             }
         }
         catch (Exception error) when (error is IOException or SocketException or OperationCanceledException or ArgumentException or System.Text.Json.JsonException)
         {
+            if (waiting.IsCompletedSuccessfully) return waiting.Result;
             ConnectionFailed();
         }
         finally
@@ -148,25 +313,26 @@ public sealed class DesktopApp : Application, IDisposable
             // settles. Observe its fault without killing or restarting the host.
             _ = waiting.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
         }
+        return null;
     }
 
     private void ConnectionFailed()
     {
         if (stopped.IsCancellationRequested || completionReceived) return;
         SetState("Stopped unexpectedly", false);
-        ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise open TDSBLive again.");
+        ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise choose Close desktop controls, then open TDSBLive again.");
     }
 
     private static bool IsTrayRegistered(TrayIcon? icon) => OperatingSystem.IsWindows()
-        ? WindowsTrayRegistration.IsAvailable() : icon?.NativeMenuExporter is not null;
+        ? WindowsTrayRegistration.IsAvailable() : false; // Linux registration is read asynchronously from its watcher.
 
     private static void RestoreTray(TrayIcon? icon)
     {
-        if (!OperatingSystem.IsWindows() || icon is null || !WindowsTrayRegistration.IsShellAvailable()) return;
-        // Explorer can disappear between Avalonia's TaskbarCreated notification
-        // and its registration attempt. Re-add the same icon once the shell is
-        // available; tooltip updates alone only issue NIM_MODIFY in the pinned
-        // implementation. Keep the existing menu, session and icon identity.
+        if (icon is null || !(OperatingSystem.IsWindows() || OperatingSystem.IsLinux())) return;
+        if (OperatingSystem.IsWindows() && !WindowsTrayRegistration.IsShellAvailable()) return;
+        // Retry the same icon without replacing its menu or backend session.
+        // Windows tooltip updates only modify an existing registration. Linux
+        // keeps its service identity and awaits any pending name release.
         icon.IsVisible = false;
         icon.IsVisible = true;
     }
@@ -176,12 +342,13 @@ public sealed class DesktopApp : Application, IDisposable
         using var browser = Process.Start(new ProcessStartInfo(address.AbsoluteUri) { UseShellExecute = true });
     }
 
-    private async Task WaitForCompletionAsync()
+    private async Task<string> WaitForCompletionAsync(DesktopBootstrap session, bool externallyManaged)
     {
-        if (bootstrap is null) return;
-        var result = await DesktopProtocol.SendAsync(bootstrap, "wait", stopped);
+        var result = await DesktopProtocol.SendAsync(session, "wait", stopped);
         completionReceived = true;
-        if (result.State is "quit" or "relaunched") ExitCompanion();
+        if (externallyManaged && result.State is "quit" or "restart-ready")
+            SetState(result.State == "quit" ? "Stopping TDSBLive…" : "Restarting TDSBLive…", false);
+        else if (result.State is "quit" or "relaunched") ExitCompanion();
         else if (result.State == "port-conflict")
         {
             SetState("Could not start TDSBLive", false);
@@ -192,6 +359,7 @@ public sealed class DesktopApp : Application, IDisposable
             SetState("Stopped unexpectedly", false);
             ShowControls("TDSBLive has stopped. Open it again using its shortcut. If a restore failed, your safety copy is retained; check recovery guidance in the editor.");
         }
+        return result.State;
     }
 
     private void OpenEditor()
@@ -249,6 +417,7 @@ public sealed class DesktopApp : Application, IDisposable
         if (openButton is not null) openButton.IsEnabled = open.IsEnabled;
         if (restartButton is not null) restartButton.IsEnabled = restart.IsEnabled;
         if (quitButton is not null) quitButton.IsEnabled = quit.IsEnabled;
+        nativeLinuxTray?.Update("TDSBLive — " + (statusLabel == RunningLabel ? "Running" : statusLabel), open.IsEnabled);
     }
 
     private void ShowControls(string explanation)
@@ -264,6 +433,13 @@ public sealed class DesktopApp : Application, IDisposable
             quitButton.Click += async (_, _) => await RequestAsync("quit");
             controls = new Window { Title = running ? RunningLabel : "TDSBLive needs attention", Width = 440, MinWidth = 320,
                 SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterScreen, Icon = CreateIcon() };
+            X11Properties.SetNetWmWindowType(controls, X11NetWmWindowType.Dialog);
+            controls.Opened += (_, _) =>
+            {
+                var screen = controls.Screens.ScreenFromWindow(controls) ?? controls.Screens.Primary;
+                if (screen is not null) controls.MaxHeight = Math.Max(180, screen.WorkingArea.Height / screen.Scaling - 48);
+                if (OperatingSystem.IsLinux()) LinuxWindowPlacement.Fit(controls);
+            };
             controls.Closing += (_, eventArgs) =>
             {
                 if (exiting) return;
@@ -274,6 +450,11 @@ public sealed class DesktopApp : Application, IDisposable
         var panel = new StackPanel { Margin = new Thickness(24), Spacing = 16 };
         // Detach the existing controls before reusing them in the refreshed panel.
         if (controls.Content is Panel old) old.Children.Clear();
+        if (controls.Content is ScrollViewer oldScroll && oldScroll.Content is Panel oldPanel)
+        {
+            oldPanel.Children.Clear();
+            oldScroll.Content = null;
+        }
         panel.Children.Add(statusText!);
         panel.Children.Add(new TextBlock { Text = explanation, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(openButton!);
@@ -287,16 +468,23 @@ public sealed class DesktopApp : Application, IDisposable
             panel.Children.Add(new TextBlock { Text = "Closing desktop controls does not stop a running TDSBLive backend. If the editor still works, use Settings to quit TDSBLive.", TextWrapping = TextWrapping.Wrap });
         }
         else panel.Children.Add(new TextBlock { Text = "Closing this window keeps TDSBLive running. Choose Quit when you finish streaming.", TextWrapping = TextWrapping.Wrap });
-        controls.Content = panel;
+        controls.Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         statusText!.Text = statusLabel;
         UpdateCommands();
-        if (!controls.IsVisible) controls.Show();
+        if (!controls.IsVisible)
+        {
+            if (OperatingSystem.IsLinux()) LinuxWindowPlacement.Fit(controls);
+            controls.Show();
+        }
     }
 
     private void ExitCompanion()
     {
         exiting = true;
         stopping.Cancel();
+        linuxBackend?.Dispose();
+        linuxOwner?.Dispose();
         lifetime?.Shutdown();
     }
 
@@ -306,7 +494,10 @@ public sealed class DesktopApp : Application, IDisposable
         if (disposed) return;
         disposed = true;
         stopping.Cancel();
+        linuxBackend?.Dispose();
+        linuxOwner?.Dispose();
         tray?.Dispose();
+        nativeLinuxTray?.Dispose();
         stopping.Dispose();
     }
 
@@ -337,5 +528,19 @@ public sealed class DesktopApp : Application, IDisposable
         bytes[index + 1] = letter ? (byte)255 : (byte)99;
         bytes[index + 2] = letter ? (byte)255 : (byte)37;
         bytes[index + 3] = visible ? (byte)255 : (byte)0;
+    }
+
+    internal static byte[] CreateTrayPixmap()
+    {
+        var pixels = new byte[32 * 32 * 4];
+        for (var y = 0; y < 32; y++)
+            for (var x = 0; x < 32; x++) DrawIconPixel(pixels, 32 * 4, x, y);
+        // SNI uses network-order ARGB, rather than the bitmap's BGRA bytes.
+        for (var i = 0; i < pixels.Length; i += 4)
+        {
+            (pixels[i], pixels[i + 3]) = (pixels[i + 3], pixels[i]);
+            (pixels[i + 1], pixels[i + 2]) = (pixels[i + 2], pixels[i + 1]);
+        }
+        return pixels;
     }
 }

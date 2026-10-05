@@ -1,5 +1,9 @@
 # Donor widgets (G08)
 
+Historical goal record: the status and evidence below describe that milestone
+and its original tested commits. Current cumulative release status is in the
+[implementation plan](implementation-plan.md) and [1.0.1 notes](releases/1.0.1.md).
+
 Implementation is in progress. This document describes the current worktree contracts; it is not completion evidence.
 
 The canvas supports `donor-crown`, `donor-leaderboard`, `latest-supporter`, `current-stream-leader`, and `current-stream-total`. Donor configuration is persisted in each widget's `donor` object and participates in ordinary overlay revisions. Existing documents without donor settings receive defaults. No financial table migration is currently required.

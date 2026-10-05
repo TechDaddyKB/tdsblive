@@ -14,7 +14,7 @@ A local HTTP page does not need an HTTPS certificate. Changing the address to HT
 
 ## I cannot find the tray icon or stop the app
 
-The tray is part of the 1.0.1 candidate; earlier downloads do not have it. Check
+The tray is part of 1.0.1; earlier downloads do not have it. Check
 your version before looking for a missing feature.
 
 On Windows, look near the clock and open the small up arrow for hidden icons.
@@ -84,11 +84,14 @@ For speech, verify that your chosen voice alias works in Speaker.bot and that th
 
 Check the selected period, stream start time, financial time zone and currency. Check whether an amount is exact, estimated or unknown.
 
-A USD threshold in minor units uses cents: 500 means $5.00. Bits use their event quantity. Read [Supporter totals](Supporter-Totals.md) and [Automation](Automation.md) before changing values.
+In 1.0.1, money fields accept ordinary amounts: USD `5.00` means five dollars.
+Bits use their event quantity. An older raw minor-unit field uses cents instead;
+check the guide bundled with that version. Read [Supporter totals](Supporter-Totals.md)
+and [Automation](Automation.md) before changing values.
 
 ## An advanced button is missing
 
-Check your version first. The earlier v0.1.0 MVP predates the TDSBLive 1.0 adaptive editor, custom-widget packages and local compatibility features. See [Before you begin](Before-You-Begin.md). A missing newer control is not a reason to erase your current setup.
+Check your version first. The earlier v0.1.0 MVP predates the TDSBLive 1.0.1 adaptive editor, custom-widget packages and local compatibility features. See [Before you begin](Before-You-Begin.md). A missing newer control is not a reason to erase your current setup.
 
 ## A custom widget is blank or stops
 
@@ -107,6 +110,11 @@ That can be expected: restored integrations and rules return to safe states, sec
 Live compatibility checks have exceeded CPU targets. Watch load during a local rehearsal, including OBS and the bots you use. Test a smaller layout, fewer active custom widgets or less media, then compare the actual result.
 
 Do not assume a green Windows CI run proves performance on your Linux streaming computer. Keep the working runner version while trying changes separately.
+
+The native Linux tray adds memory overhead. If KDE's panel closes without showing
+fallback controls, use the editor's **Backup and recovery** controls. These
+[accepted issues](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/known-issues.md)
+remain open for future investigation.
 
 ## Ask for help with useful, private-safe information
 

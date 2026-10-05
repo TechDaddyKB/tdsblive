@@ -4,6 +4,10 @@ TDSBLive brings stream chat, on-screen graphics and alerts together on your comp
 
 **Already installed?** Start TDSBLive, then open [the editor](http://127.0.0.1:17474/editor) in your web browser. Keep the application running while OBS uses its pages. Closing the browser tab does not quit the application.
 
+This guide describes **1.0.1**. [Download the application](https://github.com/TechDaddyKB/tdsblive/releases/latest),
+then choose Windows installer/ZIP or the Linux launcher bundle under **Assets**.
+The Linux bundle needs installed Wine or UMU/Proton. Source code is for developers.
+
 ## Your first trip through the guide
 
 Follow these steps in order. You can leave the optional features until your basic setup works.
@@ -20,19 +24,19 @@ Follow these steps in order. You can leave the optional features until your basi
 ## Choose what you want to do next
 
 - [Install, update or remove TDSBLive](Install-and-Update.md).
-- [Find TDSBLive and use its tray controls](Tray-and-Desktop-Controls.md) in the 1.0.1 candidate.
+- [Find TDSBLive and use its tray controls](Tray-and-Desktop-Controls.md) in 1.0.1.
 - [Understand supporter totals](Supporter-Totals.md) and their dates, currencies and estimates.
 - [Set up speech and sound](Automation.md), then test rules before enabling them.
 - [Make a backup or restore one](Backup-and-Recovery.md).
 - [Use another computer on your home network](LAN-Access.md), if you need to.
-- [Use the adaptive workspace and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) in TDSBLive 1.0.
+- [Use the adaptive workspace and guided alerts](Adaptive-Editor-and-Guided-Alerts.md) in TDSBLive 1.0.1.
 - [Arrange more complex overlays](Advanced-Editor-and-Widgets.md).
 - [Use custom widgets and share packages](Custom-Widgets-and-Portable-Packages.md).
 - [Try the limited local StreamElements compatibility option](Local-StreamElements-Compatibility.md).
 
 ## Read without the internet
 
-The Windows application download includes a `guide` folder. Open `guide/Home.html` in your browser. Those pages and their pictures work without the internet. Links to downloads and other projects still require an internet connection. Keep the guide folder and its images together. The bundled guide belongs to the build you downloaded; the current wiki may include newer instructions. Use the bundled guide for your installed version; older downloads retain their original documentation.
+Every application download includes a `guide` folder. Open `guide/Home.html` in your browser. Those pages and their pictures work without the internet. Links to downloads and other projects still require an internet connection. Keep the guide folder and its images together. The bundled guide belongs to the build you downloaded; the current wiki may include newer instructions. Use the bundled guide for your installed version; older downloads retain their original documentation.
 
 Screenshots in this guide show owned examples. Names, ports and example settings are illustrations; use the values in your own applications. Some pictures show an earlier interface, so use the accompanying instructions if your screen differs slightly.
 
@@ -41,6 +45,10 @@ Screenshots in this guide show owned examples. Names, ports and example settings
 The project has native Windows build, automated test and package checks. It also has live Linux/Wine checks, including local OBS rendering and an audible custom-widget test. These checks do not establish that every Linux distribution, Wine runner or Proton runner behaves the same way.
 
 Linux compatibility testing has exceeded the project's CPU targets. The original MVP also exceeded its memory target in its Wine test. Later managed-host Linux qualification met the memory target, but did not meet the CPU targets; that was a separate workload, not a new Wine performance pass. Native Windows streaming-PC performance testing remains deferred. Check the load on your own streaming computer before relying on it for a show.
+
+The Linux tray's memory overhead and KDE panel-only recovery remain accepted
+issues. [Known issues](https://github.com/TechDaddyKB/tdsblive/blob/main/docs/known-issues.md)
+explains the limits and what to do if the icon disappears.
 
 Actual paid Rumble Rant, Ko-fi donation and Twitch Bits delivery has not been verified. Local examples test behavior without requiring you to spend money. VTube Studio work is on hold; use Streamer.bot's built-in integration for that application.
 

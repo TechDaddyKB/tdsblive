@@ -75,3 +75,42 @@ matrix](requirements-matrix.md) records all numbered sections and explicit
 live-evidence limits. Actual OBS sound/video, restart/restore and native Windows
 packaging remain distinct gates. [Developer utilities](g13-compatibility.md)
 operate on scanner-approved files and disposable local hosts.
+
+## Tray-release qualification
+
+The [1.0.1 plan](tray-release-plan.md) records G22–G24 and their current gates.
+Local builds and headless desktop tests are preparation; actual native Windows
+and Linux runs are required. Handwritten desktop production code remains in
+coverage. Windows-only registration tests are explicitly skipped on Linux.
+
+- `tools/qualify_desktop_control.py` uses an actual disposable host and bounded,
+  authenticated control channel. It checks ownership, restart/restore, conflicts,
+  retained state and SQLite integrity without live integrations.
+- `tools/qualify_windows_tray.ps1` is guarded for an isolated interactive CI
+  desktop and owned package. It checks native menus, normal browser handoff,
+  Cancel-first keyboard behavior, Explorer loss/recovery, crash isolation,
+  retained DPAPI credentials, manual/quiet launch, light/dark and actual display
+  scaling. Never run its Explorer-changing scenarios on a streaming desktop.
+- The full Windows job tests both portable and installed packages, their editor
+  workflows and lifecycle, then reinstall/uninstall and opt-in startup behavior.
+  The faster native probe provides diagnostic packages and screenshots; those
+  artifacts do not replace the protected full job's release candidates.
+- `tools/serve_tray_obs.py` prepares owned sample data for a separately created
+  OBS Browser Source. Its `--self-check` is silent process evidence. Actual OBS
+  rendering, reconnect, transparency and audio-signal observation are separate
+  checks; recording, broadcasting and physical listening are not inferred.
+
+The native Linux suite covers private profile ownership, alias/duplicate launches,
+Wine/UMU argument and process boundaries, registration, dialogs and package
+admission. Actual representative desktop checks and accepted resource/KDE limits
+are recorded in the [tray plan](tray-release-plan.md). Keep unavailable evidence
+explicit. Scan extracted packages and captures before inspection; publish reviewed
+source and documentation, never private profiles or dependency/test output.
+
+`Publish release` is a main-only manual workflow. Supply the successful **Windows
+CI** run ID for the exact current main SHA. `tools/publish_release.py` requires
+the full same-source Windows/Linux/security checks, validates archive markers
+and checksums, creates a draft and immutable tag, verifies all uploaded assets,
+publishes Latest and checks fresh unauthenticated downloads. Conflicting existing
+tags/assets fail rather than being replaced. Release workflow tests reject
+unqualified runs, mismatched source/backend hashes and conflicting assets.

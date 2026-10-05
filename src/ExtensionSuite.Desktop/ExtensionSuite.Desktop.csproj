@@ -8,6 +8,11 @@
     <InternalsVisibleTo Include="ExtensionSuite.Desktop.Tests" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Tmds.DBus.Protocol" />
     <ProjectReference Include="../ExtensionSuite.DesktopControl/ExtensionSuite.DesktopControl.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../packaging/linux/tdsblive.svg" Link="tdsblive.svg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

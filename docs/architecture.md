@@ -12,6 +12,7 @@ flowchart LR
   H --> E[Browser editor]
   H --> O[OBS overlay runtime]
   H --> S[Speaker.bot]
+  H <-->|Authenticated loopback control| T[Native desktop companion]
 ```
 
 ## Build boundaries
@@ -27,6 +28,10 @@ flowchart LR
   transport/API services. G12 adds mediated custom-widget state and portable packages.
 - `ExtensionSuite.Host`: composition root, HTTP editor assets, typed configuration,
   DPAPI provisioning, authenticated LAN, diagnostics, OpenAPI and editor WebSockets.
+- `ExtensionSuite.Desktop`: native tray, normal-browser handoff, Cancel-first
+  confirmations and missing-tray controls. On Windows 1.0.1, the
+  packaged host starts this companion and owns successful backend relaunch.
+  The companion is separate from OBS rendering and production automation.
 - `frontend/editor` and `frontend/overlay-runtime`: separate Vite build targets;
   editor-only dependencies must not enter the lightweight OBS runtime.
 
@@ -47,3 +52,13 @@ and bounded portable packages. [G13](g13-compatibility.md) supplies the optional
 local StreamElements shim and development/diagnostic tools; it adds no production
 automation authority. The [requirements matrix](requirements-matrix.md) separates
 implemented capabilities from explicitly deferred work and unavailable live evidence.
+
+The [desktop lifecycle contract](desktop-lifecycle.md) describes authenticated
+control, one owner per profile, graceful shutdown and explicit relaunch outcomes.
+Closing a browser or desktop control window leaves a running backend alone.
+Desktop failure also leaves the backend running; backend process death is never
+treated as successful restart intent. The native Linux companion owns Wine/UMU
+launch, retains the selected runner/prefix and holds a separate native profile
+lease through backend crashes. Explicit recovery closes the stopped controls
+before reopening the launcher. See [lifecycle](desktop-lifecycle.md),
+[accepted issues](known-issues.md) and [1.0.1 evidence](tray-release-plan.md).

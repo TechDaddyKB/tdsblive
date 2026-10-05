@@ -1,6 +1,6 @@
 # Rumble snapshots and ingestion
 
-For connection instructions, see [First setup](user-guide/First-Setup.md#3-connect-rumble). The private Live API URL is a credential. Enter it locally; do not place it in Git, screenshots, logs or public support requests. Session-only storage is the default and clears on restart. Persistent Windows storage uses DPAPI.
+For connection instructions, see [First setup](user-guide/First-Setup.md#6-connect-rumble-only-if-you-use-it). The private Live API URL is a credential. Enter it locally; do not place it in Git, screenshots, logs or public support requests. Session-only storage is the default and clears on restart. Persistent Windows storage uses DPAPI.
 
 Rumble provides snapshots rather than a durable event cursor. The same recent messages and Rants can appear in several polls. Accepting each row as a new event would duplicate chat, alerts and supporter totals. Conversely, a bounded recent window can discard activity between polls; no snapshot algorithm can recover records that were never observed.
 

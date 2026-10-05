@@ -4,6 +4,66 @@ Wine lets a Linux computer run some Windows applications. TDSBLive still runs as
 
 The project has live Wine qualification evidence, including Wine 11.17 Staging on the owner's machine. That is evidence for the tested setup, not a promise for every distribution or runner. Bottles instructions below follow its upstream documentation and are not a separate project qualification of every Bottles configuration.
 
+## Use the native Linux launcher in 1.0.1
+
+If Wine offers to install **Wine Mono** or **Wine Gecko**, choose **Cancel** for
+those optional components. TDSBLive includes its own .NET runtime and uses your
+normal browser. Its tested Wine setup runs without those extra installations.
+Keep your existing settings folder; you do not need to delete it to dismiss the
+prompt.
+
+![Actual Linux setup window from the packaged 1.0.1 qualification build](images/tray-linux-setup.png)
+
+The **1.0.1 release** includes a native Linux tray and setup window. Download
+**`TDSBLive-1.0.1-linux-x64-wine.tar.gz`** from the official release page.
+It includes the Linux launcher, the complete Windows backend and .NET runtime.
+A fully native Linux backend remains deferred.
+
+1. Install Wine using your distribution's software manager or the
+   [Wine project](https://www.winehq.org/). If your existing setup works, keep its
+   runner and settings folder. Run TDSBLive as your ordinary user, without `sudo`.
+2. Extract the complete Linux archive into a folder you will keep, such as
+   `Applications/TDSBLive` in your home folder. Keep all extracted files together.
+3. Open **`TDSBLive`**, the Linux launcher. If your file manager cannot start it,
+   open a terminal in that extracted folder and enter `./TDSBLive`. The archive
+   already gives it permission to run.
+4. In **Set up TDSBLive on Linux**, choose **Wine** under
+   **1. Choose the Windows app runner**. Check **Runner program**; use **Browse…**
+   to choose the installed `wine` or `wine64` program if it was not found.
+5. Under **2. Windows settings folder (Wine prefix)**, choose your existing
+   prefix if you have used TDSBLive before. A prefix is Wine's folder containing
+   its Windows-style drive, settings and connection keys.
+6. Leave **Start a new empty TDSBLive setup** unchecked to retain your settings.
+   Choose your setup from **Saved setups found in this folder**. If it is stored
+   elsewhere, use **Existing TDSBLive setup folder** and **Browse…**.
+7. For your first installation, choose a separate empty prefix and check
+   **Start a new empty TDSBLive setup**. Read the displayed destination first.
+8. Keep **3. TDSBLive Windows application** pointed to the included
+   `backend/TDSBLive.exe`. Optionally check **Add TDSBLive to my applications menu**.
+9. Choose **Start TDSBLive**. Keep the window open while Wine prepares the setup.
+10. Check the editor in your normal Linux browser. Find the blue **T** in your
+    desktop panel and use **Open editor**, **Restart** or **Quit** from its menu.
+
+Save edits before restarting or quitting. A missing tray opens the
+**TDSBLive is running** window with the same buttons. Closing that window or the
+browser keeps TDSBLive running. See [Tray and desktop controls](Tray-and-Desktop-Controls.md).
+
+The launcher saves its choices after the backend reaches its running state.
+**Cancel** closes setup without creating a prefix. The optional application-menu
+shortcut does not enable automatic sign-in startup. Keep the extracted folder in
+place so the shortcut continues to work.
+
+A different prefix can make saved settings appear missing. Return to your
+original prefix instead of deleting data or starting an empty setup. Native Linux
+OBS can use the local viewing URLs; check an overlay and sound before broadcasting.
+
+## Optional: use the Windows ZIP directly
+
+The following manual paths remain available for older downloads and existing
+setups. The older v0.1.0 release uses the Windows ZIP path. These paths
+do not use the new native Linux launcher. Bottles remains a separate backend
+workflow; native-companion support for Bottles is not qualified.
+
 ## 1. Choose direct Wine or Bottles
 
 **Direct Wine** is useful if Wine already works on your computer and you are comfortable entering a short command. **Bottles** provides a graphical way to manage separate Wine environments. Choose one path for your first installation. Switching between them creates different environments unless you deliberately migrate your data.

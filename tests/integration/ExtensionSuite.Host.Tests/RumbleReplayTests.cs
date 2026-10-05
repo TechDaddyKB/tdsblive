@@ -141,7 +141,9 @@ public sealed class RumbleReplayTests : IAsyncLifetime
     [Fact]
     public async Task DispatcherRefreshesLateRegistrationAndDeliversOneCanonicalTrigger()
     {
-        var triggerDiscovery = 0; var executions = 0;
+        var triggerDiscovery = 0; var executions = 0; var registrationAvailable = 0;
+        var delivered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var discoveryClock = new DiscoveryClock();
         var batch = engine.Reconcile(new(), new(DateTimeOffset.UtcNow, "timeout"), "late-bootstrap", false);
         var waiting = Enumerable.Range(0, 64).Select(index => new CanonicalEvent {
             Source = "rumble", Platform = "rumble", Type = "stream.viewers", NativeType = "viewers",
@@ -157,7 +159,8 @@ public sealed class RumbleReplayTests : IAsyncLifetime
                 var request = await FakeBot.Read(socket); var response = new JsonObject();
                 if (request["request"]!.GetValue<string>() == "GetCodeTriggers")
                 {
-                    response["triggers"] = ++triggerDiscovery == 1 ? new JsonArray() : new JsonArray(new JsonObject {
+                    Interlocked.Increment(ref triggerDiscovery);
+                    response["triggers"] = Volatile.Read(ref registrationAvailable) == 0 ? new JsonArray() : new JsonArray(new JsonObject {
                         ["eventName"] = "tdsblive.rumble.health", ["name"] = "Health", ["category"] = "Tests" });
                 }
                 if (request["request"]!.GetValue<string>() == "ExecuteCodeTrigger")
@@ -167,23 +170,32 @@ public sealed class RumbleReplayTests : IAsyncLifetime
                     Assert.Equal(item.Id.ToString(), request["args"]!["tdsbliveEventId"]!.GetValue<string>());
                     Assert.Equal("timeout", request["args"]!["health"]!.GetValue<string>());
                     Assert.Null(request["args"]!["raw"]);
+                    delivered.TrySetResult();
                 }
                 await FakeBot.Reply(socket, request, response);
             }
         });
         var config = new ApplicationConfiguration { StreamerBot = server.Configuration with { ForwardLiveEvents = true }, Rumble = new() { ForwardTriggers = true } };
         var adapter = new StreamerBotConnection(config.StreamerBot, () => null, new());
-        // This exercises 64 individual SQLite park transactions before delivery.
-        // Windows coverage instrumentation can exceed ten seconds without a protocol failure.
+        // Observe all unavailable rows parked before introducing the trigger.
+        // Advance only discovery time instead of spending 30 real seconds waiting
+        // for its refresh interval while instrumented SQLite transactions run.
         using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(60));
         var run = adapter.RunAsync((_, _) => Task.CompletedTask, lifetime.Token);
         var dispatch = Task.CompletedTask;
         try
         {
             while (adapter.State.State != "connected") await Task.Delay(20, lifetime.Token);
-            dispatch = new RumbleTriggerDispatcher(store, adapter, config, new EventInspectorStore(config), TimeProvider.System).RunAsync(lifetime.Token);
-            while (!(await store.DeliveryStatusAsync(lifetime.Token)).ContainsKey("acknowledged")) await Task.Delay(20, lifetime.Token);
-            Assert.Equal(1, executions); Assert.True(triggerDiscovery >= 2); Assert.Empty(await store.PendingTriggersAsync(default));
+            dispatch = new RumbleTriggerDispatcher(store, adapter, config, new EventInspectorStore(config), discoveryClock).RunAsync(lifetime.Token);
+            while ((await store.DeliveryStatusAsync(lifetime.Token)).GetValueOrDefault("waitingForTrigger") != 65)
+                await Task.Delay(250, lifetime.Token);
+            Assert.Equal(0, Volatile.Read(ref executions));
+            Assert.Empty(await store.PendingTriggersAsync(lifetime.Token));
+            Volatile.Write(ref registrationAvailable, 1);
+            discoveryClock.Advance(TimeSpan.FromSeconds(31));
+            await delivered.Task.WaitAsync(lifetime.Token);
+            while (!(await store.DeliveryStatusAsync(lifetime.Token)).ContainsKey("acknowledged")) await Task.Delay(250, lifetime.Token);
+            Assert.Equal(1, executions); Assert.True(triggerDiscovery >= 3); Assert.Empty(await store.PendingTriggersAsync(default));
             Assert.Equal(64, (await store.DeliveryStatusAsync(default))["waitingForTrigger"]);
             await lifetime.CancelAsync(); await run.WaitAsync(TimeSpan.FromSeconds(3));
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => dispatch.WaitAsync(TimeSpan.FromSeconds(3)));
@@ -202,6 +214,13 @@ public sealed class RumbleReplayTests : IAsyncLifetime
         await reopened.ResumeRegisteredAsync(["stream.viewers"], default);
         Assert.Equal(64, (await reopened.PendingTriggersAsync(default)).Length);
         Assert.Equal(1, (await reopened.DeliveryStatusAsync(default))["acknowledged"]);
+    }
+
+    private sealed class DiscoveryClock : TimeProvider
+    {
+        private long ticks = DateTimeOffset.UtcNow.UtcTicks;
+        public override DateTimeOffset GetUtcNow() => new(Interlocked.Read(ref ticks), TimeSpan.Zero);
+        public void Advance(TimeSpan duration) => Interlocked.Add(ref ticks, duration.Ticks);
     }
 
     [Fact]

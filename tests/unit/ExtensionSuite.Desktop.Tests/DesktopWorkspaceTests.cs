@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
@@ -34,6 +36,32 @@ public sealed class DesktopWorkspaceTests
         .OfType<TextBlock>().Select(text => text.Text));
 
     private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task RecoveryControlsRemainReachableInAShortNarrowWindow(bool dark) => RunAsync(async () =>
+    {
+        using var app = new DesktopApp(_ => { }, _ => false, _ => Task.FromResult(false));
+        Avalonia.Application.Current!.RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
+        await app.StartAsync(new MemoryStream(), attached: false);
+        var window = app.Controls!;
+        window.SizeToContent = SizeToContent.Manual;
+        window.Width = 320; window.Height = 240;
+        window.UpdateLayout();
+        var scroll = Assert.IsType<ScrollViewer>(window.Content);
+        Assert.Equal(ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
+        Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+        Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + 1);
+        var close = Button(app, "Close desktop controls");
+        close.BringIntoView();
+        window.UpdateLayout();
+        var position = close.TranslatePoint(default, scroll)!.Value;
+        Assert.InRange(position.Y, 0, scroll.Viewport.Height - close.Bounds.Height + 1);
+        Assert.True(close.IsEnabled);
+        Click(close);
+        window.Close();
+    });
 
     [Theory]
     [InlineData(false, "", "needs to be started by TDSBLive")]
@@ -265,6 +293,51 @@ public sealed class DesktopWorkspaceTests
         Assert.Empty(host.Commands);
         Click(Button(app, "Close desktop controls"));
         app.Controls.Close();
+    });
+
+    [Theory]
+    [InlineData("restart-ready")]
+    [InlineData("quit")]
+    public Task ExternallyManagedCompletionReturnsGracefulOutcomeAndAcceptsANewSession(string outcome) => RunAsync(async () =>
+    {
+        await using var first = new OwnedControlHost();
+        await using var second = new OwnedControlHost();
+        var opened = new List<Uri>();
+        using var app = new DesktopApp(opened.Add, _ => false, _ => Task.FromResult(false));
+        var attached = app.AttachAsync(first.Bootstrap, externallyManaged: true);
+        await UntilAsync(() => opened.Count == 1 && app.Controls?.IsVisible == true);
+        first.Complete(outcome);
+        Assert.Equal(outcome, await attached);
+        Assert.False(Button(app, "Restart").IsEnabled);
+        Assert.DoesNotContain("stopped. Open it again", Text(app));
+        Assert.Empty(first.Commands);
+        var replacement = app.AttachAsync(second.Bootstrap, externallyManaged: true);
+        await UntilAsync(() => opened.Count == 2 && Button(app, "Quit").IsEnabled);
+        Assert.NotEqual(first.Bootstrap.SessionToken, second.Bootstrap.SessionToken);
+        second.Complete("quit");
+        Assert.Equal("quit", await replacement);
+        Assert.Empty(second.Commands);
+        app.Controls!.Close();
+    });
+
+    [Theory]
+    [InlineData("failed")]
+    [InlineData("stopped")]
+    [InlineData("port-conflict")]
+    public Task ExternallyManagedFailureReturnsRecoveryOutcomeWithoutAnotherBrowserOrCommand(string outcome) => RunAsync(async () =>
+    {
+        await using var host = new OwnedControlHost();
+        var opened = 0;
+        using var app = new DesktopApp(_ => opened++, _ => false, _ => Task.FromResult(true));
+        var attached = app.AttachAsync(host.Bootstrap, externallyManaged: true);
+        await UntilAsync(() => opened == 1 && app.Controls?.IsVisible == true);
+        host.Complete(outcome);
+        Assert.Equal(outcome, await attached);
+        Assert.Equal(1, opened);
+        Assert.False(Button(app, "Restart").IsEnabled);
+        Assert.Empty(host.Commands);
+        Click(Button(app, "Close desktop controls"));
+        app.Controls!.Close();
     });
 
     private sealed class OwnedControlHost : IAsyncDisposable

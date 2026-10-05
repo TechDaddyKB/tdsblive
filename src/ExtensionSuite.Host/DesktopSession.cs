@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using ExtensionSuite.Core;
 using ExtensionSuite.DesktopControl;
 
@@ -35,17 +37,22 @@ public sealed class DesktopSession : IAsyncDisposable
     }
 
     public static Task<DesktopSession?> StartAsync(WebApplication app, IConfiguration configuration) =>
-        StartAsync(app, configuration, Console.OpenStandardInput(), Console.IsInputRedirected);
+        StartAsync(app, configuration, Console.OpenStandardInput(), Console.IsInputRedirected, Console.Out, IsOutputPipe());
 
     internal static async Task<DesktopSession?> StartAsync(WebApplication app, IConfiguration configuration,
-        Stream bootstrapInput, bool redirected)
+        Stream bootstrapInput, bool redirected, TextWriter? bootstrapOutput = null, bool outputIsPipe = false)
     {
         var mode = configuration["TDSBLive:DesktopMode"] ?? "automatic";
         if (mode is not ("automatic" or "external" or "off")) throw new ArgumentException("Desktop mode must be automatic, external or off.");
         var companionPath = Path.Combine(AppContext.BaseDirectory, "desktop", "TDSBLive.Desktop.exe");
         var external = mode == "external";
+        var bootstrapMode = configuration["TDSBLive:DesktopBootstrap"] ?? "input";
+        if (bootstrapMode is not ("input" or "output") ||
+            bootstrapMode == "output" && (!external || !outputIsPipe || bootstrapOutput is null))
+            throw new ArgumentException("Output desktop bootstrap requires external mode and a private output pipe.");
         if (mode == "off" || !external && (!OperatingSystem.IsWindows() || !File.Exists(companionPath))) return null;
-        var sessionToken = external ? await ReadExternalTokenAsync(bootstrapInput, redirected) : DesktopProtocol.NewSessionToken();
+        var sessionToken = external && bootstrapMode == "input"
+            ? await ReadExternalTokenAsync(bootstrapInput, redirected) : DesktopProtocol.NewSessionToken();
         var configured = app.Services.GetRequiredService<ApplicationConfiguration>().Server;
         var editorServer = LocalEditorServer(configured);
         // An explicit LAN interface does not also listen on loopback. Add a local
@@ -60,12 +67,80 @@ public sealed class DesktopSession : IAsyncDisposable
             app.Services.GetRequiredService<ILogger<DesktopSession>>());
         if (external)
         {
-            // Port is not a capability. The session credential is never printed.
-            await Console.Out.WriteLineAsync(DesktopProtocol.ReadyPrefix + bootstrapInfo.Port);
-            await Console.Out.FlushAsync();
+            if (bootstrapMode == "output")
+            {
+                // UMU replaces stdin with /dev/null. Deliver the credential only
+                // through the private output pipe, never logs or configuration.
+                await bootstrapOutput!.WriteLineAsync(DesktopProtocol.BootstrapPrefix + JsonSerializer.Serialize(bootstrapInfo));
+                await bootstrapOutput.FlushAsync();
+            }
+            else
+            {
+                // Port is not a capability. The input-mode credential is never printed.
+                await Console.Out.WriteLineAsync(DesktopProtocol.ReadyPrefix + bootstrapInfo.Port);
+                await Console.Out.FlushAsync();
+            }
         }
         else await session.StartCompanionAsync(companionPath, bootstrapInfo);
         return session;
+    }
+
+    private static bool IsOutputPipe()
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        var handle = NativeOutput.GetStdHandle(-11);
+        var type = NativeOutput.GetFileType(handle);
+        if (type == 3) return true; // Native Windows anonymous/named pipe.
+        if (type != 2 || !Console.IsOutputRedirected) return false;
+        var wine = NativeOutput.GetProcAddress(NativeOutput.GetModuleHandle("ntdll.dll"), "wine_get_version") != IntPtr.Zero;
+        if (!wine) return false;
+        var status = NativeOutput.NtQueryVolumeInformationFile(handle, out _, out var device, 8, 4);
+        return IsWineOutputPipe(type, Console.IsOutputRedirected, wine, status, device.Type);
+    }
+
+    // Wine get_device_info maps Unix FIFOs to FILE_DEVICE_UNKNOWN, whereas
+    // regular files are disk devices, /dev/null is FILE_DEVICE_NULL and terminal
+    // handles are recognized by Console.IsOutputRedirected. Native Windows never
+    // uses this compatibility case. A caller must also explicitly request the
+    // external output bootstrap; ordinary host output contains no credential.
+    internal static bool IsWineOutputPipe(uint fileType, bool redirected, bool wine, int status, uint deviceType)
+        => fileType == 2 && redirected && wine && status == 0 && deviceType == 0x22;
+
+    private static class NativeOutput
+    {
+        [DllImport("kernel32.dll")]
+        internal static extern IntPtr GetStdHandle(int standardHandle);
+        [DllImport("kernel32.dll")]
+        internal static extern uint GetFileType(IntPtr handle);
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        internal static extern IntPtr GetModuleHandle(string moduleName);
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true)]
+        internal static extern IntPtr GetProcAddress(IntPtr module, string name);
+        [DllImport("ntdll.dll")]
+        internal static extern int NtQueryVolumeInformationFile(IntPtr handle, out IoStatus io,
+            out DeviceInformation device, uint length, int informationClass);
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct IoStatus { internal IntPtr Status; internal UIntPtr Information; }
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct DeviceInformation { internal uint Type; internal uint Characteristics; }
+    }
+
+    internal static Task AcknowledgeExistingProfileAsync(IConfiguration configuration) =>
+        AcknowledgeExistingProfileAsync(configuration, Console.OpenStandardInput(), Console.IsInputRedirected,
+            Console.Out, IsOutputPipe());
+
+    internal static async Task AcknowledgeExistingProfileAsync(IConfiguration configuration,
+        Stream input, bool redirected, TextWriter output, bool outputIsPipe)
+    {
+        if (configuration["TDSBLive:DesktopMode"] != "external") return;
+        var bootstrapMode = configuration["TDSBLive:DesktopBootstrap"] ?? "input";
+        if (bootstrapMode is not ("input" or "output") || bootstrapMode == "output" && !outputIsPipe)
+            throw new ArgumentException("Existing-profile acknowledgement needs a launcher pipe.");
+        // Consume the input frame before exiting so the launcher cannot race a
+        // closed pipe. No capability or existing session authority is returned.
+        if (bootstrapMode == "input") _ = await ReadExternalTokenAsync(input, redirected);
+        await output.WriteLineAsync(DesktopProtocol.AlreadyRunningMarker);
+        await output.FlushAsync();
     }
 
     private static async Task<string> ReadExternalTokenAsync(Stream input, bool redirected)

@@ -10,7 +10,7 @@ The installer is named `TDSBLive-<version>-win-x64-setup.exe`; the application Z
 
 Do not choose the links named **Source code** for an ordinary installation. Source code is for building the application yourself. The application package includes the runtime needed to launch TDSBLive.
 
-Check the release's version and notes. The tray controls below describe the **1.0.1 candidate**, which is still being tested and has not been published. Older downloads use the editor's own restart and quit controls. [Before you begin](Before-You-Begin.md) explains the feature differences.
+Check the release's version and notes. The tray controls below describe **1.0.1**. Older downloads use the editor's own restart and quit controls. [Before you begin](Before-You-Begin.md) explains the feature differences.
 
 ## 2A. Install using the installer
 
@@ -47,7 +47,7 @@ editor** to return to the editor later.
 
 ![Windows tray menu with Open editor, Restart and Quit](images/tray-windows-menu.png)
 
-The screenshot is from an owned Windows test of the 1.0.1 candidate. The
+The screenshot is from an owned Windows qualification build for 1.0.1. The
 [illustrated tray guide](Tray-and-Desktop-Controls.md) explains the icon,
 confirmations and the small control window used when the tray is unavailable.
 

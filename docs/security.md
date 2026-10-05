@@ -39,6 +39,27 @@ credentials, stream keys, integration passwords and tokens before persistence,
 display or diagnostics. Widgets never receive credentials. Sandbox custom widgets
 and mediate permissions in G12. Validate files/package traversal and size limits.
 
+## Desktop control boundary
+
+The 1.0.1 native tray uses a separate authenticated IPv4 loopback
+control channel. It grants status, restart and quit access to the admitted local
+companion; it does not grant integration execution or change HTTP, CSRF, LAN or
+custom-widget permissions. Backup restore remains an authenticated browser task.
+
+A fresh session capability travels only through redirected process pipes, never
+through arguments, URLs, environment variables, saved configuration or exports.
+Record formatting redacts it. Requests and replies have bounded sizes, admission
+counts and deadlines; authentication uses constant-time comparison. A profile
+lease prevents two desktop-enabled backends from owning the same saved data.
+An unrelated application's port conflict never authorizes attachment or termination.
+
+Restart and Quit require Cancel-first native confirmations. Closing a control
+window or losing the companion does not stop the backend. A successor launches
+only after explicit successful shutdown/recovery completion; a crashed backend
+does not silently restart. See [Desktop lifecycle](desktop-lifecycle.md) for
+the complete ownership and recovery contract. Linux launcher settings and
+runner/prefix boundaries still require G23 implementation and qualification.
+
 ## Repository and CI safeguards
 
 The original reference directory, credentials, raw captures/databases, logs,
