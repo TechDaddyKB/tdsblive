@@ -120,18 +120,20 @@ final cumulative-package qualification):
 | KDE Wayland/XWayland | Native `f20fdc8` with protected `5ff394f9` backend under Wine; actual menu/browser, Cancel-first Enter/Escape, confirmed restart/quit and full tray-service recovery | Repeat on final cumulative package; complete UMU matrix |
 | Hyprland/Omarchy Wayland | Actual owned Hyprland 0.56.2 compositor with Quickshell: Wine representative and protected `7b58702` UMU menus, Cancel-first keyboard, confirmed restart, native browser and tray recovery | Remaining final cumulative qualification |
 | Direct Wine and UMU native companion | Owned Wine GUI evidence; corrected native UMU default starts selected profile and passes KDE Wayland cancellation/restart/browser/quit | Remaining desktop/runner matrix and final exact packages |
-| New and retained prefixes | Production selection/startup tests; representative actual retained owned prefix | Actual production new-prefix initialization and alias/exclusive-ownership scenarios |
+| New and retained prefixes | Actual optional first-run window initializes its suggested Wine prefix; retained Wine/UMU, physical aliases and native ownership pass at repaired source 6791cfb | Repeat first-run and retained/alias scenarios on the final cumulative bundle |
 | Missing/reappearing tray | Transport watcher replacement tests; actual KDE Wayland watcher loss shows fallback, full service restoration recovers menu | Final-package repeat; panel-only loss retains KDE stale-host limitation documented in guide |
-| Browser restart/restore and crashed hosts | Earlier actual owned backend protocol checks | Current native GUI/package recovery, duplicates and no unintended relaunch |
+| Browser restart/restore and crashed hosts | Actual Hyprland/Wine browser restart and validated restore retain the selected profile; repaired Wine/UMU crash cases keep one native owner, no automatic relaunch, and explicit keyboard close/reopen | Final cumulative-package repeats, including unsuccessful restore |
 | Applications-menu shortcut | Actual optional checkbox installs the shortcut; GIO reopens the retained owned profile; repeated Wine/UMU launches keep one native companion/backend after the acknowledgement repair | Final packaged repetition |
-| Window sizes, themes and keyboard | First-run rendering/resize and KDE X11 native cancellation evidence | Complete Linux short/narrow/DPI/theme and Wayland keyboard scenarios |
-| Resource use | Owned ten-second idle sample: companion/backend combined 472,338,432 bytes RSS, 3.9% of one core | Compare equivalent backend-only baseline and investigate material regressions |
-| Protected current-source package | Head `a507b1e` passes full Windows/Linux/SonarQube/package run and CodeQL; downloaded Linux native/backend markers both identify protected PR merge `7b58702` | Final protected main build and cumulative artifact qualification |
+| Window sizes, themes and keyboard | Both-theme short/narrow headless checks; actual Wayland keyboard cancellation; repaired Hyprland recovery floats and stays keyboard-operable at 320×240 | Complete actual Linux DPI/theme checks and repeat on final package |
+| Resource use | Paired owned UMU runs at repaired 6791cfb source: later samples total 352.0 MiB PSS / 3.93% of one core with the companion versus 229.8 MiB / 3.53% backend-only; same profile, runner and editor workload | Longer allocation/GC investigation and final-package comparison; no steady-state acceptance claim yet |
+| Protected current-source package | Prior full run at a507b1e passes; e286733 fails a missing-input qualifier fixture, now corrected. Current source 6791cfb is pushed; protected run 37367019353 passes the native Windows probe, then unstarted jobs fail to acquire hosted runners; those jobs are retried | Current protected checks, then final protected main build and cumulative artifact qualification |
 | Documentation and public release | Candidate Linux/Windows guide preparation, screenshots and offline checks | G24 full audit/wiki/final OBS and package qualification, then publish v1.0.1 |
 
 ### Blockers
 
-Actual X11/Wayland and both named desktop/runner evidence remain required.
+Current protected checks, remaining DPI/theme/resource qualification and final
+cumulative desktop/runner package repeats remain required. No user decision is
+pending for the investigated Python examples.
 
 ## G24 — Documentation, qualification and publication
 
@@ -1741,3 +1743,87 @@ UMU recovery after explicit close reopens that same profile through the real
 owned applications-menu entry (handoffs increase to 23), retaining disabled LAN
 and integrations. Owned-browser Quit and fixture cleanup complete. No qualified
 case enables live integrations, broadcasts, external execution or financial writes.
+
+
+### G23 paired resource measurement and hosted-runner retry — 2026-10-05
+
+Repaired source is committed and pushed as
+`6791cfbc27d6ffec9a742562dd43e983b722b11d` on draft PR #22. Current protected
+run [37367019353](https://github.com/TechDaddyKB/tdsblive/actions/runs/37367019353)
+passes **Windows native tray probe**. Windows inventory and Linux coverage never
+receive runners: each annotation reports **The job was not acquired by Runner of
+type hosted even after multiple attempts**. Dependent build/package jobs are
+skipped. Failed/unstarted jobs are retried without changing source or protection;
+the passed native probe remains passed. This infrastructure failure is distinct
+from the repaired missing-input qualifier at `e286733`.
+
+Paired actual UMU runs use the same owned prefix/profile, current diagnostic
+Windows backend, compositor, browser/editor workload and production runner/NLS
+choices. The baseline starts the backend with desktop controls off; the comparison
+uses the native companion. Neither run enables LAN or integrations. Three
+30-second samples per run record CPU and proportional memory for the backend and,
+when present, native companion. Browser, compositor and Wine/UMU helpers are
+excluded from both totals. Later two-sample means are **352.0 MiB PSS / 3.93% of
+one core** with the companion and **229.8 MiB / 3.53%** backend-only: about
+**122.2 MiB additional PSS / 0.40 percentage points of one core** in this example.
+The added proportional memory is material (about 53% of that process-only baseline),
+not hidden by counting shared RSS twice. Evidence resides in ignored
+`artifacts/tray-hyprland-native/umu-resource-{with,without}-6791cfb/`.
+
+A subsequent ten-sample, five-minute run shows native PSS growing from 117.0 to
+127.9 MiB between first and last samples, predominantly private dirty pages;
+backend PSS varies rather than following the same monotonic trend. This does not
+prove a leak or settle steady-state use. Numeric allocation/garbage-collection
+counters are being investigated using pinned Microsoft `dotnet-counters`
+**10.0.745401**, installed only in ignored artifacts. No heap dump, environment
+inspection or private control-frame export is collected. Its process attachment
+is restricted to the reviewed owned native executable/PID; user applications and
+production Quickshell are untouched. These preliminary resource measurements
+are not a performance acceptance pass. G23 remains **In progress** and v1.0.1
+remains unpublished; the latest public release is verified as v0.1.0.
+
+
+### G23 actual Linux high-DPI setup repair — 2026-10-05
+
+An actual owned native setup window at 200% scaling on the 1280×900 Hyprland
+output exposes a screen-fit defect at `6791cfb`: its 1280×1400 client starts at
+(0, −250), leaving setup controls outside the output. Escape cancels with exit 0
+and does not start or change the owned backend. Ignored scanned evidence:
+`artifacts/tray-hyprland-native/setup-dpi-6791cfb/`.
+
+The repair constrains Linux setup/recovery window dimensions to the selected
+screen's logical working area and centers the resulting size. Explicit setup
+sizes shrink; auto-sized recovery content retains its scroll viewport. Screen
+limits adjust minimum dimensions where needed, allowing smaller available areas.
+Windows recovery placement is unchanged. Overlay geometry, profile choices and
+backend authority are untouched. The full local desktop suite passes **124
+cases**, with **2 Windows-only skips** (126 total), after this repair.
+
+A fresh pinned native diagnostic publish of repaired working source passes the
+same actual 200% setup case: its floating client is **1232×804 at (24, 48)**,
+within the output, with **Cancel** and **Start TDSBLive** visible and scrollable
+fields. The scanned screenshot is visually inspected. Native Escape cancels
+with exit 0; the original tray remains Running and no backend action is requested.
+Evidence: `artifacts/tray-hyprland-native/setup-dpi-repaired-after-6791cfb/`.
+A new current protected build and final-package DPI repetition remain required.
+
+The first three-minute numeric counter collection on the owned native process
+records GC heap growth from **7.78 to 14.57 MB**, about **7.0 MB allocated**, and
+zero collections in all generations during that interval. This explains much of
+that interval's resident growth as uncollected managed allocation; it does not
+establish retained live objects or prove absence of a leak. An extended numeric
+collection remains in progress. Neither collection dumps memory or credentials.
+The hosted-runner retry passes Windows inventory but again fails to acquire the
+Linux hosted runner; its annotation repeats the same infrastructure failure.
+The successful Windows native probe and inventory are preserved. Protection is
+not changed or bypassed. G23 remains **In progress**, G24 **Not started**, and
+the full goal remains active.
+
+The extended ten-minute numeric collection completes with 120 samples per
+counter: GC heap grows **19.05→42.00 MB**, working set **196.68→222.00 MB**,
+about **23.12 MB** is allocated, and no generation records a collection in that
+interval. Thus collection has not yet distinguished live retention from ordinary
+uncollected allocations. Natural collection/longer observation remains required;
+no leak or steady-state pass is claimed. Both counter exports are scanned before
+numeric analysis. The owned native process remains available for that bounded
+follow-up, with all integrations and LAN disabled.

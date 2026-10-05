@@ -50,6 +50,7 @@ public sealed class LinuxSetupWindow : Window
         Width = 640; Height = 700; MinWidth = 320; MinHeight = 360;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         X11Properties.SetNetWmWindowType(this, X11NetWmWindowType.Dialog);
+        Opened += (_, _) => LinuxWindowPlacement.Fit(this);
         runner.SelectedIndex = initial?.Runner == LinuxRunnerKind.Umu ? 1 : 0;
         runnerPath.Text = initial?.RunnerPath ?? InstalledRunner("wine");
         previousRunner = runner.SelectedIndex;

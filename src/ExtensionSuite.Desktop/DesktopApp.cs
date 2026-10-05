@@ -435,6 +435,7 @@ public sealed class DesktopApp : Application, IDisposable
             {
                 var screen = controls.Screens.ScreenFromWindow(controls) ?? controls.Screens.Primary;
                 if (screen is not null) controls.MaxHeight = Math.Max(180, screen.WorkingArea.Height / screen.Scaling - 48);
+                if (OperatingSystem.IsLinux()) LinuxWindowPlacement.Fit(controls);
             };
             controls.Closing += (_, eventArgs) =>
             {
