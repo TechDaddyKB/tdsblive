@@ -1237,3 +1237,41 @@ desktop requalification remain required for TR-R02. The visible title used by
 the Quickshell test panel is not sufficient proof of a real desktop tooltip.
 G23 remains In progress. This is actionable implementation work, not an external
 approval or participant blocker.
+
+### G23 Linux tooltip repair and transport evidence — 2026-10-05
+
+The active goal is progressing through Linux compatibility qualification; it is
+not waiting for operator approval or a participant. Protected Windows/Linux run
+[37334967173](https://github.com/TechDaddyKB/tdsblive/actions/runs/37334967173)
+completed successfully for source `6c717cc`. That run predates the repair below
+and does not qualify the new implementation.
+
+The pinned Avalonia Linux implementation exports empty SNI `ToolTip` fields.
+`LinuxNativeTray.cs` now exports the fixed three-action menu and current status
+through the existing pinned Tmds D-Bus transport. The application retains
+Avalonia's native dialogs and the Windows tray implementation. The exporter uses
+public transport APIs, controlled status strings and the existing icon; it adds
+no dependency or integration-data exposure. Watcher replacement, bounded
+registration retries, disabled commands and disposal remain supported.
+
+Eight tests exercise the exporter over an owned actual session bus, including
+tooltip/icon properties, menu actions and disabled states, malformed requests,
+watcher replacement, disposal, grouped requests and activation. The complete
+desktop suite passes on the reviewed worktree based on `da90c92`: **118 passed,
+2 Windows-only skipped, 0 failed**. Command: pinned .NET 10.0.401
+`dotnet test tests/unit/ExtensionSuite.Desktop.Tests/ExtensionSuite.Desktop.Tests.csproj
+-c Release --no-restore -m:1 -p:UseSharedCompilation=false --settings
+coverage.runsettings --collect:"XPlat Code Coverage" --logger trx`, with an owned
+temporary directory. Scanned ignored evidence is under
+`artifacts/tray-linux-tooltip-reviewed-tests/`; its TRX records a 38-second run.
+
+An earlier local native publish of this exporter, paired with the protected
+candidate Windows backend, visibly displays **TDSBLive — Running** in the owned
+KDE Plasma X11 session. Scanned captures `kde-fixed-tooltip.png` and
+`kde-fixed-menu.png` under `artifacts/tray-linux-native-actions/` record the
+tooltip and three menu actions. This resolves the observed defect in that local
+prototype; it does not establish latest-commit packaged lifecycle or complete
+the desktop/runner matrix. Protected qualification of this repair and the
+remaining G23 scenarios are next. G23 remains **In progress**; G24's final
+documentation, qualification and public release remain outstanding. There is
+still no published v1.0.1 release.

@@ -22,6 +22,7 @@ public sealed class DesktopApp : Application, IDisposable
     private readonly NativeMenuItem restart = new("Restart");
     private readonly NativeMenuItem quit = new("Quit");
     private TrayIcon? tray;
+    private LinuxNativeTray? nativeLinuxTray;
     private Window? controls;
     private TextBlock? statusText;
     private Button? openButton, restartButton, quitButton;
@@ -195,9 +196,18 @@ public sealed class DesktopApp : Application, IDisposable
         open.Click += (_, _) => OpenEditor();
         restart.Click += async (_, _) => await RequestAsync("restart");
         quit.Click += async (_, _) => await RequestAsync("quit");
-        tray = new TrayIcon { Icon = CreateIcon(), ToolTipText = "TDSBLive — Starting", Menu = menu, IsVisible = true };
-        tray.Clicked += (_, _) => OpenEditor();
-        TrayIcon.SetIcons(this, new TrayIcons { tray });
+        if (probeLinuxTray)
+            nativeLinuxTray = new(command => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (command == "open") OpenEditor();
+                else _ = RequestAsync(command);
+            }), CreateTrayPixmap());
+        else
+        {
+            tray = new TrayIcon { Icon = CreateIcon(), ToolTipText = "TDSBLive — Starting", Menu = menu, IsVisible = true };
+            tray.Clicked += (_, _) => OpenEditor();
+            TrayIcon.SetIcons(this, new TrayIcons { tray });
+        }
         SetState("Starting TDSBLive…", false);
     }
 
@@ -232,14 +242,14 @@ public sealed class DesktopApp : Application, IDisposable
                 var available = trayRegistered(tray);
                 if (probeLinuxTray)
                 {
+                    if (nativeLinuxTray is not null) await nativeLinuxTray.EnsureRegisteredAsync(stopped);
                     var registration = await LinuxTrayRegistration.ReadAsync(stopped);
                     stopped.ThrowIfCancellationRequested();
                     available = registration.Registered;
                     if (!available && registration.HostAvailable && DateTimeOffset.UtcNow >= nextLinuxTrayRetry)
                     {
-                        // Avalonia already watches owner changes. A bounded retry
-                        // also covers a failed registration while that owner stays.
-                        restoreTray(tray);
+                        if (nativeLinuxTray is not null) await nativeLinuxTray.EnsureRegisteredAsync(stopped, retry: true);
+                        else restoreTray(tray);
                         nextLinuxTrayRetry = DateTimeOffset.UtcNow.AddSeconds(10);
                     }
                 }
@@ -370,6 +380,7 @@ public sealed class DesktopApp : Application, IDisposable
         if (openButton is not null) openButton.IsEnabled = open.IsEnabled;
         if (restartButton is not null) restartButton.IsEnabled = restart.IsEnabled;
         if (quitButton is not null) quitButton.IsEnabled = quit.IsEnabled;
+        nativeLinuxTray?.Update("TDSBLive — " + (statusLabel == RunningLabel ? "Running" : statusLabel), open.IsEnabled);
     }
 
     private void ShowControls(string explanation)
@@ -430,6 +441,7 @@ public sealed class DesktopApp : Application, IDisposable
         stopping.Cancel();
         linuxBackend?.Dispose();
         tray?.Dispose();
+        nativeLinuxTray?.Dispose();
         stopping.Dispose();
     }
 
@@ -460,5 +472,19 @@ public sealed class DesktopApp : Application, IDisposable
         bytes[index + 1] = letter ? (byte)255 : (byte)99;
         bytes[index + 2] = letter ? (byte)255 : (byte)37;
         bytes[index + 3] = visible ? (byte)255 : (byte)0;
+    }
+
+    internal static byte[] CreateTrayPixmap()
+    {
+        var pixels = new byte[32 * 32 * 4];
+        for (var y = 0; y < 32; y++)
+            for (var x = 0; x < 32; x++) DrawIconPixel(pixels, 32 * 4, x, y);
+        // SNI uses network-order ARGB, rather than the bitmap's BGRA bytes.
+        for (var i = 0; i < pixels.Length; i += 4)
+        {
+            (pixels[i], pixels[i + 3]) = (pixels[i + 3], pixels[i]);
+            (pixels[i + 1], pixels[i + 2]) = (pixels[i + 2], pixels[i + 1]);
+        }
+        return pixels;
     }
 }
