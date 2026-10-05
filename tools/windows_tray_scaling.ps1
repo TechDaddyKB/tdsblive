@@ -18,6 +18,10 @@ function Open-DisplaySettings {
     Start-Process 'ms-settings:display' | Out-Null
     return Wait-For { Display-SettingsWindow } 'The owned display Settings window did not open.'
 }
+function Close-DisplaySettings($Settings) {
+    $Settings.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
+    Wait-For { -not (Display-SettingsWindow) } 'The owned Settings window did not finish closing.' | Out-Null
+}
 function Display-ScaleChoices($Settings) {
     $condition = [System.Windows.Automation.PropertyCondition]::new(
         [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'SystemSettings_Display_Scaling_ItemSizeOverride_ComboBox')
@@ -71,8 +75,9 @@ function Qualify-WindowsScaling($Desktop) {
             $offered = @($available.choices | ForEach-Object { $_.name })
         } finally { $available.expand.Collapse() }
         $changed = $true
+        $script:scalingEvidence = @{ original = $original; targetPercent = $target.percent; offeredScales = $offered; restored = $false }
         Set-DisplayScale $settings $target.name
-        $settings.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
+        Close-DisplaySettings $settings
         $settings = $null
         $expectedDpi = [int](96 * $target.percent / 100)
         foreach ($action in @('Restart', 'Quit')) {
@@ -108,10 +113,11 @@ function Qualify-WindowsScaling($Desktop) {
                     if (-not ($restored.choices | Where-Object { $_.name -eq $original -and $_.selected })) {
                         throw 'The original Windows display scale was not restored.'
                     }
+                    $script:scalingEvidence.restored = $true
                 } finally { $restored.expand.Collapse() }
             }
         } finally {
-            if ($settings) { $settings.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close() }
+            if ($settings) { Close-DisplaySettings $settings }
         }
     }
 }

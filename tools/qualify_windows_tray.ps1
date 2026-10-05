@@ -87,6 +87,9 @@ $hostProcess = $null
 $browserPolicy = $null
 $desktopIds = New-Object 'System.Collections.Generic.HashSet[int]'
 $screenshotMetrics = @{}
+$nativePhase = 'startup'
+$scalingEvidence = $null
+$trayAction = $null
 
 function Wait-For([scriptblock]$Probe, [string]$Failure, [int]$Seconds = 30) {
     $deadline = [DateTime]::UtcNow.AddSeconds($Seconds)
@@ -218,8 +221,20 @@ function Screenshot($Target, [string]$Name) {
     }
 }
 function Menu-Action($Desktop, [string]$Action) {
-    [TdsTrayDesktop]::OpenMenu($Desktop.Id)
-    $item = Wait-For { Element $Desktop.Id $Action ([System.Windows.Automation.ControlType]::MenuItem) } "Native tray menu action '$Action' was not accessible."
+    $script:trayAction = $Action
+    # A closing Windows Settings window can briefly reclaim activation after a
+    # display change. Retry opening a dismissed menu, without invoking an action
+    # twice or sending keys to another application.
+    $probe = @{ lastOpen = [DateTime]::MinValue }
+    $item = Wait-For {
+        $found = Element $Desktop.Id $Action ([System.Windows.Automation.ControlType]::MenuItem)
+        if ($found -and -not $found.Current.IsOffscreen) { return $found }
+        if (([DateTime]::UtcNow - $probe.lastOpen).TotalSeconds -ge 1) {
+            [TdsTrayDesktop]::OpenMenu($Desktop.Id)
+            $probe.lastOpen = [DateTime]::UtcNow
+        }
+        return $null
+    } "Native tray menu action '$Action' was not accessible."
     $parent = $item
     while ($parent -and $parent.Current.ControlType -ne [System.Windows.Automation.ControlType]::Window) {
         $parent = [System.Windows.Automation.TreeWalker]::RawViewWalker.GetParent($parent)
@@ -362,12 +377,15 @@ try {
     Confirm-Action $desktop 'Quit' $false 'quit-cancel.png'
     if ((Ready) -ne $generation) { throw 'Cancel button unexpectedly quit TDSBLive.' }
 
+    $nativePhase = 'themes'
     $themes = Qualify-WindowsThemes $desktop
     if ((Ready) -ne $generation) { throw 'Changing native appearance unexpectedly changed the backend generation.' }
+    $nativePhase = 'scaling'
     $scaling = Qualify-WindowsScaling $desktop
     if ((Ready) -ne $generation) { throw 'Changing display scale unexpectedly changed the backend generation.' }
 
     # Explorer restart is isolated to this CI session; never restart an operator's shell.
+    $nativePhase = 'Explorer recovery'
     $explorers = @(Get-Process explorer | Where-Object { $_.SessionId -eq $session })
     if ($explorers.Count -ne 1) { throw 'Expected one Explorer in the owned interactive CI session.' }
     Stop-Process -Id $explorers[0].Id -Force
@@ -399,6 +417,7 @@ try {
     }
     $shellRestarted = $false
 
+    $nativePhase = 'confirmed restart'
     Confirm-Action $desktop 'Restart' $true 'restart-confirm.png'
     $generationAfter = Wait-For { $current = Ready; if ($current -and $current -ne $generation) { $current } } 'Confirmed restart did not start a new backend generation.'
     $previousDesktop = $desktop.Id
@@ -408,6 +427,7 @@ try {
     Assert-OwnedCredential $credentialHash
 
     # Keep this owned backup in memory. It contains only this disposable profile;
+    $nativePhase = 'browser restore'
     # its encrypted credential is never decoded or printed by the harness.
     $csrf = Invoke-RestMethod "$origin/api/auth/csrf" -SessionVariable editorSession -TimeoutSec 5
     $headers = @{ Origin = $origin; 'X-TDSBLive-CSRF' = $csrf.requestToken }
@@ -494,6 +514,27 @@ try {
         remaining = $remaining
     } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $EvidenceDirectory 'tray-result.json') -Encoding UTF8
     Write-Output 'Actual owned Windows tray/confirmation/Explorer/restart/quit qualification passed. Remaining release gates are recorded separately.'
+} catch {
+    $failure = $_
+    try {
+        $ownedWindows = @()
+        if ($desktop) {
+            $condition = [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::ProcessIdProperty, [int]$desktop.Id)
+            foreach ($window in [System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Children, $condition)) {
+                $ownedWindows += @{ name = $window.Current.Name; offscreen = $window.Current.IsOffscreen; enabled = $window.Current.IsEnabled }
+            }
+        }
+        @{
+            phase = $nativePhase; trayAction = $trayAction; scaling = $scalingEvidence
+            screenshots = @($screenshotMetrics.Values); ownedWindows = $ownedWindows
+            shellAvailable = [TdsTrayDesktop]::FindWindow('Shell_TrayWnd', $null) -ne [IntPtr]::Zero
+            backendReady = [bool](Ready)
+            registered = $desktop -and [TdsTrayDesktop]::Registered($desktop.Id)
+            desktopHasForeground = $desktop -and [TdsTrayDesktop]::OwnsForeground($desktop.Id)
+        } | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $EvidenceDirectory 'native-failure.json') -Encoding UTF8
+    } catch { Write-Warning 'Owned native diagnostics could not be collected; the original qualification failure is retained.' }
+    throw $failure
 } finally {
     try {
         if ($shellRestarted -and [TdsTrayDesktop]::FindWindow('Shell_TrayWnd', $null) -eq [IntPtr]::Zero) { Start-Process explorer.exe | Out-Null }

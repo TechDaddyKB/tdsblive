@@ -411,3 +411,35 @@ scanning, with per-page review/update destinations in the documentation audit.
 All 76 audit links resolve. Plain-language tray, desktop companion and start-at-
 login definitions are prepared. Final documentation, offline/wiki publication,
 Linux delivery and OBS qualification remain outstanding.
+
+Source `119694c8304fb35c79354be220d8ae80504d03b8` passes the existing build,
+regression and Sonar steps in
+[run 37256469350](https://github.com/TechDaddyKB/tdsblive/actions/runs/37256469350),
+then fails opening **Restart** after the scaling step. Scanned native artifacts
+contain the earlier editor/theme screenshots but no completed high-DPI or
+Explorer recovery evidence. The harness now waits for the owned Settings window
+to disappear, retries opening only a missing/dismissed tray menu, and retains
+foreground/focus checks before keyboard activation. It records phase, owned
+windows, registration/foreground status, screenshot DPI and restored scaling
+selection on failure. The independent inventory returned an empty control list
+after finding its window; it now waits explicitly for display controls rather
+than treating an empty page as completed discovery. PowerShell parsing passes;
+actual native scaling/recovery still must pass on the updated source.
+
+Preparation adds an illustrated Windows tray chapter and three real owned
+screenshots from source `199f79f` to canonical navigation. The offline build has
+**21 chapters and 15 images**. A network-disabled browser verifies chapter links,
+images, tray navigation and reflow at **320, 390 and 1366 pixels**. Candidate and
+Linux/publication limits remain explicit; the public wiki is not updated yet.
+
+The owned OBS fixture helper passes real managed-host overlay/asset setup,
+stored state, authenticated restart/restore, explicit successful relaunch,
+graceful quit and SQLite integrity without touching OBS or playing audio.
+The current host was rebuilt with the pinned SDK before recording the pass;
+an older local binary first timed out and is not acceptance evidence. The shared
+HTTP helper now accepts legitimate empty 204 responses, exercised by actual
+custom-state writes. The existing desktop process qualifier also passes after
+that change. OBS 32.2.2/WebSocket 5.7.4 remains connected on Omarchy, with Browser
+Source available and streaming/recording inactive (2026-10-05 02:44 UTC). No OBS
+scene/output was changed. Final packaged OBS rendering/reconnect/audio, native
+Linux delivery and release publication remain required.

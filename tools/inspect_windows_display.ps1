@@ -38,6 +38,16 @@ try {
         Start-Sleep -Milliseconds 200
     }
     if (-not $settings) { throw 'The CI image did not expose a Windows display Settings window.' }
+    # The top-level window can appear before its display page is populated.
+    $scaleCondition = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'SystemSettings_Display_Scaling_ItemSizeOverride_ComboBox')
+    $deadline = [DateTime]::UtcNow.AddSeconds(30)
+    $scaleControl = $null
+    while (-not $scaleControl -and [DateTime]::UtcNow -lt $deadline) {
+        $scaleControl = $settings.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $scaleCondition)
+        if (-not $scaleControl) { Start-Sleep -Milliseconds 200 }
+    }
+    if (-not $scaleControl) { throw 'The Settings window appeared, but its display controls did not finish loading.' }
     $elements = $settings.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     $controls = @()
     foreach ($element in $elements) {
