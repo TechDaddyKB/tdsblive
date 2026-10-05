@@ -32,7 +32,16 @@ public sealed class LinuxLauncherSettingsTests
             Assert.Contains("--TDSBLive:DesktopBootstrap=output", launch.ArgumentList);
             Assert.Equal("0", launch.Environment["PROTON_LOG"]);
             Assert.Equal("0", launch.Environment["STEAM_LINUX_RUNTIME_LOG"]);
+            Assert.Equal(Environment.GetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_USENLS") ?? "1",
+                launch.Environment["DOTNET_SYSTEM_GLOBALIZATION_USENLS"]);
+            launch.Environment.TryGetValue("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", out var invariantMode);
+            Assert.Equal(Environment.GetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"), invariantMode);
             Assert.False(launch.Environment.ContainsKey("STORE"));
+        }
+        else
+        {
+            launch.Environment.TryGetValue("DOTNET_SYSTEM_GLOBALIZATION_USENLS", out var nlsMode);
+            Assert.Equal(Environment.GetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_USENLS"), nlsMode);
         }
     }
 

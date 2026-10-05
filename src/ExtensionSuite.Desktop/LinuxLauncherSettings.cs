@@ -68,6 +68,12 @@ public sealed record LinuxLauncherSettings(LinuxRunnerKind Runner, string Runner
             // A private bootstrap frame must never reach runner log files.
             info.Environment["PROTON_LOG"] = "0";
             info.Environment["STEAM_LINUX_RUNTIME_LOG"] = "0";
+            // Retained Wine prefixes can expose ICU forwarders unavailable in
+            // Proton's runtime. NLS keeps Windows culture support without
+            // requiring users to rebuild their prefix or disable globalization.
+            // Preserve an explicitly selected runtime mode; only this child gets
+            // the default; native Linux and native Windows launches are unchanged.
+            info.Environment.TryAdd("DOTNET_SYSTEM_GLOBALIZATION_USENLS", "1");
             info.Environment.Remove("STORE");
         }
         return info;

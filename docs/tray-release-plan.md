@@ -117,16 +117,16 @@ final cumulative-package qualification):
 | Required scenario | Current evidence | Remaining work |
 | --- | --- | --- |
 | KDE X11 native menu, tooltip, browser, restart and quit | Native `2989331` with protected `5ff394f9` backend under Wine; actual interactions, retained profile, replaced backend, exit 0 and SQLite integrity | Repeat on final cumulative package |
-| KDE Wayland/XWayland | Actual menu, tooltip, editor and native dialog render; browser Quit exits 0 | Resolve fixture input/activation and prove tray actions, cancellation and lifecycle |
+| KDE Wayland/XWayland | Native `f20fdc8` with protected `5ff394f9` backend under Wine; actual menu/browser, Cancel-first Enter/Escape, confirmed restart/quit and full tray-service recovery | Repeat on final cumulative package; complete UMU matrix |
 | Hyprland/Omarchy Wayland | Earlier isolated Quickshell panel evidence; not a complete compositor qualification | Actual owned compositor/session interactions with current exporter |
-| Direct Wine and UMU native companion | Owned actual Wine GUI evidence; owned UMU backend bootstrap/lifecycle evidence | Full native GUI flow under UMU and desktop/runner matrix |
+| Direct Wine and UMU native companion | Owned Wine GUI evidence; corrected native UMU default starts selected profile and passes KDE Wayland cancellation/restart/browser/quit | Remaining desktop/runner matrix and final exact packages |
 | New and retained prefixes | Production selection/startup tests; representative actual retained owned prefix | Actual production new-prefix initialization and alias/exclusive-ownership scenarios |
-| Missing/reappearing tray | Transport watcher replacement tests; actual KDE panel menu/tooltip recovery | Current exporter service-loss fallback and KDE stale-host limitation resolution/qualification |
+| Missing/reappearing tray | Transport watcher replacement tests; actual KDE Wayland watcher loss shows fallback, full service restoration recovers menu | Final-package repeat; panel-only loss retains KDE stale-host limitation documented in guide |
 | Browser restart/restore and crashed hosts | Earlier actual owned backend protocol checks | Current native GUI/package recovery, duplicates and no unintended relaunch |
 | Applications-menu shortcut | Owned GIO/installation tests | Final packaged shortcut installation and launch |
 | Window sizes, themes and keyboard | First-run rendering/resize and KDE X11 native cancellation evidence | Complete Linux short/narrow/DPI/theme and Wayland keyboard scenarios |
-| Resource use | Historical backend baselines retained | Measure companion plus backend versus baseline |
-| Protected current-source package | Earlier `6c717cc` full protected build passes; `2989331` desktop probes/tests pass but a host regression test times out | Protected full run after test repair, then inspect current artifacts |
+| Resource use | Owned ten-second idle sample: companion/backend combined 472,338,432 bytes RSS, 3.9% of one core | Compare equivalent backend-only baseline and investigate material regressions |
+| Protected current-source package | `f20fdc8` full protected Windows/Linux/SonarQube/package run and Advanced Security succeed; subsequent UMU repair passes local desktop tests and actual GUI | Protected full run after UMU repair, then final protected main build |
 | Documentation and public release | Candidate Linux/Windows guide preparation, screenshots and offline checks | G24 full audit/wiki/final OBS and package qualification, then publish v1.0.1 |
 
 ### Blockers
@@ -1350,3 +1350,150 @@ The regenerated beginner offline guide also passes its network-disabled browser
 audit: **21 chapters, 18 images**, local navigation and reflow at
 **320/390/1366 pixels**. This includes the new actual KDE illustration and
 recovery guidance. Full wiki and final-package acceptance are still pending.
+
+
+### G23 Wayland lifecycle and vendor finding investigation — 2026-10-05
+
+The user authorized investigation of the two scanner findings in the owned
+SteamRT4 Python runtime. Both copies of `lib/python3.13/urllib/request.py` have
+SHA-256 `e30e1285f957dad785d401c79fac9fd701c5cb2b8607b6d74d5f7082d612dcd4`.
+A bounded in-memory AST comparison proves that line 56 is inside the module
+documentation string and that the entire string exactly matches
+[official CPython 3.13 source](https://github.com/python/cpython/blob/3.13/Lib/urllib/request.py).
+These are public authentication examples, not application credentials. No
+flagged value was printed from either local file, no vendor code was modified,
+and no credential rotation is required for these two false positives. This
+classification applies only to the two verified files and exact contents;
+future findings or changed contents still require investigation. The runtime
+was rescanned before resuming qualification.
+
+An owned KDE Plasma 6.7.4 Wayland/XWayland session now qualifies the native
+`f20fdc8` diagnostic publish with the protected `5ff394f9` Windows backend under
+Wine 11.17. Evidence is retained in
+`artifacts/tray-linux-wayland-f20fdc8-qualified/`. Input is sent through the
+owned nested compositor output, rather than incorrectly targeting its inner
+XWayland display. The actual Restart dialog closes on Enter without changing
+the native or backend process; explicit Tab/Enter confirmation replaces backend
+PID 1609718 with 1613088 while native PID 1609572 and the selected profile remain
+unchanged. Quit also cancels on Enter and Escape; explicit confirmation exits
+the native process with code 0 and stops its owned backend. LAN and integrations
+remain disabled throughout. Open editor visibly opens the native owned browser.
+
+Stopping the owned KDE watcher produces the visible three-action fallback.
+Restoring the watcher and panel recovers the tray menu. Watcher restoration
+alone was captured before full recovery; that capture does not prove immediate
+recovery. Panel-only loss still has KDE's stale host flag limitation and the
+published candidate guide explains the editor recovery controls.
+
+A ten-second idle sample measures native RSS 211,546,112 bytes and CPU 0.3% of
+one core; backend RSS 260,792,320 bytes and CPU 3.6%. The combined sample excludes
+Wine server, compositor and browser. It is not a performance pass or a baseline
+comparison. Equivalent backend-only measurement and investigation remain due.
+
+Protected [Windows/Linux qualification run 37345261968](https://github.com/TechDaddyKB/tdsblive/actions/runs/37345261968)
+and [Advanced Security run 37345267170](https://github.com/TechDaddyKB/tdsblive/actions/runs/37345267170)
+both completed successfully at PR head `f20fdc8f0084878788b216f9f7cd9cb2caa0a950`.
+The full run includes Windows inventory/native tray, Linux desktop coverage,
+Windows build/regression/SonarQube/packages, offline guide and Linux bundle
+first-run qualification. Downloaded artifact source markers and exact final
+protected-main packages still require inspection and qualification.
+
+G23 remains **In progress**; G24 is **Not started**. The prepared native UMU GUI
+fixture can now run after its scoped source/runtime scans. Hyprland, production
+new-prefix setup, final package evidence, documentation audit/wiki, actual OBS
+and public v1.0.1 downloads remain required.
+
+
+The current protected Linux candidate was downloaded from run 37345261968,
+its SHA-256 verified as
+`626bb8e61d0bf394884ae3844d42d54f5b609f8e74e890ddcd311a3c7a0f898f`,
+and its 1,208 tar members admitted only after rejecting links, special files,
+absolute/traversing paths and oversized archives. Extracted files pass secrets
+scanning. Native and Windows backend package markers both identify checkout
+`9e06170f9b1045a794b5fcb9e8f73f13b18e5337`, the protected PR merge of main
+`5ee550803cf18fa786e4edc2651fd53ecf035643` and head
+`f20fdc8f0084878788b216f9f7cd9cb2caa0a950` (tree
+`ba8cc715efb42e26c8338b72ea240f12ff1648e1`). This distinction preserves exact
+artifact provenance; the binaries are not claimed to be a head-only build.
+
+The first UMU GUI fixture ended cleanly after its 30-second readiness deadline
+without a working backend. Its owned processes were stopped and logs scanned;
+no GUI acceptance is inferred. The next diagnostic fixture uses both binaries
+from the same protected candidate and respects the application's five-minute
+startup allowance, with intermediate captures to distinguish slow startup from
+an error window.
+
+
+The intermediate native capture shows the friendly runner-failure setup window,
+so the UMU result was not merely slow startup. A bounded owned diagnostic run
+with desktop capability exchange disabled exits 1; its scanned log identifies
+UMU pressure-vessel attempting to mount the fixture's nonexistent
+`/tmp/owned-no-system-bus`. The fixture had deliberately advertised that path
+to avoid the production system bus. It now advertises its real owned private
+bus instead, preserving isolation while allowing the container bind. No
+production source or vendor runtime change is needed for this fixture error.
+The failed diagnostic processes are confirmed stopped before the corrected
+protected-candidate GUI fixture starts.
+
+
+The corrected fixture reaches Proton but the current protected backend then
+exits 3 with `Cannot get symbol u_charsToUChars from libicuuc` (scanned owned
+logs in `artifacts/tray-linux-wayland-umu-bus-diagnostic-f20fdc8/`). Removing
+fixture-only Qt/library search paths gives the same result. A subsequent owned
+native GUI run with .NET Windows NLS enabled and the production DLL overrides
+successfully reaches the selected HTTP profile under UMU. This narrows the
+compatibility repair to Windows globalization selection in the UMU child;
+[Microsoft documents the NLS option](https://learn.microsoft.com/en-us/dotnet/core/runtime-config/globalization#nls).
+This option retains culture-specific support; invariant globalization is not
+used. The diagnostic candidate remains unchanged, and the compatibility
+setting is currently supplied by the fixture environment. Native GUI lifecycle
+and a production default repair still require qualification.
+
+
+### G23 retained-prefix Proton globalization repair — 2026-10-05
+
+The same protected candidate now starts the owned selected profile under UMU
+1.4.4, GE-Proton11-6 and SteamRT4 with NLS enabled. Its native Running menu and
+editor are visually verified in
+`artifacts/tray-linux-wayland-umu-nls-gui-f20fdc8-evidence/`; LAN and integrations
+are disabled. This initial GUI run stops at an immediate dialog-disappearance
+assertion and does not prove cancellation or restart. The qualifier now waits
+for owned-dialog activation and disappearance with bounded polling, avoiding
+an assertion before the compositor/UI has processed the input.
+
+Production `LinuxLauncherSettings.CreateStartInfo` supplies
+`DOTNET_SYSTEM_GLOBALIZATION_USENLS=1` by default only to the UMU Windows child.
+An explicit inherited choice remains respected. Native Linux and direct-Wine
+process settings are unaffected, and invariant globalization is not enabled.
+Existing selected prefixes, saved configuration, runner logs and Windows
+package settings are not modified. The whole desktop suite passes **118 tests,
+2 Windows-only skips, total 120**, with evidence in
+`artifacts/tray-umu-nls-desktop-tests/`. Assertions cover the child compatibility
+default, retained explicit mode, unchanged invariant setting and Wine behavior.
+
+A fresh local native diagnostic publish is being checked with the protected
+`9e06170f` Windows backend, without a fixture-supplied NLS variable, to verify the
+production default in actual UMU startup and GUI lifecycle. Current protected
+checks and final cumulative packages must be rebuilt after this source change.
+G23 remains **In progress** and G24 remains **Not started**.
+
+
+The production-default diagnostic completes the actual KDE Wayland/XWayland
+UMU GUI flow with no fixture-supplied NLS environment variable. Evidence is in
+`artifacts/tray-linux-wayland-umu-default-nls-evidence/`; native publish is
+`artifacts/tray-umu-nls-native/`, paired with protected backend `9e06170f`.
+Native PID 1818078 stays unchanged; Enter cancels Restart with child 1818204
+retained, while explicit Tab/Enter Restart replaces that child with 1822052.
+Quit cancels with both Enter and Escape, retaining child 1822052 and the same
+profile, port 57109 and disabled integration/LAN settings. Open editor visibly
+opens another owned native Chromium tab at the same editor address. Explicit
+Quit exits the native application with code 0; the fixture closes all owned
+processes. The selected database passes read-only SQLite integrity checking and
+retains the owned configuration and port. This proves representative UMU GUI
+behavior with the repair, not the complete desktop matrix or final package.
+
+A separate run of all **18 LinuxLauncherSettingsTests** with inherited
+`DOTNET_SYSTEM_GLOBALIZATION_USENLS=0` passes with no skips, proving that the
+compatibility default respects an explicit ICU choice. The full **118-pass**
+desktop suite and actual default-mode GUI evidence remain the relevant repair
+checks. No subsequent functional source changes were made after those checks.
