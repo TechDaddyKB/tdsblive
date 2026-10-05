@@ -42,6 +42,8 @@ public sealed class DesktopApp : Application, IDisposable
     private readonly bool probeLinuxTray;
     private DateTimeOffset nextLinuxTrayRetry = DateTimeOffset.UtcNow.AddSeconds(3);
     internal Window? Controls => controls;
+    internal LinuxSetupWindow? LinuxSetup { get; private set; }
+    internal Task? LinuxLifecycle { get; private set; }
 
     public DesktopApp() : this(LaunchBrowser, IsTrayRegistered, ConfirmAsync)
         => probeLinuxTray = OperatingSystem.IsLinux();
@@ -74,7 +76,7 @@ public sealed class DesktopApp : Application, IDisposable
         ? StartLinuxAsync(Program.Arguments.Length != 0) : StartAsync(Console.OpenStandardInput(),
             Program.Arguments.SequenceEqual(new[] { "--attach" }) && Console.IsInputRedirected);
 
-    private async Task StartLinuxAsync(bool showSetup)
+    internal async Task StartLinuxAsync(bool showSetup)
     {
         var configured = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
         var root = !string.IsNullOrWhiteSpace(configured) && Path.IsPathFullyQualified(configured) ? configured :
@@ -82,7 +84,7 @@ public sealed class DesktopApp : Application, IDisposable
         var store = new LinuxLauncherSettingsStore(Path.Combine(root, "tdsblive"));
         LinuxLauncherSettings? selected;
         try { selected = store.Load(); }
-        catch (Exception error) when (error is IOException or ArgumentException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        catch (Exception error) when (error is IOException or InvalidDataException or ArgumentException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
             SetState("Launcher settings need attention", false);
             ShowControls("Your saved Linux launcher choices could not be loaded. Your Windows setup is unchanged. Keep launcher.json in " +
@@ -109,6 +111,8 @@ public sealed class DesktopApp : Application, IDisposable
             Path.Combine(AppContext.BaseDirectory, "backend", "TDSBLive.exe"),
             (settings, isNew) => StartLinuxBackendAsync(settings, isNew, store), ExitCompanion, selected) { Icon = CreateIcon() };
         if (explanation is not null) setup.Feedback.Text = explanation;
+        LinuxSetup = setup;
+        setup.Closed += (_, _) => LinuxSetup = null;
         setup.Show();
     }
 
@@ -124,7 +128,7 @@ public sealed class DesktopApp : Application, IDisposable
         linuxBackend = session;
         editorUrl = ready.EditorUrl;
         SetState(RunningLabel, true);
-        _ = RunLinuxBackendAsync(session, settings);
+        LinuxLifecycle = RunLinuxBackendAsync(session, settings);
         if (saveFailed) ShowControls("TDSBLive is running, but your Linux launcher choices could not be saved. You can use these controls now. Check that your launcher settings folder is writable before your next start.");
     }
 

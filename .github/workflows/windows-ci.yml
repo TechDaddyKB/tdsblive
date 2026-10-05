@@ -15,8 +15,83 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  linux-desktop:
+    name: Linux desktop tests and coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      RUN_SONAR: ${{ github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    steps:
+      - name: Check out the same source as Windows analysis
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned deterministic secrets scanner
+        run: |
+          tool_directory="$RUNNER_TEMP/tdsblive-sonar-cli"
+          mkdir -p "$tool_directory"
+          curl --fail --location --silent --show-error 'https://binaries.sonarsource.com/Distribution/sonarqube-cli/1.9.0.15656/linux/sonarqube-cli-1.9.0.15656-linux-x86-64.bin' --output "$tool_directory/sonar"
+          printf '%s  %s\n' '42ec815ef8015921a76b76c865932130d756c5c5a977d82bca9fa81d09bfccd8' "$tool_directory/sonar" | sha256sum --check
+          chmod +x "$tool_directory/sonar"
+          echo "$tool_directory" >> "$GITHUB_PATH"
+
+      - name: Scan tracked files before reading source
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
+        run: |
+          mapfile -d '' tracked_files < <(git ls-files -z)
+          sonar analyze secrets -- "${tracked_files[@]}"
+
+      - name: Set up pinned .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.7'
+
+      - name: Require Linux test prerequisites
+        run: |
+          test -x /usr/bin/dbus-daemon
+          python3 --version
+          test -x /usr/bin/python3
+
+      - name: Restore locked desktop dependencies
+        run: dotnet restore tests/unit/ExtensionSuite.Desktop.Tests/ExtensionSuite.Desktop.Tests.csproj --locked-mode
+
+      - name: Test Linux startup, process ownership and private D-Bus registration
+        run: dotnet test tests/unit/ExtensionSuite.Desktop.Tests/ExtensionSuite.Desktop.Tests.csproj --configuration Release --no-restore --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults/Linux
+
+      - name: Qualify same-commit coverage transfer
+        run: python -m unittest discover -s tests/replay -p test_linux_coverage.py -v
+
+      - name: Export scanned Linux coverage for the exact checkout
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
+        run: |
+          python tools/linux_coverage.py export --reports TestResults/Linux --output artifacts/linux-coverage
+          sonar analyze secrets artifacts/linux-coverage
+
+      - name: Upload same-run Linux coverage
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linux-desktop-coverage
+          retention-days: 14
+          path: artifacts/linux-coverage/
+          if-no-files-found: error
+
   windows:
     name: Windows build and tests
+    needs: linux-desktop
     runs-on: windows-2022
     # The full browser/parity suite now runs on managed, portable and installed hosts.
     timeout-minutes: 45
@@ -124,6 +199,18 @@ jobs:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
         run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
+
+      - name: Download successful Linux coverage from this workflow run
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: linux-desktop-coverage
+          path: TestResults/LinuxImported
+
+      - name: Verify exact source commit and remap Linux coverage paths
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
+        run: python tools/linux_coverage.py import --directory TestResults/LinuxImported
 
       - name: Qualify actual isolated desktop control lifecycle
         shell: pwsh
