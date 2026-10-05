@@ -55,13 +55,27 @@ class OwnedWine:
         self.directory = Path(directory).resolve(strict=True)
         self.prefix = self.directory / "owned wine prefix"
         self.prefix.mkdir(mode=0o700)  # Refuse to reuse an existing prefix.
-        devices = self.prefix / "dosdevices"
-        devices.mkdir()
-        (devices / "z:").symlink_to("/", target_is_directory=True)
+        # Wine must initialize its drive mappings itself. Precreating dosdevices
+        # makes a fresh prefix look initialized while its C: drive is absent.
         self.environment = os.environ.copy()
         for name in ("WINELOADER", "WINEARCH"):
             self.environment.pop(name, None)
-        self.environment.update(WINEPREFIX=str(self.prefix), WINESERVER=self.server, WINEDEBUG="-all")
+        self.initialized = False
+        # CoreCLR still needs Wine's builtin mscoree when loading IL assemblies.
+        # Suppress optional add-ons only during first-prefix initialization.
+        self.environment.update(WINEPREFIX=str(self.prefix), WINESERVER=self.server, WINEDEBUG="-all",
+                                WINEDLLOVERRIDES="mscoree=b;mshtml=")
+
+    def initialize(self):
+        if self.initialized:
+            return
+        bootstrap_environment = dict(self.environment, WINEDLLOVERRIDES="mscoree,mshtml=")
+        subprocess.run([self.runner, "wineboot.exe", "--init"], env=bootstrap_environment,
+                       stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       check=True, timeout=60)
+        if not (self.prefix / "drive_c").is_dir() or not (self.prefix / "dosdevices" / "z:").is_symlink():
+            raise RuntimeError("Owned Wine drive initialization did not finish")
+        self.initialized = True
 
     def launch(self, command, profile):
         command = checked_command(command)
@@ -101,6 +115,7 @@ def start_host(command, profile, wine=None):
     data_directory = str(profile)
     if wine is not None:
         command, data_directory = wine.launch(command, profile)
+        wine.initialize()
     process = subprocess.Popen(command + ["--TDSBLive:DataDirectory", data_directory,
                                           "--TDSBLive:DesktopMode=external", "--TDSBLive:OpenEditor=false"],
                                env=wine.environment if wine is not None else None,

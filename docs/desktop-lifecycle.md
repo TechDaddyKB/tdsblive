@@ -126,6 +126,12 @@ For a Windows package tested on Linux, add `--wine /usr/bin/wine` alongside
 option creates a fresh private Wine prefix beside the temporary test profile;
 it never accepts or reuses an existing prefix. Arguments remain separate,
 desktop mode stays external, and the session capability still uses stdin only.
+Wine initializes its own drives before the backend launches. For this temporary
+test only, process-local Mono/Gecko overrides prevent optional installation
+prompts during initialization. Backend launch restores Wine's builtin `mscoree`,
+which the packaged runtime needs to load assemblies. The example uses native
+OBS/browser rendering.
+Existing prefixes and the user's environment are not changed.
 Cleanup waits for that prefix's Wine server; a timeout retains the temporary
 files for inspection instead of killing Wine processes. `--self-check` remains
 silent and does not touch OBS. This helper is preparation for packaged OBS

@@ -45,16 +45,19 @@ class DesktopQualificationTests(unittest.TestCase):
                 (root / name).touch()
             profile = root / "owned profile with spaces"
             profile.mkdir()
-            with patch.dict(os.environ, {"WINEPREFIX": "/existing user prefix", "WINELOADER": "/other runner"}):
+            with patch.dict(os.environ, {"WINEPREFIX": "/existing user prefix", "WINELOADER": "/other runner",
+                                         "WINEDLLOVERRIDES": "user-override=n"}):
                 owned = OwnedWine(str(root / "wine"), root)
                 command, data_directory = owned.launch([str(root / "TDSBLive.exe")], profile)
                 self.assertEqual([str(root / "wine"), str(root / "TDSBLive.exe")], command)
                 self.assertEqual("Z:" + str(profile).replace("/", "\\"), data_directory)
                 self.assertEqual(str(root / "owned wine prefix"), owned.environment["WINEPREFIX"])
                 self.assertEqual(str(root / "wineserver"), owned.environment["WINESERVER"])
+                self.assertEqual("mscoree=b;mshtml=", owned.environment["WINEDLLOVERRIDES"])
                 self.assertNotIn("WINELOADER", owned.environment)
                 self.assertEqual("/existing user prefix", os.environ["WINEPREFIX"])
-                self.assertEqual(Path("/"), (owned.prefix / "dosdevices" / "z:").resolve())
+                self.assertEqual("user-override=n", os.environ["WINEDLLOVERRIDES"])
+                self.assertFalse((owned.prefix / "dosdevices").exists(), "Leave fresh drive initialization to Wine")
                 with self.assertRaises(ValueError):
                     owned.launch([str(root / "dotnet"), str(root / "ExtensionSuite.Host.dll")], profile)
                 with self.assertRaises(ValueError):
@@ -78,6 +81,30 @@ class DesktopQualificationTests(unittest.TestCase):
     def test_wine_fixture_rejects_non_linux_platform(self):
         with patch("tools.qualify_desktop_control.sys.platform", "win32"), self.assertRaises(ValueError):
             OwnedWine("wine", ".")
+
+    @unittest.skipUnless(sys.platform == "linux", "Owned Wine prefixes require Linux drive symlinks")
+    def test_wine_initialization_is_owned_and_preserves_backend_loader(self):
+        with tempfile.TemporaryDirectory(prefix="tdsblive-command-") as directory:
+            root = Path(directory)
+            for name in ("wine", "wineserver"):
+                (root / name).touch()
+            owned = OwnedWine(str(root / "wine"), root)
+            with patch("tools.qualify_desktop_control.subprocess.run") as run:
+                with self.assertRaises(RuntimeError):
+                    owned.initialize()
+                self.assertFalse(owned.initialized)
+                self.assertEqual([str(root / "wine"), "wineboot.exe", "--init"], run.call_args.args[0])
+                self.assertEqual(str(owned.prefix), run.call_args.kwargs["env"]["WINEPREFIX"])
+                self.assertEqual("mscoree,mshtml=", run.call_args.kwargs["env"]["WINEDLLOVERRIDES"])
+                self.assertEqual("mscoree=b;mshtml=", owned.environment["WINEDLLOVERRIDES"])
+                (owned.prefix / "drive_c").mkdir()
+                (owned.prefix / "dosdevices").mkdir()
+                (owned.prefix / "dosdevices" / "z:").symlink_to("/", target_is_directory=True)
+                owned.initialize()
+                self.assertTrue(owned.initialized)
+                count = run.call_count
+                owned.initialize()
+                self.assertEqual(count, run.call_count)
 
 
 if __name__ == "__main__":
