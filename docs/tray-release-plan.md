@@ -208,3 +208,18 @@ OBS routes and existing HTTP authority; desktop diagnostics report missing
 companion heartbeats. Native Windows
 registration/fallback/Explorer behavior, packaged desktop qualification and all
 G23/G24 gates remain outstanding. G22 is not complete.
+
+Windows checkpoint (2026-10-04): source `74f0dd56f25bf5682f0c3620df8be880cb981b4d`
+builds and passes the Windows unit/integration tests in
+[run 37244864657](https://github.com/TechDaddyKB/tdsblive/actions/runs/37244864657),
+but fails actual external browser restore qualification. The profile lease was
+inside the folder that recovery replaces; Windows denies moving that folder while
+its exclusive file handle remains open. Move the nonsensitive lease beside the
+profile, retaining ownership throughout replacement. A regression now checks
+folder replacement, trailing-separator identity, exclusivity and reacquisition.
+The repaired actual isolated process check passes locally; Windows requalification
+is required. `tools/qualify_windows_tray.ps1` adds actual isolated-runner native
+UI, browser handoff, Cancel focus, Explorer/fallback, crash isolation, diagnostics,
+restart/quit and screenshot qualification to both portable and installed packages.
+It has not yet run on Windows. It requires an interactive CI desktop and rejects
+blank screenshot evidence. Light/dark, high-DPI and final OBS gates remain explicit.

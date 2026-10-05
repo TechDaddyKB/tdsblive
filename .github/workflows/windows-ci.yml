@@ -251,4 +251,5 @@ jobs:
             artifacts/g05-streamer-chat.png
             artifacts/g06-editor.png
             artifacts/ui-redesign/**
+            artifacts/windows-tray/**
           if-no-files-found: warn

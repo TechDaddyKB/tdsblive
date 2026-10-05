@@ -111,7 +111,8 @@ public sealed class DesktopControlTests
     [Fact]
     public async Task ProfileOwnerRequestsOpenAndCanBeReacquiredAfterRelease()
     {
-        var directory = Path.Combine(Path.GetTempPath(), "tdsblive-desktop-" + Guid.NewGuid());
+        var root = Path.Combine(Path.GetTempPath(), "tdsblive-desktop-" + Guid.NewGuid());
+        var directory = Path.Combine(root, "profile");
         Directory.CreateDirectory(directory);
         try
         {
@@ -124,9 +125,31 @@ public sealed class DesktopControlTests
             first.Dispose();
             await using var replacement = DesktopProfileOwner.AcquireOrRequestOpen(directory);
             Assert.NotNull(replacement);
-            Assert.Equal(0, new FileInfo(Path.Combine(directory, ".desktop-owner.lock")).Length);
+            Assert.Equal(0, new FileInfo(replacement.LeasePath).Length);
         }
-        finally { Directory.Delete(directory, true); }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task RecoveryCanReplaceTheDataFolderWhileOwnershipRemainsExclusive()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "tdsblive-desktop-restore-" + Guid.NewGuid());
+        var directory = Path.Combine(root, "profile with spaces");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            await using var owner = DesktopProfileOwner.AcquireOrRequestOpen(directory);
+            Assert.NotNull(owner);
+            Assert.Equal(Path.GetFullPath(root), Path.GetDirectoryName(owner.LeasePath));
+            Directory.Move(directory, directory + ".safety");
+            Directory.CreateDirectory(directory);
+            Assert.Null(DesktopProfileOwner.AcquireOrRequestOpen(directory));
+            Assert.Null(DesktopProfileOwner.AcquireOrRequestOpen(directory + Path.DirectorySeparatorChar));
+            owner.Dispose();
+            await using var replacement = DesktopProfileOwner.AcquireOrRequestOpen(directory);
+            Assert.NotNull(replacement);
+        }
+        finally { Directory.Delete(root, true); }
     }
 
     private sealed class Lifetime : IHostApplicationLifetime

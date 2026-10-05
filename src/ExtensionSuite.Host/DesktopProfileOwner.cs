@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 namespace ExtensionSuite.Host;
 
 /// <summary>Exclusive profile ownership without storing desktop credentials on disk.</summary>
@@ -8,17 +11,25 @@ public sealed class DesktopProfileOwner : IAsyncDisposable, IDisposable
     private readonly CancellationTokenSource stopping = new();
     private Task? watching;
     private bool disposed;
+    public string LeasePath => lease.Name;
 
     private DesktopProfileOwner(FileStream lease, string requestPath)
         => (this.lease, this.requestPath) = (lease, requestPath);
 
     public static DesktopProfileOwner? AcquireOrRequestOpen(string directory)
     {
+        directory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
         Directory.CreateDirectory(directory);
+        var parent = Path.GetDirectoryName(directory) ?? throw new ArgumentException("Desktop profiles need a parent directory.");
+        var identity = OperatingSystem.IsWindows() ? directory.ToUpperInvariant() : directory;
+        var key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
+        // Recovery atomically renames the entire data folder. Keep ownership
+        // outside it so Windows can move that folder while the lease stays held.
+        var leasePath = Path.Combine(parent, ".tdsblive-desktop-" + key + ".lock");
         var requestPath = Path.Combine(directory, ".desktop-open.request");
         try
         {
-            var lease = new FileStream(Path.Combine(directory, ".desktop-owner.lock"), FileMode.OpenOrCreate,
+            var lease = new FileStream(leasePath, FileMode.OpenOrCreate,
                 FileAccess.ReadWrite, FileShare.None);
             return new(lease, requestPath);
         }

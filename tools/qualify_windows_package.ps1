@@ -87,6 +87,10 @@ try {
     $portable = Join-Path $root 'portable'
     Expand-Archive (Join-Path $package "TDSBLive-$Version-win-x64.zip") $portable
     Test-Application $portable
+    $nativePowerShell = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+    & $nativePowerShell -NoProfile -File (Join-Path $PSScriptRoot 'qualify_windows_tray.ps1') -ApplicationDirectory $portable `
+        -EvidenceDirectory (Join-Path $PSScriptRoot '../artifacts/windows-tray/portable')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual portable Windows tray qualification failed.' }
     & python (Join-Path $PSScriptRoot 'qualify_desktop_control.py') --executable (Join-Path $portable 'TDSBLive.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Portable EXE desktop control lifecycle qualification failed.' }
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') portable
@@ -96,6 +100,9 @@ try {
     Invoke-Installer $installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$installed`" /TASKS=`"`""
     if (Test-Path $startupShortcut) { throw 'Login startup must be disabled by default.' }
     Test-Application $installed
+    & $nativePowerShell -NoProfile -File (Join-Path $PSScriptRoot 'qualify_windows_tray.ps1') -ApplicationDirectory $installed `
+        -EvidenceDirectory (Join-Path $PSScriptRoot '../artifacts/windows-tray/installed')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual installed Windows tray qualification failed.' }
     & python (Join-Path $PSScriptRoot 'qualify_desktop_control.py') --executable (Join-Path $installed 'TDSBLive.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Installed EXE desktop control lifecycle qualification failed.' }
     & node (Join-Path $PSScriptRoot 'browser-qualification/recovery-process.mjs') installed
