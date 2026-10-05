@@ -19,7 +19,12 @@ def archive(*entries):
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w') as zipped:
         for name, data in entries:
-            zipped.writestr(name, data)
+            # ZipInfo normalizes the host separator on Windows. Preserve the
+            # actual malicious member bytes so admission sees the same archive
+            # on every test platform.
+            entry = zipfile.ZipInfo(name)
+            entry.filename = entry.orig_filename = name
+            zipped.writestr(entry, data)
     output.seek(0)
     return zipfile.ZipFile(output)
 

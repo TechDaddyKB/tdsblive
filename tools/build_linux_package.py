@@ -39,7 +39,7 @@ def archive_members(archive):
         name = entry.filename
         parts = PurePosixPath(name).parts
         folded = '/'.join(parts).casefold()
-        if (not parts or name.startswith('/') or '\\' in name or '\0' in entry.orig_filename or ':' in name
+        if (not parts or name.startswith('/') or '\\' in entry.orig_filename or '\0' in entry.orig_filename or ':' in name
                 or '..' in parts or folded in names or entry.flag_bits & 1
                 or stat.S_ISLNK(entry.external_attr >> 16)):
             raise ValueError('Unsafe or duplicate Windows archive member')

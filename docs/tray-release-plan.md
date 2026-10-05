@@ -996,3 +996,28 @@ and visible Cancel/Start buttons. This is production native rendering evidence,
 not headless UI assertions, a displayed tray-menu interaction, or a complete
 bundle/Wine/UMU qualification. G23 remains **In progress**; its other acceptance
 requirements and G24 publication remain outstanding.
+
+### G23 cross-platform fixture and actual UMU diagnosis — 2026-10-05
+
+Hosted [run 37318426039](https://github.com/TechDaddyKB/tdsblive/actions/runs/37318426039)
+at `54cc472` passes Linux desktop tests and the native Windows tray probe, but
+stops in Python replay tests. Python's Windows ZipInfo constructor normalizes a
+backslash member name before the fixture writes it, so that fixture did not
+contain the intended malformed path. The fixture now writes the exact original
+member name, and archive admission examines original member names before host
+normalization. All six Linux package tests pass locally. Corrected Windows
+execution, Sonar analysis and same-run complete Linux bundle qualification remain
+required; the skipped Linux package job is not a successful build.
+
+An isolated upstream UMU 1.4.4 zipapp is downloaded and verified against its
+published SHA256 `eb590691841f7fad3fc3ad8fd5db4ccb87849fe7948e62b28ece7a4ee48cc851`.
+Both archive layers are decompressed and scanned before execution. With the
+existing GE-Proton11-6 runner, an owned prefix initializes using UMU's verified
+steamrt4 4.0.20260928.262390 runtime. No existing user prefix is changed.
+An actual bridge probe using current native source and the previously qualified
+`ec699fb` Windows package fails before desktop controls connect. A diagnostic
+confirms EndOfStreamException reading the private bootstrap pipe; using a mapped
+Windows executable path alone does not resolve it. UMU backend/tray support is
+not qualified. Runner/pipe behavior is under investigation while retaining
+TR-R06: session tokens must remain in redirected process pipes, not arguments,
+environment variables, files, logs or configuration.
