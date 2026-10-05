@@ -121,6 +121,16 @@ support observation in a separately owned Browser Source; native packaged OBS
 screenshots, reconnect and audio evidence remain separate requirements. Quit
 stops the owned host, checks SQLite integrity and removes its temporary profile.
 
+For a Windows package tested on Linux, add `--wine /usr/bin/wine` alongside
+`--executable` and the actual package's `TDSBLive.exe` path. This qualification
+option creates a fresh private Wine prefix beside the temporary test profile;
+it never accepts or reuses an existing prefix. Arguments remain separate,
+desktop mode stays external, and the session capability still uses stdin only.
+Cleanup waits for that prefix's Wine server; a timeout retains the temporary
+files for inspection instead of killing Wine processes. `--self-check` remains
+silent and does not touch OBS. This helper is preparation for packaged OBS
+checks, not delivery or qualification of the G23 native Linux companion.
+
 Headless UI tests cover controls and connection behavior. They run serially
 because Avalonia's platform registrations are process-wide. Coverage includes
 both `ExtensionSuite.*` assemblies and `TDSBLive.Desktop`; handwritten desktop

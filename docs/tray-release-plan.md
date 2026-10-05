@@ -443,3 +443,26 @@ that change. OBS 32.2.2/WebSocket 5.7.4 remains connected on Omarchy, with Brows
 Source available and streaming/recording inactive (2026-10-05 02:44 UTC). No OBS
 scene/output was changed. Final packaged OBS rendering/reconnect/audio, native
 Linux delivery and release publication remain required.
+
+The owned OBS fixture now accepts an explicit Linux Wine runner with the
+packaged Windows EXE. It creates a fresh private prefix, preserves individual
+arguments including spaced paths, and keeps control capabilities on stdin.
+Cleanup waits only for that prefix's server; it never kills a Wine server and
+retains temporary files if waiting fails. Five executable/ownership admission
+tests pass. The unchanged managed-host fixture also passes actual isolated
+restart/restore, retained overlay/custom state, quit and SQLite integrity after
+this addition. Current Windows source `53ecc97` is under qualification in
+[run 37258964197](https://github.com/TechDaddyKB/tdsblive/actions/runs/37258964197).
+The Wine path still needs the current qualified Windows package for actual
+execution. G22 remains in progress; G23/G24 prerequisites remain in force.
+
+Managed-source OBS preparation (2026-10-05): an owned 1000×600 Browser Source
+in native OBS renders the sample text, image, progress bar and stored custom
+state. With that source left open, authenticated restart reconnects at progress
+75/state 2; backup restore reconnects at progress 25/state 1. Actual screenshots
+are scanned and inspected in ignored `artifacts/tray-managed-obs-preparation`.
+The helper quits cleanly and removes its temporary profile after SQLite checks.
+The previous OBS program scene is restored; the owned scene/source are removed.
+Streaming and recording remain inactive. No tone is played. This verifies fixture
+rendering/reconnect on the local managed build, not the final Windows package,
+native tray or current-package audio acceptance.

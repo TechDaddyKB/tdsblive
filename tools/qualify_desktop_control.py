@@ -9,11 +9,13 @@ import concurrent.futures
 import contextlib
 import http.cookiejar
 import json
+import os
 import queue
 import secrets
 import socket
 import sqlite3
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -42,6 +44,41 @@ def checked_command(command):
     raise ValueError("Only a packaged host or the pinned SDK plus host assembly is allowed")
 
 
+class OwnedWine:
+    """A fresh qualification prefix, never an existing user prefix or launcher."""
+
+    def __init__(self, runner, directory):
+        if sys.platform != "linux":
+            raise ValueError("The isolated Wine fixture runs only on Linux")
+        self.runner = checked_file(runner, {"wine", "wine64"})
+        self.server = checked_file(str(Path(self.runner).with_name("wineserver")), {"wineserver"})
+        self.directory = Path(directory).resolve(strict=True)
+        self.prefix = self.directory / "owned wine prefix"
+        self.prefix.mkdir(mode=0o700)  # Refuse to reuse an existing prefix.
+        devices = self.prefix / "dosdevices"
+        devices.mkdir()
+        (devices / "z:").symlink_to("/", target_is_directory=True)
+        self.environment = os.environ.copy()
+        for name in ("WINELOADER", "WINEARCH"):
+            self.environment.pop(name, None)
+        self.environment.update(WINEPREFIX=str(self.prefix), WINESERVER=self.server, WINEDEBUG="-all")
+
+    def launch(self, command, profile):
+        command = checked_command(command)
+        profile = Path(profile).resolve(strict=True)
+        if len(command) != 1 or profile.parent != self.directory:
+            raise ValueError("Wine requires the packaged EXE and an owned temporary profile")
+        return [self.runner, *command], "Z:" + str(profile).replace("/", "\\")
+
+    def wait(self):
+        """Wait for only this prefix to finish before removing its temporary files."""
+        try:
+            subprocess.run([self.server, "--wait"], env=self.environment, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as error:
+            raise RuntimeError(f"Owned Wine session did not finish; temporary files retained at {self.directory}") from error
+
+
 def free_port():
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
@@ -59,10 +96,14 @@ def request(bootstrap, command, timeout=10):
         return json.loads(reply)
 
 
-def start_host(command, profile):
+def start_host(command, profile, wine=None):
     command = checked_command(command)
-    process = subprocess.Popen(command + ["--TDSBLive:DataDirectory", str(profile),
+    data_directory = str(profile)
+    if wine is not None:
+        command, data_directory = wine.launch(command, profile)
+    process = subprocess.Popen(command + ["--TDSBLive:DataDirectory", data_directory,
                                           "--TDSBLive:DesktopMode=external", "--TDSBLive:OpenEditor=false"],
+                               env=wine.environment if wine is not None else None,
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     token = secrets.token_hex(32).upper()
     process.stdin.write(json.dumps({"Port": 0, "SessionToken": token}) + "\n")
@@ -78,7 +119,7 @@ def start_host(command, profile):
     for stream in (process.stdout, process.stderr):
         threading.Thread(target=drain, args=(stream,), daemon=True).start()
     try:
-        bootstrap = ready(process, lines, token)
+        bootstrap = ready(process, lines, token, timeout=90 if wine is not None else 30)
         return process, bootstrap, captured
     except BaseException:
         process.terminate()
@@ -86,8 +127,8 @@ def start_host(command, profile):
         raise
 
 
-def ready(process, lines, token):
-    deadline = time.monotonic() + 30
+def ready(process, lines, token, timeout=30):
+    deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if process.poll() is not None:
             raise RuntimeError("Owned host stopped before desktop readiness")

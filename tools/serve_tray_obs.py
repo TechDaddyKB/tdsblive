@@ -12,6 +12,7 @@ import contextlib
 import io
 import json
 import math
+import shutil
 import sqlite3
 import struct
 import subprocess
@@ -22,7 +23,7 @@ import uuid
 import wave
 from pathlib import Path
 
-from qualify_desktop_control import BrowserClient, checked_command, free_port, request, start_host
+from qualify_desktop_control import BrowserClient, OwnedWine, checked_command, free_port, request, start_host
 
 
 OVERLAY_ID = "owned-tray-recovery"
@@ -52,10 +53,11 @@ def upload(client, content, mime, filename):
 
 
 class OwnedExample:
-    def __init__(self, command, profile, port):
+    def __init__(self, command, profile, port, wine=None):
         self.command = command
         self.profile = profile
         self.port = port
+        self.wine = wine
         self.process = None
         self.bootstrap = None
         self.client = None
@@ -66,7 +68,7 @@ class OwnedExample:
         self.tone_asset = None
 
     def start(self):
-        self.process, self.bootstrap, _ = start_host(self.command, self.profile)
+        self.process, self.bootstrap, _ = start_host(self.command, self.profile, self.wine)
         self.client = BrowserClient(self.port)
         configuration = self.client.send("/api/configuration")
         for integration in ("streamerBot", "speakerBot", "rumble"):
@@ -165,16 +167,22 @@ class OwnedExample:
                 raise RuntimeError("The owned database did not pass integrity checking")
 
 
-def run(command, self_check):
+def run(command, self_check, wine=None):
     command = checked_command(command)
+    if wine is not None and len(command) != 1:
+        raise ValueError("Wine requires the packaged Windows EXE")
     subprocess.run(["sonar", "analyze", "secrets", str(Path(command[-1]).parent)], check=True)
-    with tempfile.TemporaryDirectory(prefix="tdsblive-tray-obs-") as directory:
-        profile = Path(directory) / "owned profile with spaces"
+    directory = Path(tempfile.mkdtemp(prefix="tdsblive-tray-obs-"))
+    wine_session = None
+    try:
+        if wine is not None:
+            wine_session = OwnedWine(wine, directory)
+        profile = directory / "owned profile with spaces"
         profile.mkdir()
         port = free_port()
         (profile / "configuration.json").write_text(json.dumps({"displayName": "Owned tray OBS qualification",
             "server": {"host": "127.0.0.1", "port": port}}), encoding="utf-8")
-        example = OwnedExample(command, profile, port)
+        example = OwnedExample(command, profile, port, wine_session)
         try:
             example.start()
             example.seed()
@@ -200,6 +208,10 @@ def run(command, self_check):
                     else: print("Choose one of the listed commands.", flush=True)
         finally:
             example.close()
+    finally:
+        if wine_session is not None:
+            wine_session.wait()
+        shutil.rmtree(directory)
     print("Owned host stopped; temporary profile removed.", flush=True)
 
 
@@ -209,8 +221,12 @@ if __name__ == "__main__":
     mode.add_argument("--executable", help="Explicit packaged TDSBLive.exe")
     mode.add_argument("--dotnet", help="Explicit pinned dotnet executable")
     parser.add_argument("--assembly", help="ExtensionSuite.Host.dll, required with --dotnet")
+    parser.add_argument("--wine", help="Linux only: installed wine/wine64; uses a fresh isolated test prefix")
     parser.add_argument("--self-check", action="store_true", help="Check fixture lifecycle without touching OBS or playing audio")
     arguments = parser.parse_args()
     if arguments.dotnet and not arguments.assembly or arguments.executable and arguments.assembly:
         parser.error("Choose packaged EXE or pinned SDK plus host assembly")
-    run([arguments.executable] if arguments.executable else [arguments.dotnet, arguments.assembly], arguments.self_check)
+    if arguments.wine and not arguments.executable:
+        parser.error("--wine requires --executable; existing prefixes are never used")
+    run([arguments.executable] if arguments.executable else [arguments.dotnet, arguments.assembly],
+        arguments.self_check, arguments.wine)

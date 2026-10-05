@@ -1,10 +1,12 @@
 """Check executable admission without executing any test application."""
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from tools.qualify_desktop_control import checked_command
+from tools.qualify_desktop_control import OwnedWine, checked_command
 
 
 class DesktopQualificationTests(unittest.TestCase):
@@ -32,6 +34,49 @@ class DesktopQualificationTests(unittest.TestCase):
             for command in invalid:
                 with self.subTest(command=command), self.assertRaises((ValueError, FileNotFoundError)):
                     checked_command(command)
+
+    @patch("tools.qualify_desktop_control.sys.platform", "linux")
+    def test_wine_uses_owned_prefix_and_individual_arguments_without_changing_global_environment(self):
+        with tempfile.TemporaryDirectory(prefix="tdsblive-command-") as directory:
+            root = Path(directory) / "path with spaces"
+            root.mkdir()
+            for name in ("wine", "wineserver", "TDSBLive.exe", "dotnet", "ExtensionSuite.Host.dll"):
+                (root / name).touch()
+            profile = root / "owned profile with spaces"
+            profile.mkdir()
+            with patch.dict(os.environ, {"WINEPREFIX": "/existing user prefix", "WINELOADER": "/other runner"}):
+                owned = OwnedWine(str(root / "wine"), root)
+                command, data_directory = owned.launch([str(root / "TDSBLive.exe")], profile)
+                self.assertEqual([str(root / "wine"), str(root / "TDSBLive.exe")], command)
+                self.assertEqual("Z:" + str(profile).replace("/", "\\"), data_directory)
+                self.assertEqual(str(root / "owned wine prefix"), owned.environment["WINEPREFIX"])
+                self.assertEqual(str(root / "wineserver"), owned.environment["WINESERVER"])
+                self.assertNotIn("WINELOADER", owned.environment)
+                self.assertEqual("/existing user prefix", os.environ["WINEPREFIX"])
+                self.assertEqual(Path("/"), (owned.prefix / "dosdevices" / "z:").resolve())
+                with self.assertRaises(ValueError):
+                    owned.launch([str(root / "dotnet"), str(root / "ExtensionSuite.Host.dll")], profile)
+                with self.assertRaises(ValueError):
+                    owned.launch([str(root / "TDSBLive.exe")], root)
+                with self.assertRaises(FileExistsError):
+                    OwnedWine(str(root / "wine"), root)
+
+    @patch("tools.qualify_desktop_control.sys.platform", "linux")
+    def test_wine_cleanup_waits_only_for_the_owned_prefix_and_never_kills_a_server(self):
+        with tempfile.TemporaryDirectory(prefix="tdsblive-command-") as directory:
+            root = Path(directory)
+            for name in ("wine", "wineserver"):
+                (root / name).touch()
+            owned = OwnedWine(str(root / "wine"), root)
+            with patch("tools.qualify_desktop_control.subprocess.run") as run:
+                owned.wait()
+            self.assertEqual([str(root / "wineserver"), "--wait"], run.call_args.args[0])
+            self.assertEqual(str(owned.prefix), run.call_args.kwargs["env"]["WINEPREFIX"])
+            self.assertTrue(run.call_args.kwargs["check"])
+
+    def test_wine_fixture_rejects_non_linux_platform(self):
+        with patch("tools.qualify_desktop_control.sys.platform", "win32"), self.assertRaises(ValueError):
+            OwnedWine("wine", ".")
 
 
 if __name__ == "__main__":
