@@ -225,13 +225,15 @@ function Menu-Action($Desktop, [string]$Action) {
     # A closing Windows Settings window can briefly reclaim activation after a
     # display change. Retry opening a dismissed menu, without invoking an action
     # twice or sending keys to another application.
-    $probe = @{ lastOpen = [DateTime]::MinValue }
+    # PowerShell callbacks inherit the readiness helper's dynamic scope. Do not
+    # call this state "probe": Wait-For's $Probe parameter would shadow it.
+    $menuState = @{ lastOpen = [DateTime]::MinValue }
     $item = Wait-For {
         $found = Element $Desktop.Id $Action ([System.Windows.Automation.ControlType]::MenuItem)
         if ($found -and -not $found.Current.IsOffscreen) { return $found }
-        if (([DateTime]::UtcNow - $probe.lastOpen).TotalSeconds -ge 1) {
+        if (([DateTime]::UtcNow - $menuState.lastOpen).TotalSeconds -ge 1) {
             [TdsTrayDesktop]::OpenMenu($Desktop.Id)
-            $probe.lastOpen = [DateTime]::UtcNow
+            $menuState.lastOpen = [DateTime]::UtcNow
         }
         return $null
     } "Native tray menu action '$Action' was not accessible."

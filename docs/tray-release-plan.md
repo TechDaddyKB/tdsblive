@@ -466,3 +466,16 @@ The previous OBS program scene is restored; the owned scene/source are removed.
 Streaming and recording remain inactive. No tone is played. This verifies fixture
 rendering/reconnect on the local managed build, not the final Windows package,
 native tray or current-package audio acceptance.
+
+Source `53ecc97` passes builds, regression, Sonar and Windows packaging in
+[run 37258964197](https://github.com/TechDaddyKB/tdsblive/actions/runs/37258964197),
+then fails the first **Open editor** interaction. Scanned native diagnostics show
+the backend ready, Explorer available and the icon registered, with no owned
+popup window. The new retry callback's `$probe` state was shadowed by the
+readiness helper's case-insensitive `$Probe` parameter, so it never posted the
+menu-open message. Executing that actual helper in isolated PowerShell reproduces
+the scope collision and verifies that renamed `$menuState` remains accessible.
+The harness now uses that name. This is a qualification bug fix, not new native
+acceptance; updated portable/installed tray execution remains required. The
+independent scanned display inventory now discovers enabled real controls and
+the 100%/125% choices; it still does not establish high-DPI tray behavior.
