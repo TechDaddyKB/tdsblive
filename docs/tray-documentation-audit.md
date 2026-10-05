@@ -37,6 +37,15 @@ guidance, and save-before-update instructions. It distinguishes public v0.1.0
 from the unpublished v1.0.1 candidate. Linux companion downloads and final
 release wording remain pending; the README row is not yet complete.
 
+Technical-guide preparation now describes the implemented Windows companion,
+authenticated pipe/loopback authority, profile ownership, graceful lifecycle,
+native test boundaries and candidate installation flow in architecture, security,
+testing and installation. The requirements matrix adds TR-R01–TR-R10 with current
+Windows evidence and explicit Linux/publication gaps. A structural check of all
+**78 tracked Markdown files** finds **454 local file links** with existing targets.
+That check does not validate remote links, heading anchors, literal UI behavior
+or final-release wording; it does not complete the page-by-page acceptance audit.
+
 | File | Review or update required | Final evidence |
 | --- | --- | --- |
 | [docs/tray-documentation-audit.md](tray-documentation-audit.md) | Include new pages/assets and final package/wiki evidence | Pending |

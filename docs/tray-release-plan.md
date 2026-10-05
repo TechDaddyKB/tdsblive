@@ -325,9 +325,9 @@ rejects local execution before inspecting or changing the desktop.
 | --- | --- | --- |
 | Authenticated control, bounded messages and one admitted command | Host/control tests and actual owned-process qualification | Exact-head protected Windows checks |
 | Profile ownership, spaced paths, nondefault port, safe restart/restore, SQLite integrity | Managed-process checks and actual diagnostic Windows package under direct Wine pass owned restart/restore, saved state and clean shutdown | Exact-head Windows packaged checks; native browser lifecycle |
-| Native icon, menu, confirmations, Explorer recovery and crash isolation | Actual portable Windows editor handoff/close, duplicate launch and Cancel via button/Enter/Escape/close pass before scaling; Edge first-run issue is resolved | Complete portable/installed native runs, accepted Restart/Quit, Explorer recovery and crash checks |
-| Manual/quiet startup and saved credentials through lifecycle | Native quiet startup and initial owned DPAPI storage verified; individual startup/vault tests pass | Complete actual-package manual startup and credential retention through lifecycle |
-| Light/dark appearance, keyboard access and high DPI | Actual portable Windows light/dark confirmations and Cancel keyboard alternatives pass; source e70a948 passes 125% physical geometry/focus checks | Complete installed-package appearance/scaling checks and final source qualification |
+| Native icon, menu, confirmations, Explorer recovery and crash isolation | Source ec699fb passes the complete actual portable Windows native probe, including accepted Restart/Quit, Explorer re-registration, browser restore, both crash paths and old-companion cleanup | Complete installed-package native qualification and protected full run |
+| Manual/quiet startup and saved credentials through lifecycle | Source ec699fb passes native manual/quiet launch and owned DPAPI credential retention through restart, backup restore, recovery and quit | Complete installed-package qualification and protected full run |
+| Light/dark appearance, keyboard access and high DPI | Source ec699fb passes actual portable Windows light/dark confirmations, Cancel keyboard alternatives and 125% physical geometry/focus checks | Complete installed-package appearance/scaling checks and final source qualification |
 | Installer, optional startup, update/reinstall, uninstall and data retention | Packages build; inherited native package harness preserves these checks | Successful exact-head package qualification |
 | Existing OBS addresses, rendering/audio and reconnect | Owned diagnostic Windows package under direct Wine renders in native OBS and reconnects after restart/restore, with sample state and transparency verified | Final-package OBS checks, Windows desktop lifecycle and audio acceptance |
 
@@ -608,3 +608,67 @@ execution of that test remains required. The modified PowerShell harness parses,
 its actual C# helper compiles, and the x64 probe layout measures 976 bytes.
 Scanned `e70a948` Restart/Quit high-DPI and missing-tray screenshots are visually
 inspected; their wording, spacing and Cancel-first controls are readable.
+
+### Native Windows milestone — 2026-10-05
+
+Source `ec699fb1549353160367903e594556830ded1598` passes the complete
+**Windows native tray probe** in
+[run 37266440100](https://github.com/TechDaddyKB/tdsblive/actions/runs/37266440100),
+job `111624355065`. The downloaded `windows-native-diagnostics` artifact is
+decompressed and secrets-scanned before inspection. Its manifest records the
+same source SHA and labels the packages diagnostic, not approved for release.
+The native `tray-result.json` reports actual packaged Windows UI evidence for:
+
+- Native registration, quiet/manual startup, ordinary browser handoff, browser
+  close, duplicate launch, and accessible Open editor/Restart/Quit controls.
+- Initial Cancel focus and cancellation through button, Enter, Escape and window
+  close; neither backend generation nor saved state changes on cancellation.
+- Explorer loss, fallback, fallback close, and successful icon re-registration.
+- Accepted restart, browser backup restore, old-companion cleanup, companion
+  crash isolation, browser recovery, backend crash guidance without automatic
+  restart, accepted quit and retained profile.
+- An owned DPAPI credential surviving restart, restore, recovery and quit.
+- Actual light/dark dialogs and 125% Windows scale at 120 DPI, including keyboard
+  Cancel and restoration of the original 100% scale.
+
+The current Restart, Quit and stopped-backend screenshots are also visually
+inspected after scanning. Labels and warnings are readable and the confirmations
+clearly offer Cancel first. The successful probe establishes Explorer recovery
+for this source; it does not prove that icon overflow caused the earlier failure.
+
+The separate full Windows job `111624355263` is still running at this checkpoint.
+Its regression, SonarCloud, installed-package and final-package OBS/audio gates
+remain independent requirements. G22 is still **In progress**; G23 and G24 retain
+their prerequisites. No release publication or Linux companion is claimed.
+
+### Current-source OBS and audio-signal preparation — 2026-10-05
+
+The diagnostic Windows ZIP from the same `ec699fb` native run is safely extracted
+into an owned directory and scanned after decompression. The shipped Windows
+EXE runs under Wine 11.17 Staging in a fresh private prefix and isolated sample
+profile, with integrations and LAN disabled. Native Linux OBS 32.2.2 keeps one
+owned 1000 × 600 Browser Source open throughout authenticated restart and backup
+restore. Scanned, visually inspected screenshots show progress 25/state 1 before
+the test, progress 75/state 2 after restart, and progress 25/state 1 after restore.
+PNG inspection independently confirms a transparent empty corner, alpha values
+from 0 to 255, and unchanged 1000 × 600 dimensions.
+
+A read-only observer uses the installed `obs_studio` client's
+`InputVolumeMeters` subscription for this owned Browser Source only. No recording
+or broadcast starts, no production input is changed, and credentials are neither
+printed nor persisted. An explicitly triggered one-second sample tone produces:
+
+| Phase | Before lifecycle | After backup restore |
+| --- | --- | --- |
+| Silent baseline | 292 samples; peak 0 | 563 samples; peak 0 |
+| Explicit tone | 18 signal frames; peak 0.0799901 | 18 signal frames; peak 0.0799901 |
+| Silent after removal | 144 samples; peak 0 | 331 samples; peak 0 |
+
+These are actual OBS post-volume/mute signal measurements, not playback receipts
+or settings. They establish delivery of the owned audio signal to OBS; physical
+speaker/headphone listening and final-release-artifact audio acceptance remain
+unverified. This is Windows-under-Wine/native-Linux-OBS evidence, not native
+Windows OBS evidence. The prior program scene is restored, the owned scene and
+input are removed, the fixture quits gracefully, and its private profile/prefix
+are removed after SQLite integrity and owned Wine shutdown checks. Stream and
+record outputs are confirmed inactive before and after qualification.
