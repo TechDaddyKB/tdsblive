@@ -565,3 +565,16 @@ busctl. UMU, KDE Plasma launchers, Xephyr and Weston are not installed. These
 observations identify future G23 environment work; they do not qualify either
 runner/desktop combination or change the prerequisite on G22. All owned Wine
 fixture processes have finished; existing Wine applications were not stopped.
+
+The full `7f21575` pipeline passes regression, SonarCloud and packaging, then
+fails the scaled geometry check. Its scanned 120-DPI screenshot shows enlarged,
+readable buttons; automation reports client width 440 and button height 44 while
+the screenshot is 568 physical pixels wide. This indicates a measurement-unit
+mismatch, rather than proving clipped or undersized rendering. Geometry reads
+now use the same per-monitor-aware thread context as screenshots and compare
+automation bounds with an independently queried native client rectangle. The
+44-pixel logical minimum, scaled to physical pixels, remains unchanged;
+mismatched coordinates still fail. PowerShell parsing and compilation of the
+actual native helper pass locally; no Windows APIs are invoked by those checks.
+This follows Microsoft's [UI Automation scaling guidance](https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-screenscaling).
+Native execution is required to verify the correction; no DPI acceptance is claimed.

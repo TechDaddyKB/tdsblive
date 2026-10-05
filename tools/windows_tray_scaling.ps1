@@ -108,18 +108,36 @@ function Qualify-WindowsScaling($Desktop) {
             # rather than treating an initial automation frame as final geometry.
             Screenshot $dialog "scale-$($target.percent)-$($action.ToLowerInvariant()).png"
             Wait-For {
-                $bounds = $dialog.Current.BoundingRectangle
-                $minimumHeight = 44 * $target.percent / 100 - 1
-                $checks = @()
-                foreach ($button in @($cancel, $accept)) {
-                    $rectangle = $button.Current.BoundingRectangle
-                    $checks += @{ name = $button.Current.Name; enabled = $button.Current.IsEnabled; offscreen = $button.Current.IsOffscreen; focused = $button.Current.HasKeyboardFocus
-                        insideDialog = $bounds.Contains($rectangle); height = $rectangle.Height; minimumHeight = $minimumHeight
-                        bounds = @{ x = $rectangle.X; y = $rectangle.Y; width = $rectangle.Width; height = $rectangle.Height } }
+                # PowerShell's default DPI context can virtualize coordinates.
+                # Use physical pixels for both automation and native bounds,
+                # as for screenshots, without rescaling reported values ourselves.
+                $previousMeasurementContext = [TdsTrayDesktop]::SetThreadDpiAwarenessContext([IntPtr](-4))
+                if ($previousMeasurementContext -eq [IntPtr]::Zero) { throw 'Physical geometry measurement could not become DPI aware.' }
+                try {
+                    $bounds = $dialog.Current.BoundingRectangle
+                    $nativeClient = [TdsTrayDesktop]::ClientRectangle([IntPtr]$dialog.Current.NativeWindowHandle)
+                    $measurementAwareness = [TdsTrayDesktop]::GetAwarenessFromDpiAwarenessContext([TdsTrayDesktop]::GetThreadDpiAwarenessContext())
+                    $coordinatesAgree = [Math]::Abs($bounds.Width - ($nativeClient.Right - $nativeClient.Left)) -le 2 -and
+                        [Math]::Abs($bounds.Height - ($nativeClient.Bottom - $nativeClient.Top)) -le 2
+                    $minimumHeight = 44 * $target.percent / 100 - 1
+                    $checks = @()
+                    foreach ($button in @($cancel, $accept)) {
+                        $rectangle = $button.Current.BoundingRectangle
+                        $checks += @{ name = $button.Current.Name; enabled = $button.Current.IsEnabled; offscreen = $button.Current.IsOffscreen; focused = $button.Current.HasKeyboardFocus
+                            insideDialog = $bounds.Contains($rectangle); height = $rectangle.Height; minimumHeight = $minimumHeight
+                            bounds = @{ x = $rectangle.X; y = $rectangle.Y; width = $rectangle.Width; height = $rectangle.Height } }
+                    }
+                    $script:scalingEvidence.dialogs[$action] = @{ windowDpi = [TdsTrayDesktop]::GetDpiForWindow([IntPtr]$dialog.Current.NativeWindowHandle)
+                        measurementAwareness = $measurementAwareness; coordinatesAgree = $coordinatesAgree
+                        nativeClient = @{ x = $nativeClient.Left; y = $nativeClient.Top; width = $nativeClient.Right - $nativeClient.Left; height = $nativeClient.Bottom - $nativeClient.Top }
+                        bounds = @{ x = $bounds.X; y = $bounds.Y; width = $bounds.Width; height = $bounds.Height }; buttons = $checks }
+                    if ($measurementAwareness -eq 2 -and $coordinatesAgree -and
+                        -not ($checks | Where-Object { $_.offscreen -or -not $_.enabled -or -not $_.insideDialog -or $_.height -lt $_.minimumHeight })) { return $true }
+                } finally {
+                    if ([TdsTrayDesktop]::SetThreadDpiAwarenessContext($previousMeasurementContext) -eq [IntPtr]::Zero) {
+                        throw 'Physical geometry measurement did not restore its DPI context.'
+                    }
                 }
-                $script:scalingEvidence.dialogs[$action] = @{ windowDpi = [TdsTrayDesktop]::GetDpiForWindow([IntPtr]$dialog.Current.NativeWindowHandle)
-                    bounds = @{ x = $bounds.X; y = $bounds.Y; width = $bounds.Width; height = $bounds.Height }; buttons = $checks }
-                if (-not ($checks | Where-Object { $_.offscreen -or -not $_.enabled -or -not $_.insideDialog -or $_.height -lt $_.minimumHeight })) { return $true }
             } 'A scaled confirmation button is clipped, disabled or smaller than its touch target after layout settled.' | Out-Null
             Screenshot $dialog "scale-$($target.percent)-$($action.ToLowerInvariant()).png"
             Send-OwnedKey $cancel '{ENTER}'
