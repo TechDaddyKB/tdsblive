@@ -253,3 +253,49 @@ jobs:
             artifacts/ui-redesign/**
             artifacts/windows-tray/**
           if-no-files-found: warn
+
+  desktop-inventory:
+    name: Windows desktop inventory
+    # Read-only OS-control discovery on a separate disposable CI machine. This
+    # job never replaces or satisfies the required Windows build/test check.
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - name: Check out trusted source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned deterministic secrets scanner
+        shell: pwsh
+        run: |
+          $toolDirectory = Join-Path $env:RUNNER_TEMP 'tdsblive-sonar-cli'
+          New-Item -ItemType Directory -Force $toolDirectory | Out-Null
+          $binary = Join-Path $toolDirectory 'sonar.exe'
+          Invoke-WebRequest 'https://binaries.sonarsource.com/Distribution/sonarqube-cli/1.9.0.15656/windows/sonarqube-cli-1.9.0.15656-windows-x86-64.exe' -OutFile $binary
+          if ((Get-FileHash $binary -Algorithm SHA256).Hash.ToLowerInvariant() -ne '338d0c3817fb09338416d9b3ac6110d96a2a1038d354ae6f1f3dede1a062e12f') { throw 'Sonar CLI checksum mismatch' }
+          $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Scan source and inspect owned display controls
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONARQUBE_CLI_ORG: camarokris
+        shell: pwsh
+        run: |
+          $trackedFiles = @(git ls-files)
+          & sonar analyze secrets @trackedFiles
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $nativePowerShell = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+          & $nativePowerShell -NoProfile -File tools/inspect_windows_display.ps1 -EvidenceDirectory artifacts/windows-display
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          sonar analyze secrets artifacts/windows-display
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload scanned display inventory
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-display-inventory
+          retention-days: 14
+          path: artifacts/windows-display/display-inventory.json
+          if-no-files-found: error

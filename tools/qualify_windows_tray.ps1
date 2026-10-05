@@ -84,6 +84,7 @@ $listener.Start(); $port = $listener.LocalEndpoint.Port; $listener.Stop()
 $origin = "http://127.0.0.1:$port"
 $shellRestarted = $false
 $hostProcess = $null
+$browserPolicy = $null
 $desktopIds = New-Object 'System.Collections.Generic.HashSet[int]'
 $screenshotMetrics = @{}
 
@@ -187,15 +188,21 @@ function Capture-VisibleWindow($Target, [string]$Name) {
     $graphics = [Drawing.Graphics]::FromImage($bitmap)
     try {
         $graphics.CopyFromScreen([int]$rectangle.Left, [int]$rectangle.Top, 0, 0, $bitmap.Size)
-        $colors = New-Object 'System.Collections.Generic.HashSet[int]'
+        $colors = @{}
         for ($y = 0; $y -lt $bitmap.Height; $y += 8) {
-            for ($x = 0; $x -lt $bitmap.Width; $x += 8) { $colors.Add($bitmap.GetPixel($x, $y).ToArgb()) | Out-Null }
+            for ($x = 0; $x -lt $bitmap.Width; $x += 8) {
+                $color = $bitmap.GetPixel($x, $y).ToArgb()
+                $colors[$color] = 1 + $colors[$color]
+            }
         }
         if ($colors.Count -lt 4) { throw 'Native screenshot was blank or unavailable; this is not visual qualification.' }
+        $dominant = $colors.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1
+        $dominantColor = [Drawing.Color]::FromArgb([int]$dominant.Key)
         $bitmap.Save((Join-Path $EvidenceDirectory $Name), [Drawing.Imaging.ImageFormat]::Png)
         $screenshotMetrics[$Name] = @{
             file = $Name; pixelWidth = $bitmap.Width; pixelHeight = $bitmap.Height
             windowDpi = [TdsTrayDesktop]::GetDpiForWindow([IntPtr]$Target.Current.NativeWindowHandle)
+            dominantLuminance = 0.2126 * $dominantColor.R + 0.7152 * $dominantColor.G + 0.0722 * $dominantColor.B
         }
     } finally { $graphics.Dispose(); $bitmap.Dispose() }
 }
@@ -260,13 +267,52 @@ function Browser-Editor {
         foreach ($edit in $edits) {
             $pattern = $null
             if ($edit.TryGetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern, [ref]$pattern) -and
-                $pattern.Current.Value -like "*127.0.0.1:$port/editor*") { return $window }
+                $pattern.Current.Value -like "*127.0.0.1:$port/editor*") {
+                $content = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants,
+                    [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty, 'Your streaming workspace'))
+                if ($content -and -not $content.Current.IsOffscreen) { return $window }
+            }
         }
     }
     return $null
 }
+function Prepare-CiBrowser {
+    # Fresh Edge displays its own first-run wizard over the editor. This policy
+    # is an isolated CI fixture, never application code or an operator setting.
+    $path = 'HKCU:\Software\Policies\Microsoft\Edge'
+    $existed = Test-Path $path
+    if (-not $existed) { New-Item -Path $path -Force | Out-Null }
+    $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Software\Policies\Microsoft\Edge', $true)
+    $present = $key.GetValueNames() -contains 'HideFirstRunExperience'
+    if ($present -and $key.GetValueKind('HideFirstRunExperience') -ne [Microsoft.Win32.RegistryValueKind]::DWord) {
+        $key.Close()
+        throw 'The CI browser policy has an unexpected type; it was not changed.'
+    }
+    $previous = $key.GetValue('HideFirstRunExperience')
+    try { $key.SetValue('HideFirstRunExperience', 1, [Microsoft.Win32.RegistryValueKind]::DWord) }
+    catch {
+        $key.Close()
+        if (-not $existed) { Remove-Item $path }
+        throw
+    }
+    return @{ key = $key; present = $present; previous = $previous; existed = $existed; path = $path }
+}
+function Restore-CiBrowser($Policy) {
+    if (-not $Policy) { return }
+    try {
+        if ($Policy.present) { $Policy.key.SetValue('HideFirstRunExperience', $Policy.previous, [Microsoft.Win32.RegistryValueKind]::DWord) }
+        else { $Policy.key.DeleteValue('HideFirstRunExperience', $false) }
+    } finally { $Policy.key.Close() }
+    if (-not $Policy.existed) { Remove-Item $Policy.path }
+}
+
+$appearanceHelper = Join-Path $PSScriptRoot 'windows_tray_appearance.ps1'
+& sonar analyze secrets $appearanceHelper | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Appearance helper secret scan failed; it was not read.' }
+. $appearanceHelper
 
 try {
+    $browserPolicy = Prepare-CiBrowser
     if ([TdsTrayDesktop]::FindWindow('Shell_TrayWnd', $null) -eq [IntPtr]::Zero) {
         throw 'Explorer tray is unavailable. Native tray qualification requires a real Windows desktop.'
     }
@@ -311,6 +357,9 @@ try {
     if ((Ready) -ne $generation) { throw 'Closing the confirmation unexpectedly restarted TDSBLive.' }
     Confirm-Action $desktop 'Quit' $false 'quit-cancel.png'
     if ((Ready) -ne $generation) { throw 'Cancel button unexpectedly quit TDSBLive.' }
+
+    $themes = Qualify-WindowsThemes $desktop
+    if ((Ready) -ne $generation) { throw 'Changing native appearance unexpectedly changed the backend generation.' }
 
     # Explorer restart is isolated to this CI session; never restart an operator's shell.
     $explorers = @(Get-Process explorer | Where-Object { $_.SessionId -eq $session })
@@ -410,9 +459,12 @@ try {
     Wait-For { -not (Get-Process -Id $desktop.Id -ErrorAction SilentlyContinue) } 'Quit left a stale tray process running.' | Out-Null
     if (-not (Test-Path (Join-Path $data 'tdsblive.db'))) { throw 'Quit discarded the owned profile.' }
     Assert-OwnedCredential $credentialHash
+    $remaining = @('actual high-DPI desktop checks', 'actual final-package OBS checks')
+    if (-not $themes.passed) { $remaining += 'actual light/dark appearance unavailable on this CI image' }
     @{
         passed = $true; evidence = 'actual packaged native Windows UI'; package = [IO.Path]::GetFileName($application)
         screenshots = @($screenshotMetrics.Values)
+        themes = $themes
         scenarios = @('native icon registration', 'quiet startup', 'normal manual startup opens editor',
             'Open editor native browser handoff', 'browser close leaves host running',
             'duplicate launch', 'accessible Restart and Quit', 'Cancel-first focus',
@@ -421,20 +473,22 @@ try {
             'old tray cleanup', 'companion crash isolation and diagnostics',
             'browser restart recovers companion', 'backend crash guidance without automatic restart', 'confirmed quit', 'profile retained',
             'saved DPAPI credential survives restart, backup restore, recovery and quit')
-        remaining = @('light/dark and high-DPI desktop checks', 'actual final-package OBS checks')
+        remaining = $remaining
     } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $EvidenceDirectory 'tray-result.json') -Encoding UTF8
     Write-Output 'Actual owned Windows tray/confirmation/Explorer/restart/quit qualification passed. Remaining release gates are recorded separately.'
 } finally {
-    if ($shellRestarted -and [TdsTrayDesktop]::FindWindow('Shell_TrayWnd', $null) -eq [IntPtr]::Zero) { Start-Process explorer.exe | Out-Null }
-    foreach ($owned in @(Owned-Hosts)) {
-        foreach ($child in @(Get-CimInstance Win32_Process -Filter "Name='TDSBLive.Desktop.exe'" | Where-Object { $_.ParentProcessId -eq $owned.ProcessId -and $_.ExecutablePath -eq $companionExecutable })) {
-            Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
+    try {
+        if ($shellRestarted -and [TdsTrayDesktop]::FindWindow('Shell_TrayWnd', $null) -eq [IntPtr]::Zero) { Start-Process explorer.exe | Out-Null }
+        foreach ($owned in @(Owned-Hosts)) {
+            foreach ($child in @(Get-CimInstance Win32_Process -Filter "Name='TDSBLive.Desktop.exe'" | Where-Object { $_.ParentProcessId -eq $owned.ProcessId -and $_.ExecutablePath -eq $companionExecutable })) {
+                Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
+            }
+            Stop-Process -Id $owned.ProcessId -Force -ErrorAction SilentlyContinue
         }
-        Stop-Process -Id $owned.ProcessId -Force -ErrorAction SilentlyContinue
-    }
-    foreach ($desktopId in $desktopIds) {
-        $orphan = Get-Process -Id $desktopId -ErrorAction SilentlyContinue
-        if ($orphan -and $orphan.MainModule.FileName -eq $companionExecutable) { Stop-Process -Id $desktopId -Force -ErrorAction SilentlyContinue }
-    }
-    Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
+        foreach ($desktopId in $desktopIds) {
+            $orphan = Get-Process -Id $desktopId -ErrorAction SilentlyContinue
+            if ($orphan -and $orphan.MainModule.FileName -eq $companionExecutable) { Stop-Process -Id $desktopId -Force -ErrorAction SilentlyContinue }
+        }
+        Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
+    } finally { Restore-CiBrowser $browserPolicy }
 }

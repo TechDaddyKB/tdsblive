@@ -324,11 +324,40 @@ rejects local execution before inspecting or changing the desktop.
 | --- | --- | --- |
 | Authenticated control, bounded messages and one admitted command | Host/control tests and actual owned-process qualification | Exact-head protected Windows checks |
 | Profile ownership, spaced paths, nondefault port, safe restart/restore, SQLite integrity | Actual owned-process checks; successful earlier Windows regression steps | Exact-head packaged checks; native browser lifecycle |
-| Native icon, menu, confirmations, Explorer recovery and crash isolation | Earlier Windows run proves icon registration, then fails menu automation | Run corrected native harness on portable and installed packages; inspect screenshots |
-| Manual/quiet startup and saved credentials through lifecycle | Source and individual startup/vault tests | Run the extended actual-package scenarios above |
+| Native icon, menu, confirmations, Explorer recovery and crash isolation | Native icon/menu and Open editor activation verified; Edge first-run screen blocks browser-close progress | Run corrected native harness on portable and installed packages; inspect screenshots |
+| Manual/quiet startup and saved credentials through lifecycle | Native quiet startup and initial owned DPAPI storage verified; individual startup/vault tests pass | Complete actual-package manual startup and credential retention through lifecycle |
 | Light/dark appearance, keyboard access and high DPI | Actual theme variant and keyboard behavior in headless tests | Real Windows screenshots and interactions in both themes and at high DPI |
 | Installer, optional startup, update/reinstall, uninstall and data retention | Packages build; inherited native package harness preserves these checks | Successful exact-head package qualification |
 | Existing OBS addresses, rendering/audio and reconnect | Historical OBS evidence remains preserved | Actual current-package isolated OBS verification |
 
 G22 remains **In progress**. G23 and G24 retain their prerequisites and remain
 **Not started**; neither native Linux delivery nor release publication is claimed.
+
+Appearance qualification preparation: the native harness now has a guarded
+light/dark phase that observes actual Windows UISettings, renders both packaged
+confirmation windows, checks their dominant background luminance, and restores
+the CI user's original theme preferences in a finally block. Unsupported theme
+observation is recorded as missing evidence, never a pass. A separate trusted
+Windows desktop inventory job discovers the CI image's real scaling controls and
+options without changing settings. It cannot satisfy or replace the protected
+Windows build/test job; fork and Dependabot source cannot receive its secret.
+Its generated metadata is scanned before artifact upload. This prepares actual
+high-DPI qualification; it does not itself qualify high DPI.
+
+The three PowerShell scripts parse successfully under the isolated temporary
+mount, and the appearance/inventory guards reject non-CI execution before desktop
+access. All changed sources pass deterministic secret scanning and whitespace
+checks. Native execution of these additions remains required.
+
+Source `fd5b16e158db838d373f35c063e6e2cd35e7e25c` passes protected Sonar and
+regression steps in [run 37252517405](https://github.com/TechDaddyKB/tdsblive/actions/runs/37252517405),
+then fails the browser-close scenario. Downloaded evidence was scanned after
+extraction and visually inspected: capture now works, but Edge's own first-run
+welcome screen covers the editor and prevents closing its window. The harness
+now temporarily enables Microsoft's documented [HideFirstRunExperience policy](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/HideFirstRunExperience)
+only for the isolated CI user, restores its original value in finally, and
+requires visible **Your streaming workspace** content in addition to the correct
+browser address/title. TDSBLive application code does not set browser policies.
+The first-run screenshot is environmental evidence, not a passing editor visual.
+The updated native harness, appearance phase and display inventory still need
+exact-head Windows execution. G22 remains incomplete.
