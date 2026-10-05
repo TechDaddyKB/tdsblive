@@ -36,7 +36,7 @@ a future fully native Linux application remain possible.
 
 ## G22 — Desktop controls and Windows tray
 
-Status: **In progress**
+Status: **Complete**
 Prerequisites: G21 and merged 1.0 source
 Requirements: TR-R01–TR-R06, TR-R10
 
@@ -70,12 +70,15 @@ data. Keyboard focus, labels, light/dark and high-DPI controls must work.
 
 ### Blockers
 
-Actual current-build Windows desktop evidence is required. Build and mock results
-alone do not satisfy this gate; record unavailable evidence explicitly.
+None for G22's approved Windows scope. Protected delivery and the actual
+portable/installed, lifecycle and owned OBS evidence are recorded below. Final
+cumulative artifacts are requalified in G24. Native Windows streaming-PC
+performance, physical hearing and native Windows OBS behavior are not claimed;
+the established environment and acceptance dispositions remain explicit.
 
 ## G23 — Native Linux tray companion
 
-Status: **Not started**
+Status: **In progress**
 Prerequisites: G22
 Requirements: TR-R01–TR-R07, TR-R10
 
@@ -323,16 +326,17 @@ rejects local execution before inspecting or changing the desktop.
 
 | Acceptance area | Current evidence | Required follow-up |
 | --- | --- | --- |
-| Authenticated control, bounded messages and one admitted command | Host/control tests and actual owned-process qualification | Exact-head protected Windows checks |
-| Profile ownership, spaced paths, nondefault port, safe restart/restore, SQLite integrity | Managed-process checks and actual diagnostic Windows package under direct Wine pass owned restart/restore, saved state and clean shutdown | Exact-head Windows packaged checks; native browser lifecycle |
-| Native icon, menu, confirmations, Explorer recovery and crash isolation | Source ec699fb passes the complete actual portable Windows native probe, including accepted Restart/Quit, Explorer re-registration, browser restore, both crash paths and old-companion cleanup | Complete installed-package native qualification and protected full run |
-| Manual/quiet startup and saved credentials through lifecycle | Source ec699fb passes native manual/quiet launch and owned DPAPI credential retention through restart, backup restore, recovery and quit | Complete installed-package qualification and protected full run |
-| Light/dark appearance, keyboard access and high DPI | Source ec699fb passes actual portable Windows light/dark confirmations, Cancel keyboard alternatives and 125% physical geometry/focus checks | Complete installed-package appearance/scaling checks and final source qualification |
-| Installer, optional startup, update/reinstall, uninstall and data retention | Packages build; inherited native package harness preserves these checks | Successful exact-head package qualification |
-| Existing OBS addresses, rendering/audio and reconnect | Owned diagnostic Windows package under direct Wine renders in native OBS and reconnects after restart/restore, with sample state and transparency verified | Final-package OBS checks, Windows desktop lifecycle and audio acceptance |
+| Authenticated control, bounded messages and one admitted command | Source ec699fb passes all host/control tests and actual owned-process qualification in protected Windows run 37266440100 | Final cumulative artifact requalification in G24 |
+| Profile ownership, spaced paths, nondefault port, safe restart/restore, SQLite integrity | Managed, portable and installed actual-process checks and browser lifecycle pass; the downloaded full-run Windows EXE under direct Wine also preserves owned state and clean shutdown | Final cumulative artifact requalification in G24 |
+| Native icon, menu, confirmations, Explorer recovery and crash isolation | Source ec699fb passes complete actual portable and installed Windows probes, including accepted Restart/Quit, Explorer re-registration, browser restore, both crash paths and old-companion cleanup | Requalify Windows after shared Linux changes |
+| Manual/quiet startup and saved credentials through lifecycle | Source ec699fb passes portable/installed native manual/quiet launch and owned DPAPI credential retention through restart, backup restore, recovery and quit | Requalify Windows after shared Linux changes |
+| Light/dark appearance, keyboard access and high DPI | Source ec699fb passes portable/installed actual light/dark confirmations, Cancel keyboard alternatives and 125% physical geometry/focus checks; downloaded screenshots are visually inspected | Requalify Windows after shared Linux changes |
+| Installer, optional startup, update/reinstall, uninstall and data retention | Protected full run passes both packages, replacement/reinstall, opt-in quiet-start shortcut, uninstall and retained data | Final cumulative artifact requalification in G24 |
+| Existing OBS addresses, rendering/audio and reconnect | Downloaded full-run Windows EXE in owned Wine/native Linux OBS preserves the same Browser Source through restart/restore; actual state, dimensions, transparency and silent/tone/silent post-volume signal are verified | Final cumulative artifact requalification in G24; physical hearing and native Windows OBS are not inferred |
 
-G22 remains **In progress**. G23 and G24 retain their prerequisites and remain
-**Not started**; neither native Linux delivery nor release publication is claimed.
+G22 is **Complete** for the qualified and protected Windows scope. G23 is
+**In progress** with its prerequisite satisfied; G24 remains **Not started**.
+Neither native Linux delivery nor release publication is claimed.
 
 Appearance qualification preparation: the native harness now has a guarded
 light/dark phase that observes actual Windows UISettings, renders both packaged
@@ -672,3 +676,76 @@ Windows OBS evidence. The prior program scene is restored, the owned scene and
 input are removed, the fixture quits gracefully, and its private profile/prefix
 are removed after SQLite integrity and owned Wine shutdown checks. Stream and
 record outputs are confirmed inactive before and after qualification.
+
+### G22 acceptance and protected delivery — 2026-10-05
+
+The full [Windows run 37266440100](https://github.com/TechDaddyKB/tdsblive/actions/runs/37266440100)
+for source `ec699fb1549353160367903e594556830ded1598` completes successfully.
+Native tests pass **88 Core, 26 Desktop and 457 Host** cases, including both real
+Windows registration cases; frontend tests pass **252** cases. Managed, portable
+and installed browser/parity suites and actual-process recovery pass. Both full
+native package probes independently pass all listed tray/lifecycle scenarios,
+light/dark and 125% scale. Replacement/reinstall, startup off by default, opt-in
+quiet startup, uninstall and retained data pass. The actual packaged guide passes
+21 chapters, images, local navigation and network-disabled reflow at
+320/390/1366 pixels. SonarCloud passes with A ratings, **83.4% new-code coverage**,
+**0% duplication** and **100% hotspot review**; CodeQL passes.
+
+Both full-run artifacts are downloaded and their SHA-256 values verified:
+
+| Package | SHA-256 |
+| --- | --- |
+| `TDSBLive-1.0.1-win-x64.zip` | `53340cbb8d82a1491bf320a7042174e04660f4acff6c2ef38692425f6e80803c` |
+| `TDSBLive-1.0.1-win-x64-setup.exe` | `f39eb3af465e1110ea5317726212a509b1377e235ebf86b154578ae478e31ddc` |
+
+The safely extracted and scanned full-run Windows EXE is then actually exercised
+in a fresh owned Wine prefix and native Linux OBS, separately from the diagnostic
+package preparation. The same Browser Source shows progress/state **25/1 → 75/2
+after restart → 25/1 after restore**. Scanned screenshots are visually inspected;
+dimensions remain 1000 × 600, alpha spans 0–255 and the empty corner is transparent.
+After restore, actual OBS meters report **324 silent samples**, **19 tone frames
+at peak 0.0799901**, and **339 silent samples afterward**. This measured delivery
+evidence retains the approved physical-listening and native-Windows-OBS limits.
+The owned source/scene are removed, prior program scene restored, fixture quits,
+SQLite integrity passes, and private prefix/profile are removed. Recording and
+streaming remain inactive.
+
+[PR #21](https://github.com/TechDaddyKB/tdsblive/pull/21) merges normally through
+strict protected checks at `5ee550803cf18fa786e4edc2651fd53ecf035643`. Its tracked
+tree matches the qualified source; no branch protection or fork-secret boundary
+is bypassed. G22 is **Complete**. G23 starts from that merged delivery. This
+does not publish 1.0.1 or complete G24; the final cumulative Windows/Linux artifacts
+and public downloads must still be qualified together at one protected main SHA.
+
+The post-merge [main run 37269145734](https://github.com/TechDaddyKB/tdsblive/actions/runs/37269145734)
+also completes successfully at `5ee550803cf18fa786e4edc2651fd53ecf035643`, including
+the full Windows job, actual native tray probe and desktop inventory. This is
+separate current-main confirmation; it does not qualify later Linux changes.
+
+### G23 initial implementation checkpoint — 2026-10-05
+
+Branch `codex/tray-linux-v1.0.1` starts from merged G22. Source `1febf41` adds
+nonsensitive runner/prefix/application/profile selections and private atomic
+launcher-settings storage. Existing profiles must remain present; loading a
+missing or empty saved setup cannot silently create a new one. New setup is an
+explicit separate choice and refuses a nonempty destination. Discovery keeps
+multiple existing profiles visible rather than selecting an arbitrary one.
+
+Launch construction keeps file paths as separate arguments, selects external
+desktop ownership, and leaves editor handoff to the native companion. A profile
+inside C: retains its Windows path; an existing external profile uses an actual
+selected-prefix drive mapping. UMU preserves its explicit Proton folder and
+prefix. Backend DLL overrides retain unrelated choices and remain child-local.
+No session capability is a member of the saved settings or launch arguments.
+The control-pipe launch itself still requires implementation and real runner tests.
+
+Pinned-SDK desktop tests pass **46 cases with two Windows-only skips** on Linux
+(48 total), including actual Unix drive symlinks, 0600 settings-file permissions,
+atomic replacement without touching an unrelated symlink target, malformed/large
+file rejection, explicit new setup and unchanged existing sample settings. Secrets
+scans and diff checks pass. No Wine/UMU process is launched by these model tests.
+
+G23 remains **In progress**. Native first-run UI, backend lifecycle ownership,
+actual StatusNotifierItem registration, per-user app-menu installation, packaging,
+both runners/desktops and resource qualification remain outstanding. The native
+Linux application is not yet delivered or claimed usable. G24 remains **Not started**.

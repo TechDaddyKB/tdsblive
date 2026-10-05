@@ -105,8 +105,8 @@ Capture evidence inspected during planning: 785 successful polls, 751 with a liv
 | [G19](ui-redesign-plan.md#g19--remaining-application-workflows) | Redesign remaining workflows | G15, G18 | Complete |
 | [G20](ui-redesign-plan.md#g20--accessibility-usability-and-compatibility) | Qualify UI accessibility, usability and compatibility | G16–G19 | Complete |
 | [G21](ui-redesign-plan.md#g21--document-and-deliver) | Document and deliver UI redesign | G20 | Complete |
-| [G22](tray-release-plan.md#g22--desktop-controls-and-windows-tray) | Desktop controls and Windows tray | G21, merged 1.0 source | In progress |
-| [G23](tray-release-plan.md#g23--native-linux-tray-companion) | Native Linux tray companion | G22 | Not started |
+| [G22](tray-release-plan.md#g22--desktop-controls-and-windows-tray) | Desktop controls and Windows tray | G21, merged 1.0 source | Complete |
+| [G23](tray-release-plan.md#g23--native-linux-tray-companion) | Native Linux tray companion | G22 | In progress |
 | [G24](tray-release-plan.md#g24--documentation-qualification-and-publication) | Documentation, qualification and v1.0.1 publication | G22–G23 | Not started |
 
 The approved [tray and 1.0.1 release plan](tray-release-plan.md) defines

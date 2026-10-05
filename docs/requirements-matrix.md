@@ -159,16 +159,16 @@ These candidate records do not claim a published release or Linux delivery.
 
 | Requirement | Current evidence | Disposition |
 | --- | --- | --- |
-| TR-R01 | Existing browser/protocol regression checks, preserved HTTP authority, owned restart/restore and current-source OBS reconnect | Windows candidate; full package run pending |
+| TR-R01 | Existing browser/protocol regression checks, preserved HTTP authority, owned restart/restore and current-source OBS reconnect | Windows qualified; Linux and final cumulative artifacts pending |
 | TR-R02 | ec699fb actual Windows native menu/dialog probe; Open editor, Restart and Quit, light/dark and 125% scale | Windows verified; native Linux pending |
-| TR-R03 | ec699fb actual Windows quiet/manual launch, duplicate launch and normal-browser handoff | Portable Windows verified; installed and Linux pending |
-| TR-R04 | Actual control/host tests plus ec699fb restart, browser restore, retained profile/DPAPI credential and accepted quit | Windows candidate; installed/Linux pending |
-| TR-R05 | ec699fb actual Explorer/fallback recovery, companion crash isolation, old-tray cleanup and stopped-backend guidance | Portable Windows verified; installed/Linux pending |
-| TR-R06 | Bounded authenticated pipe/loopback protocol and ownership tests; unchanged HTTP/CSRF boundary | Implemented; protected full run pending |
+| TR-R03 | ec699fb actual Windows quiet/manual launch, duplicate launch and normal-browser handoff | Portable and installed Windows verified; Linux pending |
+| TR-R04 | Actual control/host tests plus ec699fb restart, browser restore, retained profile/DPAPI credential and accepted quit | Portable and installed Windows verified; Linux pending |
+| TR-R05 | ec699fb actual Explorer/fallback recovery, companion crash isolation, old-tray cleanup and stopped-backend guidance | Portable and installed Windows verified; Linux pending |
+| TR-R06 | Bounded authenticated pipe/loopback protocol and ownership tests; unchanged HTTP/CSRF boundary | Windows implemented and qualified; Linux launch integration pending |
 | TR-R07 | Approved explicit runner/prefix/native-browser contract | Native Linux implementation and both runner/desktop qualification pending |
 | TR-R08 | Illustrated Windows tray guide and README; 21-chapter network-disabled guide preparation | Complete documentation audit, Linux/offline/wiki/publication pending |
 | TR-R09 | Central application version 1.0.1 and diagnostic Windows packages | Linux artifact, immutable protected publisher, four public downloads/checksums pending |
-| TR-R10 | Current native Windows probe; owned Windows-under-Wine package in native Linux OBS renders/reconnects and delivers measured silent/tone/silent audio | Full Windows candidate, Linux and final artifacts pending; established physical/performance/live-platform limits retained |
+| TR-R10 | Full native Windows portable/installed checks; downloaded full-run Windows-under-Wine package in native Linux OBS renders/reconnects and delivers measured silent/tone/silent audio; protected PR #21 merged | G22 qualified; Linux and final cumulative artifacts pending; established physical/performance/live-platform limits retained |
 
 Exact tested source/run links, screenshots and remaining gates belong to the
 tray plan. Actual OBS signal measurements do not claim physical hearing, and
