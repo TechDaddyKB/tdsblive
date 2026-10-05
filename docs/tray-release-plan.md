@@ -773,6 +773,14 @@ Backend ownership/pipe/lifecycle, actual tray registration, application-menu
 installation, packages and runner/desktop/resource evidence remain outstanding.
 G23 remains **In progress**; G24 remains **Not started**.
 
+Additional `5843c49` owned direct-Wine probe: after a separate startup, disposing
+the native process/control reader handles leaves the backend reachable. Desktop
+polling stays absent for 15 seconds, including its degraded-controls warning;
+the same owned configuration and Running state remain available. The retained
+test-driver capability then admits graceful Quit, and the owned Wine server
+finishes before cleanup. SQLite integrity passes again. This qualifies closed
+companion handles, not an actual killed native GUI process or tray recovery.
+
 ### G23 native backend bridge checkpoint — 2026-10-05
 
 Source `5843c49` connects the native first-run window and saved launcher choices
