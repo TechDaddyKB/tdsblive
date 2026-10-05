@@ -110,6 +110,17 @@ the original scale in finally. It neither changes resolution nor injects simulat
 DPI notifications. Script parsing and safety guards are preparation evidence;
 the actual packaged Windows run must pass these phases.
 
+`tools/serve_tray_obs.py` prepares a separate owned OBS example with a random
+loopback port, temporary profile, disabled integrations/LAN, stored custom state,
+progress, an image and an explicitly requested short tone. It accepts only the
+known packaged host or pinned SDK/host assembly through the shared executable
+admission checks. Authenticated restart/restore must report `restart-ready` and
+exit cleanly before the owning fixture starts a successor. It does not control
+OBS, run live actions or play audio during `--self-check`. Interactive commands
+support observation in a separately owned Browser Source; native packaged OBS
+screenshots, reconnect and audio evidence remain separate requirements. Quit
+stops the owned host, checks SQLite integrity and removes its temporary profile.
+
 Headless UI tests cover controls and connection behavior. They run serially
 because Avalonia's platform registrations are process-wide. Coverage includes
 both `ExtensionSuite.*` assemblies and `TDSBLive.Desktop`; handwritten desktop

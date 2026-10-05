@@ -131,6 +131,8 @@ class BrowserClient:
         message = urllib.request.Request(self.origin + route, data=data, headers=headers, method=method)
         with self.opener.open(message, timeout=30) as response:
             content = response.read()
+            if not content:
+                return None
             return content if response.headers.get_content_type() == "application/zip" else json.loads(content)
 
 
