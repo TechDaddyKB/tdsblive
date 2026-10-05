@@ -75,11 +75,12 @@ public sealed class DesktopWorkspaceTests
         var opened = new List<Uri>();
         var available = false;
         using var app = new DesktopApp(opened.Add, _ => available, _ => Task.FromResult(false));
-        app.RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
+        Avalonia.Application.Current!.RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
         app.InitializeTray();
         var attached = app.AttachAsync(host.Bootstrap);
         await UntilAsync(() => app.Controls?.IsVisible == true && Button(app, "Restart").IsEnabled);
         Assert.Equal("TDSBLive is running", app.Controls!.Title);
+        Assert.Equal(dark ? ThemeVariant.Dark : ThemeVariant.Light, app.Controls.ActualThemeVariant);
         Assert.Contains("tray is unavailable", Text(app));
         Assert.True(Button(app, "Quit").MinHeight >= 44);
         Click(Button(app, "Open editor"));
@@ -201,6 +202,23 @@ public sealed class DesktopWorkspaceTests
     });
 
     [Fact]
+    public Task KnownShutdownFailureIsNotOverwrittenBySimultaneousConnectionClosure() => RunAsync(async () =>
+    {
+        await using var host = new OwnedControlHost { PauseStatusResponses = true };
+        using var app = new DesktopApp(_ => { }, _ => false, _ => Task.FromResult(true));
+        var attached = app.AttachAsync(host.Bootstrap);
+        await host.StatusSeen.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        host.Complete("port-conflict");
+        await UntilAsync(() => app.Controls?.IsVisible == true && Text(app).Contains("Another app may be using"));
+        host.Disconnect();
+        await attached;
+        Assert.Contains("Another app may be using", Text(app));
+        Assert.DoesNotContain("lost their connection", Text(app));
+        Click(Button(app, "Close desktop controls"));
+        app.Controls!.Close();
+    });
+
+    [Fact]
     public Task ConnectionLossDisablesCommandsAndLeavesRecoveryGuidance() => RunAsync(async () =>
     {
         await using var host = new OwnedControlHost();
@@ -229,6 +247,8 @@ public sealed class DesktopWorkspaceTests
         public string State { get; set; } = "running";
         public int OpenRequests { get; set; }
         public bool AcceptCommands { get; set; } = true;
+        public bool PauseStatusResponses { get; init; }
+        public TaskCompletionSource StatusSeen { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public System.Collections.Concurrent.ConcurrentQueue<string> Commands { get; } = new();
 
         public OwnedControlHost()
@@ -261,7 +281,12 @@ public sealed class DesktopWorkspaceTests
                     Assert.True(DesktopProtocol.Authenticate(Bootstrap.SessionToken, request.SessionToken));
                     DesktopReply reply;
                     if (request.Command == "wait") reply = new(await completed.Task.WaitAsync(stopping.Token), EditorUrl);
-                    else if (request.Command == "status") reply = new(State, EditorUrl, OpenRequests: OpenRequests);
+                    else if (request.Command == "status")
+                    {
+                        StatusSeen.TrySetResult();
+                        if (PauseStatusResponses) await Task.Delay(Timeout.Infinite, stopping.Token);
+                        reply = new(State, EditorUrl, OpenRequests: OpenRequests);
+                    }
                     else
                     {
                         var accepted = AcceptCommands && State == "running";

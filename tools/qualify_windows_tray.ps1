@@ -30,6 +30,7 @@ public static class TdsTrayDesktop {
     public delegate bool Visitor(IntPtr window, IntPtr parameter);
     [DllImport("user32.dll")] public static extern bool EnumWindows(Visitor visitor, IntPtr parameter);
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(IntPtr window, StringBuilder name, int count);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindow(string name, string title);
     [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
@@ -58,6 +59,11 @@ public static class TdsTrayDesktop {
         var window = MessageWindow(pid);
         if (window == IntPtr.Zero || !PostMessage(window, 0x400 + 1024, new IntPtr(1), new IntPtr(0x205)))
             throw new InvalidOperationException("Owned native tray window was not available.");
+    }
+    public static bool OwnsForeground(int pid) {
+        uint process;
+        var window = GetForegroundWindow();
+        return window != IntPtr.Zero && GetWindowThreadProcessId(window, out process) != 0 && process == pid;
     }
 }
 '@
@@ -112,7 +118,21 @@ function Element([int]$ProcessId, [string]$Name, $Type = $null) {
 }
 function Invoke-Element($Target) {
     if (-not $Target.Current.IsEnabled) { throw 'The native desktop action was not enabled.' }
-    $Target.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $pattern = $null
+    if ($Target.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$pattern)) {
+        $pattern.Invoke()
+        return
+    }
+    # The pinned Avalonia MenuItem peer exposes focus and menu semantics, but
+    # not InvokePattern. Exercise its actual keyboard activation instead.
+    if ($Target.Current.ControlType -ne [System.Windows.Automation.ControlType]::MenuItem) {
+        throw 'The owned control provides no supported activation pattern.'
+    }
+    $Target.SetFocus()
+    if (-not $Target.Current.HasKeyboardFocus -or -not [TdsTrayDesktop]::OwnsForeground($Target.Current.ProcessId)) {
+        throw 'The owned tray menu did not receive keyboard focus; no key was sent.'
+    }
+    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 }
 function Screenshot($Target, [string]$Name) {
     $rectangle = $Target.Current.BoundingRectangle
@@ -134,6 +154,12 @@ function Screenshot($Target, [string]$Name) {
 function Menu-Action($Desktop, [string]$Action) {
     [TdsTrayDesktop]::OpenMenu($Desktop.Id)
     $item = Wait-For { Element $Desktop.Id $Action ([System.Windows.Automation.ControlType]::MenuItem) } "Native tray menu action '$Action' was not accessible."
+    $parent = $item
+    while ($parent -and $parent.Current.ControlType -ne [System.Windows.Automation.ControlType]::Window) {
+        $parent = [System.Windows.Automation.TreeWalker]::RawViewWalker.GetParent($parent)
+    }
+    if (-not $parent -or $parent.Current.ProcessId -ne $Desktop.Id) { throw 'Owned tray popup could not be identified for its screenshot.' }
+    Screenshot $parent 'tray-menu.png'
     Invoke-Element $item
 }
 function Confirm-Action($Desktop, [string]$Action, [bool]$Accept, [string]$ScreenshotName) {

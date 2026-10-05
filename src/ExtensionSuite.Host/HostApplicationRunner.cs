@@ -4,9 +4,15 @@ namespace ExtensionSuite.Host;
 
 internal static class HostApplicationRunner
 {
+    private sealed record ShutdownServices(ApplicationLifecycle Lifecycle, ApplicationPaths Paths, RecoveryRestore Restore);
+
     public static async Task<int> RunAsync(WebApplication app, IConfiguration configuration, string[] arguments,
         DesktopSession? desktop, DesktopProfileOwner? profileOwner)
     {
+        // Capture these while DI is live. Shutdown/recovery can dispose the
+        // provider before the post-shutdown owner finishes its work.
+        var services = new ShutdownServices(app.Services.GetRequiredService<ApplicationLifecycle>(),
+            app.Services.GetRequiredService<ApplicationPaths>(), app.Services.GetRequiredService<RecoveryRestore>());
         var started = false;
         try
         {
@@ -17,7 +23,7 @@ internal static class HostApplicationRunner
             await app.WaitForShutdownAsync();
             if (profileOwner is not null) await profileOwner.StopWatchingAsync();
             if (desktop is not null) await desktop.StopMonitoringAsync();
-            return await FinishAsync(app, configuration, arguments, desktop, profileOwner);
+            return await FinishAsync(app, configuration, arguments, desktop, profileOwner, services);
         }
         catch (IOException)
         {
@@ -42,19 +48,17 @@ internal static class HostApplicationRunner
     }
 
     private static async Task<int> FinishAsync(WebApplication app, IConfiguration configuration, string[] arguments,
-        DesktopSession? desktop, DesktopProfileOwner? profileOwner)
+        DesktopSession? desktop, DesktopProfileOwner? profileOwner, ShutdownServices services)
     {
-        var operation = app.Services.GetRequiredService<ApplicationLifecycle>().Operation;
-        var paths = app.Services.GetRequiredService<ApplicationPaths>();
-        var restore = app.Services.GetRequiredService<RecoveryRestore>();
-        var safe = await CloseAndRestoreAsync(app, operation, restore);
+        var operation = services.Lifecycle.Operation;
+        var safe = await CloseAndRestoreAsync(app, operation, services.Restore);
         // Recovery replaces the profile while ownership is held; release only
         // after that work, and before a replacement process can start.
         profileOwner?.ReleaseOwnership();
         if (safe && desktop?.External != true && operation?.Kind is "restart" or "restore")
         {
             safe = ApplicationRelauncher.TryStart(Environment.ProcessPath!, typeof(HostApplicationRunner).Assembly.Location,
-                paths.Root, openEditor: configuration.GetValue<bool>("TDSBLive:OpenEditor"), launchArguments: arguments);
+                services.Paths.Root, openEditor: configuration.GetValue<bool>("TDSBLive:OpenEditor"), launchArguments: arguments);
             if (!safe) await Console.Error.WriteLineAsync("TDSBLive stopped. Open it again using its shortcut to continue.");
         }
         if (desktop is not null) await desktop.CompleteAsync(CompletionState(safe, operation?.Kind, desktop.External));

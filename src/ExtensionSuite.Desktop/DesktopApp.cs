@@ -32,6 +32,7 @@ public sealed class DesktopApp : Application, IDisposable
     private int openRequests;
     private bool trayUnavailable;
     private bool exiting;
+    private bool completionReceived;
     private string statusLabel = "Starting TDSBLive…";
     private readonly Action<Uri> launchBrowser;
     private readonly Func<TrayIcon?, bool> trayRegistered;
@@ -144,7 +145,7 @@ public sealed class DesktopApp : Application, IDisposable
 
     private void ConnectionFailed()
     {
-        if (stopped.IsCancellationRequested) return;
+        if (stopped.IsCancellationRequested || completionReceived) return;
         SetState("Stopped unexpectedly", false);
         ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise open TDSBLive again.");
     }
@@ -161,6 +162,7 @@ public sealed class DesktopApp : Application, IDisposable
     {
         if (bootstrap is null) return;
         var result = await DesktopProtocol.SendAsync(bootstrap, "wait", stopped);
+        completionReceived = true;
         if (result.State is "quit" or "relaunched") ExitCompanion();
         else if (result.State == "port-conflict")
         {

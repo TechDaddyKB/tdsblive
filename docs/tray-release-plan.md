@@ -267,3 +267,26 @@ the system temporary folder. Use that isolated mount plus the pinned SDK and
 environment workaround, not native desktop acceptance. Requalification of the
 new source on Windows/Sonar, actual native UI, all Linux and final release gates
 remain required.
+
+The [desktop lifecycle contract](desktop-lifecycle.md) records launch modes,
+profile ownership, control authority, completion outcomes and verification
+boundaries for the implementation candidate.
+
+Native-package checkpoint: `89db2ffe8379d7fc9a568475e903cab8e1c1d065` passes
+Sonar with 82.2% new-code coverage, A ratings, zero new duplication and all
+hotspots reviewed. All-language CodeQL and the existing regression checks pass.
+[Run 37248512240](https://github.com/TechDaddyKB/tdsblive/actions/runs/37248512240)
+builds both Windows packages, reaches the actual registered Explorer icon, then
+fails native menu activation because the pinned Avalonia menu peer does not
+expose UI Automation InvokePattern. The harness now uses supported invocation
+when available and otherwise verifies owned foreground/keyboard focus before
+pressing Enter on a menu item. It also captures the actual tray popup. This
+correction has not yet run on Windows; native acceptance remains incomplete.
+
+Follow-up local tests verify the actual light/dark variant on the control window
+and preserve known startup failure guidance when a concurrent status connection
+closes. Host shutdown keeps service references captured before DI disposal,
+retaining the original recovery ownership order. Local full regression passes
+453 host, 88 core and 23 desktop tests, with five explicit Windows-only skips;
+the desktop coverage run and actual owned process lifecycle also pass. These
+follow-up source changes still need exact-head protected requalification.
