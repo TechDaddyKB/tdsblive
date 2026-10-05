@@ -69,8 +69,10 @@ public sealed record LinuxLauncherSettings(LinuxRunnerKind Runner, string Runner
 
     public string WindowsDataDirectory()
     {
-        var drive = Path.GetFullPath(Path.Combine(PrefixDirectory, "drive_c"));
-        var data = Path.GetFullPath(DataDirectory);
+        var originalDrive = Path.GetFullPath(Path.Combine(PrefixDirectory, "drive_c"));
+        var originalData = Path.GetFullPath(DataDirectory);
+        var drive = LinuxPhysicalPath.Resolve(originalDrive);
+        var data = LinuxPhysicalPath.Resolve(originalData);
         if (data.Equals(drive, StringComparison.Ordinal))
             throw new ArgumentException("Choose the TDSBLive setup folder, not the whole Windows drive.");
         if (Within(data, drive)) return WindowsPath('C', Path.GetRelativePath(drive, data));
@@ -82,10 +84,18 @@ public sealed record LinuxLauncherSettings(LinuxRunnerKind Runner, string Runner
                 var name = Path.GetFileName(mapping);
                 if (name.Length != 2 || name[1] != ':' || name[0] is < 'a' or > 'z') continue;
                 var target = new DirectoryInfo(mapping).ResolveLinkTarget(true);
-                if (target is not null && Within(data, target.FullName))
-                    return WindowsPath(char.ToUpperInvariant(name[0]), Path.GetRelativePath(target.FullName, data));
+                if (target is not null)
+                {
+                    var physical = LinuxPhysicalPath.Resolve(target.FullName);
+                    if (Within(data, physical))
+                        return WindowsPath(char.ToUpperInvariant(name[0]), Path.GetRelativePath(physical, data));
+                }
             }
         }
+        // A custom prefix may intentionally omit Z: while exposing an external
+        // setup through a C: directory link. Keep that existing access usable.
+        if (Within(originalData, originalDrive))
+            return WindowsPath('C', Path.GetRelativePath(originalDrive, originalData));
         throw new ArgumentException("This setup folder is not available inside the selected Windows settings folder. Choose its existing mapped setup folder.");
     }
 
@@ -97,7 +107,7 @@ public sealed record LinuxLauncherSettings(LinuxRunnerKind Runner, string Runner
         if (Directory.Exists(users))
             candidates.AddRange(Directory.EnumerateDirectories(users).Take(256)
                 .Select(user => Path.Combine(user, "AppData", "Local", "TDSBLive")));
-        return candidates.Where(IsProfile).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        return candidates.Where(IsProfile).DistinctBy(LinuxPhysicalPath.Resolve, StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
     }
 
     internal static string BackendOverrides(string? inherited)

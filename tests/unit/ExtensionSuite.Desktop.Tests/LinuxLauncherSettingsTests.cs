@@ -148,6 +148,75 @@ public sealed class LinuxLauncherSettingsTests
         }
     }
 
+    [LinuxOnlyFact]
+    public void WineAndProtonUserAliasesShareOneIncomingProfileIdentity()
+    {
+        using var example = new OwnedExample(LinuxRunnerKind.Wine);
+        var users = Path.Combine(example.Settings.PrefixDirectory, "drive_c", "users");
+        Directory.CreateSymbolicLink(Path.Combine(users, "steamuser"), "owned");
+        var alias = example.Settings with { Runner = LinuxRunnerKind.Umu,
+            RunnerPath = Path.Combine(example.Root, "umu-run"),
+            DataDirectory = Path.Combine(users, "steamuser", "AppData", "Local", "TDSBLive") };
+        File.WriteAllText(alias.RunnerPath, "owned runner marker; never executed");
+        var launch = alias.CreateStartInfo();
+        Assert.Equal(example.Settings.WindowsDataDirectory(), alias.WindowsDataDirectory());
+        Assert.Equal("--TDSBLive:DataDirectory=" + example.Settings.WindowsDataDirectory(), launch.ArgumentList[3]);
+        Assert.Equal(alias.PrefixDirectory, launch.Environment["WINEPREFIX"]);
+        Assert.Equal(alias.RunnerPath, launch.FileName);
+        Assert.Equal(alias.DataDirectory, alias.Normalize().DataDirectory);
+        Assert.Single(LinuxLauncherSettings.FindProfiles(alias.PrefixDirectory));
+    }
+
+    [LinuxOnlyFact]
+    public void PrefixAndProfileDirectoryAliasesResolveBeforeWindowsDriveSelection()
+    {
+        using var example = new OwnedExample(LinuxRunnerKind.Wine);
+        var prefixAlias = Path.Combine(example.Root, "selected prefix alias");
+        Directory.CreateSymbolicLink(prefixAlias, example.Settings.PrefixDirectory);
+        var dataAlias = Path.Combine(example.Settings.PrefixDirectory, "drive_c", "selected profile alias");
+        Directory.CreateSymbolicLink(dataAlias, example.Settings.DataDirectory);
+        var selected = example.Settings with { PrefixDirectory = prefixAlias,
+            DataDirectory = Path.Combine(prefixAlias, "drive_c", "selected profile alias") };
+        Assert.Equal(example.Settings.WindowsDataDirectory(), selected.WindowsDataDirectory());
+        Assert.Equal(prefixAlias, selected.CreateStartInfo().Environment["WINEPREFIX"]);
+        Assert.Equal(selected.DataDirectory, selected.Normalize().DataDirectory);
+    }
+
+    [LinuxOnlyFact]
+    public void ExternalSetupLinksUseTheCanonicalMappingAndKeepPrefixesWithoutZUsable()
+    {
+        using var example = new OwnedExample(LinuxRunnerKind.Wine);
+        var external = Path.Combine(example.Root, "external physical profile");
+        Directory.CreateDirectory(external);
+        File.WriteAllText(Path.Combine(external, "configuration.json"), "owned settings");
+        var alias = Path.Combine(example.Settings.PrefixDirectory, "drive_c", "external alias");
+        Directory.CreateSymbolicLink(alias, external);
+        var selected = example.Settings with { DataDirectory = alias };
+        Assert.Equal("C:\\external alias", selected.WindowsDataDirectory());
+        var mappings = Path.Combine(example.Settings.PrefixDirectory, "dosdevices");
+        Directory.CreateDirectory(mappings);
+        Directory.CreateSymbolicLink(Path.Combine(mappings, "z:"), "/");
+        Assert.Equal("Z:\\" + external.TrimStart('/').Replace('/', '\\'), selected.WindowsDataDirectory());
+        Assert.Equal((example.Settings with { DataDirectory = external }).WindowsDataDirectory(), selected.WindowsDataDirectory());
+    }
+
+    [LinuxOnlyFact]
+    public void NewPathsResolveExistingParentLinksAndCyclicLinksFailWithinABound()
+    {
+        using var example = new OwnedExample(LinuxRunnerKind.Wine);
+        var alias = Path.Combine(example.Root, "prefix alias");
+        Directory.CreateSymbolicLink(alias, example.Settings.PrefixDirectory);
+        var selected = example.Settings with { PrefixDirectory = alias,
+            DataDirectory = Path.Combine(alias, "drive_c", "new owned profile") };
+        Assert.Equal("C:\\new owned profile", selected.CreateStartInfo(createNewProfile: true).ArgumentList[3].Split('=', 2)[1]);
+        Assert.False(Directory.Exists(selected.DataDirectory));
+        var first = Path.Combine(example.Root, "link-a");
+        var second = Path.Combine(example.Root, "link-b");
+        Directory.CreateSymbolicLink(first, second);
+        Directory.CreateSymbolicLink(second, first);
+        Assert.Throws<IOException>(() => LinuxPhysicalPath.Resolve(first));
+    }
+
     private sealed class OwnedExample : IDisposable
     {
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "tdsblive-linux-settings-" + Guid.NewGuid().ToString("N"));
