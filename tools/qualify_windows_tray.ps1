@@ -31,6 +31,11 @@ public static class TdsTrayDesktop {
     [DllImport("user32.dll")] public static extern bool EnumWindows(Visitor visitor, IntPtr parameter);
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern uint GetDpiForWindow(IntPtr window);
+    [DllImport("user32.dll")] public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Rect rectangle);
+    [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
+    [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr window);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(IntPtr window, StringBuilder name, int count);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindow(string name, string title);
     [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
@@ -80,6 +85,7 @@ $origin = "http://127.0.0.1:$port"
 $shellRestarted = $false
 $hostProcess = $null
 $desktopIds = New-Object 'System.Collections.Generic.HashSet[int]'
+$screenshotMetrics = @{}
 
 function Wait-For([scriptblock]$Probe, [string]$Failure, [int]$Seconds = 30) {
     $deadline = [DateTime]::UtcNow.AddSeconds($Seconds)
@@ -129,15 +135,53 @@ function Invoke-Element($Target) {
         throw 'The owned control provides no supported activation pattern.'
     }
     $Target.SetFocus()
-    if (-not $Target.Current.HasKeyboardFocus -or -not [TdsTrayDesktop]::OwnsForeground($Target.Current.ProcessId)) {
-        throw 'The owned tray menu did not receive keyboard focus; no key was sent.'
-    }
-    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+    Send-OwnedKey $Target '{ENTER}'
 }
-function Screenshot($Target, [string]$Name) {
-    $rectangle = $Target.Current.BoundingRectangle
-    if ($rectangle.Width -lt 100 -or $rectangle.Height -lt 50 -or $rectangle.Left -lt 0 -or $rectangle.Top -lt 0) {
-        throw 'Owned native UI was not visibly laid out on an interactive desktop.'
+function Send-OwnedKey($Target, [string]$Key) {
+    if (-not $Target.Current.HasKeyboardFocus -or -not [TdsTrayDesktop]::OwnsForeground($Target.Current.ProcessId)) {
+        throw 'The owned desktop control did not receive keyboard focus; no key was sent.'
+    }
+    [System.Windows.Forms.SendKeys]::SendWait($Key)
+}
+function Current-Rectangle($Target) {
+    $handle = [IntPtr]$Target.Current.NativeWindowHandle
+    if ($handle -ne [IntPtr]::Zero) {
+        $owner = [uint32]0
+        if ([TdsTrayDesktop]::GetWindowThreadProcessId($handle, [ref]$owner) -eq 0 -or $owner -ne $Target.Current.ProcessId) {
+            throw 'The native screenshot window does not belong to its automation target.'
+        }
+        if (-not [TdsTrayDesktop]::IsWindowVisible($handle) -or [TdsTrayDesktop]::IsIconic($handle)) { return $null }
+        $frame = [TdsTrayDesktop+Rect]::new()
+        if (-not [TdsTrayDesktop]::GetWindowRect($handle, [ref]$frame)) { throw 'Owned native window bounds were unavailable.' }
+        return [Drawing.Rectangle]::FromLTRB($frame.Left, $frame.Top, $frame.Right, $frame.Bottom)
+    }
+    if ($Target.Current.IsOffscreen) { return $null }
+    $frame = $Target.Current.BoundingRectangle
+    return [Drawing.Rectangle]::FromLTRB([int][Math]::Floor($frame.Left), [int][Math]::Floor($frame.Top),
+        [int][Math]::Ceiling($frame.Right), [int][Math]::Ceiling($frame.Bottom))
+}
+function Capture-VisibleWindow($Target, [string]$Name) {
+    $screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
+    try {
+        # Wait for actual layout. Legitimate resize borders/shadows can extend
+        # beyond a screen edge, so capture only the visible screen intersection.
+        $rectangle = Wait-For {
+            $frame = Current-Rectangle $Target
+            if ($frame) {
+                $visible = [Drawing.Rectangle]::Intersect($frame, $screen)
+                if ($visible.Width -ge 100 -and $visible.Height -ge 50) { return $visible }
+            }
+            return $null
+        } "Owned native UI for '$Name' never became visibly laid out."
+    } catch {
+        $reported = $Target.Current.BoundingRectangle
+        @{
+            screenshot = $Name; processId = $Target.Current.ProcessId; isOffscreen = $Target.Current.IsOffscreen
+            nativeWindowHandle = $Target.Current.NativeWindowHandle
+            reportedBounds = @{ x = $reported.X; y = $reported.Y; width = $reported.Width; height = $reported.Height }
+            virtualScreen = @{ x = $screen.X; y = $screen.Y; width = $screen.Width; height = $screen.Height }
+        } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $EvidenceDirectory 'layout-failure.json') -Encoding UTF8
+        throw
     }
     $bitmap = New-Object Drawing.Bitmap ([int]$rectangle.Width), ([int]$rectangle.Height)
     $graphics = [Drawing.Graphics]::FromImage($bitmap)
@@ -149,7 +193,22 @@ function Screenshot($Target, [string]$Name) {
         }
         if ($colors.Count -lt 4) { throw 'Native screenshot was blank or unavailable; this is not visual qualification.' }
         $bitmap.Save((Join-Path $EvidenceDirectory $Name), [Drawing.Imaging.ImageFormat]::Png)
+        $screenshotMetrics[$Name] = @{
+            file = $Name; pixelWidth = $bitmap.Width; pixelHeight = $bitmap.Height
+            windowDpi = [TdsTrayDesktop]::GetDpiForWindow([IntPtr]$Target.Current.NativeWindowHandle)
+        }
     } finally { $graphics.Dispose(); $bitmap.Dispose() }
+}
+function Screenshot($Target, [string]$Name) {
+    # Capture physical pixels consistently with UIA/native screen coordinates.
+    $previous = [TdsTrayDesktop]::SetThreadDpiAwarenessContext([IntPtr](-4))
+    if ($previous -eq [IntPtr]::Zero) { throw 'The owned screenshot thread could not become DPI aware.' }
+    try { Capture-VisibleWindow $Target $Name }
+    finally {
+        if ([TdsTrayDesktop]::SetThreadDpiAwarenessContext($previous) -eq [IntPtr]::Zero) {
+            throw 'The screenshot thread DPI context could not be restored.'
+        }
+    }
 }
 function Menu-Action($Desktop, [string]$Action) {
     [TdsTrayDesktop]::OpenMenu($Desktop.Id)
@@ -162,14 +221,29 @@ function Menu-Action($Desktop, [string]$Action) {
     Screenshot $parent 'tray-menu.png'
     Invoke-Element $item
 }
-function Confirm-Action($Desktop, [string]$Action, [bool]$Accept, [string]$ScreenshotName) {
+function Confirm-Action($Desktop, [string]$Action, [bool]$Accept, [string]$ScreenshotName,
+    [ValidateSet('button', 'enter', 'escape', 'close')][string]$CancelMethod = 'button') {
     Menu-Action $Desktop $Action
     $dialog = Wait-For { Element $Desktop.Id "$Action TDSBLive?" ([System.Windows.Automation.ControlType]::Window) } 'Native confirmation did not open.'
     $cancel = Wait-For { Element $Desktop.Id 'Cancel' ([System.Windows.Automation.ControlType]::Button) } 'Confirmation had no accessible Cancel button.'
     if (-not $cancel.Current.HasKeyboardFocus) { throw 'Confirmation did not initially focus Cancel.' }
     Screenshot $dialog $ScreenshotName
     if ($Accept) { Invoke-Element (Element $Desktop.Id $Action ([System.Windows.Automation.ControlType]::Button)) }
+    elseif ($CancelMethod -eq 'enter') { Send-OwnedKey $cancel '{ENTER}' }
+    elseif ($CancelMethod -eq 'escape') { Send-OwnedKey $cancel '{ESC}' }
+    elseif ($CancelMethod -eq 'close') { $dialog.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close() }
     else { Invoke-Element $cancel }
+    Wait-For { -not (Element $Desktop.Id "$Action TDSBLive?" ([System.Windows.Automation.ControlType]::Window)) } 'Confirmation did not close.' | Out-Null
+}
+function Owned-CredentialHash {
+    $path = Join-Path $data 'credentials\owned-tray-check.dpapi'
+    & sonar analyze secrets $path | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Owned credential file scan failed; it was not inspected.' }
+    return (Get-FileHash $path -Algorithm SHA256).Hash
+}
+function Assert-OwnedCredential([string]$Expected) {
+    # Successful host readiness also exercises vault decryption during startup.
+    if ((Owned-CredentialHash) -ne $Expected) { throw 'Desktop lifecycle changed the saved owned DPAPI credential.' }
 }
 function Ready {
     try { return (Invoke-RestMethod "$origin/api/application/status" -TimeoutSec 2).generation } catch { return $null }
@@ -200,22 +274,43 @@ try {
     $generation = Wait-For { Ready } 'Owned packaged host never became ready.'
     $desktop = Wait-For { Companion } 'Windows host did not start its desktop companion.'
     Wait-For { [TdsTrayDesktop]::Registered($desktop.Id) } 'The native notification icon was not registered with Explorer.' | Out-Null
+    Start-Sleep -Seconds 1
+    if (Browser-Editor) { throw 'Quiet startup unexpectedly opened the editor browser.' }
+
+    # This random owned marker is never sent to an integration or printed. All
+    # integrations remain disabled. Verify actual packaged lifecycle preserves it.
+    $csrf = Invoke-RestMethod "$origin/api/auth/csrf" -SessionVariable editorSession -TimeoutSec 5
+    $headers = @{ Origin = $origin; 'X-TDSBLive-CSRF' = $csrf.requestToken }
+    $ownedMarker = @{ value = [Guid]::NewGuid().ToString('N') } | ConvertTo-Json
+    Invoke-RestMethod "$origin/api/secrets/owned-tray-check" -Method Post -WebSession $editorSession -Headers $headers `
+        -ContentType 'application/json' -Body $ownedMarker -TimeoutSec 5 | Out-Null
+    $ownedMarker = $null
+    $credentialHash = Owned-CredentialHash
 
     Menu-Action $desktop 'Open editor'
     $browserWindow = Wait-For { Browser-Editor } 'Open editor did not display the configured address in a native Windows browser.'
     Screenshot $browserWindow 'open-editor.png'
     $browserWindow.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
+    Wait-For { -not (Browser-Editor) } 'The owned editor browser did not close.' | Out-Null
     if ((Ready) -ne $generation) { throw 'Closing the editor browser stopped TDSBLive.' }
 
     # Repeated launch cannot create another backend or tray.
     $duplicate = Start-Process $executable -ArgumentList "--TDSBLive:DataDirectory=`"$data`" --TDSBLive:OpenEditor=false" -PassThru
     if (-not $duplicate.WaitForExit(15000) -or $duplicate.ExitCode -ne 0) { throw 'Duplicate launch did not hand off to the existing owner.' }
     if (@(Owned-Hosts).Count -ne 1 -or (Companion).Id -ne $desktop.Id) { throw 'Duplicate launch replaced or duplicated the owned profile.' }
+    $duplicateBrowser = Wait-For { Browser-Editor } 'Duplicate launch did not open the existing profile editor.'
+    Screenshot $duplicateBrowser 'duplicate-open-editor.png'
+    $duplicateBrowser.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
+    Wait-For { -not (Browser-Editor) } 'Duplicate-launch browser did not close before the remaining startup checks.' | Out-Null
 
-    Confirm-Action $desktop 'Restart' $false 'restart-cancel.png'
+    Confirm-Action $desktop 'Restart' $false 'restart-cancel-enter.png' 'enter'
     if ((Ready) -ne $generation) { throw 'Cancel unexpectedly restarted TDSBLive.' }
-    Confirm-Action $desktop 'Quit' $false 'quit-cancel.png'
+    Confirm-Action $desktop 'Quit' $false 'quit-cancel-escape.png' 'escape'
     if ((Ready) -ne $generation) { throw 'Cancel unexpectedly quit TDSBLive.' }
+    Confirm-Action $desktop 'Restart' $false 'restart-cancel-close.png' 'close'
+    if ((Ready) -ne $generation) { throw 'Closing the confirmation unexpectedly restarted TDSBLive.' }
+    Confirm-Action $desktop 'Quit' $false 'quit-cancel.png'
+    if ((Ready) -ne $generation) { throw 'Cancel button unexpectedly quit TDSBLive.' }
 
     # Explorer restart is isolated to this CI session; never restart an operator's shell.
     $explorers = @(Get-Process explorer | Where-Object { $_.SessionId -eq $session })
@@ -244,6 +339,33 @@ try {
     $desktop = Wait-For { $current = Companion; if ($current -and $current.Id -ne $previousDesktop) { $current } } 'Restart did not recreate the native tray companion.'
     Wait-For { -not (Get-Process -Id $previousDesktop -ErrorAction SilentlyContinue) } 'Restart left the old tray process running.' | Out-Null
     Wait-For { [TdsTrayDesktop]::Registered($desktop.Id) } 'Restarted tray was not registered.' | Out-Null
+    Assert-OwnedCredential $credentialHash
+
+    # Keep this owned backup in memory. It contains only this disposable profile;
+    # its encrypted credential is never decoded or printed by the harness.
+    $csrf = Invoke-RestMethod "$origin/api/auth/csrf" -SessionVariable editorSession -TimeoutSec 5
+    $headers = @{ Origin = $origin; 'X-TDSBLive-CSRF' = $csrf.requestToken }
+    $backupResponse = Invoke-WebRequest "$origin/api/recovery/backup" -Method Post -WebSession $editorSession -Headers $headers -UseBasicParsing -TimeoutSec 30
+    $backupBytes = $backupResponse.RawContentStream.ToArray()
+    $configuration = Invoke-RestMethod "$origin/api/configuration" -WebSession $editorSession -TimeoutSec 5
+    $originalName = $configuration.displayName
+    $configuration.displayName = 'Owned post-backup change'
+    Invoke-RestMethod "$origin/api/configuration" -Method Put -WebSession $editorSession -Headers $headers `
+        -ContentType 'application/json' -Body ($configuration | ConvertTo-Json -Depth 20) -TimeoutSec 5 | Out-Null
+    $validation = Invoke-RestMethod "$origin/api/recovery/validate" -Method Post -WebSession $editorSession -Headers $headers `
+        -ContentType 'application/zip' -Body $backupBytes -TimeoutSec 30
+    $previousDesktop = $desktop.Id
+    Invoke-RestMethod "$origin/api/recovery/restore" -Method Post -WebSession $editorSession -Headers $headers `
+        -ContentType 'application/json' -Body (@{ id = $validation.id; confirm = $true } | ConvertTo-Json) -TimeoutSec 10 | Out-Null
+    $restoredGeneration = Wait-For { $current = Ready; if ($current -and $current -ne $generationAfter) { $current } } 'Browser restore did not relaunch the retained profile.'
+    $desktop = Wait-For { $current = Companion; if ($current -and $current.Id -ne $previousDesktop) { $current } } 'Restore did not recreate the native tray companion.'
+    Wait-For { -not (Get-Process -Id $previousDesktop -ErrorAction SilentlyContinue) } 'Restore left the old tray process running.' | Out-Null
+    Wait-For { [TdsTrayDesktop]::Registered($desktop.Id) } 'Restored tray was not registered.' | Out-Null
+    if ((Invoke-RestMethod "$origin/api/configuration" -TimeoutSec 5).displayName -ne $originalName) {
+        throw 'Browser restore did not recover the backed-up settings.'
+    }
+    Assert-OwnedCredential $credentialHash
+    $generationAfter = $restoredGeneration
 
     # A companion crash must leave streaming/backend work intact. Recover using
     # the existing authenticated browser restart, never by killing the backend.
@@ -259,6 +381,7 @@ try {
     $recoveredGeneration = Wait-For { $current = Ready; if ($current -and $current -ne $generationAfter) { $current } } 'Browser restart did not recover a missing companion.'
     $desktop = Wait-For { Companion } 'Browser restart did not recreate desktop controls.'
     Wait-For { [TdsTrayDesktop]::Registered($desktop.Id) } 'Recovered tray was not registered.' | Out-Null
+    Assert-OwnedCredential $credentialHash
 
     # A backend crash is never restart intent. The companion shows recovery
     # guidance and offers to close itself without claiming it stopped the backend.
@@ -271,21 +394,33 @@ try {
     Wait-For { -not (Get-Process -Id $desktop.Id -ErrorAction SilentlyContinue) } 'Closing stopped desktop controls did not exit the companion.' | Out-Null
     Start-Sleep -Seconds 3
     if (@(Owned-Hosts).Count -ne 0) { throw 'A crashed backend was automatically restarted.' }
-    $hostProcess = Start-Process $executable -ArgumentList "--TDSBLive:DataDirectory=`"$data`" --TDSBLive:OpenEditor=false" -PassThru
+    # A normal manual launch omits the quiet-start override and opens the editor.
+    if (Browser-Editor) { throw 'An old owned browser window would invalidate manual-start evidence.' }
+    $hostProcess = Start-Process $executable -ArgumentList "--TDSBLive:DataDirectory=`"$data`"" -PassThru
     Wait-For { Ready } 'Manual recovery did not start the retained profile.' | Out-Null
     $desktop = Wait-For { Companion } 'Manual recovery did not recreate the desktop companion.'
     Wait-For { [TdsTrayDesktop]::Registered($desktop.Id) } 'Manually recovered tray was not registered.' | Out-Null
+    Assert-OwnedCredential $credentialHash
+    $manualBrowser = Wait-For { Browser-Editor } 'Normal manual startup did not open the editor in the native browser.'
+    Screenshot $manualBrowser 'manual-start-editor.png'
+    $manualBrowser.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
+    if (-not (Ready)) { throw 'Closing the manually opened editor stopped TDSBLive.' }
     Confirm-Action $desktop 'Quit' $true 'quit-confirm.png'
     Wait-For { @(Owned-Hosts).Count -eq 0 } 'Confirmed Quit left the backend running.' | Out-Null
     Wait-For { -not (Get-Process -Id $desktop.Id -ErrorAction SilentlyContinue) } 'Quit left a stale tray process running.' | Out-Null
     if (-not (Test-Path (Join-Path $data 'tdsblive.db'))) { throw 'Quit discarded the owned profile.' }
+    Assert-OwnedCredential $credentialHash
     @{
         passed = $true; evidence = 'actual packaged native Windows UI'; package = [IO.Path]::GetFileName($application)
-        scenarios = @('native icon registration', 'Open editor native browser handoff', 'browser close leaves host running',
+        screenshots = @($screenshotMetrics.Values)
+        scenarios = @('native icon registration', 'quiet startup', 'normal manual startup opens editor',
+            'Open editor native browser handoff', 'browser close leaves host running',
             'duplicate launch', 'accessible Restart and Quit', 'Cancel-first focus',
-            'Cancel preserves generation', 'Explorer loss and fallback', 'fallback close leaves host running',
-            'Explorer re-registration', 'confirmed restart', 'old tray cleanup', 'companion crash isolation and diagnostics',
-            'browser restart recovers companion', 'backend crash guidance without automatic restart', 'confirmed quit', 'profile retained')
+            'Cancel button, Enter, Escape and window close preserve generation', 'Explorer loss and fallback', 'fallback close leaves host running',
+            'Explorer re-registration', 'confirmed restart', 'browser backup restore with profile ownership',
+            'old tray cleanup', 'companion crash isolation and diagnostics',
+            'browser restart recovers companion', 'backend crash guidance without automatic restart', 'confirmed quit', 'profile retained',
+            'saved DPAPI credential survives restart, backup restore, recovery and quit')
         remaining = @('light/dark and high-DPI desktop checks', 'actual final-package OBS checks')
     } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $EvidenceDirectory 'tray-result.json') -Encoding UTF8
     Write-Output 'Actual owned Windows tray/confirmation/Explorer/restart/quit qualification passed. Remaining release gates are recorded separately.'

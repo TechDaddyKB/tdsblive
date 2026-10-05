@@ -290,3 +290,45 @@ retaining the original recovery ownership order. Local full regression passes
 453 host, 88 core and 23 desktop tests, with five explicit Windows-only skips;
 the desktop coverage run and actual owned process lifecycle also pass. These
 follow-up source changes still need exact-head protected requalification.
+
+Requalification source `55de8e7f871a55de47615dc797d971bc048f900c` is pushed in
+PR #21. [Windows run 37250701114](https://github.com/TechDaddyKB/tdsblive/actions/runs/37250701114)
+passes the regressions/contracts, all-language CodeQL and Sonar (82.0% new-code
+coverage, A ratings, zero new duplication, all hotspots reviewed), and builds both
+packages. Its native run captures a clear three-action tray menu, activates
+**Open editor**, and identifies the correct address in the native browser. The
+next browser screenshot fails the bounds check, so remaining native scenarios
+are not accepted. Downloaded evidence was scanned after extraction; the actual
+tray-menu PNG was visually inspected. The capture helper now waits for layout,
+queries visible native-window geometry when available, clips only to the actual
+virtual screen, preserves blank-image rejection, and records layout diagnostics
+and measured DPI. This correction still needs native Windows execution.
+
+The next native harness revision also exercises Enter, Escape, window-close and button cancellation,
+normal manual launch versus quiet launch, and an owned DPAPI marker surviving
+tray restart, browser backup restore, crash recovery and Quit. Its integrations stay
+disabled; the marker is generated in memory, never printed, and its encrypted
+file is scanned before inspection. Successful startup exercises actual vault
+decryption; ciphertext hashes verify retention. PowerShell 7.6.0 parses the
+updated script successfully using the private temporary mount. This syntax
+check does not establish Windows UI behavior. Its in-memory PowerShell
+backup/validate/restore requests also pass against an actual isolated managed
+backend, with successful external completion and original settings after relaunch.
+The native harness records screenshot sizes and measured window DPI; ordinary
+DPI screenshots will not be relabeled as high-DPI evidence. The non-CI guard
+rejects local execution before inspecting or changing the desktop.
+
+### Current G22 acceptance map
+
+| Acceptance area | Current evidence | Required follow-up |
+| --- | --- | --- |
+| Authenticated control, bounded messages and one admitted command | Host/control tests and actual owned-process qualification | Exact-head protected Windows checks |
+| Profile ownership, spaced paths, nondefault port, safe restart/restore, SQLite integrity | Actual owned-process checks; successful earlier Windows regression steps | Exact-head packaged checks; native browser lifecycle |
+| Native icon, menu, confirmations, Explorer recovery and crash isolation | Earlier Windows run proves icon registration, then fails menu automation | Run corrected native harness on portable and installed packages; inspect screenshots |
+| Manual/quiet startup and saved credentials through lifecycle | Source and individual startup/vault tests | Run the extended actual-package scenarios above |
+| Light/dark appearance, keyboard access and high DPI | Actual theme variant and keyboard behavior in headless tests | Real Windows screenshots and interactions in both themes and at high DPI |
+| Installer, optional startup, update/reinstall, uninstall and data retention | Packages build; inherited native package harness preserves these checks | Successful exact-head package qualification |
+| Existing OBS addresses, rendering/audio and reconnect | Historical OBS evidence remains preserved | Actual current-package isolated OBS verification |
+
+G22 remains **In progress**. G23 and G24 retain their prerequisites and remain
+**Not started**; neither native Linux delivery nor release publication is claimed.
