@@ -111,8 +111,9 @@ duplicate backend/tray. Measure companion plus backend resource use against the
 baseline; investigate material regressions. Historical accepted Wine performance
 deviations are limitations, not passing performance evidence.
 
-Current acceptance map (2026-10-05; representative evidence does not replace
-final cumulative-package qualification):
+Historical pre-publication acceptance map (2026-10-05). The final G24 delivery
+record below supersedes publication gaps; uncompleted desktop/runner repetitions
+remain operator-accepted future work rather than release blockers:
 
 | Required scenario | Current evidence | Remaining work |
 | --- | --- | --- |
@@ -133,9 +134,9 @@ final cumulative-package qualification):
 
 G23 is accepted with the documented memory, KDE and representative-matrix
 limitations. Longer resource investigation and the remaining desktop/runner
-matrix are future work. G24 still requires protected current-source checks,
-exact cumulative-package qualification and publication. No user decision is
-pending for the investigated Python examples.
+matrix are future work. G24 delivered protected current-source checks, exact
+cumulative-package qualification, publication and the wiki; see its final delivery
+record below. No user decision is pending for the investigated Python examples.
 
 ## G24 — Documentation, qualification and publication
 
