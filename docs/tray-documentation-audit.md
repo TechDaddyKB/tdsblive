@@ -32,6 +32,11 @@ their local links and images, and every chapter at **320, 390 and 1366 pixels**.
 Expanding the check beyond the tray page exposed unwrapped local viewing URLs in
 the chat chapter; offline links now wrap without changing their addresses.
 
+README preparation adds the tray start/open/quit flow, confirmation and fallback
+guidance, and save-before-update instructions. It distinguishes public v0.1.0
+from the unpublished v1.0.1 candidate. Linux companion downloads and final
+release wording remain pending; the README row is not yet complete.
+
 | File | Review or update required | Final evidence |
 | --- | --- | --- |
 | [docs/tray-documentation-audit.md](tray-documentation-audit.md) | Include new pages/assets and final package/wiki evidence | Pending |

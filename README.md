@@ -16,6 +16,10 @@ and configure speech, sounds and actions from a browser-based editor.
 
 ## Download and install
 
+The public download is currently **v0.1.0**. The cumulative **v1.0.1** update is
+being qualified and is not published yet. There is no public v1.0.0 download.
+Check the release notes and bundled guide for the features in your download.
+
 Official releases provide self-contained **Windows x64** builds. You do not need
 to install .NET separately or build the source code to use them.
 
@@ -52,15 +56,36 @@ Start with [First setup](docs/user-guide/First-Setup.md), then
 [Chat and OBS](docs/user-guide/Chat-and-OBS.md) or
 [Overlays and alerts](docs/user-guide/Overlays-and-Alerts.md).
 
+## Open the editor and finish your stream
+
+The **unreleased v1.0.1 Windows candidate** adds a blue **T** icon near the clock.
+Starting it normally opens the editor in your usual browser. Optional start-at-login
+stays quiet; use **Open editor** when you need it.
+
+1. Find the blue **T** near the clock. Click the hidden-icons arrow if it is tucked away.
+2. Right-click it and choose **Open editor**, **Restart**, or **Quit**.
+3. When you finish streaming, save changes in the editor, choose **Quit**, then
+   confirm **Quit**. Your OBS overlays stop until you start TDSBLive again.
+
+**Restart** and **Quit** first show a confirmation with **Cancel** selected.
+Closing the browser or the **TDSBLive is running** control window keeps the app
+running. If the icon is unavailable, that control window provides the same actions.
+Tray actions do not save unfinished forms.
+
+For screenshots and missing-icon help, read
+[Tray and desktop controls](docs/user-guide/Tray-and-Desktop-Controls.md).
+The current v0.1.0 download uses the editor's application controls; follow its
+bundled guide until v1.0.1 is available.
+
 ## What you can do
 
 - **Bring chat together:** display combined chat in OBS and use a separate streamer
   view, with platform indicators, supported badges and emotes.
 - **Create overlays and alerts:** arrange text, images, chat and supporter widgets;
   customize alert wording, media, timing and playback queues.
-- **Choose different alert designs:** TDSBLive 1.0 provides named triggers,
+- **Choose different alert designs:** the v1.0.1 source candidate provides named triggers,
   donation/quantity conditions and ordered first/all matching alert sets.
-- **Customize and share designs:** TDSBLive 1.0 adds advanced arrangement,
+- **Customize and share designs:** the v1.0.1 source candidate adds advanced arrangement,
   sandboxed custom widgets and portable overlay/widget packages.
 - **Connect Rumble events:** use the Rumble live API with persistent repeat-event
   protection and connection diagnostics.
@@ -85,7 +110,8 @@ for setup, chat, overlays, automation, supporter totals and recovery.
 For offline reading, open **`guide/Home.html`** in your installed or extracted
 application folder; keep the guide's images beside its pages.
 
-Before updating, make an application backup and quit TDSBLive. Run the new
+Before updating, save your editor changes, make an application backup and quit
+TDSBLive. Wait for it to stop before replacing application files. Run the new
 installer, or extract the new ZIP into a separate folder. Check your connections
 and OBS sources before your next broadcast. Your application data normally lives
 under **`%LOCALAPPDATA%\TDSBLive`** on Windows, separately from the program files.
