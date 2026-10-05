@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Platform;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -35,6 +37,7 @@ public sealed class DesktopApp : Application, IDisposable
     private bool exiting;
     private bool completionReceived;
     private LinuxBackendProcess? linuxBackend;
+    private LinuxDesktopOwner? linuxOwner;
     private string statusLabel = "Starting TDSBLive…";
     private readonly Action<Uri> launchBrowser;
     private readonly Func<TrayIcon?, bool> trayRegistered;
@@ -67,7 +70,9 @@ public sealed class DesktopApp : Application, IDisposable
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             desktop.Exit += (_, _) => Dispose();
             InitializeTray();
-            _ = StartAsync();
+            // A duplicate can finish immediately. Start after the native event
+            // loop begins so its successful shutdown does not precede that loop.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = StartAsync());
         }
         base.OnFrameworkInitializationCompleted();
     }
@@ -121,6 +126,29 @@ public sealed class DesktopApp : Application, IDisposable
 
     private async Task StartLinuxBackendAsync(LinuxLauncherSettings settings, bool isNew, LinuxLauncherSettingsStore store)
     {
+        var runtime = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
+        linuxOwner = LinuxDesktopOwner.AcquireOrRequestOpen(settings.DataDirectory,
+            !string.IsNullOrWhiteSpace(runtime) && Path.IsPathFullyQualified(runtime) ? runtime : store.DirectoryPath);
+        if (linuxOwner is null) { ExitCompanion(); return; }
+        linuxOwner.Watch(() => Avalonia.Threading.Dispatcher.UIThread.Post(ActivateLinuxControls));
+        try { await StartOwnedLinuxBackendAsync(settings, isNew, store); }
+        catch { linuxOwner?.Dispose(); linuxOwner = null; throw; }
+    }
+
+    private void ActivateLinuxControls()
+    {
+        if (exiting || stopped.IsCancellationRequested) return;
+        if (running) OpenEditor();
+        else if (LinuxSetup?.IsVisible == true) LinuxSetup.Activate();
+        else
+        {
+            ShowControls("TDSBLive desktop controls are already open for this setup. If the editor still works, use Settings to quit. Otherwise choose Close desktop controls, then open TDSBLive again to keep using this setup.");
+            controls?.Activate();
+        }
+    }
+
+    private async Task StartOwnedLinuxBackendAsync(LinuxLauncherSettings settings, bool isNew, LinuxLauncherSettingsStore store)
+    {
         LinuxBackendProcess session;
         try { session = await LinuxBackendProcess.StartAsync(settings, isNew, stopped); }
         catch (LinuxBackendAlreadyRunningException)
@@ -168,7 +196,7 @@ public sealed class DesktopApp : Application, IDisposable
             if (!stopped.IsCancellationRequested)
             {
                 SetState("TDSBLive needs attention", false);
-                ShowControls("TDSBLive could not complete the requested restart or quit. Another copy has not been started automatically after a crash. If the editor still works, use Settings to quit; otherwise reopen the Linux launcher and keep your existing setup selected.");
+                ShowControls("TDSBLive could not complete the requested restart or quit. If the editor still works, use Settings to quit. Otherwise choose Close desktop controls, then reopen the Linux launcher and keep your existing setup selected.");
             }
         }
         finally { session.Dispose(); if (ReferenceEquals(linuxBackend, session)) linuxBackend = null; }
@@ -289,7 +317,7 @@ public sealed class DesktopApp : Application, IDisposable
     {
         if (stopped.IsCancellationRequested || completionReceived) return;
         SetState("Stopped unexpectedly", false);
-        ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise open TDSBLive again.");
+        ShowControls("TDSBLive stopped or desktop controls lost their connection. If the editor still works, use Settings to restart or quit. Otherwise choose Close desktop controls, then open TDSBLive again.");
     }
 
     private static bool IsTrayRegistered(TrayIcon? icon) => OperatingSystem.IsWindows()
@@ -402,6 +430,12 @@ public sealed class DesktopApp : Application, IDisposable
             quitButton.Click += async (_, _) => await RequestAsync("quit");
             controls = new Window { Title = running ? RunningLabel : "TDSBLive needs attention", Width = 440, MinWidth = 320,
                 SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterScreen, Icon = CreateIcon() };
+            X11Properties.SetNetWmWindowType(controls, X11NetWmWindowType.Dialog);
+            controls.Opened += (_, _) =>
+            {
+                var screen = controls.Screens.ScreenFromWindow(controls) ?? controls.Screens.Primary;
+                if (screen is not null) controls.MaxHeight = Math.Max(180, screen.WorkingArea.Height / screen.Scaling - 48);
+            };
             controls.Closing += (_, eventArgs) =>
             {
                 if (exiting) return;
@@ -412,6 +446,11 @@ public sealed class DesktopApp : Application, IDisposable
         var panel = new StackPanel { Margin = new Thickness(24), Spacing = 16 };
         // Detach the existing controls before reusing them in the refreshed panel.
         if (controls.Content is Panel old) old.Children.Clear();
+        if (controls.Content is ScrollViewer oldScroll && oldScroll.Content is Panel oldPanel)
+        {
+            oldPanel.Children.Clear();
+            oldScroll.Content = null;
+        }
         panel.Children.Add(statusText!);
         panel.Children.Add(new TextBlock { Text = explanation, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(openButton!);
@@ -425,7 +464,8 @@ public sealed class DesktopApp : Application, IDisposable
             panel.Children.Add(new TextBlock { Text = "Closing desktop controls does not stop a running TDSBLive backend. If the editor still works, use Settings to quit TDSBLive.", TextWrapping = TextWrapping.Wrap });
         }
         else panel.Children.Add(new TextBlock { Text = "Closing this window keeps TDSBLive running. Choose Quit when you finish streaming.", TextWrapping = TextWrapping.Wrap });
-        controls.Content = panel;
+        controls.Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         statusText!.Text = statusLabel;
         UpdateCommands();
         if (!controls.IsVisible) controls.Show();
@@ -436,6 +476,7 @@ public sealed class DesktopApp : Application, IDisposable
         exiting = true;
         stopping.Cancel();
         linuxBackend?.Dispose();
+        linuxOwner?.Dispose();
         lifetime?.Shutdown();
     }
 
@@ -446,6 +487,7 @@ public sealed class DesktopApp : Application, IDisposable
         disposed = true;
         stopping.Cancel();
         linuxBackend?.Dispose();
+        linuxOwner?.Dispose();
         tray?.Dispose();
         nativeLinuxTray?.Dispose();
         stopping.Dispose();

@@ -6,6 +6,12 @@ The project has live Wine qualification evidence, including Wine 11.17 Staging o
 
 ## Use the native Linux launcher in 1.0.1
 
+If Wine offers to install **Wine Mono** or **Wine Gecko**, choose **Cancel** for
+those optional components. TDSBLive includes its own .NET runtime and uses your
+normal browser. Its tested Wine setup runs without those extra installations.
+Keep your existing settings folder; you do not need to delete it to dismiss the
+prompt.
+
 ![Actual Linux setup window from the packaged 1.0.1 candidate](images/tray-linux-setup.png)
 
 The **1.0.1 candidate** adds a native Linux tray and setup window. It is not

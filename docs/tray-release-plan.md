@@ -1655,3 +1655,89 @@ that additional dialog case is not claimed. The fixture uses the authenticated
 owned-browser Quit during cleanup. Both native processes are absent afterward;
 retained UMU runner/prefix/profile choices and read-only SQLite integrity pass.
 A new protected package remains required. G23 stays **In progress**.
+
+
+### G23 recovery, crash ownership and protected qualifier follow-up — 2026-10-05
+
+Actual isolated Hyprland/Wine repetition at source `e286733` confirms browser
+Restart and validated Backup/restore preserve the selected profile, port 17474,
+disabled LAN and disabled integrations. Restoring the owned backup returns setup
+progress from step 3 to saved step 1 and replaces only the owned backend. Opening
+the same owned setup through prefix/profile aliases requests the existing editor:
+one native companion and backend remain, with browser handoffs increasing 11→12.
+Ignored evidence: `artifacts/tray-hyprland-native/wine-lifecycle-e286733/`.
+
+Killing the exact owned backend during this qualification does not automatically
+relaunch a child after ten seconds. However, reopening the launcher then leaves
+two native tray items: the original stopped companion and a new running companion.
+This is a confirmed native ownership defect. The stopped controls also tile into
+a narrow, clipped window under Hyprland, hiding their recovery buttons. Both
+issues require repair and real desktop repetition before G23 completion.
+
+The repair adds a private, per-profile native lease with an empty activation
+marker. Physical directory aliases share ownership; missing prefixes are not
+created by this check. Reopening activates the existing editor or stopped controls
+without starting another backend. Closing stopped controls releases native
+ownership; reopening afterward remains an explicit recovery action. Setup and
+recovery windows declare their X11 dialog role; recovery controls scroll within
+the available height. No control token, new HTTP authority, automatic crash
+restart, global desktop setting or unrelated application shutdown is added.
+Local desktop tests pass **124 tests**, with **2 Windows-only skips** (126 total),
+including ownership release, aliases, no new prefix mappings, private empty lease
+files and reachable recovery controls at 320×240 in both themes. These checks
+alone do not qualify actual native layout or Windows behavior.
+
+Protected run [37362730849](https://github.com/TechDaddyKB/tdsblive/actions/runs/37362730849)
+at `e286733` fails the actual desktop lifecycle qualifier: its external duplicate
+launch omits the required private bootstrap input. Windows tray inventory/probe
+and Linux desktop tests pass; dependent Linux packaging is skipped. The fixture
+now supplies a private input frame and asserts the exact nonsecret acknowledgement,
+exit 0 and absence of the private token in output. The updated local isolated
+lifecycle qualifier passes. Protection is retained; a new protected run is required.
+
+Three ten-second idle samples with the diagnostic companion active show native
+CPU 0.2–0.3 percent of one core and PSS about 115–116 MiB; backend CPU is 3.2–3.5
+percent with PSS about 292–296 MiB. These process-only samples exclude browser,
+compositor and Wine helpers. An equivalent backend-only baseline is still needed;
+they are not a performance acceptance pass. Production Quickshell and user data
+remain untouched. G23 remains **In progress**; G24 remains **Not started** and
+v1.0.1 remains unpublished.
+
+
+The first native lease GUI repetition catches an immediate-duplicate startup
+failure: shutting down before Avalonia enters its event loop makes the duplicate
+exit unsuccessfully. Startup is now posted onto that loop. A fresh pinned native
+publish and full local desktop suite again pass **124 tests**, **2 Windows-only
+skips**. This timing repair is required by actual desktop evidence, not a fixture
+exception.
+
+Actual Hyprland/Wine repetition of the repaired working source then passes:
+companion `2205497` retains backend `2205612` while a duplicate exits 0 and the
+watcher retains exactly one registered tray item. Browser handoffs increase 16→17;
+physical profile aliases increase them to 18 with the same owner and backend.
+After an exact owned backend crash, no child restarts after ten seconds. Reopening
+exits 0, leaves exactly one registered item and activates that original companion's
+stopped controls. The actual recovery window now floats at 440×464 without a user
+window rule. At 320×240 it scrolls; native Tab/Return reaches **Close desktop
+controls** and exits 0. Evidence is retained in ignored
+`artifacts/tray-hyprland-native/wine-native-owner-repaired-v2/`.
+This is a local diagnostic publish from working source after `e286733`, not a
+final protected package or publication. UMU repetition, new protected checks and
+the remaining G23/G24 release evidence remain required.
+
+
+Wine recovery after that explicit close also passes: the owned applications-menu
+entry opens the same retained profile, disabled LAN/integrations remain unchanged,
+and browser handoffs increase to 19. Authenticated owned-browser Quit exits 0;
+fixture processes stop cleanly. The equivalent actual UMU/Proton repetition uses
+companion `2215483` with original runner child `2215547`: running duplicates and
+physical aliases exit 0 and open the existing editor (handoffs 20→21→22). After
+the exact owned backend crash, no child is restarted after ten seconds. Reopening
+again leaves one registered native tray item and the same stopped controls.
+Native Tab/Return closes those controls with exit 0. Ignored evidence:
+`artifacts/tray-hyprland-native/umu-native-owner-repaired-v2/`.
+
+UMU recovery after explicit close reopens that same profile through the real
+owned applications-menu entry (handoffs increase to 23), retaining disabled LAN
+and integrations. Owned-browser Quit and fixture cleanup complete. No qualified
+case enables live integrations, broadcasts, external execution or financial writes.

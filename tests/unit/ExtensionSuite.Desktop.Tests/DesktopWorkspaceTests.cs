@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
@@ -34,6 +36,32 @@ public sealed class DesktopWorkspaceTests
         .OfType<TextBlock>().Select(text => text.Text));
 
     private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task RecoveryControlsRemainReachableInAShortNarrowWindow(bool dark) => RunAsync(async () =>
+    {
+        using var app = new DesktopApp(_ => { }, _ => false, _ => Task.FromResult(false));
+        Avalonia.Application.Current!.RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
+        await app.StartAsync(new MemoryStream(), attached: false);
+        var window = app.Controls!;
+        window.SizeToContent = SizeToContent.Manual;
+        window.Width = 320; window.Height = 240;
+        window.UpdateLayout();
+        var scroll = Assert.IsType<ScrollViewer>(window.Content);
+        Assert.Equal(ScrollBarVisibility.Disabled, scroll.HorizontalScrollBarVisibility);
+        Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+        Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + 1);
+        var close = Button(app, "Close desktop controls");
+        close.BringIntoView();
+        window.UpdateLayout();
+        var position = close.TranslatePoint(default, scroll)!.Value;
+        Assert.InRange(position.Y, 0, scroll.Viewport.Height - close.Bounds.Height + 1);
+        Assert.True(close.IsEnabled);
+        Click(close);
+        window.Close();
+    });
 
     [Theory]
     [InlineData(false, "", "needs to be started by TDSBLive")]

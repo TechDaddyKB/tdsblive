@@ -108,8 +108,11 @@ to stop it. The editor's **Backup and recovery** controls remain another way to 
 or quit when the editor still works.
 
 If desktop controls say TDSBLive stopped unexpectedly, check whether the editor
-still works. If it does, use its application controls. If it does not, open
-TDSBLive from your shortcut. See [Troubleshooting](Troubleshooting.md) if it cannot
+still works. If it does, use its application controls. If it does not, choose
+**Close desktop controls**, then open TDSBLive from your shortcut. On Linux,
+opening the shortcut while stopped controls are still open brings that same
+window forward. It does not start another copy. Keep the same saved setup when
+you reopen the launcher. See [Troubleshooting](Troubleshooting.md) if it cannot
 start; do not stop other applications or delete your data to clear an unknown
 port conflict.
 

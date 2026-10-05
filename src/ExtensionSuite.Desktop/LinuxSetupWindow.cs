@@ -4,6 +4,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
+using Avalonia.Controls.Platform;
 using Avalonia.Platform.Storage;
 
 namespace ExtensionSuite.Desktop;
@@ -48,6 +49,7 @@ public sealed class LinuxSetupWindow : Window
         Title = "Set up TDSBLive on Linux";
         Width = 640; Height = 700; MinWidth = 320; MinHeight = 360;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        X11Properties.SetNetWmWindowType(this, X11NetWmWindowType.Dialog);
         runner.SelectedIndex = initial?.Runner == LinuxRunnerKind.Umu ? 1 : 0;
         runnerPath.Text = initial?.RunnerPath ?? InstalledRunner("wine");
         previousRunner = runner.SelectedIndex;

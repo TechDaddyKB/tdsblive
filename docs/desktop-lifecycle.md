@@ -88,6 +88,16 @@ exact marker followed by child exit 0 lets the second native companion exit;
 a failed child remains an error and cannot attach to an existing control session.
 This prevents a successful editor-open request from leaving another setup window.
 
+The Linux companion also holds its own per-profile lease in the user's private
+runtime directory (or its launcher settings directory when no runtime directory
+is available). Directory aliases resolve to the same profile identity. The lease
+and activation marker are empty, owner-readable files outside the Windows prefix;
+checking ownership never creates Windows mappings or a replacement profile.
+Reopening activates the existing editor or native recovery controls, without
+starting a second backend. This native ownership survives a backend crash until
+the user chooses **Close desktop controls**. Recovery is explicit: close those
+controls, then reopen the launcher. Activation grants no restart or quit authority.
+
 The host shuts down subscriptions and integrations, checkpoints the database,
 then applies any prepared recovery. The lease remains held through replacement
 and is released before a successor is started. Only an explicitly successful

@@ -229,9 +229,13 @@ def qualify(command):
         process, bootstrap, captured = start_host(command, profile)
         try:
             assert request(bootstrap, "status")["EditorUrl"] == f"http://127.0.0.1:{port}/editor"
+            duplicate_token = secrets.token_hex(32).upper()
             duplicate = subprocess.run(command + ["--TDSBLive:DataDirectory", str(profile), "--TDSBLive:DesktopMode=external"],
+                                       input=json.dumps({"Port": 0, "SessionToken": duplicate_token}) + "\n",
                                        capture_output=True, text=True, timeout=15)
             assert duplicate.returncode == 0
+            assert duplicate.stdout.strip() == "TDSBLIVE-DESKTOP-ALREADY-RUNNING"
+            assert duplicate_token not in duplicate.stdout + duplicate.stderr
             deadline = time.monotonic() + 5
             while request(bootstrap, "status")["OpenRequests"] != 1 and time.monotonic() < deadline:
                 time.sleep(0.05)
