@@ -86,9 +86,24 @@ function Qualify-WindowsScaling($Desktop) {
                 $window = Element $Desktop.Id "$action TDSBLive?" ([System.Windows.Automation.ControlType]::Window)
                 if ($window -and [TdsTrayDesktop]::GetDpiForWindow([IntPtr]$window.Current.NativeWindowHandle) -eq $expectedDpi) { return $window }
             } "The actual $action window did not receive $expectedDpi DPI after Windows scaling."
-            $cancel = Dialog-Button $dialog 'Cancel'
-            $accept = Dialog-Button $dialog $action
-            if (-not $cancel -or -not $accept -or -not $cancel.Current.HasKeyboardFocus) { throw 'The scaled confirmation lost its controls or Cancel-first focus.' }
+            Screenshot $dialog "scale-$($target.percent)-$($action.ToLowerInvariant()).png"
+            try {
+                $buttons = Wait-For {
+                    $cancelControl = Dialog-Button $dialog 'Cancel'
+                    $acceptControl = Dialog-Button $dialog $action
+                    $script:scalingEvidence.dialogs[$action] = @{ state = 'waiting for controls and initial focus'
+                        cancelFound = [bool]$cancelControl; acceptFound = [bool]$acceptControl
+                        cancelFocused = [bool]($cancelControl -and $cancelControl.Current.HasKeyboardFocus) }
+                    if ($cancelControl -and $acceptControl -and $cancelControl.Current.HasKeyboardFocus) {
+                        return @{ cancel = $cancelControl; accept = $acceptControl }
+                    }
+                } 'The scaled confirmation lost its controls or Cancel-first focus after becoming ready.'
+            } catch {
+                Screenshot $dialog "scale-$($target.percent)-$($action.ToLowerInvariant()).png"
+                throw
+            }
+            $cancel = $buttons.cancel
+            $accept = $buttons.accept
             # Capture even a failing layout, and wait for real layout to settle
             # rather than treating an initial automation frame as final geometry.
             Screenshot $dialog "scale-$($target.percent)-$($action.ToLowerInvariant()).png"
@@ -98,7 +113,7 @@ function Qualify-WindowsScaling($Desktop) {
                 $checks = @()
                 foreach ($button in @($cancel, $accept)) {
                     $rectangle = $button.Current.BoundingRectangle
-                    $checks += @{ name = $button.Current.Name; enabled = $button.Current.IsEnabled; offscreen = $button.Current.IsOffscreen
+                    $checks += @{ name = $button.Current.Name; enabled = $button.Current.IsEnabled; offscreen = $button.Current.IsOffscreen; focused = $button.Current.HasKeyboardFocus
                         insideDialog = $bounds.Contains($rectangle); height = $rectangle.Height; minimumHeight = $minimumHeight
                         bounds = @{ x = $rectangle.X; y = $rectangle.Y; width = $rectangle.Width; height = $rectangle.Height } }
                 }

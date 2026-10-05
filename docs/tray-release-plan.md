@@ -516,3 +516,45 @@ dialog. Scaling checks retain enabled, visible, contained and 44-pixel minimum
 requirements; screenshots and per-button geometry are recorded before failure.
 Both modified scripts pass actual PowerShell parsing. This correction still
 requires native execution; installed qualification and G22 remain outstanding.
+
+Source `7f21575` completes the diagnostic package job but the portable tray probe
+in [run 37263259477](https://github.com/TechDaddyKB/tdsblive/actions/runs/37263259477)
+stops immediately after opening the actual 125%-scaled confirmation: its controls
+or initial Cancel focus are not yet observed. The native diagnostic record has
+no per-button geometry and no scaled screenshot, so it cannot distinguish an
+initial automation frame from a persistent focus problem. Qualification now
+captures the scaled window before that check and waits boundedly for the owned
+dialog's controls and Cancel focus, without setting focus itself. A failure also
+records which controls exist and their focus state. All geometry and keyboard
+requirements remain enforced. Actual execution of this correction is pending.
+
+Wine fixture preparation (2026-10-05): real fresh-prefix runs exposed two helper
+problems: precreating drive mappings prevented C: initialization, and disabling
+`mscoree` throughout launch prevented CoreCLR from loading `System.Runtime.dll`.
+The latter failure was diagnosed from scanned owned-process output, not assumed
+to be a backend defect. Initialization now lets Wine create its drives and
+suppresses optional Mono/Gecko prompts only during `wineboot --init`; backend
+launch retains builtin `mscoree`. Six admission/ownership tests pass on Linux.
+The actual diagnostic Windows package from `5cecbf0` then passes the fresh owned
+fixture: overlay/assets, persisted widget state, authenticated restart/restore,
+SQLite checks and graceful quit. Its prefix/profile are removed after the scoped
+Wine server finishes. Failed test prefixes are retained; cleanup stops only a
+server whose exact owned prefix was independently verified, with existing Wine
+applications untouched. This is diagnostic package preparation, not native tray,
+final-package OBS, audio or G23 acceptance.
+
+Actual Wine-package OBS preparation (2026-10-05): native OBS renders the owned
+1000×600 overlay from the diagnostic Windows package. Keeping the same Browser
+Source open, authenticated restart reconnects with progress 75/state 2; backup
+restore reconnects with progress 25/state 1. Scanned and visually inspected PNGs
+in ignored `artifacts/tray-wine-obs-preparation` retain transparent empty corners
+and opaque content. The previous OBS program scene is restored, the owned
+scene/source are removed, and the fixture quits and removes its private profile.
+Streaming/recording stay inactive; no tone is played. This extends the managed
+fixture evidence to an actual Windows package under direct Wine, while final
+release packages, native desktop behavior and audio remain outstanding.
+
+README preparation now explains finding the Windows icon, opening the editor,
+save-before-quit, confirmations and fallback controls. It explicitly identifies
+the public v0.1.0 download and unpublished v1.0.1 candidate; final Linux companion
+instructions and published-release wording are still required before G24 delivery.
