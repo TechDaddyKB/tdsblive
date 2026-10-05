@@ -1201,3 +1201,39 @@ owned private /tmp mount; a first launch using the exhausted system /tmp fails
 before any guide is inspected. Wiki synchronization, the complete documentation
 audit and final release evidence remain outstanding. G23 remains In progress;
 G24's final qualification/publication has not started.
+
+### G23 isolated KDE X11 checkpoint — 2026-10-05
+
+Documentation and packaged native-menu evidence are pushed at `6c717cc`.
+The preceding full protected run 37331507046 at `1a062c4` is terminal Success,
+including both package jobs and the required quality gate. The newer protected
+run 37334967173 at `6c717cc` remains live; it is not cancelled to publish this
+checkpoint.
+
+An actual Plasma 6.7.4 / KWin X11 desktop now runs on an owned Xvfb display,
+private session bus, temporary XDG directories and private home. Its temporary
+runtime comes from 78 distribution packages with checked sizes and verified
+signatures; decompressed content is scanned before execution. No system package
+installation or package scripts run. The system bus is inaccessible and X11
+compositing is disabled for this test. The first attempts exposed fixture gaps:
+the desktop shell package and activity daemon were missing; those are corrected.
+A preflight using the real home is discarded as qualification evidence. Its test
+editor window is closed and owned services finish before the private-home rerun.
+
+The protected `5ff394f9` Linux bundle displays its native icon and three-action
+menu in Plasma's actual panel. The owned editor opens at its configured address,
+and the exact owned Quit dialog receives initial Cancel focus; Enter dismisses
+it while the backend/profile/settings remain available. These are partial KDE
+X11/direct-Wine observations, not the full KDE/Wayland/UMU acceptance matrix.
+Ignored scanned captures include kde-owned-running.png, kde-native-menu.png and
+kde-quit-confirm.png in artifacts/tray-linux-native-actions.
+
+Hover qualification finds a specific remaining defect: no readable TDSBLive
+tooltip appears after a three-second hover, while the same panel's clock tooltip
+does appear. Captures kde-tooltip-delayed.png and kde-clock-tooltip-control.png
+record that comparison. The pinned Avalonia Linux SNI tooltip implementation
+previously observed in source returns empty tooltip fields; remedy and actual
+desktop requalification remain required for TR-R02. The visible title used by
+the Quickshell test panel is not sufficient proof of a real desktop tooltip.
+G23 remains In progress. This is actionable implementation work, not an external
+approval or participant blocker.
