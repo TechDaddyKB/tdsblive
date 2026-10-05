@@ -1,5 +1,6 @@
 using ExtensionSuite.Desktop;
 using ExtensionSuite.DesktopControl;
+using System.Text.Json;
 using Xunit;
 
 namespace ExtensionSuite.Desktop.Tests;
@@ -61,5 +62,48 @@ public sealed class LinuxBackendProcessTests
         public BrokenReader() : base("") { }
         public override ValueTask<int> ReadAsync(Memory<char> buffer, CancellationToken cancellationToken = default) =>
             ValueTask.FromException<int>(new IOException("private owned output"));
+    }
+
+    [Fact]
+    public async Task PrivateOutputAcceptsOnlyTheFirstValidBootstrapAndIgnoresOrdinaryPortMarkers()
+    {
+        var first = new DesktopBootstrap(23456, DesktopProtocol.NewSessionToken());
+        var second = new DesktopBootstrap(34567, DesktopProtocol.NewSessionToken());
+        using var reader = new StringReader(DesktopProtocol.ReadyPrefix + "12345\n" +
+            DesktopProtocol.BootstrapPrefix + JsonSerializer.Serialize(first) + "\r\n" +
+            DesktopProtocol.BootstrapPrefix + JsonSerializer.Serialize(second) + "\n");
+        var ready = new TaskCompletionSource<DesktopBootstrap>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await LinuxBackendProcess.ReadBootstrapOutputAsync(reader, ready, CancellationToken.None);
+        var actual = await ready.Task;
+        Assert.Equal(first.Port, actual.Port);
+        Assert.True(DesktopProtocol.Authenticate(first.SessionToken, actual.SessionToken));
+    }
+
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(65536, false)]
+    [InlineData(23456, true)]
+    public async Task InvalidPrivateBootstrapNeverExposesItsContents(int port, bool invalidToken)
+    {
+        var token = invalidToken ? "owned-invalid-marker" : DesktopProtocol.NewSessionToken();
+        var frame = DesktopProtocol.BootstrapPrefix + JsonSerializer.Serialize(new DesktopBootstrap(port, token));
+        using var reader = new StringReader(frame + "\n");
+        var ready = new TaskCompletionSource<DesktopBootstrap>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await LinuxBackendProcess.ReadBootstrapOutputAsync(reader, ready, CancellationToken.None);
+        var error = await Assert.ThrowsAsync<IOException>(() => ready.Task);
+        Assert.DoesNotContain(token, error.Message);
+        Assert.Null(error.InnerException);
+    }
+
+    [Fact]
+    public async Task OversizedAndMalformedPrivateFramesDoNotHideTheNextCompleteBootstrap()
+    {
+        var expected = new DesktopBootstrap(23456, DesktopProtocol.NewSessionToken());
+        using var reader = new StringReader(DesktopProtocol.BootstrapPrefix + "{bad json}\n" +
+            DesktopProtocol.BootstrapPrefix + new string('x', 2 * 1024 * 1024) + "\n" +
+            DesktopProtocol.BootstrapPrefix + JsonSerializer.Serialize(expected) + "\n");
+        var ready = new TaskCompletionSource<DesktopBootstrap>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await LinuxBackendProcess.ReadBootstrapOutputAsync(reader, ready, CancellationToken.None);
+        Assert.True(DesktopProtocol.Authenticate(expected.SessionToken, (await ready.Task).SessionToken));
     }
 }

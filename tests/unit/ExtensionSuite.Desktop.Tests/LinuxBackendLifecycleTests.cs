@@ -48,6 +48,29 @@ public sealed class LinuxBackendLifecycleTests
     }
 
     [OwnedRunnerFact]
+    public async Task UmuOutputBootstrapAcceptsEmptyInputAndRetainsTheProfileWithAFreshRestartCapability()
+    {
+        using var runner = new OwnedRunner(kind: LinuxRunnerKind.Umu);
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        string firstCapability;
+        using (var first = await LinuxBackendProcess.StartAsync(runner.Settings, false, deadline.Token))
+        {
+            firstCapability = first.Bootstrap.SessionToken;
+            Assert.Equal("running", (await first.WaitUntilRunningAsync(deadline.Token)).State);
+            runner.AssertMetadata(firstCapability);
+            Assert.True((await DesktopProtocol.SendAsync(first.Bootstrap, "restart", deadline.Token)).Accepted);
+            Assert.Equal(0, await first.WaitForExitAsync(deadline.Token));
+        }
+        using var second = await LinuxBackendProcess.StartAsync(runner.Settings, false, deadline.Token);
+        Assert.False(DesktopProtocol.Authenticate(firstCapability, second.Bootstrap.SessionToken));
+        Assert.Equal("running", (await second.WaitUntilRunningAsync(deadline.Token)).State);
+        runner.AssertMetadata(second.Bootstrap.SessionToken);
+        Assert.Equal("owned settings", File.ReadAllText(runner.ConfigurationPath));
+        Assert.True((await DesktopProtocol.SendAsync(second.Bootstrap, "quit", deadline.Token)).Accepted);
+        Assert.Equal(0, await second.WaitForExitAsync(deadline.Token));
+    }
+
+    [OwnedRunnerFact]
     public async Task ExplicitNewPrefixIsInitializedBeforeBackendStartup()
     {
         using var runner = new OwnedRunner(createNew: true);
@@ -114,10 +137,10 @@ public sealed class LinuxBackendLifecycleTests
         public LinuxLauncherSettings Settings { get; }
         public string ConfigurationPath => Path.Combine(Settings.DataDirectory, "configuration.json");
 
-        public OwnedRunner(string mode = "normal", bool createNew = false)
+        public OwnedRunner(string mode = "normal", bool createNew = false, LinuxRunnerKind kind = LinuxRunnerKind.Wine)
         {
             Directory.CreateDirectory(Root);
-            var runner = Path.Combine(Root, "wine");
+            var runner = Path.Combine(Root, kind == LinuxRunnerKind.Umu ? "umu-run" : "wine");
             File.Copy(Path.Combine(AppContext.BaseDirectory, "desktop-runner.py"), runner);
             if (OperatingSystem.IsLinux())
                 File.SetUnixFileMode(runner, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
@@ -126,7 +149,15 @@ public sealed class LinuxBackendLifecycleTests
             File.WriteAllText(application, "Owned transport fixture; never executed.");
             File.WriteAllText(Path.Combine(Root, "ExtensionSuite.DesktopControl.dll"), "Owned completeness marker.");
             var prefix = Path.Combine(Root, "Windows settings with spaces");
-            Settings = new(LinuxRunnerKind.Wine, runner, prefix, application, Path.Combine(prefix, "drive_c", "TDSBLiveData"));
+            string? proton = null;
+            if (kind == LinuxRunnerKind.Umu)
+            {
+                proton = Path.Combine(Root, "selected Proton");
+                Directory.CreateDirectory(proton);
+                File.WriteAllText(Path.Combine(proton, "proton"), "Owned runner selection marker; never executed.");
+                File.WriteAllText(Path.Combine(proton, "toolmanifest.vdf"), "Owned runner selection marker.");
+            }
+            Settings = new(kind, runner, prefix, application, Path.Combine(prefix, "drive_c", "TDSBLiveData"), proton);
             if (!createNew)
             {
                 Directory.CreateDirectory(Settings.DataDirectory);
@@ -148,8 +179,10 @@ public sealed class LinuxBackendLifecycleTests
             using var metadata = JsonDocument.Parse(text);
             Assert.Equal(Settings.PrefixDirectory, metadata.RootElement.GetProperty("prefix").GetString());
             Assert.Contains("mscoree=b", metadata.RootElement.GetProperty("overrides").GetString());
-            Assert.Equal(new[] { Settings.ApplicationPath, "--TDSBLive:DesktopMode=external", "--TDSBLive:OpenEditor=false",
-                "--TDSBLive:DataDirectory=C:\\TDSBLiveData" },
+            var expectedArguments = new List<string> { Settings.ApplicationPath, "--TDSBLive:DesktopMode=external", "--TDSBLive:OpenEditor=false",
+                "--TDSBLive:DataDirectory=C:\\TDSBLiveData" };
+            if (Settings.Runner == LinuxRunnerKind.Umu) expectedArguments.Add("--TDSBLive:DesktopBootstrap=output");
+            Assert.Equal(expectedArguments,
                 metadata.RootElement.GetProperty("arguments").EnumerateArray().Select(value => value.GetString()));
         }
         public void Dispose()

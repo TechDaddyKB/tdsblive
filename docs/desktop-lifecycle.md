@@ -2,7 +2,8 @@
 
 This describes the 1.0.1 implementation candidate. Native Windows desktop,
 packaged application and OBS qualification must pass before release. The native
-Linux launcher is the next goal; this document does not claim it is delivered.
+Linux launcher remains an implementation candidate pending desktop and package
+qualification; this document does not claim a published Linux release.
 See the [tray release plan](tray-release-plan.md) for acceptance evidence.
 
 ## What users do
@@ -31,7 +32,7 @@ settings and overlay designs.
 | Mode | Behavior |
 | --- | --- |
 | Omitted or `automatic` | On Windows, start the companion when the packaged `desktop/TDSBLive.Desktop.exe` exists. Unpackaged hosts retain their previous headless behavior. |
-| `external` | An owning launcher supplies a fresh capability through redirected standard input and owns any successful relaunch. A Windows companion is not spawned. |
+| `external` | An owning launcher exchanges a fresh capability through redirected process pipes and owns any successful relaunch. A Windows companion is not spawned. |
 | `off` | Keep desktop controls off for utilities, isolated browser tests and existing headless workflows. |
 
 In packaged manual startup, `TDSBLive:OpenEditor` defaults to true. The optional
@@ -48,9 +49,17 @@ LAN authentication, overlay permissions or existing integration authority.
 
 Each session has a random 32-byte capability represented as 64 hexadecimal
 characters. A Windows host gives it to its child through redirected standard
-input. An external launcher gives a fresh capability to the backend through its
-input pipe. Only the listener port is reported on standard output, prefixed with
-`TDSBLIVE-DESKTOP `. Credentials do not travel in process arguments, environment,
+input. Direct Wine uses the same input-pipe handshake; only the listener port is
+reported on standard output, prefixed with `TDSBLIVE-DESKTOP `. UMU replaces input
+with an empty stream, so the native launcher selects `TDSBLive:DesktopBootstrap=output`.
+The host generates a fresh capability and sends it through the launcher's private
+output pipe with `TDSBLIVE-DESKTOP-BOOTSTRAP `. Ordinary output never emits that
+frame. The output mode requires external ownership and a pipe; files and terminals
+are rejected. Wine reports its Unix pipe as a redirected character handle with
+an unknown device type, so the guard checks Wine identity and device information.
+The native launcher parses bounded frames in memory and discards remaining
+output without logging it. UMU's Proton/runtime log-file options are disabled
+for this child. Credentials do not travel in process arguments, environment,
 URLs, logs, configuration, backup or export. Capability record formatting redacts
 the value.
 

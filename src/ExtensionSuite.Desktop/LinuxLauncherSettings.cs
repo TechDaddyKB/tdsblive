@@ -61,7 +61,13 @@ public sealed record LinuxLauncherSettings(LinuxRunnerKind Runner, string Runner
         {
             info.Environment["GAMEID"] = "0";
             info.Environment["PROTONPATH"] = settings.ProtonDirectory;
-            info.Environment["PROTON_VERB"] = "waitforexitandrun";
+            // Run the selected Proton's Wine directly inside UMU's runtime.
+            // The game launcher shim does not preserve our private stdio.
+            info.Environment["PROTON_VERB"] = "runinprefix";
+            info.ArgumentList.Add("--TDSBLive:DesktopBootstrap=output");
+            // A private bootstrap frame must never reach runner log files.
+            info.Environment["PROTON_LOG"] = "0";
+            info.Environment["STEAM_LINUX_RUNTIME_LOG"] = "0";
             info.Environment.Remove("STORE");
         }
         return info;

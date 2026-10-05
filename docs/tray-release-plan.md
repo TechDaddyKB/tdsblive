@@ -1043,3 +1043,47 @@ private-output bootstrap experiment is rejected by the Windows output-pipe
 guard. That separate, uncommitted experiment is not included in this packaging
 repair. No UMU acceptance or 1.0.1 publication is claimed; G24 remains
 **Not started**.
+
+### G23 actual UMU private bootstrap repair — 2026-10-05
+
+The source delivered with this checkpoint keeps the legacy input-pipe handshake
+for direct Wine and Windows. UMU selects runinprefix and an explicit external
+output bootstrap: the backend creates a fresh capability, sends one bounded
+private frame to the native launcher's redirected output pipe, and never logs
+that frame. The launcher discards other runner output and disables child
+Proton/runtime log files. Tokens remain absent from arguments, environment,
+configuration, exports and recorded evidence.
+
+An actual owned Windows metadata probe under UMU 1.4.4 / GE-Proton11-6 confirms
+why the original guard failed: Wine reports a Unix pipe as FILE_TYPE_CHAR with
+FILE_DEVICE_UNKNOWN. File output instead reports FILE_TYPE_DISK; terminal output
+reports a console device and is not redirected. The compatibility check requires
+Wine identity, redirected output and a successful matching device query. Native
+Windows continues to require FILE_TYPE_PIPE. Unknown modes, file/terminal/null
+output and failed queries are rejected before a capability can be emitted.
+
+Local Release desktop tests pass 110 cases with two Windows-only skips. Host
+desktop-session tests pass all 29 cases. Current native source and a locally
+published Windows diagnostic build pass actual owned lifecycle probes under both
+direct Wine 11.17 and UMU 1.4.4 / GE-Proton11-6 with steamrt4
+4.0.20260928.262390. Each probe checks startup, configured loopback HTTP address,
+retained profile and disabled integrations/LAN, successful graceful restart with
+a fresh capability, graceful quit, backend/browser availability after companion
+handles close for 15 seconds, and SQLite integrity. Owned Wine servers finish
+without blanket termination. The first UMU lifecycle assertion exposed a fixture
+error: rewriting its fallback configuration file did not change authoritative
+SQLite settings. The corrected probe retains and reads that owned saved port.
+
+Ignored evidence: artifacts/umu-stdio-metadata/{result,file-output,terminal-output}.log,
+artifacts/umu-backend-probe/result.log,
+artifacts/tray-linux-backend-probe/result-detach.log,
+artifacts/tray-host-output-wine-pipe-tests and
+artifacts/tray-linux-output-wine-pipe-tests. These are scanned local diagnostics,
+not protected release assets. Protected packaging-fix run
+[37324678416](https://github.com/TechDaddyKB/tdsblive/actions/runs/37324678416)
+at a614f8a is still running when this checkpoint is recorded.
+
+This resolves the observed UMU backend handshake failure. It does not establish
+native tray-menu interaction, the named desktop/session matrix, browser restore,
+final-package OBS behavior or release publication. G23 remains **In progress**
+and G24 remains **Not started** until their remaining acceptance evidence exists.

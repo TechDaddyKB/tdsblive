@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
+using System.Text.Json;
 using ExtensionSuite.DesktopControl;
 
 namespace ExtensionSuite.Desktop;
@@ -15,10 +17,12 @@ public sealed class LinuxBackendProcess : IDisposable
     private bool disposed;
     public DesktopBootstrap Bootstrap { get; private set; } = null!;
 
-    private LinuxBackendProcess(Process process, TaskCompletionSource<int> ready)
+    private LinuxBackendProcess(Process process, TaskCompletionSource<DesktopBootstrap> ready, string? inputCapability)
     {
         this.process = process;
-        output = ReadOutputAsync(process.StandardOutput, ready, readers.Token);
+        output = inputCapability is null
+            ? ReadBootstrapOutputAsync(process.StandardOutput, ready, readers.Token)
+            : ReadInputBootstrapAsync(process.StandardOutput, ready, inputCapability, readers.Token);
         errors = DrainAsync(process.StandardError, readers.Token);
     }
 
@@ -34,17 +38,17 @@ public sealed class LinuxBackendProcess : IDisposable
             !Directory.Exists(Path.Combine(selected.PrefixDirectory, "drive_c")))
             await InitializeWineAsync(selected, deadline.Token);
 
-        var ready = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ready = new TaskCompletionSource<DesktopBootstrap>(TaskCreationOptions.RunContinuationsAsynchronously);
         Observe(ready.Task);
+        var capability = selected.Runner == LinuxRunnerKind.Umu ? null : DesktopProtocol.NewSessionToken();
         var process = Process.Start(selected.CreateStartInfo(createNewProfile)) ?? throw new InvalidOperationException("The Windows app could not start.");
-        var owned = new LinuxBackendProcess(process, ready);
+        var owned = new LinuxBackendProcess(process, ready, capability);
         try
         {
-            var capability = DesktopProtocol.NewSessionToken();
-            await DesktopProtocol.WriteAsync(process.StandardInput.BaseStream, new DesktopBootstrap(0, capability), deadline.Token);
+            if (capability is not null)
+                await DesktopProtocol.WriteAsync(process.StandardInput.BaseStream, new DesktopBootstrap(0, capability), deadline.Token);
             process.StandardInput.Close();
-            var port = await ready.Task.WaitAsync(deadline.Token);
-            owned.Bootstrap = new(port, capability);
+            owned.Bootstrap = await ready.Task.WaitAsync(deadline.Token);
             return owned;
         }
         catch { owned.Dispose(); throw; }
@@ -97,12 +101,52 @@ public sealed class LinuxBackendProcess : IDisposable
         return process.ExitCode;
     }
 
-    internal static async Task ReadOutputAsync(TextReader reader, TaskCompletionSource<int> ready, CancellationToken cancellationToken)
+    private static async Task ReadInputBootstrapAsync(TextReader reader, TaskCompletionSource<DesktopBootstrap> ready,
+        string capability, CancellationToken cancellationToken)
+    {
+        var port = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Observe(port.Task);
+        var reading = ReadOutputAsync(reader, port, cancellationToken);
+        try { ready.TrySetResult(new(await port.Task, capability)); }
+        catch (IOException) { ready.TrySetException(new IOException("The Windows app's desktop pipe is unavailable.")); }
+        await reading;
+    }
+
+    internal static Task ReadOutputAsync(TextReader reader, TaskCompletionSource<int> ready, CancellationToken cancellationToken) =>
+        ReadLinesAsync(reader, 128, line =>
+        {
+            var span = line.Span;
+            if (span.StartsWith(DesktopProtocol.ReadyPrefix, StringComparison.Ordinal) &&
+                int.TryParse(span[DesktopProtocol.ReadyPrefix.Length..], NumberStyles.None, CultureInfo.InvariantCulture,
+                    out var port) && port is >= 1 and <= 65535)
+                ready.TrySetResult(port);
+        }, () => ready.TrySetException(new IOException("The Windows app's desktop pipe is unavailable.")), cancellationToken);
+
+    internal static Task ReadBootstrapOutputAsync(TextReader reader, TaskCompletionSource<DesktopBootstrap> ready,
+        CancellationToken cancellationToken) =>
+        ReadLinesAsync(reader, DesktopProtocol.MaximumFrameBytes + DesktopProtocol.BootstrapPrefix.Length, line =>
+        {
+            var span = line.Span;
+            if (!span.StartsWith(DesktopProtocol.BootstrapPrefix, StringComparison.Ordinal)) return;
+            var payload = span[DesktopProtocol.BootstrapPrefix.Length..];
+            if (Encoding.UTF8.GetByteCount(payload) >= DesktopProtocol.MaximumFrameBytes) return;
+            try
+            {
+                var bootstrap = JsonSerializer.Deserialize<DesktopBootstrap>(payload.ToString());
+                if (bootstrap is { Port: >= 1 and <= 65535 } && DesktopProtocol.ValidSessionToken(bootstrap.SessionToken))
+                    ready.TrySetResult(bootstrap);
+            }
+            catch (JsonException) { /* Ignore malformed private frames without logging their contents. */ }
+        }, () => ready.TrySetException(new IOException("The Windows app's private desktop bootstrap is unavailable. Choose the current complete Windows application folder.")),
+            cancellationToken);
+
+    private static async Task ReadLinesAsync(TextReader reader, int maximumLineCharacters,
+        Action<ReadOnlyMemory<char>> accept, Action unavailable, CancellationToken cancellationToken)
     {
         // Backend and runner output can contain private data. Discard it without
-        // logging, retaining only a bounded line for the nonsensitive port marker.
+        // logging. Only a bounded legacy port or private bootstrap frame is parsed.
         var buffer = new char[1024];
-        var line = new char[128];
+        var line = new char[maximumLineCharacters];
         var count = 0;
         var overflow = false;
         try
@@ -116,21 +160,18 @@ public sealed class LinuxBackendProcess : IDisposable
                     if (character == '\n')
                     {
                         var length = count > 0 && line[count - 1] == '\r' ? count - 1 : count;
-                        if (!overflow && line.AsSpan(0, length).StartsWith(DesktopProtocol.ReadyPrefix, StringComparison.Ordinal) &&
-                            int.TryParse(line.AsSpan(DesktopProtocol.ReadyPrefix.Length, length - DesktopProtocol.ReadyPrefix.Length),
-                                NumberStyles.None, CultureInfo.InvariantCulture, out var port) && port is >= 1 and <= 65535)
-                            ready.TrySetResult(port);
+                        if (!overflow) accept(line.AsMemory(0, length));
                         count = 0; overflow = false;
                     }
                     else if (count < line.Length) line[count++] = character;
                     else overflow = true;
                 }
             }
-            ready.TrySetException(new IOException("The Windows app ended before desktop controls connected. If TDSBLive is already running, use its editor controls."));
+            unavailable();
         }
         catch (Exception error) when (error is IOException or OperationCanceledException or ObjectDisposedException)
         {
-            ready.TrySetException(new IOException("The Windows app's desktop pipe is unavailable."));
+            unavailable();
         }
     }
 

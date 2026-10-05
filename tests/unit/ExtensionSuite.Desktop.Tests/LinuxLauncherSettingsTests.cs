@@ -28,7 +28,10 @@ public sealed class LinuxLauncherSettingsTests
         {
             Assert.Equal(example.Settings.ProtonDirectory, launch.Environment["PROTONPATH"]);
             Assert.Equal("0", launch.Environment["GAMEID"]);
-            Assert.Equal("waitforexitandrun", launch.Environment["PROTON_VERB"]);
+            Assert.Equal("runinprefix", launch.Environment["PROTON_VERB"]);
+            Assert.Contains("--TDSBLive:DesktopBootstrap=output", launch.ArgumentList);
+            Assert.Equal("0", launch.Environment["PROTON_LOG"]);
+            Assert.Equal("0", launch.Environment["STEAM_LINUX_RUNTIME_LOG"]);
             Assert.False(launch.Environment.ContainsKey("STORE"));
         }
     }

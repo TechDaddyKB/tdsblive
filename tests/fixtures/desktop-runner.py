@@ -2,6 +2,7 @@
 """Owned transport test double. Does not run Wine or execute Windows code."""
 import json
 import os
+import secrets
 import socketserver
 import sys
 import threading
@@ -22,7 +23,8 @@ if sys.argv[1:] == ['wineboot.exe', '--init']:
     (root / 'initialized').write_text(os.environ['WINEDLLOVERRIDES'])
     sys.exit(0)
 
-bootstrap = json.loads(sys.stdin.readline())
+output_bootstrap = '--TDSBLive:DesktopBootstrap=output' in sys.argv[1:]
+bootstrap = {'SessionToken': secrets.token_hex(32)} if output_bootstrap else json.loads(sys.stdin.readline())
 (root / 'started').touch()
 if mode == 'no-marker':
     time.sleep(30)
@@ -68,7 +70,11 @@ with Server(('127.0.0.1', 0), Handler) as server:
     sys.stderr.write('owned private fixture output\n' * 8192)
     sys.stderr.flush()
     sys.stdout.write('owned private fixture output\n' * 8192)
-    print('TDSBLIVE-DESKTOP ' + str(server.server_address[1]), flush=True)
+    if output_bootstrap:
+        print('TDSBLIVE-DESKTOP-BOOTSTRAP ' + json.dumps({
+            'Port': server.server_address[1], 'SessionToken': bootstrap['SessionToken']}), flush=True)
+    else:
+        print('TDSBLIVE-DESKTOP ' + str(server.server_address[1]), flush=True)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     completed.wait(30)
