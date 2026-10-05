@@ -558,3 +558,10 @@ README preparation now explains finding the Windows icon, opening the editor,
 save-before-quit, confirmations and fallback controls. It explicitly identifies
 the public v0.1.0 download and unpublished v1.0.1 candidate; final Linux companion
 instructions and published-release wording are still required before G24 delivery.
+
+Read-only Linux qualification inventory (2026-10-05): this workstation exposes
+Wayland and X11/XWayland, installed direct Wine, Xvfb, D-Bus session tooling and
+busctl. UMU, KDE Plasma launchers, Xephyr and Weston are not installed. These
+observations identify future G23 environment work; they do not qualify either
+runner/desktop combination or change the prerequisite on G22. All owned Wine
+fixture processes have finished; existing Wine applications were not stopped.

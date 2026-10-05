@@ -62,6 +62,8 @@ The **unreleased v1.0.1 Windows candidate** adds a blue **T** icon near the cloc
 Starting it normally opens the editor in your usual browser. Optional start-at-login
 stays quiet; use **Open editor** when you need it.
 
+![Windows candidate tray menu: Open editor, Restart, Quit](docs/user-guide/images/tray-windows-menu.png)
+
 1. Find the blue **T** near the clock. Click the hidden-icons arrow if it is tucked away.
 2. Right-click it and choose **Open editor**, **Restart**, or **Quit**.
 3. When you finish streaming, save changes in the editor, choose **Quit**, then
