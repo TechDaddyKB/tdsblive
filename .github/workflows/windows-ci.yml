@@ -33,7 +33,7 @@ jobs:
         run: |
           tool_directory="$RUNNER_TEMP/tdsblive-sonar-cli"
           mkdir -p "$tool_directory"
-          curl --fail --location --silent --show-error 'https://binaries.sonarsource.com/Distribution/sonarqube-cli/1.9.0.15656/linux/sonarqube-cli-1.9.0.15656-linux-x86-64.bin' --output "$tool_directory/sonar"
+          curl --proto '=https' --proto-redir '=https' --fail --location --silent --show-error 'https://binaries.sonarsource.com/Distribution/sonarqube-cli/1.9.0.15656/linux/sonarqube-cli-1.9.0.15656-linux-x86-64.bin' --output "$tool_directory/sonar"
           printf '%s  %s\n' '42ec815ef8015921a76b76c865932130d756c5c5a977d82bca9fa81d09bfccd8' "$tool_directory/sonar" | sha256sum --check
           chmod +x "$tool_directory/sonar"
           echo "$tool_directory" >> "$GITHUB_PATH"
@@ -61,6 +61,7 @@ jobs:
       - name: Require Linux test prerequisites
         run: |
           test -x /usr/bin/dbus-daemon
+          test -x /usr/bin/gio
           python3 --version
           test -x /usr/bin/python3
 

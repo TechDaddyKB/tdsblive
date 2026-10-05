@@ -187,6 +187,51 @@ public sealed class LinuxSetupWindowTests
         return Task.CompletedTask;
     });
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task ApplicationsMenuInstallationRequiresAnExplicitChoice(bool chosen) => RunAsync(async () =>
+    {
+        using var example = new OwnedExample();
+        var installed = 0;
+        var started = 0;
+        var window = new LinuxSetupWindow(example.Root, example.Settings.ApplicationPath,
+            (_, _) => { Assert.Equal(chosen ? 1 : 0, installed); started++; return Task.CompletedTask; },
+            () => Assert.Fail("Successful start must not cancel"), example.Settings,
+            () => { installed++; return Task.CompletedTask; });
+        window.Show();
+        var option = Field<CheckBox>(window, "Shortcut");
+        Assert.False(option.IsChecked == true);
+        Assert.True(option.MinHeight >= 44);
+        option.IsChecked = chosen;
+        await window.StartSelectedAsync();
+        Assert.Equal(chosen ? 1 : 0, installed);
+        Assert.Equal(1, started);
+        Assert.False(window.IsVisible);
+    });
+
+    [Fact]
+    public Task FailedShortcutInstallationKeepsSetupEditableAndDoesNotStartTheBackend() => RunAsync(async () =>
+    {
+        using var example = new OwnedExample();
+        var started = 0;
+        var window = new LinuxSetupWindow(example.Root, example.Settings.ApplicationPath,
+            (_, _) => { started++; return Task.CompletedTask; }, () => { }, example.Settings,
+            () => Task.FromException(new IOException("owned failure")));
+        window.Show();
+        var option = Field<CheckBox>(window, "Shortcut");
+        option.IsChecked = true;
+        await window.StartSelectedAsync();
+        Assert.Equal(0, started);
+        Assert.True(window.IsVisible);
+        Assert.True(window.StartButton.IsEnabled);
+        Assert.Contains("leave the shortcut box unchecked", window.Feedback.Text);
+        option.IsChecked = false;
+        await window.StartSelectedAsync();
+        Assert.Equal(1, started);
+        Assert.False(window.IsVisible);
+    });
+
     private sealed class OwnedExample : IDisposable
     {
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "tdsblive-linux-form-" + Guid.NewGuid().ToString("N"));

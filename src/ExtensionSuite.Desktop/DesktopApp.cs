@@ -109,7 +109,9 @@ public sealed class DesktopApp : Application, IDisposable
     {
         var setup = new LinuxSetupWindow(store.DirectoryPath,
             Path.Combine(AppContext.BaseDirectory, "backend", "TDSBLive.exe"),
-            (settings, isNew) => StartLinuxBackendAsync(settings, isNew, store), ExitCompanion, selected) { Icon = CreateIcon() };
+            (settings, isNew) => StartLinuxBackendAsync(settings, isNew, store), ExitCompanion, selected,
+            () => Task.Run(() => LinuxApplicationShortcut.Install(Path.Combine(AppContext.BaseDirectory, "TDSBLive.Desktop"),
+                Path.Combine(AppContext.BaseDirectory, "tdsblive.svg")))) { Icon = CreateIcon() };
         if (explanation is not null) setup.Feedback.Text = explanation;
         LinuxSetup = setup;
         setup.Closed += (_, _) => LinuxSetup = null;

@@ -12,6 +12,7 @@ public sealed class LinuxSetupWindow : Window
 {
     private readonly Func<LinuxLauncherSettings, bool, Task> start;
     private readonly Action cancel;
+    private readonly Func<Task>? installShortcut;
     private readonly string newPrefix;
     private readonly ComboBox runner = new() { ItemsSource = new[] { "Wine", "Proton (UMU)" }, MinHeight = 44 };
     private readonly TextBox runnerPath = new() { MinHeight = 44 };
@@ -24,6 +25,8 @@ public sealed class LinuxSetupWindow : Window
         { Text = "Start a new empty TDSBLive setup", TextWrapping = TextWrapping.Wrap }, MinHeight = 44 };
     private readonly TextBlock destination = new() { TextWrapping = TextWrapping.Wrap };
     private readonly TextBlock feedback = new() { TextWrapping = TextWrapping.Wrap };
+    private readonly CheckBox shortcut = new() { Content = new TextBlock
+        { Text = "Add TDSBLive to my applications menu", TextWrapping = TextWrapping.Wrap }, MinHeight = 44 };
     private readonly Button launch = new() { Content = "Start TDSBLive", MinHeight = 44, MinWidth = 132 };
     private readonly Button close = new() { Content = "Cancel", MinHeight = 44, MinWidth = 100 };
     private readonly StackPanel fields = new() { Spacing = 18 };
@@ -36,9 +39,11 @@ public sealed class LinuxSetupWindow : Window
     internal TextBlock Feedback => feedback;
 
     public LinuxSetupWindow(string settingsDirectory, string bundledApplication,
-        Func<LinuxLauncherSettings, bool, Task> start, Action cancel, LinuxLauncherSettings? initial = null)
+        Func<LinuxLauncherSettings, bool, Task> start, Action cancel, LinuxLauncherSettings? initial = null,
+        Func<Task>? installShortcut = null)
     {
         (this.start, this.cancel) = (start, cancel);
+        this.installShortcut = installShortcut;
         newPrefix = Path.Combine(settingsDirectory, "wine-prefix");
         Title = "Set up TDSBLive on Linux";
         Width = 640; Height = 700; MinWidth = 320; MinHeight = 360;
@@ -62,6 +67,7 @@ public sealed class LinuxSetupWindow : Window
         AccessibleName(launch, "Start TDSBLive", "Linux-Start");
         AccessibleName(close, "Cancel Linux setup", "Linux-Cancel");
         AccessibleName(feedback, "Setup status", "Linux-Status");
+        AccessibleName(shortcut, "Add TDSBLive to my applications menu", "Linux-Shortcut");
         close.IsCancel = true;
 
         var header = new StackPanel { Spacing = 10 };
@@ -85,6 +91,11 @@ public sealed class LinuxSetupWindow : Window
         fields.Children.Add(destination);
         fields.Children.Add(Field("3. TDSBLive Windows application", application, false,
             "The Linux download includes the current Windows app. Keep all of its files together; use TDSBLive.exe from that folder."));
+        if (installShortcut is not null)
+        {
+            fields.Children.Add(Label("4. Add a shortcut (optional)", shortcut));
+            fields.Children.Add(Help("Find TDSBLive in your applications menu next time. Keep the Linux app folder in place so the shortcut keeps working. This does not start TDSBLive when you sign in."));
+        }
         var scroll = new ScrollViewer { Content = fields, Margin = new Thickness(24, 20, 24, 0),
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         scroll.PropertyChanged += (_, change) =>
@@ -177,6 +188,15 @@ public sealed class LinuxSetupWindow : Window
         feedback.Text = runner.SelectedIndex == 1 ? "Preparing Proton and TDSBLive… Keep this window open. The first start can take a few minutes." : "Starting TDSBLive… Keep this window open.";
         try
         {
+            if (shortcut.IsChecked == true && installShortcut is not null)
+            {
+                try { await installShortcut(); }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
+                {
+                    feedback.Text = "The applications-menu shortcut could not be added. Check that the Linux app folder is complete and your applications folder is writable, or leave the shortcut box unchecked to start without it.";
+                    return;
+                }
+            }
             await start(selection, isNew);
             started = true;
         }
