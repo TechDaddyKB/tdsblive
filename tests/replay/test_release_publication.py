@@ -20,7 +20,7 @@ class ReleaseAdmissionTests(unittest.TestCase):
         self.run = dict(name='Windows CI', head_sha=SHA, head_branch='main', event='push',
             status='completed', conclusion='success', head_repository={'full_name':release.REPOSITORY})
         self.checks = {'check_runs':[{'name':name,'status':'completed','conclusion':'success'} for name in (
-            'Windows build and tests','Linux desktop tests and coverage','Linux companion package',
+            'Windows build and tests','Windows validation','Linux desktop tests and coverage','Linux companion package',
             'Windows native tray probe','SonarCloud Code Analysis','Analyze (csharp)',
             'Analyze (python)','Analyze (javascript-typescript)')]}
 

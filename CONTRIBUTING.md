@@ -21,6 +21,14 @@ repository branch for scanning, tests and analysis. Never switch to
 `pull_request_target` to run untrusted changes with secrets. No merge should bypass
 the protected branch's required quality check.
 
+CI selects additive checks from the cumulative PR diff using protected-base
+policy. Every PR retains baseline build/tests, coverage, Sonar and managed-host
+browser checks; package/desktop/guide/build/tooling changes and unknown paths add
+full qualification. Main and manual runs always qualify the complete release.
+Agents and maintainers may request full qualification with a standalone `CI: full`
+commit trailer, but cannot opt out of the minimum checks. Read the selected scope
+and reason in the Actions summary; see [change-aware validation](docs/testing.md#change-aware-pr-validation).
+
 Dependency updates use weekly Dependabot PRs. Update exact versions, lockfiles,
 tool/action pins and documentation together, then validate Windows CI. Public
 bug reports should use sanitized reproductions without private messages or keys.

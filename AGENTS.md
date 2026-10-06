@@ -37,3 +37,24 @@ Use the pinned toolchains, tracked lockfiles, isolated tests and scoped commits.
 Check the staged file list before pushing public history. Do not add original
 references, credentials, user data, generated output, dependency trees or test
 reports. Never bypass fork-secret isolation or protected-branch checks.
+
+## Change-aware CI for agents
+
+Every PR commit is classified automatically using the protected base's policy and
+the cumulative PR diff, not just its latest commit. Baseline build/tests, coverage,
+Sonar and managed-host browser qualification always run. Desktop/lifecycle,
+packaging, shipped-guide, dependency/build/CI/tooling changes and unknown paths
+require full native Windows/Linux qualification. Main and manual runs are full.
+
+To request more evidence for a risky or cross-cutting change, add a standalone
+`CI: full` trailer to a commit message. It raises scope for the whole PR while that
+commit remains in PR history; there is no skip or reduced-scope override. Preserve
+the required co-author trailer. Do not use `[skip ci]`, `[ci skip]`, skipped-check
+workarounds, coverage exclusions or workflow edits to lower the required scope.
+
+After scanning `tools/ci_plan.py`, preview committed changes with
+`python tools/ci_plan.py select --event pull_request --base origin/main --head HEAD`.
+The workflow summary records the selected tier and reason. Local previews use the
+working copy's policy; Actions uses protected-base policy. Routing-policy changes
+therefore take effect after merge and their own PR receives full qualification.
+See [testing](docs/testing.md#change-aware-pr-validation) for the complete contract.

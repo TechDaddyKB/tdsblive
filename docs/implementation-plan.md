@@ -72,6 +72,38 @@ Ignore `references/` entirely, original archives, `.secrets/`, environment files
 
 Use Windows GitHub Actions for Windows build/test/package work. Backend tests generate OpenCover and TRX; frontend tests generate LCOV. SonarQube imports these reports rather than executing tests. Use trusted CI analysis, disable automatic analysis, keep SONAR_TOKEN in Actions secrets, and never execute fork code using pull_request_target. The mandatory scanner currently requires Sonar authentication: fork/Dependabot runs receive no secret and fail closed before reading source; reviewed changes must be promoted to a trusted branch for tests and analysis. Require trusted build/tests and Sonar quality gate; at least 80% new-code coverage, reviewed security hotspots, and no new blocking quality/security issues. Exclude generated/dependency/build/fixture/test code from production coverage without hiding handwritten logic.
 
+### Approved delivery optimization -- change-aware PR validation
+
+On 2026-10-06 the operator approved deterministic, additive PR scope selection
+with an agent-controlled full-validation override. Every PR keeps baseline
+build/tests, production coverage, managed-host browser checks and Sonar. Desktop,
+startup/recovery, packaging, shipped-guide, dependency/build/CI/tooling changes
+and unknown paths add full native Windows/Linux qualification. Main pushes and
+manual Windows CI runs always retain full qualification. A standalone `CI: full`
+commit trailer can raise, never lower, PR scope.
+
+The selector runs scanned protected-base policy against the cumulative PR diff.
+Its bootstrap defaults explicitly to full. The existing protected **Windows build
+and tests** name becomes an aggregate requiring every selected job; the separate
+Sonar requirement and fork-secret isolation remain unchanged. Parallel desktop
+tests still require successful same-run, exact-checkout Linux coverage before
+Windows analysis. Release admission requires full main evidence and actual
+Windows validation, not a standard PR or diagnostic artifact. Goal IDs and prior
+acceptance records are unchanged. See [testing](testing.md#change-aware-pr-validation).
+
+Local acceptance evidence (2026-10-06): 25 focused CI-routing, actual aggregate
+shell-script, Linux coverage-transfer and release-admission tests pass.
+`actionlint` 1.7.7 validates both workflows' YAML, expressions and job dependencies;
+changed-file secret scans and `git diff --check` pass. The coverage wait helper
+also admits the existing successful Linux job from run `37377961774` through the
+actual GitHub API. This confirms API admission, not a new Windows run.
+
+The implementation is locally validated. A real
+trusted PR/main Actions run is still required after publication to establish
+native behavior and measure the new wall-clock timings; local tests are not
+Windows evidence. The first PR uses the explicit full bootstrap until the policy
+is present on protected main.
+
 ### Scope and evidence limitations
 
 First release is the integrated MVP, followed by full-spec milestones. Exclude initial cloud hosting, SaaS accounts, marketplace, mobile editor, Rumble chat sending, remote OBS control/synchronization, and full StreamElements compatibility. Use original UX/assets and licensed dependencies.

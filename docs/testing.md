@@ -3,6 +3,69 @@
 See README for exact commands. Windows CI is the authority for Windows builds;
 local Linux checks are useful but do not substitute for the Windows run.
 
+## Change-aware PR validation
+
+`Windows CI` runs on every PR update without workflow-level path exclusions.
+`tools/ci_plan.py` selects **standard** or **full** from the cumulative base-to-head
+diff, including deletions and both sides of renames. Selection runs the scanned
+policy from the protected PR base, not editable PR routing code. If that base
+does not yet contain the policy, CI explicitly requires full qualification for
+the bootstrap run. Missing/invalid selection fails the required check.
+
+| Scope | Required checks |
+|---|---|
+| Standard PR | Secrets scans; Linux desktop tests/coverage; Windows/frontend build, lint and types; all .NET/frontend/replay tests; production coverage thresholds; host HTTP/financial/desktop/recovery checks; managed-host browser suite; API type drift; Sonar analysis and quality gate |
+| Full PR | Everything above plus Windows ZIP/installer build, portable/installed browser and native lifecycle qualification, offline packaged guide, Linux companion build/native UI qualification, native tray probe and desktop inventory |
+| Main push or manual Windows CI | Always full, regardless of changed files |
+
+Application C#/frontend changes and non-shipped Markdown documentation normally
+use standard scope. Desktop, host ownership/startup/recovery, shipped user guide,
+packaging, dependency manifests/lockfiles, build/coverage settings, CI, qualification
+tooling and unrecognized files require full. This is an additive optimization:
+even documentation-only PRs retain coverage and the required Sonar check.
+
+Agents can escalate a PR with a standalone `CI: full` line in any PR commit message.
+The request remains effective on subsequent commits while that commit remains in
+PR history. No `CI: skip` or reduced tier is supported. Manual dispatch also provides
+full validation; dispatch on a feature branch is not release-publication evidence.
+After scanning the tool, preview committed changes locally with:
+
+```bash
+python tools/ci_plan.py select --event pull_request --base origin/main --head HEAD
+python -m unittest tests.replay.test_ci_plan tests.replay.test_linux_coverage tests.replay.test_release_publication -v
+```
+
+Fetch the current main revision before previewing. Local previews use the local
+policy, whereas Actions uses protected-base policy, so a policy-changing PR cannot
+weaken its own selection. Selection never uses an AI model, credentials in commit
+messages, a PR-authored file list or only the most recent commit.
+
+Windows and Linux desktop validation start in parallel after policy selection.
+Before importing coverage, Windows requires the Linux job in the same workflow run
+to succeed; the existing import verifies the exact checkout commit and unchanged
+measured counts. Missing coverage, API errors, failed/skipped/cancelled Linux tests
+and bounded-wait expiry fail explicitly, rather than dropping Linux coverage.
+
+NuGet cache keys include Windows runtime lockfiles; npm keys include the independent
+browser/API-generator lockfiles. Playwright browsers are cached by their pinned
+lockfile, with cache saves limited to main. PRs may restore the trusted main cache
+but cannot populate it. Browser installation/qualification still runs on cache hits;
+cache presence is not evidence that tests passed.
+
+The final **Windows build and tests** check retains the protected branch's existing
+name. It runs even when a dependency fails and requires both baseline jobs plus
+every selected full-qualification job to succeed. Intentionally unselected package
+jobs must be skipped only for standard scope. **SonarCloud Code Analysis** remains
+a separate required check. Fork/Dependabot isolation is unchanged; missing secrets
+still fail closed before source execution.
+
+Standard PRs produce test evidence, not release candidates. Full protected-main
+runs retain the same candidate artifact names consumed by `Publish release`,
+which additionally requires the actual **Windows validation** job and all native,
+Linux and security checks. Diagnostic packages never substitute for release assets.
+Existing full qualification remains the authority for Windows/installer behavior;
+local routing tests do not establish native execution or runtime savings.
+
 ## Initial meaningful tests
 
 - Core xUnit tests enforce the seven-second Rumble default, inclusive normal
