@@ -135,6 +135,16 @@ class CiPlanTests(unittest.TestCase):
                         operation()
                     git.assert_not_called()
 
+    def test_named_refs_use_literal_commands_and_shas_do_not_become_git_arguments(self):
+        sha = 'a' * 40
+        with patch('tools.ci_plan.subprocess.check_output') as git:
+            self.assertEqual(sha, revision(Path('.'), sha))
+            git.assert_not_called()
+        for value in ('HEAD', 'origin/main'):
+            with self.subTest(value=value), patch('tools.ci_plan.subprocess.check_output', return_value=sha.encode()) as git:
+                self.assertEqual(sha, revision(Path('.'), value))
+                self.assertEqual(['git', 'rev-parse', '--verify', value + '^{commit}'], git.call_args.args[0])
+
     def test_linux_coverage_requires_exact_successful_job_not_just_an_artifact(self):
         success = {'name': 'Linux desktop tests and coverage', 'status': 'completed', 'conclusion': 'success'}
         self.assertTrue(linux_coverage_state([success]))

@@ -91,7 +91,7 @@ Windows analysis. Release admission requires full main evidence and actual
 Windows validation, not a standard PR or diagnostic artifact. Goal IDs and prior
 acceptance records are unchanged. See [testing](testing.md#change-aware-pr-validation).
 
-Local acceptance evidence (2026-10-06): 26 focused CI-routing, actual aggregate
+Local acceptance evidence (2026-10-06): 27 focused CI-routing, actual aggregate
 shell-script, Linux coverage-transfer and release-admission tests pass.
 `actionlint` 1.7.7 validates both workflows' YAML, expressions and job dependencies;
 changed-file secret scans and `git diff --check` pass. The coverage wait helper
@@ -112,6 +112,10 @@ restricts Git revisions to full SHAs or named preview refs, validates SHA ranges
 before subprocess calls, and removes caller-selected output paths in favor of
 GitHub-owned output/summary environment files. The gate remains enforced; a new
 successful full Actions run is still required before merge.
+Second bootstrap run `37473719441` retained the same passing native/baseline
+checks but Sonar reported one remaining revision-resolver argument finding.
+Resolution now accepts validated full SHAs directly and uses literal Git commands
+only for `HEAD` and `origin/main`; no CLI revision text enters that subprocess.
 
 ### Scope and evidence limitations
 

@@ -89,11 +89,13 @@ def checked_sha(value: str) -> str:
 
 
 def revision(root: Path, value: str) -> str:
-    if value not in ('HEAD', 'origin/main'):
-        checked_sha(value)
-    sha = subprocess.check_output(
-        ['git', 'rev-parse', '--verify', '--end-of-options', value + '^{commit}'], cwd=root,
-    ).decode().strip()
+    if value == 'HEAD':
+        result = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD^{commit}'], cwd=root)
+    elif value == 'origin/main':
+        result = subprocess.check_output(['git', 'rev-parse', '--verify', 'origin/main^{commit}'], cwd=root)
+    else:
+        return checked_sha(value)
+    sha = result.decode().strip()
     return checked_sha(sha)
 
 
