@@ -15,8 +15,70 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validation-plan:
+    name: Select validation scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      full: ${{ steps.plan.outputs.full }}
+      tier: ${{ steps.plan.outputs.tier }}
+    env:
+      RUN_SONAR: ${{ github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    steps:
+      - name: Check out protected policy rather than PR routing code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install pinned deterministic secrets scanner
+        run: |
+          tool_directory="$RUNNER_TEMP/tdsblive-sonar-cli"
+          mkdir -p "$tool_directory"
+          curl --proto '=https' --proto-redir '=https' --fail --location --silent --show-error 'https://binaries.sonarsource.com/Distribution/sonarqube-cli/1.9.0.15656/linux/sonarqube-cli-1.9.0.15656-linux-x86-64.bin' --output "$tool_directory/sonar"
+          printf '%s  %s\n' '42ec815ef8015921a76b76c865932130d756c5c5a977d82bca9fa81d09bfccd8' "$tool_directory/sonar" | sha256sum --check
+          chmod +x "$tool_directory/sonar"
+          echo "$tool_directory" >> "$GITHUB_PATH"
+
+      - name: Scan protected policy before execution
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
+        run: |
+          mapfile -d '' tracked_files < <(git ls-files -z)
+          sonar analyze secrets -- "${tracked_files[@]}"
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.7'
+
+      - name: Select additive checks from the cumulative PR diff
+        id: plan
+        env:
+          SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
+          SONARQUBE_CLI_ORG: camarokris
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == pull_request ]]; then
+            [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ && "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+            git fetch --no-tags origin "$HEAD_SHA"
+          fi
+          if [[ ! -f tools/ci_plan.py ]]; then
+            printf '%s\n' 'full=true' 'tier=full' >> "$GITHUB_OUTPUT"
+            printf '%s\n' '## CI validation: full' 'Protected base has no routing policy yet; bootstrap requires full qualification.' >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$EVENT_NAME" == pull_request ]]; then
+            python tools/ci_plan.py select --event "$EVENT_NAME" --base "$BASE_SHA" --head "$HEAD_SHA"
+          else
+            python tools/ci_plan.py select --event "$EVENT_NAME"
+          fi
+
   linux-desktop:
     name: Linux desktop tests and coverage
+    needs: validation-plan
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -91,10 +153,13 @@ jobs:
           if-no-files-found: error
 
   windows:
-    name: Windows build and tests
-    needs: linux-desktop
+    name: Windows validation
+    needs: validation-plan
+    permissions:
+      contents: read
+      actions: read
     runs-on: windows-2022
-    # The full browser/parity suite now runs on managed, portable and installed hosts.
+    # Managed-host checks always run; full scope also qualifies portable and installed hosts.
     timeout-minutes: 45
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -133,7 +198,9 @@ jobs:
         with:
           global-json-file: global.json
           cache: true
-          cache-dependency-path: '**/packages.lock.json'
+          cache-dependency-path: |
+            **/packages.lock.json
+            **/packages.win-x64.lock.json
 
       - name: Set up pinned Node LTS
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -141,6 +208,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           package-manager-cache: false
+          cache-dependency-path: |
+            package-lock.json
+            tools/browser-qualification/package-lock.json
+            tools/api-type-generator/package-lock.json
 
       - name: Set up pinned Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -201,6 +272,11 @@ jobs:
           SONARQUBE_CLI_ORG: camarokris
         run: dotnet test TDSBLive.slnx --configuration Release --no-build --settings coverage.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults
 
+      - name: Require successful Linux coverage while allowing parallel builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/ci_plan.py wait-coverage
+
       - name: Download successful Linux coverage from this workflow run
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -242,6 +318,19 @@ jobs:
       - name: Qualify financial ingestion and crash recovery in an isolated host
         run: python tools/qualify_financial.py
 
+      - name: Configure owned Playwright browser cache
+        shell: pwsh
+        run: |
+          "PLAYWRIGHT_BROWSERS_PATH=$(Join-Path $env:RUNNER_TEMP 'tdsblive-playwright')" |
+            Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Restore pinned Playwright browsers from trusted main cache
+        id: playwright-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: windows-playwright-${{ hashFiles('tools/browser-qualification/package-lock.json') }}
+
       - name: Qualify rendered editor in an isolated CI browser
         shell: pwsh
         run: |
@@ -251,6 +340,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm run qualify --prefix tools/browser-qualification
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Save verified Playwright browsers only from protected main
+        if: github.ref == 'refs/heads/main' && steps.playwright-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: windows-playwright-${{ hashFiles('tools/browser-qualification/package-lock.json') }}
 
       - name: Qualify real-process restart and backup restore
         run: node tools/browser-qualification/recovery-process.mjs
@@ -281,6 +377,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build self-contained Windows ZIP and per-user installer
+        if: needs.validation-plan.outputs.full == 'true'
         env:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
@@ -295,6 +392,7 @@ jobs:
           ./tools/build_windows_package.ps1 -Version $env:TDSBLIVE_VERSION -CompilerPath (Join-Path $innoRoot 'ISCC.exe')
 
       - name: Qualify native Windows packages
+        if: needs.validation-plan.outputs.full == 'true'
         env:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
@@ -302,6 +400,7 @@ jobs:
         run: ./tools/qualify_windows_package.ps1 -Version $env:TDSBLIVE_VERSION
 
       - name: Qualify packaged guide without network access
+        if: needs.validation-plan.outputs.full == 'true'
         env:
           SONARQUBE_CLI_TOKEN: ${{ env.RUN_SONAR == 'true' && secrets.SONAR_TOKEN || '' }}
           SONARQUBE_CLI_ORG: camarokris
@@ -313,6 +412,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload candidate Windows packages
+        if: needs.validation-plan.outputs.full == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-release-candidate
@@ -344,7 +444,8 @@ jobs:
 
   linux-package:
     name: Linux companion package
-    needs: windows
+    needs: [validation-plan, windows]
+    if: needs.validation-plan.outputs.full == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -443,7 +544,8 @@ jobs:
     # Run actual portable desktop interactions promptly, independently of the
     # longer regression/Sonar pipeline. This never replaces its required check
     # or supplies release-publication artifacts.
-    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    needs: validation-plan
+    if: needs.validation-plan.outputs.full == 'true' && github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-2022
     timeout-minutes: 20
     env:
@@ -480,7 +582,9 @@ jobs:
         with:
           global-json-file: global.json
           cache: true
-          cache-dependency-path: '**/packages.lock.json'
+          cache-dependency-path: |
+            **/packages.lock.json
+            **/packages.win-x64.lock.json
 
       - name: Set up pinned Node LTS
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -488,6 +592,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           package-manager-cache: false
+          cache-dependency-path: package-lock.json
 
       - name: Set up pinned Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -574,7 +679,8 @@ jobs:
     name: Windows desktop inventory
     # Read-only OS-control discovery on a separate disposable CI machine. This
     # job never replaces or satisfies the required Windows build/test check.
-    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    needs: validation-plan
+    if: needs.validation-plan.outputs.full == 'true' && github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-2022
     timeout-minutes: 5
     steps:
@@ -615,3 +721,46 @@ jobs:
           retention-days: 14
           path: artifacts/windows-display/display-inventory.json
           if-no-files-found: error
+
+  required-validation:
+    name: Windows build and tests
+    needs: [validation-plan, linux-desktop, windows, linux-package, native-tray-probe, desktop-inventory]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PLAN_RESULT: ${{ needs.validation-plan.result }}
+      FULL: ${{ needs.validation-plan.outputs.full }}
+      WINDOWS_RESULT: ${{ needs.windows.result }}
+      LINUX_RESULT: ${{ needs.linux-desktop.result }}
+      PACKAGE_RESULT: ${{ needs.linux-package.result }}
+      PROBE_RESULT: ${{ needs.native-tray-probe.result }}
+      INVENTORY_RESULT: ${{ needs.desktop-inventory.result }}
+    steps:
+      - name: Require every selected check without changing branch protection
+        run: |
+          printf '## Selected validation results\n\nScope: %s\n\nPolicy: %s\nWindows: %s\nLinux tests: %s\nLinux package: %s\nNative probe: %s\nInventory: %s\n' \
+            "$FULL" "$PLAN_RESULT" "$WINDOWS_RESULT" "$LINUX_RESULT" "$PACKAGE_RESULT" "$PROBE_RESULT" "$INVENTORY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$PLAN_RESULT" != success || "$WINDOWS_RESULT" != success || "$LINUX_RESULT" != success ]]; then
+            echo 'Policy selection and both baseline validation jobs must succeed.' >&2
+            exit 1
+          fi
+          case "$FULL" in
+            true)
+              if [[ "$PACKAGE_RESULT" != success || "$PROBE_RESULT" != success || "$INVENTORY_RESULT" != success ]]; then
+                echo 'Every full-qualification job must succeed; failures or skipped jobs cannot pass.' >&2
+                exit 1
+              fi
+              ;;
+            false)
+              if [[ "$PACKAGE_RESULT" != skipped || "$PROBE_RESULT" != skipped || "$INVENTORY_RESULT" != skipped ]]; then
+                echo 'Executed qualification does not match the selected standard scope.' >&2
+                exit 1
+              fi
+              ;;
+            *)
+              echo 'Missing or invalid validation scope; required check fails closed.' >&2
+              exit 1
+              ;;
+          esac
+          printf '## Required validation passed\n\nSelected scope: %s. Every selected job succeeded.\n' "$FULL" >> "$GITHUB_STEP_SUMMARY"

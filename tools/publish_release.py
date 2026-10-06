@@ -44,7 +44,7 @@ def qualified_run(run_id, commit):
     checks = api(f'commits/{commit}/check-runs?per_page=100')['check_runs']
     # The API returns the latest run of each check by default. Include package and
     # security checks, not only the branch protection minimum.
-    required = {'Windows build and tests', 'Linux desktop tests and coverage', 'Linux companion package',
+    required = {'Windows build and tests', 'Windows validation', 'Linux desktop tests and coverage', 'Linux companion package',
                 'Windows native tray probe', 'SonarCloud Code Analysis',
                 'Analyze (csharp)', 'Analyze (python)', 'Analyze (javascript-typescript)'}
     successful = {item['name'] for item in checks if item['status'] == 'completed' and item['conclusion'] == 'success'}
