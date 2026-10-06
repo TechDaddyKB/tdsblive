@@ -104,7 +104,7 @@ class CiPlanTests(unittest.TestCase):
             self.assertEqual({'packaging/old.cs', 'frontend/new.ts', 'README.md'}, set(files))
             self.assertEqual('true', select_plan('pull_request', files)['full'])
             messages = subprocess.check_output(['git', 'log', '--format=%B%x00', base + '..' + head], cwd=root)
-            with patch('tools.ci_plan.git_output', return_value=messages), \
+            with patch('tools.ci_plan.subprocess.check_output', return_value=messages), \
                     patch('tools.ci_plan.subprocess.run') as scan:
                 self.assertTrue(full_requested(root, base, head))
                 self.assertEqual(['sonar', 'analyze', 'secrets', '--stdin'], scan.call_args.args[0])
@@ -116,14 +116,24 @@ class CiPlanTests(unittest.TestCase):
             (b'CI: standard\n\0', False), (b'CI: skip\n\0', False),
             (b'Mention CI: full in prose\n\0', False),
         ):
-            with self.subTest(message=message), patch('tools.ci_plan.git_output', return_value=message), \
+            with self.subTest(message=message), patch('tools.ci_plan.subprocess.check_output', return_value=message), \
                     patch('tools.ci_plan.subprocess.run') as scan:
                 self.assertEqual(expected, full_requested(Path('.'), 'a' * 40, 'b' * 40))
                 self.assertEqual(message, scan.call_args.kwargs['input'])
-        with patch('tools.ci_plan.git_output', return_value=b'CI: full'), \
+        with patch('tools.ci_plan.subprocess.check_output', return_value=b'CI: full'), \
                 patch('tools.ci_plan.subprocess.run', side_effect=subprocess.CalledProcessError(1, 'sonar')):
             with self.assertRaises(subprocess.CalledProcessError):
                 full_requested(Path('.'), 'a' * 40, 'b' * 40)
+
+    def test_cli_revisions_cannot_be_options_ranges_or_unapproved_refs(self):
+        for value in ('--help', '--output=private', 'HEAD~1', 'main', 'a' * 40 + '..HEAD'):
+            for operation in (lambda: revision(Path('.'), value),
+                              lambda: changed_files(Path('.'), value, 'a' * 40),
+                              lambda: full_requested(Path('.'), 'a' * 40, value)):
+                with self.subTest(value=value), patch('tools.ci_plan.subprocess.check_output') as git:
+                    with self.assertRaises(ValueError):
+                        operation()
+                    git.assert_not_called()
 
     def test_linux_coverage_requires_exact_successful_job_not_just_an_artifact(self):
         success = {'name': 'Linux desktop tests and coverage', 'status': 'completed', 'conclusion': 'success'}

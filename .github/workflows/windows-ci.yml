@@ -71,9 +71,9 @@ jobs:
             printf '%s\n' 'full=true' 'tier=full' >> "$GITHUB_OUTPUT"
             printf '%s\n' '## CI validation: full' 'Protected base has no routing policy yet; bootstrap requires full qualification.' >> "$GITHUB_STEP_SUMMARY"
           elif [[ "$EVENT_NAME" == pull_request ]]; then
-            python tools/ci_plan.py select --event "$EVENT_NAME" --base "$BASE_SHA" --head "$HEAD_SHA" --output "$GITHUB_OUTPUT" --summary "$GITHUB_STEP_SUMMARY"
+            python tools/ci_plan.py select --event "$EVENT_NAME" --base "$BASE_SHA" --head "$HEAD_SHA"
           else
-            python tools/ci_plan.py select --event "$EVENT_NAME" --output "$GITHUB_OUTPUT" --summary "$GITHUB_STEP_SUMMARY"
+            python tools/ci_plan.py select --event "$EVENT_NAME"
           fi
 
   linux-desktop:

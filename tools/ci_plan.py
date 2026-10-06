@@ -27,11 +27,26 @@ SOURCE_SUFFIXES = {'.cs'}
 FRONTEND_SUFFIXES = {'.ts', '.tsx', '.js', '.jsx', '.mjs', '.css', '.html', '.svg', '.png', '.woff2'}
 
 
-def full_reason(filename: str) -> str | None:
+def validate_path(filename: str) -> PurePosixPath:
     path = PurePosixPath(filename)
     if (not filename or path.is_absolute() or '..' in path.parts or '\\' in filename
             or ':' in filename or filename != path.as_posix()):
         raise ValueError('Changed paths must be canonical repository-relative paths')
+    return path
+
+
+def standard_path(filename: str, path: PurePosixPath) -> bool:
+    return (
+        filename in STANDARD_ROOT_DOCS or filename in STANDARD_FRONTEND_CONFIG
+        or filename == 'docs/contracts/openapi.json'
+        or filename.startswith('docs/') and path.suffix == '.md'
+        or filename.startswith('frontend/') and path.suffix in FRONTEND_SUFFIXES
+        or filename.startswith(('src/', 'tests/unit/', 'tests/integration/')) and path.suffix in SOURCE_SUFFIXES
+    )
+
+
+def full_reason(filename: str) -> str | None:
+    path = validate_path(filename)
     if filename.startswith(FULL_PREFIXES):
         return 'Desktop, packaging, qualification tooling, CI or shipped guide changed'
     if (filename.endswith(BUILD_SUFFIXES) or path.name in ('package.json', 'package-lock.json')
@@ -40,19 +55,11 @@ def full_reason(filename: str) -> str | None:
     if filename.startswith('src/ExtensionSuite.Host/'):
         if path.name in HOST_LIFECYCLE or path.name.startswith('Desktop'):
             return 'Host ownership, startup or recovery changed'
-    if filename in STANDARD_ROOT_DOCS or filename in STANDARD_FRONTEND_CONFIG:
-        return None
-    if filename == 'docs/contracts/openapi.json':
-        return None
-    if filename.startswith('docs/') and path.suffix == '.md':
-        return None
-    if filename.startswith('frontend/') and path.suffix in FRONTEND_SUFFIXES:
-        return None
-    if filename.startswith(('src/', 'tests/unit/', 'tests/integration/')) and path.suffix in SOURCE_SUFFIXES:
-        if filename.startswith('tests/') and any(
-            word in path.name for word in ('Desktop', 'Lifecycle', 'Recovery', 'Relaunch')
-        ):
-            return 'Desktop or recovery regression tests changed'
+    if filename.startswith('tests/') and any(
+        word in path.name for word in ('Desktop', 'Lifecycle', 'Recovery', 'Relaunch')
+    ):
+        return 'Desktop or recovery regression tests changed'
+    if standard_path(filename, path):
         return None
     return 'Unrecognized change requires full qualification'
 
@@ -75,24 +82,32 @@ def select_plan(event: str, files: list[str], force_full: bool = False) -> dict[
     }
 
 
-def git_output(root: Path, *arguments: str) -> bytes:
-    return subprocess.check_output(['git', *arguments], cwd=root)
+def checked_sha(value: str) -> str:
+    if not re.fullmatch(r'[0-9a-f]{40}', value):
+        raise ValueError('Expected a full Git commit SHA')
+    return value
 
 
 def revision(root: Path, value: str) -> str:
-    sha = git_output(root, 'rev-parse', '--verify', '--end-of-options', value + '^{commit}').decode().strip()
-    if not re.fullmatch(r'[0-9a-f]{40}', sha):
-        raise ValueError('Expected a full Git commit SHA')
-    return sha
+    if value not in ('HEAD', 'origin/main'):
+        checked_sha(value)
+    sha = subprocess.check_output(
+        ['git', 'rev-parse', '--verify', '--end-of-options', value + '^{commit}'], cwd=root,
+    ).decode().strip()
+    return checked_sha(sha)
 
 
 def changed_files(root: Path, base: str, head: str) -> list[str]:
-    data = git_output(root, 'diff', '--name-only', '--no-renames', '-z', base + '...' + head)
+    base, head = checked_sha(base), checked_sha(head)
+    data = subprocess.check_output(
+        ['git', 'diff', '--name-only', '--no-renames', '-z', base + '...' + head], cwd=root,
+    )
     return [item.decode('utf-8') for item in data.split(b'\0') if item]
 
 
 def full_requested(root: Path, base: str, head: str) -> bool:
-    messages = git_output(root, 'log', '--format=%B%x00', base + '..' + head)
+    base, head = checked_sha(base), checked_sha(head)
+    messages = subprocess.check_output(['git', 'log', '--format=%B%x00', base + '..' + head], cwd=root)
     subprocess.run(['sonar', 'analyze', 'secrets', '--stdin'], input=messages, check=True)
     return any(line.strip().lower() == 'ci: full' for line in messages.decode('utf-8').splitlines())
 
@@ -128,7 +143,7 @@ def linux_coverage_state(jobs: list[dict]) -> bool:
 def wait_for_linux_coverage(repository: str, run_id: str, timeout: int) -> None:
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*', repository):
         raise ValueError('Invalid repository name')
-    if not re.fullmatch(r'[1-9][0-9]*', run_id) or timeout <= 0:
+    if not re.fullmatch(r'[1-9]\d*', run_id) or timeout <= 0:
         raise ValueError('Require a positive run ID and bounded timeout')
     endpoint = f'repos/{repository}/actions/runs/{run_id}/jobs?filter=latest&per_page=100'
     deadline = time.monotonic() + timeout
@@ -152,8 +167,6 @@ def main() -> None:
     select.add_argument('--base')
     select.add_argument('--head', default='HEAD')
     select.add_argument('--full', action='store_true')
-    select.add_argument('--output', type=Path)
-    select.add_argument('--summary', type=Path)
     wait = commands.add_parser('wait-coverage')
     wait.add_argument('--repository', default=os.environ.get('GITHUB_REPOSITORY', ''))
     wait.add_argument('--run-id', default=os.environ.get('GITHUB_RUN_ID', ''))
@@ -170,7 +183,10 @@ def main() -> None:
         base, head = revision(ROOT, args.base), revision(ROOT, args.head)
         files = changed_files(ROOT, base, head)
         force_full = force_full or full_requested(ROOT, base, head)
-    emit(select_plan(args.event, files, force_full), args.output, args.summary)
+    output = os.environ.get('GITHUB_OUTPUT')
+    summary = os.environ.get('GITHUB_STEP_SUMMARY')
+    emit(select_plan(args.event, files, force_full),
+         Path(output) if output else None, Path(summary) if summary else None)
 
 
 if __name__ == '__main__':

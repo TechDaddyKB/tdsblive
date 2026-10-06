@@ -91,7 +91,7 @@ Windows analysis. Release admission requires full main evidence and actual
 Windows validation, not a standard PR or diagnostic artifact. Goal IDs and prior
 acceptance records are unchanged. See [testing](testing.md#change-aware-pr-validation).
 
-Local acceptance evidence (2026-10-06): 25 focused CI-routing, actual aggregate
+Local acceptance evidence (2026-10-06): 26 focused CI-routing, actual aggregate
 shell-script, Linux coverage-transfer and release-admission tests pass.
 `actionlint` 1.7.7 validates both workflows' YAML, expressions and job dependencies;
 changed-file secret scans and `git diff --check` pass. The coverage wait helper
@@ -103,6 +103,15 @@ trusted PR/main Actions run is still required after publication to establish
 native behavior and measure the new wall-clock timings; local tests are not
 Windows evidence. The first PR uses the explicit full bootstrap until the policy
 is present on protected main.
+
+Publication validation: PR #24 bootstrap run `37471641936` passed routing, Linux
+desktop coverage, native tray probe, inventory and all CodeQL languages. Windows
+baseline reached Sonar, where the gate rejected new CLI argument/path admission
+issues; packaging did not proceed and the aggregate correctly failed. Follow-up
+restricts Git revisions to full SHAs or named preview refs, validates SHA ranges
+before subprocess calls, and removes caller-selected output paths in favor of
+GitHub-owned output/summary environment files. The gate remains enforced; a new
+successful full Actions run is still required before merge.
 
 ### Scope and evidence limitations
 
