@@ -52,14 +52,14 @@ jobs:
       - name: Require exact successful main build and security checks
         run: python tools/publish_release.py --run-id "$RELEASE_RUN_ID" --commit "$RELEASE_COMMIT" --validate-only
       - name: Download qualified Windows assets
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-release-candidate
           path: artifacts/publish-windows
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
       - name: Download same-run Linux assets
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: linux-release-candidate
           path: artifacts/publish-linux
