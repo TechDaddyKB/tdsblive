@@ -145,7 +145,7 @@ jobs:
           sonar analyze secrets artifacts/linux-coverage
 
       - name: Upload same-run Linux coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux-desktop-coverage
           retention-days: 14
@@ -413,7 +413,7 @@ jobs:
 
       - name: Upload candidate Windows packages
         if: needs.validation-plan.outputs.full == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-release-candidate
           retention-days: 14
@@ -425,7 +425,7 @@ jobs:
 
       - name: Upload test and coverage evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-test-evidence
           retention-days: 14
@@ -522,7 +522,7 @@ jobs:
           python tools/qualify_linux_package.py --application-directory "${applications[0]}"
 
       - name: Upload Linux companion candidate
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux-release-candidate
           retention-days: 14
@@ -532,7 +532,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload scanned native Linux evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux-native-package-evidence
           retention-days: 14
@@ -663,7 +663,7 @@ jobs:
 
       - name: Upload scanned diagnostic packages and native evidence
         if: always() && steps.scanned.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-native-diagnostics
           retention-days: 14
@@ -715,7 +715,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload scanned display inventory
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-display-inventory
           retention-days: 14
